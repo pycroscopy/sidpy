@@ -8,7 +8,6 @@ python:
 before_install:
   - sudo apt-get update -qq
   - pip  install coveralls
-#install: python setup.py install
 dist: xenial
 sudo: true
 install: pip install .
