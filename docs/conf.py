@@ -135,7 +135,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
-#html_title = u'pyUSID v0.0a4'
+#html_title = u'sidpy ' + sidpy_version
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -222,9 +222,6 @@ html_search_language = 'en'
 # The name of a javascript file (relative to the configuration directory) that
 # implements a search results scorer. If empty, the default will be used.
 #html_search_scorer = 'scorer.js'
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = 'sidpydoc'
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
