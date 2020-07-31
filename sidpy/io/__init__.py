@@ -17,9 +17,8 @@ Submodules
     write_utils
 
 """
-from . import hdf_utils, io_utils, dtype_utils, write_utils, reg_ref
-from .translator import Translator
-from .dimension import Dimension
+from . import hdf_utils, interface_utils, dtype_utils, num_utils, reg_ref, string_utils
+from sidpy.sid.dimension import Dimension
 
-__all__ = ['hdf_utils', 'io_utils', 'dtype_utils', 'write_utils', 'reg_ref',
-           'Translator', 'Dimension']
+__all__ = ['hdf_utils', 'interface_utils', 'dtype_utils', 'num_utils', 'reg_ref',
+           'Translator', 'Dimension', 'string_utils']

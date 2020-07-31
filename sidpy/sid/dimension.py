@@ -11,7 +11,7 @@ Created on Thu Jul  7 21:14:25 2020
 from __future__ import division, print_function, unicode_literals, absolute_import
 import sys
 import numpy as np
-from .string_utils import validate_single_string_arg
+from sidpy.io.string_utils import validate_single_string_arg
 
 __all__ = ['Dimension']
 
