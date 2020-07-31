@@ -16,7 +16,7 @@ from warnings import warn
 if sys.version_info.major == 3:
     unicode = str
 
-__all__ = ['get_time_stamp', 'file_dialog', 'get_available_memory', 'get_available_memory']
+__all__ = ['check_ssh', 'get_time_stamp', 'file_dialog']
 
 
 def check_ssh():

@@ -11,8 +11,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import abc
 import sys
 import os
-from .dtype_utils import validate_list_of_strings, validate_single_string_arg
-from ..processing.comp_utils import get_available_memory
+from .string_utils import validate_single_string_arg, validate_list_of_strings
 
 if sys.version_info.major == 3:
     unicode = str
