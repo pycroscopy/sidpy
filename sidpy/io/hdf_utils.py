@@ -17,8 +17,8 @@ import numpy as np
 
 from ..__version__ import version as sidpy_version
 from .io_utils import get_time_stamp
-from .write_utils import clean_string_att
-from .string_utils import validate_single_string_arg, validate_list_of_strings
+from .string_utils import validate_single_string_arg, validate_list_of_strings, \
+    clean_string_att
 
 if sys.version_info.major == 3:
     unicode = str
