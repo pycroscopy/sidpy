@@ -14,11 +14,11 @@ from platform import platform
 
 import h5py
 import numpy as np
+from dask import array as da
 
 from ..__version__ import version as sidpy_version
-from .io_utils import get_time_stamp
 from .string_utils import validate_single_string_arg, validate_list_of_strings, \
-    clean_string_att
+    clean_string_att, get_time_stamp
 
 if sys.version_info.major == 3:
     unicode = str
@@ -392,3 +392,29 @@ def write_simple_attrs(h5_obj, attrs, obj_type='', verbose=False):
         h5_obj.attrs[key] = clean_val
     if verbose:
         print('Wrote all (simple) attributes to {}: {}\n'.format(obj_type, h5_obj.name.split('/')[-1]))
+
+
+def lazy_load_array(dataset):
+    """
+    Loads the provided object as a dask array (h5py.Dataset or numpy.ndarray
+
+    Parameters
+    ----------
+    dataset : :class:`numpy.ndarray`, or :class:`h5py.Dataset`, or :class:`dask.array.core.Array`
+        Array to laod as dask array
+
+    Returns
+    -------
+    :class:`dask.array.core.Array`
+        Dask array with appropriate chunks
+    """
+    if isinstance(dataset, da.core.Array):
+        return dataset
+    elif not isinstance(dataset, (h5py.Dataset, np.ndarray)):
+        raise TypeError('Expected one of h5py.Dataset, dask.array.core.Array, or numpy.ndarray'
+                        'objects. Provided object was of type: {}'.format(type(dataset)))
+    # Cannot pass 'auto' for chunks for python 2!
+    chunks = "auto" if sys.version_info.major == 3 else dataset.shape
+    if isinstance(dataset, h5py.Dataset):
+        chunks = chunks if dataset.chunks is None else dataset.chunks
+    return da.from_array(dataset, chunks=chunks)

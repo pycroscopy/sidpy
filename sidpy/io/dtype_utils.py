@@ -19,37 +19,12 @@ import dask.array as da
 
 __all__ = ['flatten_complex_to_real', 'get_compound_sub_dtypes', 'flatten_compound_to_real', 'check_dtype',
            'stack_real_to_complex', 'validate_dtype', 'is_complex_dtype',
-           'stack_real_to_compound', 'stack_real_to_target_dtype', 'flatten_to_real',
-           'lazy_load_array']
+           'stack_real_to_compound', 'stack_real_to_target_dtype', 'flatten_to_real']
+
+from .hdf_utils import lazy_load_array
 
 if sys.version_info.major == 3:
     unicode = str
-
-
-def lazy_load_array(dataset):
-    """
-    Loads the provided object as a dask array (h5py.Dataset or numpy.ndarray
-
-    Parameters
-    ----------
-    dataset : :class:`numpy.ndarray`, or :class:`h5py.Dataset`, or :class:`dask.array.core.Array`
-        Array to laod as dask array
-
-    Returns
-    -------
-    :class:`dask.array.core.Array`
-        Dask array with appropriate chunks
-    """
-    if isinstance(dataset, da.core.Array):
-        return dataset
-    elif not isinstance(dataset, (h5py.Dataset, np.ndarray)):
-        raise TypeError('Expected one of h5py.Dataset, dask.array.core.Array, or numpy.ndarray'
-                        'objects. Provided object was of type: {}'.format(type(dataset)))
-    # Cannot pass 'auto' for chunks for python 2!
-    chunks = "auto" if sys.version_info.major == 3 else dataset.shape
-    if isinstance(dataset, h5py.Dataset):
-        chunks = chunks if dataset.chunks is None else dataset.chunks
-    return da.from_array(dataset, chunks=chunks)
 
 
 def flatten_complex_to_real(dataset, lazy=False):
