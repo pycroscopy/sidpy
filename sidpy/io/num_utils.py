@@ -164,3 +164,28 @@ def integers_to_slices(int_array):
 
     sequences = [slice(item[0], item[1] + 1) for item in integers_to_consecutive_sections(int_array)]
     return sequences
+
+
+def get_exponent(vector):
+    """
+    Gets the scale / exponent for a sequence of numbers. This is particularly useful when wanting to scale a vector
+    for the purposes of plotting
+
+    Parameters
+    ----------
+    vector : array-like
+        Array of numbers
+
+    Returns
+    -------
+    exponent : int
+        Scale / exponent for the given vector
+    """
+    if not isinstance(vector, np.ndarray):
+        raise TypeError('vector should be of type numpy.ndarray. Provided object of type: {}'.format(type(vector)))
+    if np.max(np.abs(vector)) == np.max(vector):
+        exponent = np.log10(np.max(vector))
+    else:
+        # negative values
+        exponent = np.log10(np.max(np.abs(vector)))
+    return int(np.floor(exponent))

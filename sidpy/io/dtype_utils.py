@@ -17,13 +17,8 @@ import h5py
 import numpy as np
 import dask.array as da
 
-if sys.version_info.major == 3:
-    pass
-else:
-    pass
-
 __all__ = ['flatten_complex_to_real', 'get_compound_sub_dtypes', 'flatten_compound_to_real', 'check_dtype',
-           'stack_real_to_complex', 'validate_dtype', 'get_exponent', 'is_complex_dtype',
+           'stack_real_to_complex', 'validate_dtype', 'is_complex_dtype',
            'stack_real_to_compound', 'stack_real_to_target_dtype', 'flatten_to_real',
            'lazy_load_array']
 
@@ -429,28 +424,3 @@ def is_complex_dtype(dtype):
     if dtype in [np.complex, np.complex64, np.complex128]:
         return True
     return False
-
-
-def get_exponent(vector):
-    """
-    Gets the scale / exponent for a sequence of numbers. This is particularly useful when wanting to scale a vector
-    for the purposes of plotting
-
-    Parameters
-    ----------
-    vector : array-like
-        Array of numbers
-
-    Returns
-    -------
-    exponent : int
-        Scale / exponent for the given vector
-    """
-    if not isinstance(vector, np.ndarray):
-        raise TypeError('vector should be of type numpy.ndarray. Provided object of type: {}'.format(type(vector)))
-    if np.max(np.abs(vector)) == np.max(vector):
-        exponent = np.log10(np.max(vector))
-    else:
-        # negative values
-        exponent = np.log10(np.max(np.abs(vector)))
-    return int(np.floor(exponent))
