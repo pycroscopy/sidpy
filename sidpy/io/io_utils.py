@@ -10,13 +10,12 @@ Created on Tue Nov  3 21:14:25 2015
 from __future__ import division, print_function, absolute_import, unicode_literals
 import os
 import sys
-from time import strftime
 from warnings import warn
 
 if sys.version_info.major == 3:
     unicode = str
 
-__all__ = ['check_ssh', 'get_time_stamp', 'file_dialog']
+__all__ = ['check_ssh', 'file_dialog']
 
 
 def check_ssh():
@@ -88,16 +87,3 @@ def file_dialog(file_filter='H5 file (*.h5)', caption='Select File'):
     return str(path)
 
 
-def get_time_stamp():
-    """
-    Teturns the current date and time as a string formatted as:
-    Year_Month_Dat-Hour_Minute_Second
-
-    Parameters
-    ----------
-
-    Returns
-    -------
-    String
-    """
-    return strftime('%Y_%m_%d-%H_%M_%S')

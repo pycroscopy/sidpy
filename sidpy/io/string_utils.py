@@ -10,15 +10,14 @@ Created on Tue Nov  3 21:14:25 2015
 from __future__ import division, print_function, absolute_import, unicode_literals
 import sys
 from numbers import Number
+from time import strftime
 import numpy as np
 
 if sys.version_info.major == 3:
+    unicode = str
     from collections.abc import Iterable
 else:
     from collections import Iterable
-
-if sys.version_info.major == 3:
-    unicode = str
 
 
 def format_quantity(value, unit_names, factors, decimals=2):
@@ -254,3 +253,18 @@ def clean_string_att(att_val):
         return att_val
     except TypeError:
         raise TypeError('Failed to clean: {}'.format(att_val))
+
+
+def get_time_stamp():
+    """
+    Teturns the current date and time as a string formatted as:
+    Year_Month_Dat-Hour_Minute_Second
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    String
+    """
+    return strftime('%Y_%m_%d-%H_%M_%S')
