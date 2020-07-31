@@ -19,7 +19,8 @@ if sys.version_info.major == 3:
 else:
     from collections import Iterable
 
-__all__ = ['get_slope', 'to_ranges']
+__all__ = ['get_slope', 'to_ranges', 'contains_integers', 'integers_to_slices',
+           'get_exponent']
 
 
 def get_slope(values, tol=1E-3):
