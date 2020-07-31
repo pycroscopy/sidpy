@@ -8,10 +8,10 @@ Submodules
     :toctree: _autosummary
 
     plot_utils
-    jupyter_utils
 
 """
 
-from . import misc, curve, image, cmap
-
-__all__ = ['curve', 'image', 'misc', 'cmap']
+from .misc import *
+from .cmap import *
+from .image import *
+from .curve import *
