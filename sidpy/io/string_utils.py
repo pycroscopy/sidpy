@@ -15,7 +15,7 @@ if sys.version_info.major == 3:
     from collections.abc import Iterable
 else:
     from collections import Iterable
-from .dtype_utils import validate_list_of_strings, validate_string_args
+from .dtype_utils import unicode
 
 if sys.version_info.major == 3:
     unicode = str
@@ -143,3 +143,86 @@ def formatted_str_to_number(str_val, magnitude_names, magnitude_values, separato
         if unit_name == components[1]:
             # Let it raise an exception. Don't catch
             return scaling * float(components[0])
+
+
+def validate_single_string_arg(value, name):
+    """
+    This function is to be used when validating a SINGLE string parameter for a function. Trims the provided value
+    Errors in the string will result in Exceptions
+
+    Parameters
+    ----------
+    value : str
+        Value of the parameter
+    name : str
+        Name of the parameter
+
+    Returns
+    -------
+    str
+        Cleaned string value of the parameter
+    """
+    if not isinstance(value, (str, unicode)):
+        raise TypeError(name + ' should be a string')
+    value = value.strip()
+    if len(value) <= 0:
+        raise ValueError(name + ' should not be an empty string')
+    return value
+
+
+def validate_list_of_strings(str_list, parm_name='parameter'):
+    """
+    This function is to be used when validating and cleaning a list of strings. Trims the provided strings
+    Errors in the strings will result in Exceptions
+
+    Parameters
+    ----------
+    str_list : array-like
+        list or tuple of strings
+    parm_name : str, Optional. Default = 'parameter'
+        Name of the parameter corresponding to this string list that will be reported in the raised Errors
+
+    Returns
+    -------
+    array-like
+        List of trimmed and validated strings when ALL objects within the list are found to be valid strings
+    """
+
+    if isinstance(str_list, (str, unicode)):
+        return [validate_single_string_arg(str_list, parm_name)]
+
+    if not isinstance(str_list, (list, tuple)):
+        raise TypeError(parm_name + ' should be a string or list / tuple of strings')
+
+    return [validate_single_string_arg(x, parm_name) for x in str_list]
+
+
+def validate_string_args(arg_list, arg_names):
+    """
+    This function is to be used when validating string parameters for a function. Trims the provided strings.
+    Errors in the strings will result in Exceptions
+
+    Parameters
+    ----------
+    arg_list : array-like
+        List of str objects that signify the value for a position argument in a function
+    arg_names : array-like
+        List of str objects with the names of the corresponding parameters in the function
+
+    Returns
+    -------
+    array-like
+        List of str objects that signify the value for a position argument in a function with spaces on ends removed
+    """
+    if isinstance(arg_list, (str, unicode)):
+        arg_list = [arg_list]
+    if isinstance(arg_names, (str, unicode)):
+        arg_names = [arg_names]
+    cleaned_args = []
+    if not isinstance(arg_list, (tuple, list)):
+        raise TypeError('arg_list should be a tuple or a list or a string')
+    if not isinstance(arg_names, (tuple, list)):
+        raise TypeError('arg_names should be a tuple or a list or a string')
+    for arg, arg_name in zip(arg_list, arg_names):
+        cleaned_args.append(validate_single_string_arg(arg, arg_name))
+    return cleaned_args

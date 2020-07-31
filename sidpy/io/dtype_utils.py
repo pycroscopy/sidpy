@@ -25,7 +25,6 @@ else:
 __all__ = ['flatten_complex_to_real', 'get_compound_sub_dtypes', 'flatten_compound_to_real', 'check_dtype',
            'stack_real_to_complex', 'validate_dtype', 'integers_to_slices', 'get_exponent', 'is_complex_dtype',
            'stack_real_to_compound', 'stack_real_to_target_dtype', 'flatten_to_real', 'contains_integers',
-           'validate_single_string_arg', 'validate_string_args', 'validate_list_of_strings',
            'lazy_load_array']
 
 if sys.version_info.major == 3:
@@ -447,89 +446,6 @@ def validate_dtype(dtype):
     else:
         raise TypeError('dtype should either be a numpy or h5py dtype')
     return True
-
-
-def validate_single_string_arg(value, name):
-    """
-    This function is to be used when validating a SINGLE string parameter for a function. Trims the provided value
-    Errors in the string will result in Exceptions
-
-    Parameters
-    ----------
-    value : str
-        Value of the parameter
-    name : str
-        Name of the parameter
-
-    Returns
-    -------
-    str
-        Cleaned string value of the parameter
-    """
-    if not isinstance(value, (str, unicode)):
-        raise TypeError(name + ' should be a string')
-    value = value.strip()
-    if len(value) <= 0:
-        raise ValueError(name + ' should not be an empty string')
-    return value
-
-
-def validate_list_of_strings(str_list, parm_name='parameter'):
-    """
-    This function is to be used when validating and cleaning a list of strings. Trims the provided strings
-    Errors in the strings will result in Exceptions
-
-    Parameters
-    ----------
-    str_list : array-like
-        list or tuple of strings
-    parm_name : str, Optional. Default = 'parameter'
-        Name of the parameter corresponding to this string list that will be reported in the raised Errors
-
-    Returns
-    -------
-    array-like
-        List of trimmed and validated strings when ALL objects within the list are found to be valid strings
-    """
-
-    if isinstance(str_list, (str, unicode)):
-        return [validate_single_string_arg(str_list, parm_name)]
-
-    if not isinstance(str_list, (list, tuple)):
-        raise TypeError(parm_name + ' should be a string or list / tuple of strings')
-
-    return [validate_single_string_arg(x, parm_name) for x in str_list]
-
-
-def validate_string_args(arg_list, arg_names):
-    """
-    This function is to be used when validating string parameters for a function. Trims the provided strings.
-    Errors in the strings will result in Exceptions
-
-    Parameters
-    ----------
-    arg_list : array-like
-        List of str objects that signify the value for a position argument in a function
-    arg_names : array-like
-        List of str objects with the names of the corresponding parameters in the function
-
-    Returns
-    -------
-    array-like
-        List of str objects that signify the value for a position argument in a function with spaces on ends removed
-    """
-    if isinstance(arg_list, (str, unicode)):
-        arg_list = [arg_list]
-    if isinstance(arg_names, (str, unicode)):
-        arg_names = [arg_names]
-    cleaned_args = []
-    if not isinstance(arg_list, (tuple, list)):
-        raise TypeError('arg_list should be a tuple or a list or a string')
-    if not isinstance(arg_names, (tuple, list)):
-        raise TypeError('arg_names should be a tuple or a list or a string')
-    for arg, arg_name in zip(arg_list, arg_names):
-        cleaned_args.append(validate_single_string_arg(arg, arg_name))
-    return cleaned_args
 
 
 def is_complex_dtype(dtype):
