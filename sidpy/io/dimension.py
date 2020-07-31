@@ -105,6 +105,9 @@ class Dimension(object):
 
         self._values = values
 
+    def copy(self):
+        return Dimension(self.name, self.values, self.quantity, self.units, self.dimension_type)
+
     def __repr__(self):
         return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units, self.values)
 
