@@ -12,9 +12,11 @@ import os
 import numpy as np
 import dask.array as da
 import h5py
+
 sys.path.append("../../sidpy/")
-from sidpy.io import dtype_utils
 from .data_utils import delete_existing_file
+from sidpy.io import dtype_utils
+import sidpy.io.hdf_utils
 
 struc_dtype = np.dtype({'names': ['r', 'g', 'b'],
                         'formats': [np.float32, np.uint16, np.float64]})
@@ -60,57 +62,6 @@ class TestDtypeUtils(unittest.TestCase):
     def tearDown(self):
         os.remove(file_path)
 
-
-class TestContainsIntegers(unittest.TestCase):
-
-    def test_typical(self):
-        self.assertTrue(dtype_utils.contains_integers([1, 2, -3, 4]))
-        self.assertTrue(dtype_utils.contains_integers(range(5)))
-        self.assertTrue(dtype_utils.contains_integers([2, 5, 8, 3], min_val=2))
-        self.assertTrue(dtype_utils.contains_integers(np.arange(5)))
-        self.assertFalse(dtype_utils.contains_integers(np.arange(5), min_val=2))
-        self.assertFalse(dtype_utils.contains_integers([1, 4.5, 2.2, -1]))
-        self.assertFalse(dtype_utils.contains_integers([1, -2, 5], min_val=1))
-        self.assertFalse(dtype_utils.contains_integers(['dsss', 34, 1.23, None]))
-        self.assertFalse(dtype_utils.contains_integers([]))
-        
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.contains_integers(None)
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.contains_integers(14)
-
-    def test_illegal_min_val(self):
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.contains_integers([1, 2, 3, 4], min_val='hello')
-
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.contains_integers([1, 2, 3, 4], min_val=[1, 2])
-
-        with self.assertRaises(ValueError):
-            _ = dtype_utils.contains_integers([1, 2, 3, 4], min_val=1.234)
-
-
-class TestIntegersToSlices(unittest.TestCase):
-
-    def test_illegal_inputs(self):
-        with self.assertRaises(TypeError):
-            dtype_utils.integers_to_slices(slice(1, 15))
-        with self.assertRaises(ValueError):
-            dtype_utils.integers_to_slices([-1.43, 34.6565, 45.344, 5+6j])
-        with self.assertRaises(ValueError):
-            dtype_utils.integers_to_slices(['asdds', None, True, 45.344, 5 + 6j])
-
-    def test_positive(self):
-        expected = [slice(0, 3), slice(7, 8), slice(14, 18), slice(22, 23), slice(27, 28), slice(29, 30), slice(31, 32)]
-        inputs = np.hstack([range(item.start, item.stop) for item in expected])
-        ret_val = dtype_utils.integers_to_slices(inputs)
-        self.assertEqual(expected, ret_val)
-
-    def test_negative(self):
-        expected = [slice(-7, -4), slice(-2, 3), slice(14, 18), slice(22, 23), slice(27, 28), slice(29, 30)]
-        inputs = np.hstack([range(item.start, item.stop) for item in expected])
-        ret_val = dtype_utils.integers_to_slices(inputs)
-        self.assertEqual(expected, ret_val)
 
 
 class TestStackRealToComplex(unittest.TestCase):
@@ -670,86 +621,41 @@ class TestGetExponent(unittest.TestCase):
     def test_negative_small(self):
         expected = -7
         self.assertEqual(expected,
-                         dtype_utils.get_exponent(np.arange(5) * -10**expected))
+                         sidpy.io.num_utils.get_exponent(np.arange(5) * -10 ** expected))
 
     def test_positive_large(self):
         expected = 4
         self.assertEqual(expected,
-                         dtype_utils.get_exponent(np.arange(6) * 10 ** expected))
+                         sidpy.io.num_utils.get_exponent(np.arange(6) * 10 ** expected))
 
     def test_mixed_large(self):
         expected = 4
         self.assertEqual(expected,
-                         dtype_utils.get_exponent(np.random.randint(-8, high=3, size=(5, 5)) * 10 ** expected))
+                         sidpy.io.num_utils.get_exponent(np.random.randint(-8, high=3, size=(5, 5)) * 10 ** expected))
 
     def test_illegal_type(self):
         with self.assertRaises(TypeError):
-            _ = dtype_utils.get_exponent('hello')
-            _ = dtype_utils.get_exponent([1, 2, 3])
+            _ = sidpy.io.num_utils.get_exponent('hello')
+            _ = sidpy.io.num_utils.get_exponent([1, 2, 3])
 
 
-class TestValidateStringArgs(unittest.TestCase):
 
-    def test_empty(self):
-        with self.assertRaises(ValueError):
-            _ = dtype_utils.validate_string_args(['      '], ['meh'])
-
-    def test_spaces(self):
-        expected = 'fd'
-        [ret] = dtype_utils.validate_string_args(['  ' + expected + '    '], ['meh'])
-        self.assertEqual(expected, ret)
-
-    def test_single(self):
-        expected = 'fd'
-        [ret] = dtype_utils.validate_string_args(expected , 'meh')
-        self.assertEqual(expected, ret)
-
-    def test_multi(self):
-        expected = ['abc', 'def']
-        returned = dtype_utils.validate_string_args(['   ' + expected[0], expected[1] + '    '], ['meh', 'foo'])
-        for exp, ret in zip(expected, returned):
-            self.assertEqual(exp, ret)
-
-    def test_not_string_lists(self):
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.validate_string_args([14], ['meh'])
-
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.validate_string_args(14, ['meh'])
-
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.validate_string_args({'dfdf': 14}, ['meh'])
-
-    def test_name_not_string(self):
-        actual = ['ghghg']
-        ret = dtype_utils.validate_string_args(actual, [np.arange(3)])
-        self.assertEqual(ret, actual)
-
-    def test_unequal_lengths(self):
-        expected = ['a', 'b']
-        actual = dtype_utils.validate_string_args(expected + ['c'], ['a', 'b'])
-        for exp, ret in zip(expected, actual):
-            self.assertEqual(exp, ret)
-
-    def test_names_not_list_of_strings(self):
-        with self.assertRaises(TypeError):
-            _ = dtype_utils.validate_string_args(['a', 'v'], {'a': 1, 'v': 43})
 
 
 class TestLazyLoadArray(unittest.TestCase):
 
     def test_dask_input(self):
         arr = da.random.random(2, 3)
-        self.assertTrue(np.allclose(arr, dtype_utils.lazy_load_array(arr)))
+        self.assertTrue(np.allclose(arr, sidpy.io.hdf_utils.lazy_load_array(arr)))
 
     def test_invalid_type(self):
         with self.assertRaises(TypeError):
-            _ = dtype_utils.lazy_load_array([1, 2, 3])
+            _ = sidpy.io.hdf_utils.lazy_load_array([1, 2, 3])
 
     def test_numpy(self):
         np_arr = np.random.rand(2, 3)
         da_arr = da.from_array(np_arr, chunks=np_arr.shape)
-        self.assertTrue(np.allclose(da_arr, dtype_utils.lazy_load_array(np_arr)))
+        self.assertTrue(np.allclose(da_arr, sidpy.io.hdf_utils.lazy_load_array(np_arr)))
 
     def test_h5_dset_no_chunks(self):
         h5_path = 'blah.h5'
@@ -758,7 +664,7 @@ class TestLazyLoadArray(unittest.TestCase):
             np_arr = np.random.rand(2, 3)
             h5_dset = h5_f.create_dataset('Test', data=np_arr)
             da_arr = da.from_array(np_arr, chunks=np_arr.shape)
-            self.assertTrue(np.allclose(da_arr, dtype_utils.lazy_load_array(h5_dset)))
+            self.assertTrue(np.allclose(da_arr, sidpy.io.hdf_utils.lazy_load_array(h5_dset)))
         os.remove(h5_path)
 
     def test_h5_dset_w_chunks(self):
@@ -768,7 +674,7 @@ class TestLazyLoadArray(unittest.TestCase):
             np_arr = np.random.rand(200, 30)
             h5_dset = h5_f.create_dataset('Test', data=np_arr, chunks=(1, 30))
             da_arr = da.from_array(np_arr, chunks=h5_dset.chunks)
-            self.assertTrue(np.allclose(da_arr, dtype_utils.lazy_load_array(h5_dset)))
+            self.assertTrue(np.allclose(da_arr, sidpy.io.hdf_utils.lazy_load_array(h5_dset)))
         os.remove(h5_path)
 
 
