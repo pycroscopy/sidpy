@@ -16,15 +16,15 @@ from warnings import warn
 import h5py
 import numpy as np
 import dask.array as da
-from itertools import groupby
+
 if sys.version_info.major == 3:
-    from collections.abc import Iterable
+    pass
 else:
-    from collections import Iterable
+    pass
 
 __all__ = ['flatten_complex_to_real', 'get_compound_sub_dtypes', 'flatten_compound_to_real', 'check_dtype',
-           'stack_real_to_complex', 'validate_dtype', 'integers_to_slices', 'get_exponent', 'is_complex_dtype',
-           'stack_real_to_compound', 'stack_real_to_target_dtype', 'flatten_to_real', 'contains_integers',
+           'stack_real_to_complex', 'validate_dtype', 'get_exponent', 'is_complex_dtype',
+           'stack_real_to_compound', 'stack_real_to_target_dtype', 'flatten_to_real',
            'lazy_load_array']
 
 if sys.version_info.major == 3:
@@ -55,43 +55,6 @@ def lazy_load_array(dataset):
     if isinstance(dataset, h5py.Dataset):
         chunks = chunks if dataset.chunks is None else dataset.chunks
     return da.from_array(dataset, chunks=chunks)
-
-
-def contains_integers(iter_int, min_val=None):
-    """
-    Checks if the provided object is iterable (list, tuple etc.) and contains integers optionally greater than equal to
-    the provided min_val
-
-    Parameters
-    ----------
-    iter_int : :class:`collections.Iterable`
-        Iterable (e.g. list, tuple, etc.) of integers
-    min_val : int, optional, default = None
-        The value above which each element of iterable must possess. By default, this is ignored.
-
-    Returns
-    -------
-    bool
-        Whether or not the provided object is an iterable of integers
-    """
-    if not isinstance(iter_int, Iterable):
-        raise TypeError('iter_int should be an Iterable')
-    if len(iter_int) == 0:
-        return False
-
-    if min_val is not None:
-        if not isinstance(min_val, (int, float)):
-            raise TypeError('min_val should be an integer. Provided object was of type: {}'.format(type(min_val)))
-        if min_val % 1 != 0:
-            raise ValueError('min_val should be an integer')
-
-    try:
-        if min_val is not None:
-            return np.all([x % 1 == 0 and x >= min_val for x in iter_int])
-        else:
-            return np.all([x % 1 == 0 for x in iter_int])
-    except TypeError:
-        return False
 
 
 def flatten_complex_to_real(dataset, lazy=False):
@@ -466,53 +429,6 @@ def is_complex_dtype(dtype):
     if dtype in [np.complex, np.complex64, np.complex128]:
         return True
     return False
-
-
-def integers_to_slices(int_array):
-    """
-    Converts a sequence of iterables to a list of slice objects denoting sequences of consecutive numbers
-
-    Parameters
-    ----------
-    int_array : :class:`collections.Iterable`
-        iterable object like a :class:`list` or :class:`numpy.ndarray`
-
-    Returns
-    -------
-    sequences : list
-        List of :class:`slice` objects each denoting sequences of consecutive numbers
-    """
-    if not contains_integers(int_array):
-        raise ValueError('Expected a list, tuple, or numpy array of integers')
-
-    def integers_to_consecutive_sections(integer_array):
-        """
-        Converts a sequence of iterables to tuples with start and stop bounds
-
-        @author: @juanchopanza and @luca from stackoverflow
-
-        Parameters
-        ----------
-        integer_array : :class:`collections.Iterable`
-            iterable object like a :class:`list`
-
-        Returns
-        -------
-        iterable : :class:`generator`
-            Cast to list or similar to use
-
-        Note
-        ----
-        From https://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
-        """
-        integer_array = sorted(set(integer_array))
-        for key, group in groupby(enumerate(integer_array),
-                                  lambda t: t[1] - t[0]):
-            group = list(group)
-            yield group[0][1], group[-1][1]
-
-    sequences = [slice(item[0], item[1] + 1) for item in integers_to_consecutive_sections(int_array)]
-    return sequences
 
 
 def get_exponent(vector):
