@@ -37,6 +37,25 @@ class TestDimension(unittest.TestCase):
             self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
         self.assertTrue(np.allclose(values, descriptor.values))
 
+    def test_copy(self):
+        name = 'Bias'
+        units = 'V'
+        values = np.arange(5)
+
+        descriptor = Dimension(name, len(values), units=units)
+        copy_descriptor = descriptor.copy()
+        for expected, actual in zip([copy_descriptor.name, copy_descriptor.units],
+                                    [descriptor.name, descriptor.units]):
+            self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+        self.assertTrue(np.allclose(copy_descriptor.values, descriptor.values))
+        copy_descriptor.units ='eV'
+        copy_descriptor.name = 'energy'
+        for expected, actual in zip([copy_descriptor.name, copy_descriptor.units],
+                                    [descriptor.name, descriptor.units]):
+            self.assertTrue(np.all([x != y for x, y in zip(expected, actual)]))
+        copy_descriptor.values = descriptor.values+1
+        self.assertFalse(np.allclose(copy_descriptor.values, descriptor.values))
+
     def test_repr(self):
         name = 'Bias'
         values = np.arange(5)
