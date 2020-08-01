@@ -14,9 +14,7 @@ import dask.array as da
 import h5py
 
 sys.path.append("../../sidpy/")
-from .data_utils import delete_existing_file
 from sidpy.io import dtype_utils
-import sidpy.io.hdf_utils
 
 struc_dtype = np.dtype({'names': ['r', 'g', 'b'],
                         'formats': [np.float32, np.uint16, np.float64]})
@@ -642,40 +640,7 @@ class TestGetExponent(unittest.TestCase):
 
 
 
-class TestLazyLoadArray(unittest.TestCase):
 
-    def test_dask_input(self):
-        arr = da.random.random(2, 3)
-        self.assertTrue(np.allclose(arr, sidpy.io.hdf_utils.lazy_load_array(arr)))
-
-    def test_invalid_type(self):
-        with self.assertRaises(TypeError):
-            _ = sidpy.io.hdf_utils.lazy_load_array([1, 2, 3])
-
-    def test_numpy(self):
-        np_arr = np.random.rand(2, 3)
-        da_arr = da.from_array(np_arr, chunks=np_arr.shape)
-        self.assertTrue(np.allclose(da_arr, sidpy.io.hdf_utils.lazy_load_array(np_arr)))
-
-    def test_h5_dset_no_chunks(self):
-        h5_path = 'blah.h5'
-        delete_existing_file(h5_path)
-        with h5py.File(h5_path, mode='w') as h5_f:
-            np_arr = np.random.rand(2, 3)
-            h5_dset = h5_f.create_dataset('Test', data=np_arr)
-            da_arr = da.from_array(np_arr, chunks=np_arr.shape)
-            self.assertTrue(np.allclose(da_arr, sidpy.io.hdf_utils.lazy_load_array(h5_dset)))
-        os.remove(h5_path)
-
-    def test_h5_dset_w_chunks(self):
-        h5_path = 'blah.h5'
-        delete_existing_file(h5_path)
-        with h5py.File(h5_path, mode='w') as h5_f:
-            np_arr = np.random.rand(200, 30)
-            h5_dset = h5_f.create_dataset('Test', data=np_arr, chunks=(1, 30))
-            da_arr = da.from_array(np_arr, chunks=h5_dset.chunks)
-            self.assertTrue(np.allclose(da_arr, sidpy.io.hdf_utils.lazy_load_array(h5_dset)))
-        os.remove(h5_path)
 
 
 if __name__ == '__main__':
