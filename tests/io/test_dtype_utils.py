@@ -614,34 +614,5 @@ class TestIsComplexDtype(unittest.TestCase):
             self.assertTrue(dtype_utils.is_complex_dtype(dtype))
 
 
-class TestGetExponent(unittest.TestCase):
-
-    def test_negative_small(self):
-        expected = -7
-        self.assertEqual(expected,
-                         sidpy.io.num_utils.get_exponent(np.arange(5) * -10 ** expected))
-
-    def test_positive_large(self):
-        expected = 4
-        self.assertEqual(expected,
-                         sidpy.io.num_utils.get_exponent(np.arange(6) * 10 ** expected))
-
-    def test_mixed_large(self):
-        expected = 4
-        self.assertEqual(expected,
-                         sidpy.io.num_utils.get_exponent(np.random.randint(-8, high=3, size=(5, 5)) * 10 ** expected))
-
-    def test_illegal_type(self):
-        with self.assertRaises(TypeError):
-            _ = sidpy.io.num_utils.get_exponent('hello')
-            _ = sidpy.io.num_utils.get_exponent([1, 2, 3])
-
-
-
-
-
-
-
-
 if __name__ == '__main__':
     unittest.main()

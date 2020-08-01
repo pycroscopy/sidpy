@@ -122,6 +122,29 @@ class TestIntegersToSlices(unittest.TestCase):
         inputs = np.hstack([range(item.start, item.stop) for item in expected])
         ret_val = integers_to_slices(inputs)
         self.assertEqual(expected, ret_val)
+        
+        
+class TestGetExponent(unittest.TestCase):
+
+    def test_negative_small(self):
+        expected = -7
+        self.assertEqual(expected,
+                         get_exponent(np.arange(5) * -10 ** expected))
+
+    def test_positive_large(self):
+        expected = 4
+        self.assertEqual(expected,
+                         get_exponent(np.arange(6) * 10 ** expected))
+
+    def test_mixed_large(self):
+        expected = 4
+        self.assertEqual(expected,
+                         get_exponent(np.random.randint(-8, high=3, size=(5, 5)) * 10 ** expected))
+
+    def test_illegal_type(self):
+        with self.assertRaises(TypeError):
+            _ = get_exponent('hello')
+            _ = get_exponent([1, 2, 3])
                 
                 
 if __name__ == '__main__':
