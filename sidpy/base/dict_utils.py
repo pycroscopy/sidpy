@@ -9,6 +9,7 @@ Created on Thu Sep  7 21:14:25 2017
 
 from __future__ import division, print_function, unicode_literals, absolute_import
 from collections.abc import MutableMapping
+import math
 
 
 def flatten_dict(nested_dict, parent_key='', sep='-'):
@@ -67,3 +68,45 @@ def print_nested_dict(nested_dict, level=0):
             print_nested_dict(val, level=level+1)
         else:
             print('\t'*level + '{} : {}'.format(key, val))
+
+
+def merge_dicts(left, right, path=None):
+    """
+    Merges two nested dictionaries (right into left)
+
+    Parameters
+    ----------
+    left : dict
+        First dictionary
+    right : dict
+        Second dictionary
+    path : str, internal variable. Do not assign
+        Internal path to current key
+
+    Notes
+    -----
+    https://stackoverflow.com/questions/7204805/how-to-merge-dictionaries-of-dictionaries
+    """
+    if path is None: path = []
+    for key in right:
+        if key in left:
+            if isinstance(left[key], dict) and isinstance(right[key], dict):
+                merge_dicts(left[key], right[key], path + [str(key)])
+            elif all([isinstance(this_dict[key], float) for this_dict in
+                      [left, right]]) and math.isnan(left[key]) and math.isnan(right[key]):
+                pass
+            elif left[key] == right[key]:
+                pass  # same leaf value
+            elif isinstance(left[key], dict) and not isinstance(right[key], dict):
+                merge_dicts(left[key], {'value': right[key]}, path + [str(key)])
+            elif not isinstance(left[key], dict) and isinstance(right[key], dict):
+                left[key] = {'value': left[key]}
+                merge_dicts(left[key], right[key], path + [str(key)])
+            else:
+                mesg = 'Left value: {} of type: {} cannot be merged with Right: value: {} of type: {}' \
+                       ''.format(left[key], type(left[key]), right[key], type(right[key]))
+                raise ValueError('Conflict at %s' % '|'.join(
+                    path + [str(key)]) + '. ' + mesg)
+        else:
+            left[key] = right[key]
+    return left
