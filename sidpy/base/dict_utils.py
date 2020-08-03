@@ -2,9 +2,9 @@
 """
 Utilities that assist in dictionary manipulation
 
-Created on Thu Sep  7 21:14:25 2017
+Created on Thu Jul  7 21:14:25 2020
 
-@author: Suhas Somnath, Chris Smith
+@author: Suhas Somnath
 """
 
 from __future__ import division, print_function, unicode_literals, absolute_import
