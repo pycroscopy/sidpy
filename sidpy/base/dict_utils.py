@@ -8,8 +8,12 @@ Created on Thu Sep  7 21:14:25 2017
 """
 
 from __future__ import division, print_function, unicode_literals, absolute_import
+import sys
 from collections.abc import MutableMapping
+from warnings import warn
 import math
+if sys.version_info.major == 3:
+    unicode = str
 
 
 def flatten_dict(nested_dict, parent_key='', sep='-'):
@@ -42,6 +46,52 @@ def flatten_dict(nested_dict, parent_key='', sep='-'):
         else:
             items.append((new_key, value))
     return dict(items)
+
+
+def nested_dict_from_flattened_key(single_pair, separator='-'):
+    """
+    Converts a dictionary with a single key: value pair to a nested dictionary
+
+    Parameters
+    ----------
+    single_pair : dict
+        Dictionary with a single key-value pair
+    separator : str, optional. Default = '-'
+        Separator used to delimit the levels in the keys
+
+    Returns
+    -------
+    nested_dict : dict
+        Nested dictionary
+
+    Notes
+    -----
+    Converts {'A|B|C': value}... to
+             {'A':
+                 'B': {'C': value_1,
+                       }
+                  }
+              }
+    """
+    if not isinstance(single_pair, dict):
+        raise TypeError('Expected dict. Provided object of type: {}'
+                        ''.format(type(single_pair)))
+    if len(single_pair) > 1:
+        warn('This function only works on one key-value pair. Provided dict'
+             'has {} pairs'.format(len(single_pair)))
+    key = list(single_pair.keys())[-1]
+    if not isinstance(key, (str, unicode)):
+        raise TypeError('Key for provided dict not string and is instead: '
+                        '{}'.format(type(key)))
+    value = single_pair[key]
+    # break up the key by separator
+    hierarchy = key.split(separator)
+    # set  actual value to the last item in the hierarchy discovered above:
+    nested_dict = {hierarchy[-1]: value}
+    # build the tree above by iterating in reverse, excepting the last leaf
+    for parent in hierarchy[:-1][::-1]:
+        nested_dict = {parent: nested_dict}
+    return nested_dict
 
 
 def print_nested_dict(nested_dict, level=0):
@@ -110,3 +160,4 @@ def merge_dicts(left, right, path=None):
         else:
             left[key] = right[key]
     return left
+
