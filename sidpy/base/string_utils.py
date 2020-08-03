@@ -257,7 +257,7 @@ def clean_string_att(att_val):
 
 def get_time_stamp():
     """
-    Teturns the current date and time as a string formatted as:
+    Returns the current date and time as a string formatted as:
     Year_Month_Dat-Hour_Minute_Second
 
     Parameters
@@ -268,3 +268,33 @@ def get_time_stamp():
     String
     """
     return strftime('%Y_%m_%d-%H_%M_%S')
+
+
+def str_to_other(value):
+    """
+    Casts a single value encoded in a string to the appropriate python object.
+    Useful when parsing numbers, boolean, etc. in text files
+
+    Parameters
+    ----------
+    value : str / unicode
+        String to be casted into other appropriate python object
+    """
+    if not isinstance(value, (str, unicode)):
+        raise TypeError('Expected object of type str. Provided object was: {}'
+                        ''.format(type(value)))
+    if len(value.split(' ')) > 1:
+        raise ValueError('Expected a string without spaces. Got: "{}"'
+                         ''.format(value))
+    value = value.strip()
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            if value.lower() == 'true':
+                value = True
+            elif value.lower() == 'false':
+                value = False
+            return value
