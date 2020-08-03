@@ -298,3 +298,30 @@ def str_to_other(value):
             elif value.lower() == 'false':
                 value = False
             return value
+
+
+def remove_extra_delimiters(line, separator=' '):
+    """
+    Removes extra spaces (or other delimiters) between words in a line.
+    Useful when parsing parameters (written by hand)
+
+    Parameters
+    ----------
+    line : str / unicode
+        Line to be cleaned
+    separator : str / unicode, Optional. Default = ' '
+        Separator between tokens
+
+    Returns
+    -------
+    line : str
+        Line with extra separators removed
+    """
+    items = line.split(separator)
+    real = list()
+    for item in items:
+        item = item.strip()
+        if len(item) > 0:
+            real.append(item)
+    line = separator.join(real)
+    return line
