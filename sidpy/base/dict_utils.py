@@ -94,6 +94,42 @@ def nested_dict_from_flattened_key(single_pair, separator='-'):
     return nested_dict
 
 
+def nest_dict(flat_dict, separator='-'):
+    """
+    Generates a nested dictionary from a flattened dictionary
+
+    Parameters
+    ----------
+    flat_dict : dict
+        Dictionary whose keys are flattened to a single string with a separator
+    separator : str, optional. Default = '-'
+        Separator used to delimit the levels in the keys
+
+    Returns
+    -------
+    nested_dict : dict
+        Nested dictionary
+
+    Notes
+    -----
+    flat_dict should look like {'A|B|C': V1, 'A|B|D': V2, ...}
+    """
+    nested_dict = dict()
+    conflict_items = dict()
+    for key, val in flat_dict.items():
+        this_dict = nested_dict_from_flattened_key({key: val},
+                                                   separator=separator)
+        try:
+            # merge the nested dictionaries:
+            nested_dict = merge_dicts(nested_dict, this_dict)
+        except ValueError as exp:
+            warn(exp)
+            conflict_items.update({key: val})
+    if len(conflict_items) > 0:
+        return nested_dict, conflict_items
+    return nested_dict
+
+
 def print_nested_dict(nested_dict, level=0):
     """
     Prints a nested dictionary in a nested manner
