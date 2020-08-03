@@ -43,3 +43,27 @@ def flatten_dict(nested_dict, parent_key='', sep='-'):
     return dict(items)
 
 
+def print_nested_dict(nested_dict, level=0):
+    """
+    Prints a nested dictionary in a nested manner
+
+    Parameters
+    ----------
+    nested_dict : dict
+        Nested dictionary
+    level : uint, internal variable. Leave unspecified
+        Current depth of nested dictionary
+
+    Returns
+    -------
+    None
+    """
+    if not isinstance(nested_dict, dict):
+        raise TypeError('nested_dict should be a dict. Provided object was: {}'
+                        ''.format(type(nested_dict)))
+    for key, val in nested_dict.items():
+        if isinstance(val, dict):
+            print('\t'*level + str(key) + ' :')
+            print_nested_dict(val, level=level+1)
+        else:
+            print('\t'*level + '{} : {}'.format(key, val))
