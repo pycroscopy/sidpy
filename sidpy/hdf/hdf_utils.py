@@ -36,6 +36,9 @@ def print_tree(parent, rel_paths=False):
         True - prints the relative paths for all elements.
         False - prints a tree-like structure with only the element names
     """
+    # TODO: Accept callables where the user could filter out group / datasets
+    # based on some condition. This will simplify print_tree extensions in
+    # pyUSID and pyNSID
     if not isinstance(parent, (h5py.File, h5py.Group)):
         raise TypeError('Provided object is not a h5py.File or h5py.Group '
                         'object')
