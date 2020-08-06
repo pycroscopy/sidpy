@@ -12,7 +12,7 @@ from multiprocessing import cpu_count
 
 sys.path.append("../../sidpy/")
 from sidpy.proc import comp_utils
-from ..io import data_utils
+from ..hdf import data_utils
 
 MAX_CPU_CORES = cpu_count()
 
