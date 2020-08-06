@@ -13,7 +13,7 @@ from warnings import warn
 import h5py
 import numpy as np
 
-from ..base.string_utils import clean_string_att
+from sidpy.base.string_utils import clean_string_att
 
 if sys.version_info.major == 3:
     unicode = str

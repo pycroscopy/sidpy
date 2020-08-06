@@ -16,8 +16,8 @@ import h5py
 import numpy as np
 from dask import array as da
 
-from ..__version__ import version as sidpy_version
-from ..base.string_utils import validate_single_string_arg, \
+from sidpy.__version__ import version as sidpy_version
+from sidpy.base.string_utils import validate_single_string_arg, \
     validate_list_of_strings, clean_string_att, get_time_stamp
 
 if sys.version_info.major == 3:
