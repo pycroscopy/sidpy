@@ -14,7 +14,7 @@ import dask.array as da
 import h5py
 
 sys.path.append("../../sidpy/")
-from sidpy.io import dtype_utils
+from sidpy.hdf import dtype_utils
 
 struc_dtype = np.dtype({'names': ['r', 'g', 'b'],
                         'formats': [np.float32, np.uint16, np.float64]})

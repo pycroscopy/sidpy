@@ -13,7 +13,7 @@ import numpy as np
 import dask.array as da
 
 sys.path.append("../../sidpy/")
-from sidpy.io import hdf_utils
+from sidpy.hdf import hdf_utils
 
 from . import data_utils
 
