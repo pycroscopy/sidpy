@@ -1,5 +1,5 @@
 """
-Tools to read, write data in HDF5 files
+User interface utilities
 
 Submodules
 ----------
@@ -7,17 +7,9 @@ Submodules
 .. autosummary::
     :toctree: _autosummary
 
-    hdf_utils
-    dtype_utils
-    image
-    io_utils
-    numpy_translator
-    usi_data
-    translator
-    write_utils
+    interface_utils
 
 """
-from . import hdf_utils, reg_ref, dtype_utils, interface_utils
+from . import interface_utils
 
-__all__ = ['hdf_utils', 'reg_ref', 'dtype_utils',
-           'interface_utils']
+__all__ = ['interface_utils']
