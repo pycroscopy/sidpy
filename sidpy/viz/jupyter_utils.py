@@ -11,8 +11,9 @@ import ipywidgets as widgets
 import numpy as np
 import sys
 
-from .plot_utils import plot_map, export_fig_data
-from ..io.dimension import Dimension
+from .plot_utils.image import plot_map
+from .plot_utils.misc import export_fig_data
+from ..sid.dimension import Dimension
 
 if sys.version_info.major == 3:
     unicode = str

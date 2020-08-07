@@ -10,7 +10,7 @@ import unittest
 import sys
 import os
 sys.path.append("../../sidpy/")
-from sidpy.io import Translator
+from sidpy.sid import Translator
 
 
 class TestIsValidFile(unittest.TestCase):
@@ -80,7 +80,8 @@ class TestIsValidFile(unittest.TestCase):
                                                                      '.png'])
 
     def test_folder(self):
-        self.assertEqual(self.translator.is_valid_file(os.path.abspath('.'),
+        self.assertEqual(self.translator.is_valid_file(os.path.abspath(
+            './sidpy'),
                                                        extension='.txt'),
                          None)
 

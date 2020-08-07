@@ -10,16 +10,8 @@ Created on Thu Jul  7 21:14:25 2020
 
 from __future__ import division, print_function, unicode_literals, absolute_import
 import sys
-from warnings import warn
-from enum import Enum
-from itertools import groupby
 import numpy as np
-import h5py #new
-from .dtype_utils import contains_integers, validate_list_of_strings, validate_single_string_arg
-if sys.version_info.major == 3:
-    from collections.abc import Iterable
-else:
-    from collections import Iterable
+from ..base.string_utils import validate_single_string_arg
 
 __all__ = ['Dimension']
 

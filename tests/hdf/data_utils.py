@@ -10,7 +10,7 @@ from platform import platform
 
 sys.path.append("../../sidpy/")
 from sidpy import __version__
-from sidpy.io.io_utils import get_time_stamp
+from sidpy.base.string_utils import get_time_stamp
 
 std_beps_path = 'test_hdf_utils.h5'
 

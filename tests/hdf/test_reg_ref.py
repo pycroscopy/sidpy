@@ -14,8 +14,8 @@ import numpy as np
 from . import data_utils
 
 sys.path.append("../../sidpy/")
-from sidpy.io.hdf_utils import get_attr
-from sidpy.io import reg_ref
+from sidpy.hdf.hdf_utils import get_attr
+from sidpy.hdf import reg_ref
 
 
 if sys.version_info.major == 3:

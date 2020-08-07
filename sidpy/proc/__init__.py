@@ -1,5 +1,5 @@
 """
-Formalizing data processing on USID datasets using parallel computing tools
+Basic computational utilities
 
 Submodules
 ----------

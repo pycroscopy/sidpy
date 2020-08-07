@@ -10,7 +10,7 @@ import sys
 import numpy as np
 
 sys.path.append("../../sidpy/")
-from sidpy.io.dimension import Dimension
+from sidpy.sid.dimension import Dimension
 
 if sys.version_info.major == 3:
     unicode = str

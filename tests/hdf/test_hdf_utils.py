@@ -10,14 +10,51 @@ import os
 import sys
 import h5py
 import numpy as np
+import dask.array as da
 
 sys.path.append("../../sidpy/")
-from sidpy.io import hdf_utils
+from sidpy.hdf import hdf_utils
 
 from . import data_utils
 
 if sys.version_info.major == 3:
     unicode = str
+
+
+class TestLazyLoadArray(unittest.TestCase):
+
+    def test_dask_input(self):
+        arr = da.random.random(2, 3)
+        self.assertTrue(np.allclose(arr, hdf_utils.lazy_load_array(arr)))
+
+    def test_invalid_type(self):
+        with self.assertRaises(TypeError):
+            _ = hdf_utils.lazy_load_array([1, 2, 3])
+
+    def test_numpy(self):
+        np_arr = np.random.rand(2, 3)
+        da_arr = da.from_array(np_arr, chunks=np_arr.shape)
+        self.assertTrue(np.allclose(da_arr, hdf_utils.lazy_load_array(np_arr)))
+
+    def test_h5_dset_no_chunks(self):
+        h5_path = 'blah.h5'
+        data_utils.delete_existing_file(h5_path)
+        with h5py.File(h5_path, mode='w') as h5_f:
+            np_arr = np.random.rand(2, 3)
+            h5_dset = h5_f.create_dataset('Test', data=np_arr)
+            da_arr = da.from_array(np_arr, chunks=np_arr.shape)
+            self.assertTrue(np.allclose(da_arr, hdf_utils.lazy_load_array(h5_dset)))
+        os.remove(h5_path)
+
+    def test_h5_dset_w_chunks(self):
+        h5_path = 'blah.h5'
+        data_utils.delete_existing_file(h5_path)
+        with h5py.File(h5_path, mode='w') as h5_f:
+            np_arr = np.random.rand(200, 30)
+            h5_dset = h5_f.create_dataset('Test', data=np_arr, chunks=(1, 30))
+            da_arr = da.from_array(np_arr, chunks=h5_dset.chunks)
+            self.assertTrue(np.allclose(da_arr, hdf_utils.lazy_load_array(h5_dset)))
+        os.remove(h5_path)
 
 
 class TestHDFUtilsBase(unittest.TestCase):
