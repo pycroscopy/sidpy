@@ -9,11 +9,14 @@ Created on Thu Jul  7 21:14:25 2020
 
 from __future__ import division, print_function, unicode_literals, absolute_import
 import sys
-from collections.abc import MutableMapping
+
 from warnings import warn
 import math
 if sys.version_info.major == 3:
     unicode = str
+    from collections.abc import MutableMapping
+else:
+    from collections import MutableMapping
 
 
 def flatten_dict(nested_dict, parent_key='', sep='-'):
