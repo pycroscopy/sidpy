@@ -93,7 +93,7 @@ def flatten_compound_to_real(dataset, lazy=False):
             dataset = lazy_load_array(dataset)
         else:
             xp = np
-            warn('HDF5 datasets will be loaded as Dask arrays in the future. ie - kwarg lazy will default to True in future releases of pyUSID')
+            warn('HDF5 datasets will be loaded as Dask arrays in the future. ie - kwarg lazy will default to True in future releases of sidpy')
 
         return xp.concatenate([xp.array(dataset[name]) for name in dataset.dtype.names], axis=len(dataset.shape) - 1)
 
@@ -310,7 +310,7 @@ def stack_real_to_compound(ds_real, compound_type, lazy=False):
     kwargs = {}
     """
     if isinstance(ds_real, h5py.Dataset) and not lazy:
-        warn('HDF5 datasets will be loaded as Dask arrays in the future. ie - kwarg lazy will default to True in future releases of pyUSID')
+        warn('HDF5 datasets will be loaded as Dask arrays in the future. ie - kwarg lazy will default to True in future releases of sidpy')
     if isinstance(ds_real, da.core.Array):
         lazy = True    
     if lazy:
