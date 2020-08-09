@@ -7,8 +7,10 @@ Submodules
 .. autosummary::
     :toctree: _autosummary
 
-    plot_utils
-
+    misc
+    cmap
+    curve
+    image
 """
 
 from .misc import *

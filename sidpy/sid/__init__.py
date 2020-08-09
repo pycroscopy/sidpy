@@ -7,6 +7,8 @@ Submodules
 .. autosummary::
     :toctree: _autosummary
 
+    Dimension
+    Translator
 """
 
 from .dimension import Dimension

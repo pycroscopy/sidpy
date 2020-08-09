@@ -9,13 +9,7 @@ Submodules
 
     hdf_utils
     dtype_utils
-    image
-    io_utils
-    numpy_translator
-    usi_data
-    translator
-    write_utils
-
+    reg_ref
 """
 from . import hdf_utils, reg_ref, dtype_utils
 

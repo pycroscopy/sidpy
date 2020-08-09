@@ -7,6 +7,9 @@ Submodules
 .. autosummary::
     :toctree: _autosummary
 
+    num_utils
+    dict_utils
+    string_utils
 """
 
 from . import num_utils, string_utils, dict_utils

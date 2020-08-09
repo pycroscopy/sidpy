@@ -7,6 +7,7 @@ Submodules
 .. autosummary::
     :toctree: _autosummary
 
+    comp_utils
 """
 
 from . import comp_utils
