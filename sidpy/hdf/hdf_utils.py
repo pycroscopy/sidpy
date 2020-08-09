@@ -352,7 +352,7 @@ def write_book_keeping_attrs(h5_obj):
                        verbose=False)
 
 
-def write_simple_attrs(h5_obj, attrs, obj_type='', verbose=False):
+def write_simple_attrs(h5_obj, attrs, verbose=False):
     """
     Writes attributes to a h5py object
 
@@ -362,8 +362,6 @@ def write_simple_attrs(h5_obj, attrs, obj_type='', verbose=False):
         h5py object to which the attributes will be written to
     attrs : dict
         Dictionary containing the attributes as key-value pairs
-    obj_type : str or unicode, optional. Default = ''
-        type of h5py.obj. Examples include 'group', 'file', 'dataset
     verbose : bool, optional. Default=False
         Whether or not to print debugging statements
 
@@ -387,6 +385,11 @@ def write_simple_attrs(h5_obj, attrs, obj_type='', verbose=False):
 
         if val is None:
             continue
+        if isinstance(val, dict):
+            raise ValueError('provided dictionary was nested, not flat. '
+                             'Flatten dictionary using sidpy.base.dict_utils.'
+                             'flatten_dict before calling sidpy.hdf.hdf_utils.'
+                             'write_simple_attrs')
         if verbose:
             print('Writing attribute: {} with value: {}'.format(key, val))
         clean_val = clean_string_att(val)
@@ -394,7 +397,8 @@ def write_simple_attrs(h5_obj, attrs, obj_type='', verbose=False):
             print('Attribute cleaned into: {}'.format(clean_val))
         h5_obj.attrs[key] = clean_val
     if verbose:
-        print('Wrote all (simple) attributes to {}: {}\n'.format(obj_type, h5_obj.name.split('/')[-1]))
+        print('Wrote all (simple) attributes to {}: {}\n'
+              ''.format(type(h5_obj), h5_obj.name.split('/')[-1]))
 
 
 def lazy_load_array(dataset):
