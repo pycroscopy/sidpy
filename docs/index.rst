@@ -19,6 +19,16 @@ Documentation Index
 
 .. toctree::
     about
+    getting_started
+    install
+    external_guides
+    auto_examples/index
+    contribution_guidelines
+    contact
+    credits
+    matlab_to_python
+    api
+
 
 Indices and tables
 ==================
