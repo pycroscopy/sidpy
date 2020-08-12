@@ -13,7 +13,7 @@ def get_QT_app():
     # start qt event loop
     _instance = QApplication.instance()
     if not _instance:
-        print('not_instance')
+        #print('not_instance')
         _instance = QApplication([])
     app = _instance
 
@@ -127,3 +127,60 @@ def savefile_dialog(initial_file = '*.hf5', file_path = '.', file_types = None, 
         else:
             return None
 
+try:
+    from PyQt5 import QtGui, QtWidgets, QtCore
+except:
+    pass
+class ProgressDialog(QtWidgets.QDialog):
+    """
+    Simple dialog that consists of a Progress Bar and a Button.
+    Clicking on the button results in the start of a timer and
+    updates the progress bar.
+    """
+
+    def __init__(self, title=''):
+        super().__init__()
+        self.initUI(title)
+
+    def initUI(self, title):
+        self.setWindowTitle('Progress Bar: ' + title)
+        self.progress = QtWidgets.QProgressBar(self)
+        self.progress.setGeometry(10, 10, 500, 50)
+        self.progress.setMaximum(100)
+        self.show()
+
+    def set_value(self, count):
+        self.progress.setValue(count)
+
+
+
+def progress_bar(title='Progress',start=0, stop = 100):
+    """
+    Opens a progress bar window
+    Parameters
+    ----------
+    title: str
+    start: int
+    stop: int
+
+    Usage
+    -------
+        >>> progress = sid.io.progress_bar('progress', 1,50)
+        >>> for count in range(50):
+        >>>      progress.setValue(count)
+    """
+    # Check whether QT is available
+    try:
+        from PyQt5 import QtGui, QtWidgets, QtCore
+
+    except ImportError:
+        warn('The required package PyQt5 could not be imported.')
+    try:
+        app = get_QT_app()
+    except:
+        pass
+
+    progress = QtWidgets.QProgressDialog(title, "Abort", 0, 100)
+    progress.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+    progress.show()
+    return progress
