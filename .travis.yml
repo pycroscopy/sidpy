@@ -11,7 +11,7 @@ before_install:
 dist: xenial
 sudo: true
 install: pip install .
-script: coverage run -m py.test ./sidpy/tests
+script: coverage run --source sidpy setup.py test
 stages:
   - name: after_success
     if: env(python) = "3.7"
