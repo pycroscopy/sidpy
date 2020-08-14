@@ -98,34 +98,6 @@ class Dataset(da.Array):
     def __init__(self, *args, **kwargs):
         super(Dataset, self).__init__()
 
-    def like_data(self, data,  name=None, lock=False):
-
-        new_data = self.from_array(data, chunks=None, name=None, lock=False)
-
-
-        new_data.data_type = self.data_type
-        new_data.units = self.units
-        new_data.title = self.title+"_new"
-        new_data.quantity = self.quantity
-
-        new_data.modality = self.modality
-        new_data.source = self.source
-        #new_data.data_descriptor = self.data_descriptor
-
-        #new_data.axes = {}
-        for dim in range(new_data.ndim):
-            # TODO: add parent to dimension to set attribute if name changes
-            new_data.labels.append(string.ascii_lowercase[dim])
-            if len(self.axes[dim].values) ==  new_data.shape[dim]:
-                new_data.set_dimension(dim,self.axes[dim])
-            else:
-                print('use generic axis for dimension ', dim)
-
-        new_data.attrs = dict(self.attrs).copy()
-        new_data.group_attrs = {}#dict(self.group_attrs).copy()
-        new_data.original_metadata = {}
-        return new_data
-
 
     @classmethod
     def from_array(cls, x, chunks=None, name=None, lock=False):
@@ -165,6 +137,40 @@ class Dataset(da.Array):
         cls.group_attrs = {}
         cls.original_metadata = {}
         return cls
+
+    def like_data(self, data,  name=None, lock=False):
+
+        new_data = self.from_array(data, chunks=None, name=None, lock=False)
+
+
+        new_data.data_type = self.data_type
+        new_data.units = self.units
+        new_data.title = self.title+"_new"
+        new_data.quantity = self.quantity
+
+        new_data.modality = self.modality
+        new_data.source = self.source
+        new_data.data_descriptor = ''
+
+
+        for dim in range(new_data.ndim):
+            # TODO: add parent to dimension to set attribute if name changes
+            new_data.labels.append(string.ascii_lowercase[dim])
+            if len(self.axes[dim].values) ==  new_data.shape[dim]:
+                new_data.set_dimension(dim,self.axes[dim])
+            else:
+                ## asumes the axis scale is equidistant -Suhas has a function somewhere to test that
+                # TODO: test below
+                scale = self.axes[dim].values[1] - self.axes[dim].values[1]
+                axis = self.axes[dim].copy()
+                axis.values = np.arange(new_data.shape[dim])*scale
+                new_data.set_dimension(dim, axis)
+
+        new_data.attrs = dict(self.attrs).copy()
+        new_data.group_attrs = {}#dict(self.group_attrs).copy()
+        new_data.original_metadata = {}
+        return new_data
+
 
     """@classmethod
     def from_hdf5(cls, dset, chunks=None, name=None, lock=False):
