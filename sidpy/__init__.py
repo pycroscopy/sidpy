@@ -18,3 +18,4 @@ __all__ += io.__all__
 __all__ += proc.__all__
 __all__ += sid.__all__
 __all__ += viz.__all__
+from .sid.dataset import Dataset
