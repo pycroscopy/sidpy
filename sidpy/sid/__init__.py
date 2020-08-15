@@ -8,6 +8,7 @@ Submodules
     :toctree: _autosummary
 
     Dimension
+    Dataset
     Translator
 """
 
