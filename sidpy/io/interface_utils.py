@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Utilities for formatting strings and other input / output methods
+Utilities for user interfaces
 
-Created on Tue Nov  3 21:14:25 2015
+Created on Tue Aug  3 21:14:25 2020
 
-@author: Suhas Somnath, Chris Smith
+@author: Gerd Duscher, Suhas Somnath, Chris Smith
 """
 
 from __future__ import division, print_function, absolute_import, unicode_literals
@@ -15,7 +15,6 @@ from warnings import warn
 if sys.version_info.major == 3:
     unicode = str
 
-__all__ = ['check_ssh', 'file_dialog']
 
 
 def check_ssh():
@@ -30,60 +29,184 @@ def check_ssh():
     return 'SSH_CLIENT' in os.environ or 'SSH_TTY' in os.environ
 
 
-def file_dialog(file_filter='H5 file (*.h5)', caption='Select File'):
+def get_QT_app():
+    ##  Starts pyQT app if not running
+    try:
+        from PyQt5.Qt import QApplication
+    except ImportError:
+        warn('The required package PyQt5 could not be imported.')
+
+    # start qt event loop
+    _instance = QApplication.instance()
+    if not _instance:
+        #print('not_instance')
+        _instance = QApplication([])
+    app = _instance
+
+    return app
+
+
+def openfile_dialog(file_types="All files (*)", multiple_files=False, file_path = '.', caption="Select a file..."):
     """
-    Presents a File dialog used for selecting the .mat file
-    and returns the absolute filepath of the selecte file\n
+    Opens a File dialog which is used in open_file() function
+    This functon uses pyQt5.
+    In jupyter notebooks use "%gui Qt" early in the notebook.
 
     Parameters
     ----------
-    file_filter : String or list of strings
-        file extensions to look for
-    caption : (Optional) String
-        Title for the file browser window
+    file_types : string of the file type filter
+    file_path: string of path to directory
+    caption: string of caption of the open file dialog
 
     Returns
     -------
-    file_path : String
-        Absolute path of the chosen file
+    filename : full filename with absolute path and extension as a string
+
+    Examples
+    --------
+
+    >>> import sidpy as sid
+    >>>
+    >>> filename = sid.io.openfile_dialog()
+    >>>
+    >>> print(filename)
+
+
     """
-    for param in [file_filter, caption]:
+    # Check whether QT is available
+    try:
+        from PyQt5 import QtGui, QtWidgets, QtCore
+
+    except ImportError:
+        warn('The required package PyQt5 could not be imported.')
+
+    ## try to find a parent the file dialog can appear on top
+    try:
+        app = get_QT_app()
+    except:
+        pass
+
+    for param in [file_path, file_types, caption]:
         if param is not None:
             if not isinstance(param, (str, unicode)):
                 raise TypeError('param must be a string')
 
-    # Only try to use the GUI options if not over an SSH connection.
-    if not check_ssh():
-        try:
-            from PyQt5 import QtWidgets
-        except ImportError:
-            warn('The required package PyQt5 could not be imported.\n',
-                 'The code will check for PyQt4.')
+    if len(file_path) < 2:
+        path = '.'
 
+    parent = None
+    if multiple_files:
+        fnames, file_filter = QtWidgets.QFileDialog.getOpenFileNames(parent, caption, file_path,
+                                                                     filter=file_types,
+                                                                     options=[QtCore.Qt.WindowStaysOnTopHint])
+        if len(fnames) > 0:
+            fname = fnames[0]
         else:
-            app = QtWidgets.QApplication([])
-            path = QtWidgets.QFileDialog.getOpenFileName(caption=caption, filter=file_filter)[0]
-            app.closeAllWindows()
-            app.exit()
-            del app
+            return
+    else:
+        fname, file_filter = QtWidgets.QFileDialog.getOpenFileName(parent, caption, file_path,
+                                                                       filter=file_types)
 
-            return str(path)
+
+    if multiple_files:
+        return fnames
+    else:
+        return str(fname)
+
+
+def savefile_dialog(initial_file = '*.hf5', file_path = '.', file_types = None, caption = "Save file as ..."):
+    """
+        Opens a save dialog in QT and retuns an "*.hf5" file.
+        In jupyter notebooks use "%gui Qt" early in the notebook.
+
+    """
+    # Check whether QT is available
+    try:
+        from PyQt5 import QtGui, QtWidgets, QtCore
+
+    except ImportError:
+            warn('The required package PyQt5 could not be imported.')
+
+    else:
+
+        for param in [file_path, initial_file, caption]:
+            if param is not None:
+                if not isinstance(param, (str, unicode)):
+                    raise TypeError('param must be a string')
+
+        if file_types == None:
+            file_types ="All files (*)"
 
         try:
-            from PyQt4 import QtGui
-        except ImportError:
-            warn('PyQt4 also not found.  Will use standard text input.')
+            app = get_QT_app()
+        except:
+            pass
+        parent = None
 
+        if len(file_path) < 2:
+            path = '.'
+
+        fname, file_filter = QtWidgets.QFileDialog.getSaveFileName(None, caption,
+                                                               file_path + "/" + initial_file, filter=file_types)
+        if len(fname) > 1:
+            return fname
         else:
-            app = QtGui.QApplication([])
-            path = QtGui.QFileDialog.getOpenFileName(caption=caption, filter=file_filter)
-            app.exit()
-            del app
+            return None
 
-            return str(path)
+try:
+    from PyQt5 import QtGui, QtWidgets, QtCore
+except:
+    pass
+class ProgressDialog(QtWidgets.QDialog):
+    """
+    Simple dialog that consists of a Progress Bar and a Button.
+    Clicking on the button results in the start of a timer and
+    updates the progress bar.
+    """
 
-    path = input('Enter path to datafile.  Raw Data (*.txt, *.mat, *.xls, *.xlsx) or Translated file (*.h5)')
+    def __init__(self, title=''):
+        super().__init__()
+        self.initUI(title)
 
-    return str(path)
+    def initUI(self, title):
+        self.setWindowTitle('Progress Bar: ' + title)
+        self.progress = QtWidgets.QProgressBar(self)
+        self.progress.setGeometry(10, 10, 500, 50)
+        self.progress.setMaximum(100)
+        self.show()
+
+    def set_value(self, count):
+        self.progress.setValue(count)
 
 
+
+def progress_bar(title='Progress',start=0, stop = 100):
+    """
+    Opens a progress bar window
+    Parameters
+    ----------
+    title: str
+    start: int
+    stop: int
+
+    Usage
+    -------
+        >>> progress = sid.io.progress_bar('progress', 1,50)
+        >>> for count in range(50):
+        >>>      progress.setValue(count)
+    """
+    # Check whether QT is available
+    try:
+        from PyQt5 import QtGui, QtWidgets, QtCore
+
+    except ImportError:
+        warn('The required package PyQt5 could not be imported.')
+    try:
+        app = get_QT_app()
+    except:
+        pass
+
+    progress = QtWidgets.QProgressDialog(title, "Abort", 0, 100)
+    progress.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+    progress.show()
+    return progress
