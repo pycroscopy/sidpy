@@ -165,26 +165,8 @@ def savefile_dialog(initial_file='*.hf5', file_path='.',
             return None
 
 
-def progress_bar(title='Progress', start=0, stop=100):
-    """
-    Opens a progress bar window
-    Parameters
-    ----------
-    title: str
-    start: int
-    stop: int
-
-    Usage`
-    -------
-        >>> progress = sid.io.progress_bar('progress', 1,50)
-        >>> for count in range(50):
-        >>>      progress.setValue(count)
-    """
-    # Check whether QT is available
-    try:
-        from PyQt5 import QtGui, QtWidgets, QtCore
-    except ImportError:
-        raise ModuleNotFoundError('Required package PyQt5 not available')
+try:
+    from PyQt5 import QtWidgets
 
     class ProgressDialog(QtWidgets.QDialog):
         """
@@ -206,6 +188,31 @@ def progress_bar(title='Progress', start=0, stop=100):
 
         def set_value(self, count):
             self.progress.setValue(count)
+
+except ImportError:
+    pass
+
+
+def progress_bar(title='Progress', start=0, stop=100):
+    """
+    Opens a progress bar window
+    Parameters
+    ----------
+    title: str
+    start: int
+    stop: int
+
+    Usage`
+    -------
+        >>> progress = sid.io.progress_bar('progress', 1,50)
+        >>> for count in range(50):
+        >>>      progress.setValue(count)
+    """
+    # Check whether QT is available
+    try:
+        from PyQt5 import QtGui, QtWidgets, QtCore
+    except ImportError:
+        raise ModuleNotFoundError('Required package PyQt5 not available')
 
     try:
         app = get_QT_app()
