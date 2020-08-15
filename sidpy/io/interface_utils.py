@@ -16,7 +16,6 @@ if sys.version_info.major == 3:
     unicode = str
 
 
-
 def check_ssh():
     """
     Checks whether or not the python kernel is running locally (False) or remotely (True)
@@ -30,23 +29,30 @@ def check_ssh():
 
 
 def get_QT_app():
-    ##  Starts pyQT app if not running
+    """
+    Starts pyQT app if not running
+
+    Returns
+    -------
+
+    """
     try:
         from PyQt5.Qt import QApplication
     except ImportError:
-        warn('The required package PyQt5 could not be imported.')
+        raise ModuleNotFoundError('Required package PyQt5 not available')
 
     # start qt event loop
     _instance = QApplication.instance()
     if not _instance:
-        #print('not_instance')
+        # print('not_instance')
         _instance = QApplication([])
     app = _instance
 
     return app
 
 
-def openfile_dialog(file_types="All files (*)", multiple_files=False, file_path = '.', caption="Select a file..."):
+def openfile_dialog(file_types="All files (*)", multiple_files=False,
+                    file_path='.', caption="Select a file..."):
     """
     Opens a File dialog which is used in open_file() function
     This functon uses pyQt5.
@@ -55,6 +61,7 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False, file_path 
     Parameters
     ----------
     file_types : string of the file type filter
+    multiple_files : Multiple
     file_path: string of path to directory
     caption: string of caption of the open file dialog
 
@@ -78,9 +85,9 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False, file_path 
         from PyQt5 import QtGui, QtWidgets, QtCore
 
     except ImportError:
-        warn('The required package PyQt5 could not be imported.')
+        raise ModuleNotFoundError('Required package PyQt5 not available')
 
-    ## try to find a parent the file dialog can appear on top
+    # try to find a parent the file dialog can appear on top
     try:
         app = get_QT_app()
     except:
@@ -96,17 +103,18 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False, file_path 
 
     parent = None
     if multiple_files:
-        fnames, file_filter = QtWidgets.QFileDialog.getOpenFileNames(parent, caption, file_path,
-                                                                     filter=file_types,
-                                                                     options=[QtCore.Qt.WindowStaysOnTopHint])
+        func = QtWidgets.QFileDialog.getOpenFileNames
+        fnames, file_filter = func(parent, caption, file_path,
+                                   filter=file_types,
+                                   options=[QtCore.Qt.WindowStaysOnTopHint])
         if len(fnames) > 0:
             fname = fnames[0]
         else:
             return
     else:
-        fname, file_filter = QtWidgets.QFileDialog.getOpenFileName(parent, caption, file_path,
-                                                                       filter=file_types)
-
+        func = QtWidgets.QFileDialog.getOpenFileName
+        fname, file_filter = func(parent, caption, file_path,
+                                  filter=file_types)
 
     if multiple_files:
         return fnames
@@ -114,7 +122,8 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False, file_path 
         return str(fname)
 
 
-def savefile_dialog(initial_file = '*.hf5', file_path = '.', file_types = None, caption = "Save file as ..."):
+def savefile_dialog(initial_file='*.hf5', file_path='.',
+                    file_types = None, caption = "Save file as ..."):
     """
         Opens a save dialog in QT and retuns an "*.hf5" file.
         In jupyter notebooks use "%gui Qt" early in the notebook.
@@ -125,7 +134,7 @@ def savefile_dialog(initial_file = '*.hf5', file_path = '.', file_types = None, 
         from PyQt5 import QtGui, QtWidgets, QtCore
 
     except ImportError:
-            warn('The required package PyQt5 could not be imported.')
+        raise ModuleNotFoundError('Required package PyQt5 not available')
 
     else:
 
@@ -135,7 +144,7 @@ def savefile_dialog(initial_file = '*.hf5', file_path = '.', file_types = None, 
                     raise TypeError('param must be a string')
 
         if file_types == None:
-            file_types ="All files (*)"
+            file_types = "All files (*)"
 
         try:
             app = get_QT_app()
@@ -146,41 +155,17 @@ def savefile_dialog(initial_file = '*.hf5', file_path = '.', file_types = None, 
         if len(file_path) < 2:
             path = '.'
 
-        fname, file_filter = QtWidgets.QFileDialog.getSaveFileName(None, caption,
-                                                               file_path + "/" + initial_file, filter=file_types)
+        func = QtWidgets.QFileDialog.getSaveFileName
+        fname, file_filter = func(None, caption,
+                                  file_path + "/" + initial_file,
+                                  filter=file_types)
         if len(fname) > 1:
             return fname
         else:
             return None
 
-try:
-    from PyQt5 import QtGui, QtWidgets, QtCore
-except:
-    pass
-class ProgressDialog(QtWidgets.QDialog):
-    """
-    Simple dialog that consists of a Progress Bar and a Button.
-    Clicking on the button results in the start of a timer and
-    updates the progress bar.
-    """
 
-    def __init__(self, title=''):
-        super().__init__()
-        self.initUI(title)
-
-    def initUI(self, title):
-        self.setWindowTitle('Progress Bar: ' + title)
-        self.progress = QtWidgets.QProgressBar(self)
-        self.progress.setGeometry(10, 10, 500, 50)
-        self.progress.setMaximum(100)
-        self.show()
-
-    def set_value(self, count):
-        self.progress.setValue(count)
-
-
-
-def progress_bar(title='Progress',start=0, stop = 100):
+def progress_bar(title='Progress', start=0, stop=100):
     """
     Opens a progress bar window
     Parameters
@@ -189,7 +174,7 @@ def progress_bar(title='Progress',start=0, stop = 100):
     start: int
     stop: int
 
-    Usage
+    Usage`
     -------
         >>> progress = sid.io.progress_bar('progress', 1,50)
         >>> for count in range(50):
@@ -198,9 +183,30 @@ def progress_bar(title='Progress',start=0, stop = 100):
     # Check whether QT is available
     try:
         from PyQt5 import QtGui, QtWidgets, QtCore
-
     except ImportError:
-        warn('The required package PyQt5 could not be imported.')
+        raise ModuleNotFoundError('Required package PyQt5 not available')
+
+    class ProgressDialog(QtWidgets.QDialog):
+        """
+        Simple dialog that consists of a Progress Bar and a Button.
+        Clicking on the button results in the start of a timer and
+        updates the progress bar.
+        """
+
+        def __init__(self, title=''):
+            super().__init__()
+            self.initUI(title)
+
+        def initUI(self, title):
+            self.setWindowTitle('Progress Bar: ' + title)
+            self.progress = QtWidgets.QProgressBar(self)
+            self.progress.setGeometry(10, 10, 500, 50)
+            self.progress.setMaximum(100)
+            self.show()
+
+        def set_value(self, count):
+            self.progress.setValue(count)
+
     try:
         app = get_QT_app()
     except:
