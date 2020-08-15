@@ -13,5 +13,6 @@ Submodules
 
 from .dimension import Dimension
 from .translator import Translator
+from .dataset import Dataset
 
-__all__ = ['Dimension', 'Translator']
+__all__ = ['Dimension', 'Translator', 'Dataset']
