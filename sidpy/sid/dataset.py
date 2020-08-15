@@ -15,6 +15,7 @@ import numpy as np
 import string
 import dask.array as da
 from .dimension import Dimension
+from ..base.num_utils import get_slope
 
 
 def get_chunks(data, chunks=None):
@@ -117,11 +118,11 @@ def view_subclass(darr, cls):
 
 
 class Dataset(da.Array):
-    """Dask NSI data array.
+    """
+    ..autoclass::Dataset
 
     To instantiate from an existing array-like object,
-    use :func:`NSIDask.from_array` - requires numpy array
-    or  :func:`NSIDask.from_hdf5`  - requires NSID Dataset
+    use :func:`Dataset.from_array` - requires numpy array, list or tuple
 
     This dask array is extended to have the following attributes:
     -data_type: str ('image', 'image_stack',  spectrum_image', ...
@@ -129,7 +130,7 @@ class Dataset(da.Array):
     -title: name of the data set
     -modality
     -source
-    -axes: dictionary of NSID Dimensions one for each data dimension
+    -axes: dictionary of Dimensions one for each data dimension
                     (the axes are dimension datsets with name, label, units, and 'dimension_type' attributes).
 
     -attrs: dictionary of additional metadata
@@ -138,7 +139,7 @@ class Dataset(da.Array):
     -labels: returns labels of all dimensions.
 
     functions:
-    set_dimension(axis, dimensions): set a NSID Dimension to a specific axis
+    set_dimension(axis, dimensions): set a Dimension to a specific axis
     """
 
     def __init__(self, *args, **kwargs):
@@ -189,8 +190,9 @@ class Dataset(da.Array):
         for dim in range(cls.ndim):
             # TODO: add parent to dimension to set attribute if name changes
             cls.labels.append(string.ascii_lowercase[dim])
-            cls.set_dimension(dim, Dimension(string.ascii_lowercase[dim], np.arange(cls.shape[dim]), 'generic',
-                                                   'generic', 'generic'))
+            cls.set_dimension(dim,
+                              Dimension(string.ascii_lowercase[dim],
+                                        np.arange(cls.shape[dim])))
         cls.attrs = {}
         cls.group_attrs = {}
         cls.original_metadata = {}
@@ -214,7 +216,7 @@ class Dataset(da.Array):
 
         new_data.data_type = self.data_type
         new_data.units = self.units
-        new_data.title = self.title+"_new"
+        new_data.title = self.title + "_new"
         new_data.quantity = self.quantity
 
         new_data.modality = self.modality
@@ -224,19 +226,18 @@ class Dataset(da.Array):
         for dim in range(new_data.ndim):
             # TODO: add parent to dimension to set attribute if name changes
             new_data.labels.append(string.ascii_lowercase[dim])
-            if len(self.axes[dim].values) ==  new_data.shape[dim]:
-                new_data.set_dimension(dim,self.axes[dim])
+            if len(self.axes[dim].values) == new_data.shape[dim]:
+                new_data.set_dimension(dim, self.axes[dim])
             else:
                 # assumes the axis scale is equidistant
-                # Suhas has a function somewhere to test that
-                # TODO: test below
+                # TODO: test below using get_slope()
                 scale = self.axes[dim].values[1] - self.axes[dim].values[1]
                 axis = self.axes[dim].copy()
                 axis.values = np.arange(new_data.shape[dim])*scale
                 new_data.set_dimension(dim, axis)
 
         new_data.attrs = dict(self.attrs).copy()
-        new_data.group_attrs = {}#dict(self.group_attrs).copy()
+        new_data.group_attrs = {}  # dict(self.group_attrs).copy()
         new_data.original_metadata = {}
         return new_data
 
