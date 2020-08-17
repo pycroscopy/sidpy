@@ -143,18 +143,28 @@ class Dataset(da.Array):
     """
 
     def __init__(self, *args, **kwargs):
-        super(Dataset, self).__init__(*args, **kwargs)
+        super(Dataset, self).__init__()
+
+        self._units = ''
+        self._title = ''
+        self._data_type = ''
+        self._data_descriptor = ''
 
     @classmethod
     def from_array(cls, x, chunks=None, name=None, lock=False):
         """
+        Initializes a sidpy dataset from an array-like object (i.e. numpy array)
+        All meta-data will be set to be generically.
 
         Parameters
         ----------
-        x
-        chunks
-        name
-        lock
+        x: array-like object
+            the values which will populate this dataset
+        chunks: optional integer or list of integers
+            the shape of the chunks to be loaded
+        name: optional string
+            the name of this dataset
+        lock: boolean
 
         Returns
         -------
@@ -200,23 +210,32 @@ class Dataset(da.Array):
 
     def like_data(self, data,  name=None, lock=False):
         """
+        Returns pysid dataset of new values but with metadata of this dataset
+        - if dimension of new dataset is different from this dataset and the scale is linear,
+            then this scale will be applied to the new dataset (naming and units will stay the same),
+            otherwise the dimension will be generic.
 
         Parameters
         ----------
-        data
-        name
-        lock
+        data: array like
+            values of new sidpy dataset
+        name: optional string
+            name of new sidpy dataset
+        lock:  boolean
 
         Returns
         -------
-
+        sidpy dataset
         """
 
         new_data = self.from_array(data, chunks=None, name=None, lock=False)
 
         new_data.data_type = self.data_type
         new_data.units = self.units
-        new_data.title = self.title + "_new"
+        if name is None:
+            new_data.title = self.title + "_new"
+        else:
+            new_data.title = name
         new_data.quantity = self.quantity
 
         new_data.modality = self.modality
@@ -229,12 +248,14 @@ class Dataset(da.Array):
             if len(self.axes[dim].values) == new_data.shape[dim]:
                 new_data.set_dimension(dim, self.axes[dim])
             else:
-                # assumes the axis scale is equidistant
-                # TODO: test below using get_slope()
-                scale = self.axes[dim].values[1] - self.axes[dim].values[1]
-                axis = self.axes[dim].copy()
-                axis.values = np.arange(new_data.shape[dim])*scale
-                new_data.set_dimension(dim, axis)
+                # assuming the axis scale is equidistant
+                try:
+                    scale = get_slope(self.axes[dim].values)
+                    axis = self.axes[dim].copy()
+                    axis.values = np.arange(new_data.shape[dim])*scale
+                    new_data.set_dimension(dim, axis)
+                except ValueError:
+                    print('using generic parameters for dimension ', dim)
 
         new_data.attrs = dict(self.attrs).copy()
         new_data.group_attrs = {}  # dict(self.group_attrs).copy()
@@ -243,9 +264,11 @@ class Dataset(da.Array):
 
     def copy(self):
         """
+        actually a deep copy of this dataset.
 
         Returns
         -------
+        sidpy dataset
 
         """
         dset_copy = Dataset.from_array(self, self.chunks, self.name)
@@ -264,36 +287,38 @@ class Dataset(da.Array):
 
         return dset_copy
 
-    def set_dimension(self,dim, dimension):
+    def set_dimension(self, dim, dimension):
         """
+        sets the dimension for the dataset including new name and updating the axes dictionary
 
         Parameters
         ----------
-        dim
-        dimension
+        dim: integer - dimension of dataset
+        dimension: sidpy dimension - name, values, ... of dimension
 
         Returns
         -------
 
         """
-        # TODO: Check whether dimension valid
-        setattr(self, dimension.name,dimension)
-        setattr(self, 'dim_{}'.format(dim), dimension)
-
-        self.axes[dim] = dimension
+        if isinstance(dimension, Dimension):
+            setattr(self, dimension.name, dimension)
+            setattr(self, 'dim_{}'.format(dim), dimension)
+            self.axes[dim] = dimension
+        else:
+            raise ValueError('dimension needs to be a sidpy dimension object')
 
     def get_extent(self, dimensions):
         """
-        get image extend as neeed i.e. in matplotlib's imshow function.
-        This function works for equi or non-equi spaced axes
+        get image extend as needed i.e. in matplotlib's imshow function.
+        This function works for equi or non-equi spaced axes and is suitable for subpixel accuracy of positions
 
         Parameters
         ----------
-        dimensions
+        dimensions: dictionary of dimensions
 
         Returns
         -------
-
+        list of floats
         """
         extend = []
         for i, dim in enumerate(dimensions):
@@ -332,7 +357,7 @@ class Dataset(da.Array):
 
     @units.setter
     def units(self, value):
-        if isinstance(value, str) :
+        if isinstance(value, str):
             self._units = value
         else:
             raise ValueError('units needs to be a string')
