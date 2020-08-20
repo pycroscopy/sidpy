@@ -188,18 +188,17 @@ class Dataset(da.Array):
         # view as sub-class
         cls = view_subclass(darr, cls)
         cls.data_type = 'generic'
-        cls.units = ''
-        cls.title = ''
+        cls.units = 'generic'
+        cls.title = 'generic'
         cls.quantity = 'generic'
 
-        cls.modality = ''
-        cls.source = ''
-        cls.data_descriptor = ''
+        cls.modality = 'generic'
+        cls.source = 'generic'
+        cls.data_descriptor = 'generic'
 
         cls.axes = {}
         for dim in range(cls.ndim):
             # TODO: add parent to dimension to set attribute if name changes
-            cls.labels.append(string.ascii_lowercase[dim])
             cls.set_dimension(dim,
                               Dimension(string.ascii_lowercase[dim],
                                         np.arange(cls.shape[dim])))
