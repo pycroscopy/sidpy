@@ -10,7 +10,6 @@ Created on Tue Aug  3 21:14:25 2020
 from __future__ import division, print_function, absolute_import, unicode_literals
 import os
 import sys
-from warnings import warn
 
 if sys.version_info.major == 3:
     unicode = str
@@ -32,7 +31,7 @@ def get_QT_app():
     """
     Starts pyQT app if not running
 
-    Returns
+    Returns: QApplication
     -------
 
     """
@@ -46,9 +45,8 @@ def get_QT_app():
     if not _instance:
         # print('not_instance')
         _instance = QApplication([])
-    app = _instance
 
-    return app
+    return _instance
 
 
 def openfile_dialog(file_types="All files (*)", multiple_files=False,
@@ -72,12 +70,11 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False,
     Examples
     --------
 
-    >>> import sidpy as sid
-    >>>
-    >>> filename = sid.io.openfile_dialog()
-    >>>
-    >>> print(filename)
-
+    >> import sidpy as sid
+    >>
+    >> filename = sid.io.openfile_dialog()
+    >>
+    >> print(filename)
 
     """
     # Check whether QT is available
@@ -89,7 +86,7 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False,
 
     # try to find a parent the file dialog can appear on top
     try:
-        app = get_QT_app()
+        get_QT_app()
     except:
         pass
 
@@ -97,9 +94,6 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False,
         if param is not None:
             if not isinstance(param, (str, unicode)):
                 raise TypeError('param must be a string')
-
-    if len(file_path) < 2:
-        path = '.'
 
     parent = None
     if multiple_files:
@@ -123,7 +117,7 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False,
 
 
 def savefile_dialog(initial_file='*.hf5', file_path='.',
-                    file_types = None, caption = "Save file as ..."):
+                    file_types=None, caption="Save file as ..."):
     """
         Opens a save dialog in QT and retuns an "*.hf5" file.
         In jupyter notebooks use "%gui Qt" early in the notebook.
@@ -143,17 +137,14 @@ def savefile_dialog(initial_file='*.hf5', file_path='.',
                 if not isinstance(param, (str, unicode)):
                     raise TypeError('param must be a string')
 
-        if file_types == None:
+        if file_types is None:
             file_types = "All files (*)"
 
         try:
-            app = get_QT_app()
+            get_QT_app()
         except:
             pass
-        parent = None
 
-        if len(file_path) < 2:
-            path = '.'
 
         func = QtWidgets.QFileDialog.getSaveFileName
         fname, file_filter = func(None, caption,
@@ -204,9 +195,9 @@ def progress_bar(title='Progress', start=0, stop=100):
 
     Usage`
     -------
-        >>> progress = sid.io.progress_bar('progress', 1,50)
-        >>> for count in range(50):
-        >>>      progress.setValue(count)
+        >> progress = sid.io.progress_bar('progress', 1,50)
+        >> for count in range(50):
+        >>      progress.setValue(count)
     """
     # Check whether QT is available
     try:
@@ -215,7 +206,7 @@ def progress_bar(title='Progress', start=0, stop=100):
         raise ModuleNotFoundError('Required package PyQt5 not available')
 
     try:
-        app = get_QT_app()
+        get_QT_app()
     except:
         pass
 
