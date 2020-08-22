@@ -18,6 +18,8 @@ __all__ = ['Dimension']
 if sys.version_info.major == 3:
     unicode = str
 
+# todo: Consider extending numpy.ndarray instead of generic python object
+
 
 class Dimension(object):
     """
