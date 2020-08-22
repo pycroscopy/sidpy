@@ -108,6 +108,12 @@ def create_results_group(h5_main, tool_name, h5_parent_group=None):
     h5_group : :class:`h5py.Group`
         Results group which can now house the results datasets
     """
+    # TODO: Revise significantly. Avoid parent dataset name
+    # Consider embedding refs to source datasets as attributes of group
+
+    warn('The behavior of create_results_group is very likely to change soon '
+         'and significantly. Use this function with caution', FutureWarning)
+
     if not isinstance(h5_main, h5py.Dataset):
         raise TypeError('h5_main should be a h5py.Dataset object')
     if h5_parent_group is not None:
@@ -162,6 +168,9 @@ def find_results_groups(h5_main, tool_name, h5_parent_group=None):
     groups : list of references to :class:`h5py.Group` objects
         groups whose name contains the tool name and the dataset name
     """
+    warn('The behavior of find_results_group is very likely to change soon '
+         'and significantly. Use this function with caution', FutureWarning)
+
     if not isinstance(h5_main, h5py.Dataset):
         raise TypeError('h5_main should be a h5py.Dataset object')
     tool_name = validate_single_string_arg(tool_name, 'tool_name')
@@ -208,6 +217,9 @@ def check_for_old(h5_base, tool_name, new_parms=None, target_dset=None,
     group : list
            List of all :class:`h5py.Group` objects with parameters matching those in `new_parms`
     """
+    warn('The behavior of check_for_old is very likely to change soon '
+         '. Use this function with caution', FutureWarning)
+
     if not isinstance(h5_base, h5py.Dataset):
         raise TypeError('h5_base should be a h5py.Dataset object')
     tool_name = validate_single_string_arg(tool_name, 'tool_name')
