@@ -16,6 +16,7 @@ from .io import interface_utils
 from .proc import comp_utils
 from .sid.dimension import Dimension
 from .sid.translator import Translator
+from .sid.reader import Reader
 from .sid.dataset import Dataset
 from .viz import plot_utils
 from .viz import jupyter_utils
@@ -34,5 +35,5 @@ __all__ += ['dict_utils', 'num_utils', 'string_utils']
 __all__ += ['hdf_utils', 'reg_ref', 'dtype_utils']
 __all__ += ['interface_utils']
 __all__ += ['comp_utils']
-__all__ += ['Dimension', 'Translator', 'Dataset']
+__all__ += ['Dimension', 'Translator', 'Dataset', 'Reader']
 __all__ += ['plot_utils', 'jupyter_utils']
