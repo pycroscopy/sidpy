@@ -11,6 +11,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import abc
 import sys
 import os
+from warnings import warn
 from ..base.string_utils import validate_single_string_arg, validate_list_of_strings
 
 if sys.version_info.major == 3:
@@ -37,6 +38,9 @@ class Translator(object):
         -------
         Translator object
         """
+        warn('sidpy.Translator will soon be replaced by sidpy.Reader. Consider'
+             'restructuring code from Translator to Reader',
+             DeprecationWarning)
         pass
 
     @abc.abstractmethod
