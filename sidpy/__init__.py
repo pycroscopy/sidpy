@@ -11,7 +11,7 @@ Submodules
 from .__version__ import version as __version__
 from . import base, hdf, io, proc, sid, viz
 from .base import dict_utils, num_utils, string_utils
-from .hdf import hdf_utils, reg_ref, dtype_utils
+from .hdf import hdf_utils, reg_ref, dtype_utils, prov_utils
 from .io import interface_utils
 from .proc import comp_utils
 from .sid.dimension import Dimension
@@ -32,7 +32,7 @@ __all__ += viz.__all__
 
 # Making things easier by surfacing all low-level modules directly:
 __all__ += ['dict_utils', 'num_utils', 'string_utils']
-__all__ += ['hdf_utils', 'reg_ref', 'dtype_utils']
+__all__ += ['hdf_utils', 'reg_ref', 'dtype_utils', 'prov_utils']
 __all__ += ['interface_utils']
 __all__ += ['comp_utils']
 __all__ += ['Dimension', 'Translator', 'Dataset', 'Reader']
