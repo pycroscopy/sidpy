@@ -665,3 +665,37 @@ def copy_linked_objects(h5_source, h5_dest, verbose=False):
                     raise NotImplementedError('Unable to copy {} objects yet'
                                               '. Contact developer if you need'
                                               ' this'.format(type(h5_orig_obj)))
+
+
+def find_dataset(h5_group, dset_name):
+    """
+    Uses visit() to find all datasets with the desired name
+
+    Parameters
+    ----------
+    h5_group : :class:`h5py.Group`
+        Group to search within for the Dataset
+    dset_name : str
+        Name of the dataset to search for
+
+    Returns
+    -------
+    datasets : list
+        List of [Name, object] pairs corresponding to datasets that match `ds_name`.
+
+    """
+    if not isinstance(h5_group, (h5py.File, h5py.Group)):
+        raise TypeError('h5_group should be a h5py.File or h5py.Group object')
+    dset_name = validate_single_string_arg(dset_name, 'dset_name')
+
+    # print 'Finding all instances of', ds_name
+    datasets = []
+
+    def __find_name(name, obj):
+        if dset_name in name.split('/')[-1] and isinstance(obj, h5py.Dataset):
+            datasets.append(obj)
+        return
+
+    h5_group.visititems(__find_name)
+
+    return datasets

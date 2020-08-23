@@ -1227,5 +1227,24 @@ class TestCopyLinkedObjects(TestHDFUtilsBase):
         os.remove(new_path)
 
 
+class TestFindDataset(TestHDFUtilsBase):
+
+    def test_legal(self):
+        with h5py.File(data_utils.std_beps_path, mode='r') as h5_f:
+            h5_group = h5_f['/Raw_Measurement/']
+            with self.assertRaises(TypeError):
+                ret_val = hdf_utils.find_dataset(h5_group, np.arange(4))
+
+    def test_invalid_type_dset(self):
+        with self.assertRaises(TypeError):
+            _ = hdf_utils.find_dataset(4.324, 'Spectroscopic_Indices')
+
+    def test_illegal(self):
+        with h5py.File(data_utils.std_beps_path, mode='r') as h5_f:
+            h5_group = h5_f['/Raw_Measurement/']
+            ret_val = hdf_utils.find_dataset(h5_group, 'Does_Not_Exist')
+            self.assertEqual(len(ret_val), 0)
+
+
 if __name__ == '__main__':
     unittest.main()
