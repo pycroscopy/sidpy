@@ -208,7 +208,7 @@ def plot_map(axis, img, show_xy_ticks=True, show_cbar=True, x_vec=None, y_vec=No
             else:
                 cbar.set_label(cbar_label + z_suffix, fontsize=tick_font_size)
         else:
-            if z_suffix is not '':
+            if z_suffix != '':
                 cbar.set_label(z_suffix)
 
         if tick_font_size is not None:
@@ -391,7 +391,7 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
                                stdevs=stdevs, show_cbar=False, **kwargs)
         axes[count].set_title(curr_subtitle)
 
-        if color_bar_mode is 'each':
+        if color_bar_mode == 'each':
             cb = axes.cbar_axes[count].colorbar(im)
             cb.set_label_text(colorbar_label)
 
@@ -400,7 +400,7 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
         if count >= (p_rows - 1) * p_cols:
             axes[count].set_xlabel(x_label)
 
-    if color_bar_mode is 'single':
+    if color_bar_mode == 'single':
         cb = axes.cbar_axes[0].colorbar(im)
         cb.set_label_text(colorbar_label)
 
