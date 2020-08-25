@@ -1,6 +1,6 @@
 """
 ================================================================================
-02. Plotting a simple spectrum
+02. Plotting a simple image
 ================================================================================
 
 **Gerd Duscher**
@@ -35,36 +35,43 @@ print('sidpy version: ', sid.__version__)
 ########################################################################################################################
 # Creating a sid Dataset requires only a numpy array
 
-# The different frequencies:
-x_vec = np.linspace(0, 2*np.pi, 256)
-# Generating the signals at the different "positions"
-spectrum = np.sin(x_vec)
+image = np.zeros((8,6))
 
-data_set = sid.Dataset.from_array(spectrum, name='signal')
+#make checker board (you can ignore how this is done exactly, the result is important)
+image[::2, 1::2] = 1
+image[1::2, ::2] = 1
+
+data_set = sid.Dataset.from_array(image, name='checkerboard')
 ########################################################################################################################
 
 ########################################################################################################################
 # Now we add additional information to the dataset
-data_set.units = 'a.u.'
+data_set.units = 'counts'
 data_set.quantity = 'intensity'
-data_set.data_type = 'spectrum'
-data_set.title = 'spectrum'
+data_set.data_type = 'image'
+data_set.title = 'checker_board'
 ########################################################################################################################
 
 ########################################################################################################################
 # We add the dimension axis to the Dataset, which is originally just 'generic'.
 # Try it by commenting out the lines in this section.
-# The second comand of this section shows an alternatice way to manipulate the dimension information.
+print(np.arange(image.shape[1]))
+data_set.set_dimension(0, sid.Dimension('x', np.arange(image.shape[0]), units='check', quantity='field',
+                                        dimension_type='spatial'))
+data_set.set_dimension(1, sid.Dimension('y', np.arange(image.shape[1]), units='check', quantity='field',
+                                        dimension_type='spatial'))
 
-data_set.set_dimension(0, sid.Dimension('frequency', x_vec, units='Hz', quantity='frequency',
-                                        dimension_type='spectral'))
-data_set.frequency.units = '1/s'
 ########################################################################################################################
 
 ########################################################################################################################
 # We plot the data
+# We can set the usual key_words for plotting in the "kwargs" dictionary.
+# Additionally, we have an extra keyword with name "scale_bar"; if that is set to True we get a TEM style image.
+# Comment out the line with the second kwargs definition to see the difference
+kwargs = {}
+kwargs = {'cmap': 'viridis', 'scale_bar': True}
 
-data_set.plot(verbose=True)
+data_set.plot(verbose=True, **kwargs)
 ########################################################################################################################
 
 
