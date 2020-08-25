@@ -23,7 +23,6 @@ if sys.version_info.major == 3:
 
 default_cmap = plt.cm.viridis
 
-
 class CurveVisualizer(object):
     def __init__(self, dset, ref_dims, figure=None, **kwargs):
 

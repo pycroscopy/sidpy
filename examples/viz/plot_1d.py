@@ -102,7 +102,7 @@ fig, axes = plt.subplots(ncols=3, figsize=(12, 4))
 sidpy.viz.plot_utils.plot_line_family(axes[0], x_vec, y_mat)
 axes[0].set_title('Basic line family')
 
-# Option suitable for visualiing spectra with y offsets:
+# Option suitable for visualizing spectra with y offsets:
 sidpy.viz.plot_utils.plot_line_family(axes[1], x_vec, y_mat, 
                                line_names=freq_strs, label_prefix='Freq = ', label_suffix='Hz',
                                  y_offset=2.5)
