@@ -16,6 +16,7 @@ import string
 import dask.array as da
 from .dimension import Dimension
 from ..base.num_utils import get_slope
+from ..viz.plot_utils import *
 
 
 def get_chunks(data, chunks=None):
@@ -305,6 +306,21 @@ class Dataset(da.Array):
             self.axes[dim] = dimension
         else:
             raise ValueError('dimension needs to be a sidpy dimension object')
+
+    def plot(self, verbose=False, **kwargs):
+        if verbose:
+            print('Shape of dataset is: ', self.shape)
+        if len(self.shape) == 1:
+            if verbose:
+                print('1D dataset')
+            self.figure = plt.figure()
+            self.figure_axis = plt.gca()
+            plot_line_family(self.figure_axis, self.axes[0].values, self[np.newaxis,:], line_names=[self.title],
+                             **kwargs)  # label_prefix='', label_suffix='', y_offset=0, show_cbar=False,
+            plt.xlabel('{} ({})'.format(self.axes[0].quantity, self.axes[0].units))
+            plt.ylabel('{} ({})'.format(self.quantity, self.units))
+            plt.legend()
+            plt.show()
 
     def get_extent(self, dimensions):
         """

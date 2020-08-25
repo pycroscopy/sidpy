@@ -47,7 +47,7 @@ def cbar_for_line_plot(axis, num_steps, discrete_ticks=True, **kwargs):
     cmap = get_cmap_object(kwargs.pop('cmap', None))
     cmap = discrete_cmap(num_steps, cmap=cmap.name)
 
-    sm = make_scalar_mappable(0, num_steps - 1, cmap=cmap)
+    sm = make_scalar_mappable(0, num_steps, cmap=cmap)
 
     if discrete_ticks:
         kwargs.update({'ticks': np.arange(num_steps)})
@@ -172,7 +172,7 @@ def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='',
     for line_ind in range(num_lines):
         axis.plot(x_vec, line_family[line_ind] + line_ind * y_offset,
                   label=line_names[line_ind],
-                  color=cmap(int(255 * line_ind / (num_lines - 1))), **kwargs)
+                  color=cmap(int(255 * line_ind / (num_lines ))), **kwargs)
 
     if show_cbar:
         # put back the cmap parameter:
