@@ -16,7 +16,6 @@ from matplotlib.widgets import Slider, Button
 import matplotlib.patches as patches
 import matplotlib.animation as animation
 
-from ..sid.dataset import Dataset
 
 if sys.version_info.major == 3:
     unicode = str
@@ -24,7 +23,8 @@ if sys.version_info.major == 3:
 default_cmap = plt.cm.viridis
 
 class CurveVisualizer(object):
-    def __init__(self, dset, ref_dims, figure=None, **kwargs):
+    def __init__(self, dset, ref_dims=None, figure=None, **kwargs):
+        from ..sid.dataset import Dataset
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -99,12 +99,14 @@ class ImageVisualizer(object):
     """
 
     def __init__(self, dset, figure=None, **kwargs):
+        from ..sid.dataset import Dataset
+
         """
         plotting of data according to two axis marked as 'spatial' in the dimensions
         """
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
-
+        scale_bar = kwargs.pop('scale_bar', False)
         fig_args = dict()
         temp = kwargs.pop('figsize', None)
         if temp is not None:
@@ -146,17 +148,35 @@ class ImageVisualizer(object):
         else:
             self.axis = self.fig.add_subplot(1, 1, 1)
             self.axis.set_title(dset.title)
-            self.img = self.axis.imshow(self.dset[tuple(selection)].T, extent=dset.get_extent(image_dims))
+
+            self.img = self.axis.imshow(self.dset[tuple(selection)].T, extent=dset.get_extent(image_dims), **kwargs)
             self.axis.set_xlabel("{} [{}]".format(self.dset.axes[image_dims[0]].quantity,
                                                   self.dset.axes[image_dims[0]].units))
             self.axis.set_ylabel("{} [{}]".format(self.dset.axes[image_dims[1]].quantity,
                                                   self.dset.axes[image_dims[1]].units))
+            if scale_bar:
+                from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
-            cbar = self.fig.colorbar(self.img)
-            cbar.set_label("{} [{}]".format(dset.quantity, dset.units))
+                plt.axis('off')
+                extent = dset.get_extent(image_dims)
+                size_of_bar = int((extent[1]-extent[0])/10+.5)
+                if size_of_bar < 1:
+                    size_of_bar = 1
+                scalebar = AnchoredSizeBar(plt.gca().transData,
+                                           size_of_bar, '{} {}'.format(size_of_bar, self.dset.axes[image_dims[0]].units), 'lower left',
+                                           pad=1,
+                                           color='white',
+                                           frameon=False,
+                                           size_vertical=.2)
 
-            self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
-            self.fig.tight_layout()
+                plt.gca().add_artist(scalebar)
+
+            else:
+                cbar = self.fig.colorbar(self.img)
+                cbar.set_label("{} [{}]".format(dset.quantity, dset.units))
+
+                self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
+                self.fig.tight_layout()
             self.img.axes.figure.canvas.draw_idle()
 
 
