@@ -15,6 +15,8 @@ from .plot_utils.image import plot_map
 from .plot_utils.misc import export_fig_data
 from ..sid.dimension import Dimension
 
+from pyUSID.io.write_utils import Dimension as usidDimension
+
 if sys.version_info.major == 3:
     unicode = str
 
@@ -51,8 +53,10 @@ def simple_ndim_visualizer(data_mat, pos_dims, spec_dims, spec_xdim=None, pos_xd
         if not isinstance(parm, (list, tuple)):
             raise TypeError('Expected {} to be of type: Iterable - example list or tuple'.format(parm_name))
         for item in parm:
+            
             if not isinstance(item, Dimension):
-                raise TypeError('Expected items in {} to be of type: Dimension'.format(parm_name))
+                if not isinstance(item, usidDimension):
+                    raise TypeError('Expected items in {} to be of type: Dimension'.format(parm_name))
         if len(parm) > 2:
             raise NotImplementedError('Currently not able to handle more than 2 position or spectroscopic dimensions.'
                                       ' {} contains {} dimensions'.format(parm_name, len(parm)))
@@ -149,7 +153,7 @@ def simple_ndim_visualizer(data_mat, pos_dims, spec_dims, spec_xdim=None, pos_xd
     def get_slice_string(slice_dict, dim_list):
         slice_str = ''
         for dimension in dim_list:
-            assert isinstance(dimension, Dimension)
+            assert isinstance(dimension, Dimension) or isinstance(dimension, usidDimension)
             if dimension.name in slice_dict.keys():
                 # TODO: Format to only have 1-2 digits of precision / use scientific notation
                 slice_str += '{} = {} {}\n'.format(dimension.name,
