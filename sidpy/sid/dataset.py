@@ -366,6 +366,7 @@ class Dataset(da.Array):
                 plt.show()
             elif self.data_type == 'spectrum_image':
                 self.view = SpectralImageVisualizer(self, **kwargs)
+                plt.show()
             else:
                 print('not implemented yet')
         else:

@@ -370,7 +370,7 @@ class ImageStackVisualizer(object):
             self._update(self.ind)
 
     def _onscroll(self, event):
-        print("%s %s" % (event.button, event.step))
+        #print("%s %s" % (event.button, event.step))
         if event.button == 'up':
             self.slider.value = (self.slider.value + 1) % self.number_of_slices
         else:
