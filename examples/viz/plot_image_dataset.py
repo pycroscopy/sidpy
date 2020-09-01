@@ -35,9 +35,9 @@ print('sidpy version: ', sid.__version__)
 ########################################################################################################################
 # Creating a sid Dataset requires only a numpy array
 
-image = np.zeros((8,6))
+image = np.zeros((8, 6))
 
-#make checker board (you can ignore how this is done exactly, the result is important)
+# make checker board (you can ignore how this is done exactly, the result is important)
 image[::2, 1::2] = 1
 image[1::2, ::2] = 1
 
@@ -73,5 +73,3 @@ kwargs = {'cmap': 'viridis', 'scale_bar': True}
 
 data_set.plot(verbose=True, **kwargs)
 ########################################################################################################################
-
-

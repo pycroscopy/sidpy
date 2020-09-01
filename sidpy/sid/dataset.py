@@ -362,10 +362,10 @@ class Dataset(da.Array):
             elif self.data_type == 'image_map':
                 pass
             elif self.data_type == 'image_stack':
-                self.view = ImageStackVisualizer(self)
+                self.view = ImageStackVisualizer(self, **kwargs)
                 plt.show()
             elif self.data_type == 'spectrum_image':
-                self.view = SpectralImageVisualizer(self)
+                self.view = SpectralImageVisualizer(self, **kwargs)
             else:
                 print('not implemented yet')
         else:
