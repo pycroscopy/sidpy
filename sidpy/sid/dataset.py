@@ -156,7 +156,7 @@ class Dataset(da.Array):
         self._data_descriptor = ''
         self._modality = ''
         self._source = ''
-        self._h5_file = None
+
         self._h5_dataset = None
         self.view = None  # this will hold the figure and axis reference for a plot
 
@@ -164,10 +164,10 @@ class Dataset(da.Array):
         self.close_h5()
 
     def close_h5(self):
-        if self.h5_file is not None:
-            if is_editable_h5(self.h5_file):
-                self.h5_file.close()
-            self.h5_file = None  # sets self._h5_dataset to None as well
+        if self.h5_datset is not None:
+            if is_editable_h5(self.h5_datset.file):
+                self.h5_datset.file.close()
+            self.h5_dataset = None
 
     @classmethod
     def from_array(cls, x, chunks=None, name=None, lock=False):
@@ -487,30 +487,6 @@ class Dataset(da.Array):
         else:
             raise ValueError('source needs to be a string')
 
-    @property
-    def h5_file(self):
-        return self._h5_file
-
-    @h5_file.setter
-    def h5_file(self, value):
-        if isinstance(value, str):
-            self._h5_file = value
-        elif value is None:
-            self._h5_dataset = value
-            self._h5_file = value
-        else:
-            raise ValueError('h5_file needs to be a hdf5 file')
-
-    @property
-    def h5_file(self):
-        return self._h5_file
-
-    @h5_file.setter
-    def h5_file(self, value):
-        if isinstance(value, h5py.File):
-            self._h5_file = value
-        else:
-            raise ValueError('h5_file needs to be a hdf5 file')
 
     @property
     def h5_dataset(self):
@@ -521,7 +497,6 @@ class Dataset(da.Array):
         if isinstance(value, h5py.Dataset):
             self._h5_dataset = value
         elif value is None:
-            self._h5_dataset = value
-            self._h5_file = value
+            self.close_h5()
         else:
             raise ValueError('h5_dataset needs to be a hdf5 Dataset')
