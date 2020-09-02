@@ -54,8 +54,7 @@ def simple_ndim_visualizer(data_mat, pos_dims, spec_dims, spec_xdim=None, pos_xd
             raise TypeError('Expected {} to be of type: Iterable - example list or tuple'.format(parm_name))
         for item in parm:
             
-            if not isinstance(item, Dimension):
-                if not isinstance(item, usidDimension):
+            if not isinstance(item, Dimension) and not isinstance(item, usidDimension):
                     raise TypeError('Expected items in {} to be of type: Dimension'.format(parm_name))
         if len(parm) > 2:
             raise NotImplementedError('Currently not able to handle more than 2 position or spectroscopic dimensions.'
