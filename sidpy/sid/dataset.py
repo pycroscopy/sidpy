@@ -15,9 +15,12 @@ import numpy as np
 import matplotlib.pylab as plt
 import string
 import dask.array as da
+import h5py
+
 from .dimension import Dimension
 from ..base.num_utils import get_slope
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
+from ..hdf.hdf_utils import is_editable_h5
 
 
 def get_chunks(data, chunks=None):
@@ -153,7 +156,18 @@ class Dataset(da.Array):
         self._data_descriptor = ''
         self._modality = ''
         self._source = ''
+        self._h5_file = None
+        self._h5_dataset = None
         self.view = None  # this will hold the figure and axis reference for a plot
+
+    def __del__(self):
+        self.close_h5()
+
+    def close_h5(self):
+        if self.h5_file is not None:
+            if is_editable_h5(self.h5_file):
+                self.h5_file.close()
+            self.h5_file = None  # sets self._h5_dataset to None as well
 
     @classmethod
     def from_array(cls, x, chunks=None, name=None, lock=False):
@@ -472,3 +486,42 @@ class Dataset(da.Array):
             self._source = value
         else:
             raise ValueError('source needs to be a string')
+
+    @property
+    def h5_file(self):
+        return self._h5_file
+
+    @h5_file.setter
+    def h5_file(self, value):
+        if isinstance(value, str):
+            self._h5_file = value
+        elif value is None:
+            self._h5_dataset = value
+            self._h5_file = value
+        else:
+            raise ValueError('h5_file needs to be a hdf5 file')
+
+    @property
+    def h5_file(self):
+        return self._h5_file
+
+    @h5_file.setter
+    def h5_file(self, value):
+        if isinstance(value, h5py.File):
+            self._h5_file = value
+        else:
+            raise ValueError('h5_file needs to be a hdf5 file')
+
+    @property
+    def h5_dataset(self):
+        return self._h5_dataset
+
+    @h5_dataset.setter
+    def h5_dataset(self, value):
+        if isinstance(value, h5py.Dataset):
+            self._h5_dataset = value
+        elif value is None:
+            self._h5_dataset = value
+            self._h5_file = value
+        else:
+            raise ValueError('h5_dataset needs to be a hdf5 Dataset')
