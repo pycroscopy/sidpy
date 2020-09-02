@@ -151,6 +151,8 @@ class Dataset(da.Array):
         self._title = ''
         self._data_type = ''
         self._data_descriptor = ''
+        self._modality = ''
+        self._source = ''
         self.view = None  # this will hold the figure and axis reference for a plot
 
     @classmethod
@@ -448,3 +450,25 @@ class Dataset(da.Array):
             self._data_type = value
         else:
             raise ValueError('data_type needs to be a string')
+
+    @property
+    def modality(self):
+        return self._modality
+
+    @modality.setter
+    def modality(self, value):
+        if isinstance(value, str):
+            self._modality = value
+        else:
+            raise ValueError('modality needs to be a string')
+
+    @property
+    def source(self):
+        return self._source
+
+    @source.setter
+    def source(self, value):
+        if isinstance(value, str):
+            self._source = value
+        else:
+            raise ValueError('source needs to be a string')
