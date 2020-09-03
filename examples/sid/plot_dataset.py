@@ -45,6 +45,9 @@ print(data_set)
 # ``sidpy`` automatically assigns generic top-level metadata regarding the
 # ``Dataset``. Users are encouraged to capture the context regarding the dataset
 # by adding the quantity, units, etc. Here's how one could do that:
+data_set.data_type = 'Spectral Image'
+data_set.units = 'Current'
+data_set.quantity = 'nA'
 
 ###############################################################################
 # Scientific metadata
@@ -63,13 +66,20 @@ print(data_set)
 # regarding each of these dimensions using ``sidpy.Dimension``.
 # One can provide as much or as little information about each dimension.
 
-data_set.set_dimension(0, sid.Dimension('X', np.arange(data_set.shape[0]),
+data_set.set_dimension(0, sid.Dimension('x', np.arange(data_set.shape[0]),
                                         units='um', quantity='Length',
                                         dimension_type='spatial'))
-data_set.set_dimension(1, sid.Dimension('Y', np.linspace(-2, 2, num=data_set.shape[1], endpoint=True),
+data_set.set_dimension(1, sid.Dimension('y', np.linspace(-2, 2, num=data_set.shape[1], endpoint=True),
                                         units='um', quantity='Length'))
-data_set.set_dimension(2, sid.Dimension('Bias', np.sin(np.linspace(0, 2 * np.pi, num=data_set.shape[2])),
+data_set.set_dimension(2, sid.Dimension('bias', np.sin(np.linspace(0, 2 * np.pi, num=data_set.shape[2])),
                                         ))
+###############################################################################
+# One could also manually add information regarding specific components of
+# dimensions associated with Datasets via:
+
+data_set.bias.dimension_type = 'spectral'
+data_set.bias.units = 'V'
+data_set.bias.quantity = 'Bias'
 
 ###############################################################################
 # Let's take a look at what the dataset looks like with the additional information
