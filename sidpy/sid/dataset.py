@@ -12,10 +12,15 @@ https://scikit-allel.readthedocs.io/en/v0.21.1/_modules/allel/model/dask.html
 
 from __future__ import division, print_function, absolute_import, unicode_literals
 import numpy as np
+import matplotlib.pylab as plt
 import string
 import dask.array as da
+import h5py
+
 from .dimension import Dimension
 from ..base.num_utils import get_slope
+from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
+from ..hdf.hdf_utils import is_editable_h5
 
 
 def get_chunks(data, chunks=None):
@@ -131,7 +136,7 @@ class Dataset(da.Array):
     -modality
     -source
     -axes: dictionary of Dimensions one for each data dimension
-                    (the axes are dimension datsets with name, label, units, and 'dimension_type' attributes).
+                    (the axes are dimension datasets with name, label, units, and 'dimension_type' attributes).
 
     -attrs: dictionary of additional metadata
     -orginal_metadata: dictionary of original metadata of file,
@@ -149,6 +154,20 @@ class Dataset(da.Array):
         self._title = ''
         self._data_type = ''
         self._data_descriptor = ''
+        self._modality = ''
+        self._source = ''
+
+        self._h5_dataset = None
+        self.view = None  # this will hold the figure and axis reference for a plot
+
+    def __del__(self):
+        self.close_h5()
+
+    def close_h5(self):
+        if self.h5_datset is not None:
+            if is_editable_h5(self.h5_datset.file):
+                self.h5_datset.file.close()
+            self.h5_dataset = None
 
     @classmethod
     def from_array(cls, x, chunks=None, name=None, lock=False):
@@ -306,6 +325,69 @@ class Dataset(da.Array):
         else:
             raise ValueError('dimension needs to be a sidpy dimension object')
 
+    def plot(self, verbose=False, **kwargs):
+        """
+        Plots the dataset according to the
+         - shape of the sidpy Dataset,
+         - data_type of the sidpy Dataset and
+         - dimension_type of dimensions of sidpy Dataset
+            the dimension_type 'spatial' or 'spectral' determines how a dataset is plotted.
+
+        Recognized data_types are:
+        1D: any keyword, but 'spectrum' or 'line_plot' are encouraged
+        2D: 'image' or one of ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']
+        3D: 'image', 'image_map', 'image_stack', 'spectrum_image'
+        4D: not implemented yet, but will be similar to spectrum_image.
+
+        Parameters
+        ----------
+        verbose: boolean
+        kwargs: dictionary for additional plotting parameters
+            additional keywords (besides the matplotlib ones) for plotting are:
+            - scale_bar: for images to replace axis with a scale bar inside the image
+
+        Returns
+        -------
+            does not return anything but the view parameter is set with access to figure and axis.
+
+        """
+        if verbose:
+            print('Shape of dataset is: ', self.shape)
+        if len(self.shape) == 1:
+            if verbose:
+                print('1D dataset')
+            self.view = CurveVisualizer(self)
+            plt.show()
+        elif len(self.shape) == 2:
+            # this can be an image or a set of line_plots
+            if verbose:
+                print('2D dataset')
+            if self.data_type == 'image':
+                self.view = ImageVisualizer(self, **kwargs)
+                plt.show()
+            elif self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
+                print('not implemented yet')
+            else:
+                print('not implemented yet')
+        elif len(self.shape) == 3:
+            if verbose:
+                print('3D dataset')
+            if self.data_type == 'image':
+                self.view = ImageVisualizer(self, **kwargs)
+                plt.show()
+            elif self.data_type == 'image_map':
+                pass
+            elif self.data_type == 'image_stack':
+                self.view = ImageStackVisualizer(self, **kwargs)
+                plt.show()
+            elif self.data_type == 'spectrum_image':
+                self.view = SpectralImageVisualizer(self, **kwargs)
+                plt.show()
+            else:
+                print('not implemented yet')
+        else:
+            print('not implemented yet')
+
     def get_extent(self, dimensions):
         """
         get image extend as needed i.e. in matplotlib's imshow function.
@@ -323,7 +405,7 @@ class Dataset(da.Array):
         for i, dim in enumerate(dimensions):
             temp = self.axes[dim].values
             start = temp[0] - (temp[1] - temp[0])/2
-            end = temp[-1] - (temp[-1] - temp[-2])/2
+            end = temp[-1] + (temp[-1] - temp[-2])/2
             if i == 1:
                 extend.append(end)  # y axis starts on top
                 extend.append(start)
@@ -382,3 +464,39 @@ class Dataset(da.Array):
             self._data_type = value
         else:
             raise ValueError('data_type needs to be a string')
+
+    @property
+    def modality(self):
+        return self._modality
+
+    @modality.setter
+    def modality(self, value):
+        if isinstance(value, str):
+            self._modality = value
+        else:
+            raise ValueError('modality needs to be a string')
+
+    @property
+    def source(self):
+        return self._source
+
+    @source.setter
+    def source(self, value):
+        if isinstance(value, str):
+            self._source = value
+        else:
+            raise ValueError('source needs to be a string')
+
+
+    @property
+    def h5_dataset(self):
+        return self._h5_dataset
+
+    @h5_dataset.setter
+    def h5_dataset(self, value):
+        if isinstance(value, h5py.Dataset):
+            self._h5_dataset = value
+        elif value is None:
+            self.close_h5()
+        else:
+            raise ValueError('h5_dataset needs to be a hdf5 Dataset')
