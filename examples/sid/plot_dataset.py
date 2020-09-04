@@ -21,6 +21,7 @@ import sys
 sys.path.append('../../')
 import sidpy as sid
 
+
 ###############################################################################
 print(sid.__version__)
 
@@ -43,7 +44,6 @@ print(data_set)
 # Note, that we first index and then we make a numpy array for printing reasons
 
 print(np.array(data_set[:,0,2]))
-
 
 ###############################################################################
 # Slicing and dicing:
