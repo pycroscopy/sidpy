@@ -119,7 +119,7 @@ dset.plot()
 # Run the code-cell below and look in the plot above.
 
 dset.view.set_bin([20,20])
-
+plt.show()
 ###############################################################################
 # The axes (and figure) instances of matplotlib can be accessed throught the ``view`` attribute of  the sidpy dataset.
 
@@ -131,14 +131,15 @@ dset.view.axes[0].scatter(x, y, color='red');
 #
 kwargs = {'scale_bar': True, 'cmap': 'hot'}
     
-view = sid.dataset_viz.ImageStackVisualizer(dset, **kwargs )
-
+view = sid.viz.dataset_viz.ImageStackVisualizer(dset, **kwargs )
+plt.show()
 ###############################################################################
 #
 
 print(dset.shape)
 kwargs = {'scale_bar': True, 'cmap': 'hot'}
-view = sid.dataset_viz.ImageVisualizer(dset, image_number = 5, **kwargs)
+view = sid.viz.dataset_viz.ImageVisualizer(dset, image_number = 5, **kwargs)
+plt.show()
 
 ###############################################################################
 #
@@ -146,11 +147,10 @@ view = sid.dataset_viz.ImageVisualizer(dset, image_number = 5, **kwargs)
 dset.data_type = 'spectrum_image'
 dset.set_dimension(0, sid.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
-view = sid.dataset_viz.SpectralImageVisualizer(dset)
-
-###############################################################################
-#
+view = sid.viz.dataset_viz.SpectralImageVisualizer(dset)
 view.set_bin([30,40])
+plt.show()
+
 
 ###############################################################################
 #
@@ -158,11 +158,7 @@ dset.data_type = 'spectrum_image'
 dset.set_dimension(0, sid.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
 # view = SpectralImageVisualizer(dset)
-dset.plot()
+#dset.plot()
 
 ###############################################################################
 #
-selection = [slice(None), slice(0,1), slice(0,1)]
-
-print(np.average(dset[tuple(selection)], axis=[1,2]).shape)
-
