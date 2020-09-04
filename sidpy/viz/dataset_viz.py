@@ -163,12 +163,13 @@ class ImageVisualizer(object):
     def plot_image(self, **kwargs):
         from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
         scale_bar = kwargs.pop('scale_bar', False)
+
         if len(self.dset.shape) > 2:
             self.axis.set_title(self.dset.title + '_image {}'.format(self.image_number))
         else:
             self.axis.set_title(self.dset.title)
 
-        self.img = self.axis.imshow(self.dset[tuple(self.selection)].T,
+        self.img = self.axis.imshow(np.squeeze(self.dset[tuple(self.selection)]).T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
         self.axis.set_xlabel("{} [{}]".format(self.dset.axes[self.image_dims[0]].quantity,
                                               self.dset.axes[self.image_dims[0]].units))

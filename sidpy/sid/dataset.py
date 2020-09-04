@@ -163,10 +163,21 @@ class Dataset(da.Array):
     def __del__(self):
         self.close_h5()
 
+    def __repr__(self):
+        rep = 'sipy Dataset of type {} with:\n '.format(self.data_type)
+        rep = rep + super(Dataset, self).__repr__()
+        rep = rep + '\n data contains: {} ({})'.format(self.quantity, self.units)
+        rep = rep + '\n and Dimensions: '
+
+        for key in self.axes:
+            rep = rep + '\n  {}:  {} ({}) of size {}'.format(self.axes[key].name ,self.axes[key].quantity,
+                                                            self.axes[key].units, len(self.axes[key].values))
+        return rep
+
     def close_h5(self):
-        if self.h5_datset is not None:
-            if is_editable_h5(self.h5_datset.file):
-                self.h5_datset.file.close()
+        if self.h5_dataset is not None:
+            if is_editable_h5(self.h5_dataset.file):
+                self.h5_dataset.file.close()
             self.h5_dataset = None
 
     @classmethod
@@ -486,7 +497,6 @@ class Dataset(da.Array):
             self._source = value
         else:
             raise ValueError('source needs to be a string')
-
 
     @property
     def h5_dataset(self):
