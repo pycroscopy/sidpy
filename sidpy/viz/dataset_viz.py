@@ -16,15 +16,23 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 # import matplotlib.animation as animation
 
+from enum import Enum
 
 if sys.version_info.major == 3:
     unicode = str
 
 default_cmap = plt.cm.viridis
 
+class PlotTypes(Enum):
+    SPECTRUM = 1
+    LINE_PLOT= 1
+    IMAGE = 2
+    IMAGE_STACK =3
+    SPECTRAL_IMAGE = 4
+    IMAGE_4D = 5
 
 class CurveVisualizer(object):
-    def __init__(self, dset, ref_dims=None, figure=None, **kwargs):
+    def __init__(self, dset, spectrum_number=None, figure=None, **kwargs):
         from ..sid.dataset import Dataset
 
         if not isinstance(dset, Dataset):
@@ -41,6 +49,20 @@ class CurveVisualizer(object):
             self.fig = figure
 
         self.dset = dset
+        self.selection = []
+        self.spectral_dims = []
+
+        for dim, axis in dset.axes.items():
+            if axis.dimension_type == 'spectral':
+                self.selection.append(slice(None))
+                self.spectral_dims.append(dim)
+            else:
+                if spectrum_number <= dset.shape[dim]:
+                    self.selection.append(slice(spectrum_number, spectrum_number + 1))
+                else:
+                    self.spectrum_number = 0
+                    self.selection.append(slice(0, 1))
+
 
         # Handle the simple cases first:
         fig_args = dict()
@@ -48,9 +70,8 @@ class CurveVisualizer(object):
         if temp is not None:
             fig_args['figsize'] = temp
 
-        if len(ref_dims) != 1:
-            print('data type not handled yet')
-        self.dim = self.dset.axes[ref_dims[0]]
+
+        self.dim = self.dset.axes[self.spectral_dims[0]]
         if False:  # is_complex_dtype(np.array(dset)):
             # Plot real and image
             fig, axes = plt.subplots(nrows=2, **fig_args)
@@ -74,7 +95,7 @@ class CurveVisualizer(object):
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
             self.axis.plot(self.dim.values, self.dset, **kwargs)
             self.axis.set_title(self.dset.title, pad=15)
-            self.axis.set_xlabel('{}, [{}]'.format(self.dim.label, self.dim.units))  # + x_suffix)
+            self.axis.set_xlabel('{}, [{}]'.format(self.dim.quantity, self.dim.units))  # + x_suffix)
             self.axis.set_ylabel('{}, [{}]'.format(self.dset.quantity, self.dset.units))
             self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
             self.fig.canvas.draw_idle()
