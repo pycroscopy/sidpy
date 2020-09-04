@@ -371,7 +371,6 @@ class ImageStackVisualizer(object):
             self._update(self.ind)
 
     def _onscroll(self, event):
-        #print("%s %s" % (event.button, event.step))
         if event.button == 'up':
             self.slider.value = (self.slider.value + 1) % self.number_of_slices
         else:
@@ -540,7 +539,7 @@ class SpectralImageVisualizer(object):
             else:
                 selection.append(slice(0, 1))
 
-        self.spectrum = np.squeeze(np.average(self.dset[tuple(selection)], axis=self.image_dims))
+        self.spectrum = np.squeeze(np.average(self.dset[tuple(selection)], axis=tuple(self.image_dims)))
         # * self.intensity_scale[self.x,self.y]
         return np.squeeze(self.spectrum)
 
