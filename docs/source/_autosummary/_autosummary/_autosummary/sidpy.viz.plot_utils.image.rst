@@ -1,0 +1,23 @@
+sidpy.viz.plot\_utils.image
+===========================
+
+.. automodule:: sidpy.viz.plot_utils.image
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      plot_map
+      plot_map_stack
+   
+   
+
+   
+   
+   
+
+   
+   
+   

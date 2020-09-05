@@ -68,6 +68,7 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
+    'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'nbsphinx',
     'sphinx.ext.viewcode',
@@ -145,7 +146,7 @@ napoleon_type_aliases = None
 todo_include_todos = True
 
 # Generate autosummary even if no references
-autosummary_generate = False
+autosummary_generate = True
 
 autoclass_content = 'both'
 
