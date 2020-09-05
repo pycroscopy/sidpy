@@ -9,10 +9,3 @@ This folder contains notebooks for creating and manipulating Datasets
 
    create_dataset.ipynb
    plot_dataset.ipynb
-
-.. _Creation of Datasets:
-  create_dataset.ipynb
-
-.. _Plotting Datasets:
-  plot_dataset.ipynb
-
