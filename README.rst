@@ -27,4 +27,4 @@ sidpy
 
 Python utilities for storing, visualizing, and processing Spectroscopic and Imaging Data (SID)
 
-Please see our `website <https://pycroscopy.github.io/sidpy/about.html>`_ for more information.
+Please see our `website <https://pycroscopy.github.io/sidpy/basics.html>`_ for more information.
