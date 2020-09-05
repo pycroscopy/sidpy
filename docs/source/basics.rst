@@ -290,7 +290,7 @@ real-time code-checking etc. but are simple, and most importantly, open files qu
 text editors for each class of operating system:
 
 * Mac OS - `Atom <https://atom.io/>`_
-* Linux - `gEdit <https://wiki.gnome.org/Apps/Gedit>`_
+* Linux - `gEdit <https://wiki.gnome.org/Apps/Gedit>`_, `vim <https://www.vim.org/>`_, `neovim <https://neovim.io/>`_
 * Windows - `Notepad++ <https://notepad-plus-plus.org/>`_
 
 Integrated Development Environments (IDE)
@@ -310,6 +310,9 @@ Both of these work in Linux, Mac OS, and Windows.
 * `Pycharm <https://www.jetbrains.com/pycharm/>`_
 
     * Official `PyCharm Tutorial <https://confluence.jetbrains.com/display/PYH/PyCharm+Tutorials>`_ from Jetbrains
+
+* `VS Code <https://code.visualstudio.com/>`_
+    * Completely free and open-source editor by Microsoft. Much faster and extremely lightweight compared to Pycharm.
 
 Jupyter Notebooks
 ~~~~~~~~~~~~~~~~~
@@ -451,7 +454,7 @@ Unit tests are a good start for ensuring that you spend more time using code tha
 Writing examples
 ----------------
 Additionally, examples on how to use the new code must also be added so others are aware about how to use the code.
-You can now do it by simply adding a Jupyter notebook with your tutorial/example to the `notebooks <https://github.com/ziatdinovmax/sidpy/tree/master/notebooks>`_ folder.
+You can now do it by simply adding a Jupyter notebook with your tutorial/example to the `notebooks <https://github.com/pycroscopy/sidpy/tree/master/notebooks>`_ folder.
 
 Contact us
 ----------
