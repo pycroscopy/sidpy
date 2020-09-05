@@ -73,6 +73,7 @@ extensions = [
     'nbsphinx',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',          # Use either napoleon or numpydoc not both.
 ]
 
