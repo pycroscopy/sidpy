@@ -1,0 +1,26 @@
+sidpy.proc.comp\_utils
+======================
+
+.. automodule:: sidpy.proc.comp_utils
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get_MPI
+      get_available_memory
+      group_ranks_by_socket
+      parallel_compute
+      recommend_cpu_cores
+   
+   
+
+   
+   
+   
+
+   
+   
+   

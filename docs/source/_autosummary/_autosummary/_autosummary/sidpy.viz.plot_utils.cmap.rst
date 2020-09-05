@@ -1,0 +1,27 @@
+sidpy.viz.plot\_utils.cmap
+==========================
+
+.. automodule:: sidpy.viz.plot_utils.cmap
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cmap_from_rgba
+      cmap_hot_desaturated
+      cmap_jet_white_center
+      discrete_cmap
+      get_cmap_object
+      make_linear_alpha_cmap
+   
+   
+
+   
+   
+   
+
+   
+   
+   

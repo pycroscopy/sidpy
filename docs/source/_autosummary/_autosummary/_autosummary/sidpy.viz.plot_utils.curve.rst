@@ -1,0 +1,27 @@
+sidpy.viz.plot\_utils.curve
+===========================
+
+.. automodule:: sidpy.viz.plot_utils.curve
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cbar_for_line_plot
+      plot_complex_spectra
+      plot_curves
+      plot_line_family
+      plot_scree
+      rainbow_plot
+   
+   
+
+   
+   
+   
+
+   
+   
+   
