@@ -5,49 +5,47 @@ About SIDpy
 
 This package supports other scientific packages such as:
 
-* `pyNSID <../pyNSID/about.html>`_
-* `pyUSID <../pyUSID/about.html>`_
-* `pycroscopy <../pycroscopy/about.html>`_
+* `pyNSID <https://pycroscopy.github.io/pyNSID/about.html>`_
+* `pyUSID <https://pycroscopy.github.io/pyUSID/about.html>`_
+* `pycroscopy <https://pycroscopy.github.io/pycroscopy/about.html>`_
 
 Please use the side panel on the left for other documentation pages on ``sidpy``
 
 
 Getting Started
 ===============
-* Follow `these instructions <./install.html>`_ to install pyUSID
-* We have compiled a list of `handy tutorials <./external_guides.html>`_ on basic / prerequisite topics such as programming in python, hdf5 handling, etc.
-* See our `examples <./auto_examples/index.html>`_ to get started on using and writing your own pyUSID functions.
+* Follow these :ref:`instructions <Installation>` to install SIDpy
+* We have compiled a list of :ref:`handy tutorials <Tutorials on Basics>` on basic / prerequisite topics such as programming in python, hdf5 handling, etc.
+* See our `examples <./notebooks/00_basic_usage/index.html>`_ to get started on creating and using your own SIDpy datasets.
 
   * Please see this `pyUSID tutorial for beginners <https://github.com/pycroscopy/pyUSID_Tutorial>`_ based on the examples on this project.
-* Details regarding the definition, implementation, and guidelines for Universal Spectroscopy and Imaging Data (USID) and its implementation in HDF5 (h5USID) are available in `this document <./data_format.html>`_.
-* If you are interested in contributing your code to pyUSID, please look at our `guidelines <./contribution_guidelines.html>`_
-* We also have a handy document for converting your `matlab code to python <./matlab_to_python.html>`_.
-* If you need detailed documentation on what is where and why, all our classes, functions, etc., please visit our `API <./api.html>`_
-* For a concise change-log, please see the `release history <https://github.com/pycroscopy/pyUSID/releases>`_.
-* Please `get in touch <./contact.html>`_ if you would like to use USID and pyUSID for other new or mature scientific packages.
-* Have questions? See our `FAQ <./faq.html>`_ to see if we have already answered them.
+* Details regarding the definition, implementation, and guidelines for N-Dimensional Spectroscopy and Imaging Data (NSID) are available in `this document <https://pycroscopy.github.io/pyNSID/nsid.html>`_.
+* If you are interested in contributing your code to SIDpy, please look at our :ref:`guidelines <Contributing code>`
+* We also have a handy document for converting your :ref:`matlab code to python <Upgrading from Matlab>`.
+* If you need detailed documentation on what is where and why, all our classes, functions, etc., please visit our :ref:`API <API Reference>`
+* For a concise change-log, please see the `release history <https://github.com/pycroscopy/SIDpy/releases>`_.
+* Please :ref:`get in touch <Contact us>` if you would like to use SIDpy and pyNSID for other new or mature scientific packages.
+* Have questions? See our `FAQ <./faq.html>`_ to see if we have already answered them.dd
 * Need more information? Please see our `Arxiv <https://arxiv.org/abs/1903.09515>`_ paper.
-* Need help or need to get in touch with us? See our `contact <./contact.html>`_ information.
+* Need help or need to get in touch with us? See our :ref:`contact <Contact us>` information.
 
 Guide for python novices
 ~~~~~~~~~~~~~~~~~~~~~~~~
 For the python novices by a python novice - **Nick Mostovych, Brown University**
 
-#. Learn about the `philosophy, purpose, etc. of pyUSID <./about.html>`_.
-#. Get an idea of the different resources available by reading the `getting started <./getting_started.html>`_ section
-#. Watch the video on `installing Anaconda <https://www.youtube.com/watch?v=YJC6ldI3hWk>`_ from the `Tutorials on Basics <./external_guides.html>`_ page
-#. Follow instructions on the `installation <./install.html>`_ page to install Anaconda.
-#. Watch the `video tutorial <https://www.youtube.com/watch?v=HW29067qVWk>`_ from the ``Jupyter Notebooks`` section in `the Tutorials on Basics <./external_guides.html>`_ page
-#. Read the whole `Tutorial on Basics page <./external_guides.html>`_. Do NOT proceed unless you are familiar with basic python programming and usage.
-#. Read `the document on the USID model and h5USID <./data_format.html>`_. This is very important and highlights the advantages of using USID. New users should not jump to the examples until they have a good understanding of the data format.
-#. Depending on your needs, go through the `recommended sequence of tutorials and examples <./auto_examples/index.html>`_
+#. Watch the video on `installing Anaconda <https://www.youtube.com/watch?v=YJC6ldI3hWk>`_
+#. Follow instructions on the :ref:`installation <Installation>` page to install Anaconda.
+#. Watch the `video tutorial <https://www.youtube.com/watch?v=HW29067qVWk>`_ on the Jupyter Notebooks
+#. Read the whole :ref:`Tutorial on Basics page <Tutorials on Basics>`. Do NOT proceed unless you are familiar with basic python programming and usage.
+#. Read `the document on the pyNSID data format <https://pycroscopy.github.io/pyNSID/nsid.html>`_. This is very important and highlights the advantages of using NSID. New users should not jump to the examples until they have a good understanding of the data format.
+#. Depending on your needs, go through the recommended sequence of tutorials and examples (see 'EXAMPLES' on the side panel on the left)
 
 Tips and pitfalls
 ~~~~~~~~~~~~~~~~~
 For the python novices by a python novice - **Nick Mostovych, Brown University**
 
-* Documentation and examples on this website are for the **latest** version of pyUSID. If something does not work as shown on this website,
-  chances are that you may be using an older version of pyUSID. Follow the instructions to `update pyUSID to the latest version <./install.html#updating-pyUSID>`_
+* Documentation and examples on this website are for the **latest** version of SIDpy. If something does not work as shown on this website,
+  chances are that you may be using an older version of pyUSID. Follow the instructions to :ref:`update SIDpy to the latest version <updating sidpy>`
 * pyUSID has excellent documentation (+ examples too) for all functions. If you are ever confused with the usage of a
   function or class, you can get help in numerous ways:
 
@@ -55,13 +53,12 @@ For the python novices by a python novice - **Nick Mostovych, Brown University**
     See `this quick video <https://www.youtube.com/watch?v=TgqMK1SG7XI>`_ for a demo.
     E.g. - type ``px.USIDataset(``. Hit ``Shift+Tab`` twice or four times. You should be able to see the documentation for the
     class / function to learn how to supply inputs / extract outputs
-  * Use the search function and reference the source code in the `API section <./api.html>`_ for detailed comments.
+  * Use the search function and reference the source code in the :ref:`API section <API Reference>` for detailed comments.
     Most detailed questions are answered there.
-* Use the `USIDataset <./auto_examples/beginner/plot_usi_dataset.html>`_ everywhere possible to simplify your tasks.
-* Many functions in pyUSID have a ``verbose`` keyword argument that can be set to ``True`` to get detailed print logs of intermediate steps in the function.
+* Many functions in SIDpy and pyNSID have a ``verbose`` keyword argument that can be set to ``True`` to get detailed print logs of intermediate steps in the function.
   This is **very** handy for debugging code
 
-If there are tips or pitfalls you would like to add to this list, please `get in touch to us <./contact.html>`_
+If there are tips or pitfalls you would like to add to this list, please :ref:`get in touch to us <Contact us>`
 
 Installation
 ============
@@ -178,7 +175,7 @@ Install a specific branch of sidpy (``dev`` in this case):
 Updating sidpy
 --------------
 
-We recommend periodically updating your conda / anaconda distribution. Please see `these instructions to update anaconda <./external_guides.html#Updating-packages>`_.
+We recommend periodically updating your conda / anaconda distribution. Please see :ref:`these instructions to update anaconda <Updating packages>`.
 
 If you already have sidpy installed and want to update to the latest version, use the following command in a terminal window:
 
@@ -214,7 +211,7 @@ for a throrough primer on all the basic concepts.
 Here are a list of other tutorials from other websites and sources that describe some of the many important topics
 on reading, using / running and writing code:
 
-.. contents::
+.. contents:: :local:
 
 Python and  packages
 --------------------
@@ -293,7 +290,7 @@ real-time code-checking etc. but are simple, and most importantly, open files qu
 text editors for each class of operating system:
 
 * Mac OS - `Atom <https://atom.io/>`_
-* Linux - `gEdit <https://wiki.gnome.org/Apps/Gedit>`_
+* Linux - `gEdit <https://wiki.gnome.org/Apps/Gedit>`_, `vim <https://www.vim.org/>`_, `neovim <https://neovim.io/>`_
 * Windows - `Notepad++ <https://notepad-plus-plus.org/>`_
 
 Integrated Development Environments (IDE)
@@ -313,6 +310,9 @@ Both of these work in Linux, Mac OS, and Windows.
 * `Pycharm <https://www.jetbrains.com/pycharm/>`_
 
     * Official `PyCharm Tutorial <https://confluence.jetbrains.com/display/PYH/PyCharm+Tutorials>`_ from Jetbrains
+
+* `VS Code <https://code.visualstudio.com/>`_
+    * Completely free and open-source editor by Microsoft. Much faster and extremely lightweight compared to Pycharm.
 
 Jupyter Notebooks
 ~~~~~~~~~~~~~~~~~
@@ -402,7 +402,7 @@ sidpy-specific guidelines
   Any code specific to the Universal Spectroscopic and Imaging Data (USID) or
   N-Dimensional Spectroscopic and Imaging Data (NSID) should go into pyUSID or pyNSID respectively.
   Code that provides scientific functionality goes into pycroscopy.
-* Please ensure that your code files fit into our `package structure <./api.html>`_ (``base``, ``hdf``, ``io``, ``proc``, ``sid`` and ``viz``)
+* Please ensure that your code files fit into our :ref:`package structure <API Reference>` (``base``, ``hdf``, ``io``, ``proc``, ``sid`` and ``viz``)
 * Once you decide where your code will sit, please use relative import statements instead of absolute / external paths.
   For example, if you are contributing code for a new submodule within ``sidpy.hdf``, you will need to turn your import statements and code from something like:
 
@@ -429,7 +429,7 @@ Contributing code
 -----------------
 We recommend that you follow the steps below. Again, if you are ever need help, please contact us:
 
-1. Learn ``git`` if you are not already familiar with it. See our `compilation of tutorials and guides <./external_guides.html>`_,
+1. Learn ``git`` if you are not already familiar with it. See our :ref:`compilation of tutorials and guides <Tutorials on Basics>`,
    especially `this one <https://github.com/pycroscopy/sidpy/blob/master/docs/Using%20PyCharm%20to%20manage%20repository.pdf>`_.
 2. Create a ``fork`` of sidpy - this creates a separate copy of the entire sidpy repository under your user ID.
    For more information see `instructions here <https://help.github.com/articles/fork-a-repo/>`_.
@@ -454,8 +454,7 @@ Unit tests are a good start for ensuring that you spend more time using code tha
 Writing examples
 ----------------
 Additionally, examples on how to use the new code must also be added so others are aware about how to use the code.
-Fortunately, it is rather straightforward to `turn unit tests into examples <./unit_tests_to_examples.html>`_.
-
+You can now do it by simply adding a Jupyter notebook with your tutorial/example to the `notebooks <https://github.com/pycroscopy/sidpy/tree/master/notebooks>`_ folder.
 
 Contact us
 ----------
