@@ -70,17 +70,17 @@ data_set.quantity = 'Current'
 # These attributes could be lists, numpy arrays or simple dictionaries.
 # It is encouraged to add any parameters of data analysis to the datasets,
 # to keep track of input parameters.
-#  It is recomended to add any parameters to the (flat not nested) metadata dictionary.
+#  It is recommended to add any parameters to the (nested) metadata dictionary.
+# These metadata can then be viewed in dataset.view_metadata and dataset.view_original_metadata.
 # Only in extreme cases should one resort to adding data as attributes (however these
 # attributes will be stored in pyNSID)
 # Here I made some up as an illustration:
 data_set.calibration =  np.arange(5)
-data_set.metadata = {'nothing': ' ', 'value': 6.8}
+data_set.metadata = {'nothing': ' ', 'value': 6.8, 'instrument': {'microscope': 'Nion', 'acceleration_voltage':60000}}
 data_set.metadata['acquired'] = 'nowhere'
 
 print(data_set.calibration)
-print(data_set.metadata)
-
+sidpy.dict_utils.print_nested_dict(data_set.metadata)
 
 ###############################################################################
 # Another set of metadata in these Datasets is the Dimension ones:
