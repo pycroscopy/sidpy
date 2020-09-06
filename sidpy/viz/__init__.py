@@ -10,9 +10,9 @@ Submodules
 
     plot_utils
     jupyter_utils
+    dataset_viz
 """
 
-from . import plot_utils
-from . import jupyter_utils
+from . import plot_utils, jupyter_utils, dataset_viz
 
-__all__ = ['plot_utils', 'jupyter_utils']
+__all__ = ['plot_utils', 'jupyter_utils', 'dataset_viz']
