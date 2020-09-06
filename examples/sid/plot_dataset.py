@@ -69,13 +69,17 @@ data_set.quantity = 'Current'
 # We would want to add those parameters as attributes.
 # These attributes could be lists, numpy arrays or simple dictionaries.
 # It is encouraged to add any parameters of data analysis to the datasets,
-# to keep track of input parameters. Here I made some up as an illustration:
-data_set.counting =  np.arange(5)
-data_set.something = {'nothing': ' ', 'value': 6.8}
-data_set.acquired = 'nowhere'
+# to keep track of input parameters.
+#  It is recomended to add any parameters to the (flat not nested) metadata dictionary.
+# Only in extreme cases should one resort to adding data as attributes (however these
+# attributes will be stored in pyNSID)
+# Here I made some up as an illustration:
+data_set.calibration =  np.arange(5)
+data_set.metadata = {'nothing': ' ', 'value': 6.8}
+data_set.metadata['acquired'] = 'nowhere'
 
-print(data_set.counting)
-print(data_set.something)
+print(data_set.calibration)
+print(data_set.metadata)
 
 
 ###############################################################################
@@ -87,8 +91,8 @@ print(data_set.something)
 # The ``Dataset`` is automatically populated with generic information about
 # each dimension of the ``Dataset``. It is a good idea to capture context
 # regarding each of these dimensions using ``sidpy.Dimension``.
-# As a minimum we need a name and values (of the smae length as the dimensions of the data).
-# One can provide as much or as little information about each dimension.
+# As a minimum we need a name and values (of the same length as the dimensions of the data).
+# One can provide as much or as little information about each dimension as one needs.
 
 data_set.set_dimension(0, sidpy.Dimension('x', np.arange(data_set.shape[0]),
                                         units='um', quantity='Length',
