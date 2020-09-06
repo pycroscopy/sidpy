@@ -28,12 +28,12 @@ import numpy as np
 
 import sys
 sys.path.append('../../')
-import sidpy as sid
+import sidpy
 
-print('sidpy version: ', sid.__version__)
+print('sidpy version: ', sidpy.__version__)
 
 ########################################################################################################################
-# Creating a sid Dataset requires only a numpy array
+# Creating a sidpy Dataset requires only a numpy array
 
 image = np.zeros((8, 6))
 
@@ -41,7 +41,7 @@ image = np.zeros((8, 6))
 image[::2, 1::2] = 1
 image[1::2, ::2] = 1
 
-data_set = sid.Dataset.from_array(image, name='checkerboard')
+data_set = sidpy.Dataset.from_array(image, name='checkerboard')
 ########################################################################################################################
 
 ########################################################################################################################
@@ -56,9 +56,9 @@ data_set.title = 'checker_board'
 # We add the dimension axis to the Dataset, which is originally just 'generic'.
 # Try it by commenting out the lines in this section.
 print(np.arange(image.shape[1]))
-data_set.set_dimension(0, sid.Dimension('x', np.arange(image.shape[0]), units='check', quantity='field',
+data_set.set_dimension(0, sidpy.Dimension('x', np.arange(image.shape[0]), units='check', quantity='field',
                                         dimension_type='spatial'))
-data_set.set_dimension(1, sid.Dimension('y', np.arange(image.shape[1]), units='check', quantity='field',
+data_set.set_dimension(1, sidpy.Dimension('y', np.arange(image.shape[1]), units='check', quantity='field',
                                         dimension_type='spatial'))
 
 ########################################################################################################################

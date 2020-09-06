@@ -19,11 +19,11 @@ import numpy as np
 import sys
 
 sys.path.append('../../')
-import sidpy as sid
+import sidpy
 
 
 ###############################################################################
-print(sid.__version__)
+print(sidpy.__version__)
 
 ###############################################################################
 # Creating a ``sipy.Dataset`` object
@@ -31,7 +31,7 @@ print(sid.__version__)
 # We can create a simple sidpy Dataset from any array like object
 # Here we just use a numpy array filled with zeros
 
-data_set = sid.Dataset.from_array(np.random.random([4, 5, 10]), name='random')
+data_set = sidpy.Dataset.from_array(np.random.random([4, 5, 10]), name='random')
 print(data_set)
 
 ###############################################################################
@@ -90,13 +90,13 @@ print(data_set.something)
 # As a minimum we need a name and values (of the smae length as the dimensions of the data).
 # One can provide as much or as little information about each dimension.
 
-data_set.set_dimension(0, sid.Dimension('x', np.arange(data_set.shape[0]),
+data_set.set_dimension(0, sidpy.Dimension('x', np.arange(data_set.shape[0]),
                                         units='um', quantity='Length',
                                         dimension_type='spatial'))
-data_set.set_dimension(1, sid.Dimension('y', np.linspace(-2, 2, num=data_set.shape[1], endpoint=True),
+data_set.set_dimension(1, sidpy.Dimension('y', np.linspace(-2, 2, num=data_set.shape[1], endpoint=True),
                                         units='um', quantity='Length',
                                         dimension_type='spatial'))
-data_set.set_dimension(2, sid.Dimension('bias', np.sin(np.linspace(0, 2 * np.pi, num=data_set.shape[2])),
+data_set.set_dimension(2, sidpy.Dimension('bias', np.sin(np.linspace(0, 2 * np.pi, num=data_set.shape[2])),
                                         ))
 ###############################################################################
 # One could also manually add information regarding specific components of

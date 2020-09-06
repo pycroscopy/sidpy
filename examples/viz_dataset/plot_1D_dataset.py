@@ -28,19 +28,19 @@ import numpy as np
 
 import sys
 sys.path.append('../../')
-import sidpy as sid
+import sidpy
 
-print('sidpy version: ', sid.__version__)
+print('sidpy version: ', sidpy.__version__)
 
 ########################################################################################################################
-# Creating a sid Dataset requires only a numpy array
+# Creating a sidpy Dataset requires only a numpy array
 
 # The different frequencies:
 x_vec = np.linspace(0, 2*np.pi, 256)
 # Generating the signals at the different "positions"
 spectrum = np.sin(x_vec)
 
-data_set = sid.Dataset.from_array(spectrum, name='signal')
+data_set = sidpy.Dataset.from_array(spectrum, name='signal')
 ########################################################################################################################
 
 ########################################################################################################################
@@ -56,7 +56,7 @@ data_set.title = 'exp. spectrum'
 # Try it by commenting out the lines in this section.
 # The second command of this section shows an alternative way to manipulate the dimension information.
 
-data_set.set_dimension(0, sid.Dimension('frequency', x_vec, units='Hz', quantity='frequency',
+data_set.set_dimension(0, sidpy.Dimension('frequency', x_vec, units='Hz', quantity='frequency',
                                         dimension_type='spectral'))
 data_set.frequency.units = '1/s'
 ########################################################################################################################
