@@ -19,6 +19,7 @@ import h5py
 
 from .dimension import Dimension
 from ..base.num_utils import get_slope
+from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
 from ..hdf.hdf_utils import is_editable_h5
 
@@ -158,6 +159,8 @@ class Dataset(da.Array):
         self._source = ''
 
         self._h5_dataset = None
+        self.metadata = {}
+        self.original_metadata = {}
         self.view = None  # this will hold the figure and axis reference for a plot
 
     def __del__(self):
@@ -170,8 +173,8 @@ class Dataset(da.Array):
         rep = rep + '\n and Dimensions: '
 
         for key in self.axes:
-            rep = rep + '\n  {}:  {} ({}) of size {}'.format(self.axes[key].name ,self.axes[key].quantity,
-                                                            self.axes[key].units, len(self.axes[key].values))
+            rep = rep + '\n  {}:  {} ({}) of size {}'.format(self.axes[key].name, self.axes[key].quantity,
+                                                             self.axes[key].units, len(self.axes[key].values))
         return rep
 
     def hdf_close(self):
@@ -289,6 +292,7 @@ class Dataset(da.Array):
         new_data.attrs = dict(self.attrs).copy()
         new_data.group_attrs = {}  # dict(self.group_attrs).copy()
         new_data.original_metadata = {}
+        new_data.metadata = {}
         return new_data
 
     def copy(self):
@@ -335,6 +339,14 @@ class Dataset(da.Array):
             self.axes[dim] = dimension
         else:
             raise ValueError('dimension needs to be a sidpy dimension object')
+
+    def view_metadata(self):
+        if isinstance(self.metadata, dict):
+            print_nested_dict(self.metadata)
+            
+    def view_original_metadata(self):
+        if isinstance(self.original_metadata, dict):
+            print_nested_dict(self.original_metadata)
 
     def plot(self, verbose=False, **kwargs):
         """
@@ -507,6 +519,6 @@ class Dataset(da.Array):
         if isinstance(value, h5py.Dataset):
             self._h5_dataset = value
         elif value is None:
-            self.close_h5()
+            self.hdf_close()
         else:
             raise ValueError('h5_dataset needs to be a hdf5 Dataset')
