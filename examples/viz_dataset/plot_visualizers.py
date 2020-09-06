@@ -16,16 +16,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 sys.path.append('../../')
-import sidpy as sid
+import sidpy
 
-print(sid.__version__)
+print(sidpy.__version__)
 
 ###############################################################################
 # Plotting an Image
 # -----------------
 # First, we make a sidpy dataset from a numpy array
 x = np.random.normal(3, 2.5, size=(512, 512))
-dset = sid.Dataset.from_array(x)
+dset = sidpy.Dataset.from_array(x)
 
 ###############################################################################
 # Next, we add some information about this dataset
@@ -37,11 +37,27 @@ dset.quantity = 'intensity'
 ###############################################################################
 # For plotting it is important to set the dimensions correctly.
 
+<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
 dset.set_dimension(0, sid.Dimension('x', np.arange(dset.shape[0])*.02))
 dset.x.dimension_type = 'spatial'
 dset.x.units = 'nm'
 dset.x.quantity = 'distance'
 dset.set_dimension(1, sid.Dimension('y', np.arange(dset.shape[1])*.02))
+=======
+<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+dset.set_dimension(0, sidpy.Dimension('x',np.arange(dset.shape[0])*.02))
+dset.x.dimension_type = 'spatial'
+dset.x.units = 'nm'
+dset.x.quantity = 'distance'
+dset.set_dimension(1, sidpy.Dimension('y',np.arange(dset.shape[1])*.02))
+=======
+dset.set_dimension(0, sid.Dimension('x', np.arange(dset.shape[0])*.02))
+dset.x.dimension_type = 'spatial'
+dset.x.units = 'nm'
+dset.x.quantity = 'distance'
+dset.set_dimension(1, sid.Dimension('y', np.arange(dset.shape[1])*.02))
+>>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+>>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 dset.y.dimension_type = 'spatial'
 dset.yunits = 'nm'
 dset.y.quantity = 'distance'
@@ -61,18 +77,18 @@ dset.plot()
 # First we make a stack of images
 x = np.random.normal(3, 2.5, size=(25, 512, 512))
 
-dset = sid.Dataset.from_array(x)
+dset = sidpy.Dataset.from_array(x)
 dset.data_type = 'image_stack'
 dset.units = 'counts'
 dset.quantity = 'intensity'
 
-dset.set_dimension(0, sid.Dimension('frame', np.arange(dset.shape[0])))
+dset.set_dimension(0, sidpy.Dimension('frame', np.arange(dset.shape[0])))
 dset.frame.dimension_type = 'time'
-dset.set_dimension(1, sid.Dimension('x', np.arange(dset.shape[1])*.02))
+dset.set_dimension(1, sidpy.Dimension('x', np.arange(dset.shape[1])*.02))
 dset.x.dimension_type = 'spatial'
 dset.x.units = 'nm'
 dset.x.quantity = 'distance'
-dset.set_dimension(2, sid.Dimension('y', np.arange(dset.shape[2])*.02))
+dset.set_dimension(2, sidpy.Dimension('y', np.arange(dset.shape[2])*.02))
 dset.y.dimension_type = 'spatial'
 dset.yunits = 'nm'
 dset.y.quantity = 'distance'
@@ -106,7 +122,15 @@ dset.plot(verbose=True, **kwargs)
 # Select the spectrum with the mouse (left click).
 
 dset.data_type = 'spectrum_image'
+<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
 dset.set_dimension(0, sid.Dimension('spectrum', np.arange(dset.shape[0])))
+=======
+<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+dset.set_dimension(0, sidpy.Dimension('spectrum',np.arange(dset.shape[0])))
+=======
+dset.set_dimension(0, sid.Dimension('spectrum', np.arange(dset.shape[0])))
+>>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+>>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 dset.spectrum.dimension_type = 'spectral'
 
 dset.plot()
@@ -114,37 +138,79 @@ dset.plot()
 ###############################################################################
 # We make the selection more visible by setting the binning of the spectra selection.
 # 
+<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
 # The binning avrages over the binning box.
 # 
 # Run the code-cell below and look in the plot above.
 
 dset.view.set_bin([20, 20])
 
+=======
+# The binning averages over the binning box.
+# While you can make the modifications in a jupyter noteboook in a code-cell after the
+# dset.plot() command is executed, that does not work in a program.
+# Here we use the explicit visualization command followed by a plt.show() command.
+
+<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+view = sidpy.viz.dataset_viz.SpectralImageVisualizer(dset)
+view.set_bin([40,40])
+=======
+dset.view.set_bin([20, 20])
+
+>>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+>>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 plt.show()
+
 ###############################################################################
-# The axes (and figure) instances of matplotlib can be accessed throught the ``view`` attribute of  the sidpy dataset.
+# The axes (and figure) instances of matplotlib can be accessed through the ``view``
+# attribute of  the sidpy dataset. For example ``dset.view``.
+# Again that does not work in a prgram and we use the explicit command.
+# Note that you always have to keep a reference for an interactive plot (here view)
 
+
+<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+view = sidpy.viz.dataset_viz.SpectralImageVisualizer(dset)
+view.set_bin([40,40])
 x, y = np.mgrid[0:501:100, 0:501:100] + 5
-dset.view.axes[0].scatter(x, y, color='red');
-
-
+view.axes[0].scatter(x, y, color='red');
+=======
 ###############################################################################
 #
 kwargs = {'scale_bar': True, 'cmap': 'hot'}
     
 view = sid.viz.dataset_viz.ImageStackVisualizer(dset, **kwargs)
+<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
+=======
+>>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+>>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 plt.show()
 
 ###############################################################################
-#
 
+<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+=======
 print(dset.shape)
 kwargs = {'scale_bar': True, 'cmap': 'hot'}
 view = sid.dataset_viz.ImageVisualizer(dset, image_number=5, **kwargs)
+<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
+=======
+>>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+>>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 
 ###############################################################################
-#
+# The generic plot command of a dispy dataset looks for the ``data_type`` to
+# decide how to plot the data.
+# We cn force any plot with the expliit plot command, but we need to provide the
+# ``dimension_type`` as information what axis to be used for the plot.
 
+<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+print(dset.shape)
+kwargs = {'scale_bar': True, 'cmap': 'hot'}
+view = sidpy.viz.dataset_viz.ImageVisualizer(dset, image_number = 5, **kwargs)
+plt.show()
+
+###############################################################################
+=======
 dset.data_type = 'spectrum_image'
 dset.set_dimension(0, sid.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
@@ -159,3 +225,7 @@ dset.set_dimension(0, sid.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
 # view = SpectralImageVisualizer(dset)
 # dset.plot()
+<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
+=======
+>>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+>>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
