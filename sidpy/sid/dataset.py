@@ -161,7 +161,7 @@ class Dataset(da.Array):
         self.view = None  # this will hold the figure and axis reference for a plot
 
     def __del__(self):
-        self.close_h5()
+        self.hdf_close()
 
     def __repr__(self):
         rep = 'sipy Dataset of type {} with:\n '.format(self.data_type)
@@ -174,7 +174,7 @@ class Dataset(da.Array):
                                                             self.axes[key].units, len(self.axes[key].values))
         return rep
 
-    def close_h5(self):
+    def hdf_close(self):
         if self.h5_dataset is not None:
             if is_editable_h5(self.h5_dataset.file):
                 self.h5_dataset.file.close()
