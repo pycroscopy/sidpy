@@ -19,7 +19,6 @@ Documentation Index
    :template: custom-module-template.rst
    :recursive:
 
-   sidpy
 
 .. toctree::
    :glob:
