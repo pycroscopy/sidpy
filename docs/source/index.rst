@@ -12,20 +12,19 @@ Jump to our `GitHub project page <https://github.com/pycroscopy/sidpy>`_
 
 Documentation Index
 -------------------
-.. autosummary::
-   :toctree: _autosummary
-   :template: custom-module-template.rst
-   :recursive:
-
-   sidpy
-
-
 .. toctree::
    :glob:
    :maxdepth: 1
    :caption: Basics
 
    basics
+
+.. autosummary::
+   :toctree: _autosummary
+   :template: custom-module-template.rst
+   :recursive:
+
+   sidpy
 
 .. toctree::
    :glob:
