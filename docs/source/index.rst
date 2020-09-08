@@ -18,17 +18,18 @@ Documentation Index
    :template: module.rst
 
 .. toctree::
-    about
-    getting_started
-    install
-    external_guides
-    auto_examples/index
-    contribution_guidelines
-    contact
-    credits
-    matlab_to_python
-    api
+   :glob:
+   :maxdepth: 1
+   :caption: Basics
 
+   basics
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: Examples
+
+   notebooks/**/index
 
 Indices and tables
 ==================
