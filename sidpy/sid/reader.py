@@ -11,7 +11,8 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import abc
 import sys
 import os
-from ..base.string_utils import validate_single_string_arg, validate_list_of_strings
+from sidpy.base.string_utils import validate_single_string_arg, \
+    validate_list_of_strings
 
 if sys.version_info.major == 3:
     unicode = str
@@ -21,8 +22,6 @@ else:
 
 class Reader(object):
     """
-    ..autoclass::Reader
-
     Abstract class that defines the most basic functionality of a data format
     Reader.
     A Reader extracts measurement data and metadata from binary / proprietary

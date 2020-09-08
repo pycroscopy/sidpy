@@ -21,7 +21,7 @@ __all__ = ['flatten_complex_to_real', 'get_compound_sub_dtypes', 'flatten_compou
            'stack_real_to_complex', 'validate_dtype', 'is_complex_dtype',
            'stack_real_to_compound', 'stack_real_to_target_dtype', 'flatten_to_real']
 
-from .hdf_utils import lazy_load_array
+from sidpy.hdf.hdf_utils import lazy_load_array
 
 if sys.version_info.major == 3:
     unicode = str
