@@ -12,8 +12,6 @@ Jump to our `GitHub project page <https://github.com/pycroscopy/sidpy>`_
 
 Documentation Index
 -------------------
-.. currentmodule:: index
-
 .. autosummary::
    :toctree: _autosummary
    :template: custom-module-template.rst
