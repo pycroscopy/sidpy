@@ -1,18 +1,5 @@
 """
 The sidpy package
-
-Submodules
-----------
-
-.. autosummary::
-    :toctree: _autosummary
-
-    base
-    hdf
-    io
-    proc
-    sid
-    viz
 """
 from .__version__ import version as __version__
 from . import base, hdf, io, proc, sid, viz
