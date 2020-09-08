@@ -1,15 +1,6 @@
 """
 Tools for static and interactive visualization of scientific imaging and
 spectroscopy data
-
-Submodules
-----------
-
-.. autosummary::
-    :toctree: _autosummary
-
-    plot_utils
-    jupyter_utils
 """
 
 from . import plot_utils

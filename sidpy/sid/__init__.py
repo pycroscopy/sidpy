@@ -1,16 +1,5 @@
 """
 Spectroscopy and Imaging Data related classes
-
-Submodules
-----------
-
-.. autosummary::
-    :toctree: _autosummary
-
-    Dimension
-    Dataset
-    Reader
-    Translator
 """
 
 from .dimension import Dimension
