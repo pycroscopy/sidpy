@@ -25,4 +25,5 @@ help:
 %: Makefile
 	rm -rf build
 	rm -rf source/_autosummary
+	rm -rf source/notebooks
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
