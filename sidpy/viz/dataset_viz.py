@@ -150,7 +150,7 @@ class ImageVisualizer(object):
         self.image_dims = []
 
         for dim, axis in dset.axes.items():
-            if axis.dimension_type == 'spatial':
+            if axis.dimension_type in ['spatial', 'reciprocal']:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
             else:
