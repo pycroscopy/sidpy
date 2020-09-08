@@ -15,7 +15,11 @@ Documentation Index
 .. currentmodule:: index
 
 .. autosummary::
-   :template: module.rst
+   :toctree: _autosummary
+   :template: custom-module-template.rst
+   :recursive:
+
+   sidpy
 
 .. toctree::
    :glob:
