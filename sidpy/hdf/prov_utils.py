@@ -19,8 +19,9 @@ if sys.version_info.major == 3:
 else:
     from collections import Iterable
 
-from ..base.string_utils import validate_single_string_arg
-from .hdf_utils import get_attr, write_book_keeping_attrs, write_simple_attrs
+from sidpy.base.string_utils import validate_single_string_arg
+from sidpy.hdf.hdf_utils import get_attr, write_book_keeping_attrs, \
+    write_simple_attrs
 
 
 def assign_group_index(h5_parent_group, base_name, verbose=False):

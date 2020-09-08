@@ -17,9 +17,9 @@ import numpy as np
 from dask import array as da
 from matplotlib import pyplot as plt
 
-from .misc import get_plot_grid_size, make_scalar_mappable
-from .cmap import default_cmap, get_cmap_object, discrete_cmap
-from .image import plot_map
+from sidpy.viz.plot_utils.misc import get_plot_grid_size, make_scalar_mappable
+from sidpy.viz.plot_utils.cmap import default_cmap, get_cmap_object, discrete_cmap
+from sidpy.viz.plot_utils.image import plot_map
 
 if sys.version_info.major == 3:
     unicode = str

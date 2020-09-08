@@ -17,10 +17,11 @@ import string
 import dask.array as da
 import h5py
 
-from .dimension import Dimension
-from ..base.num_utils import get_slope
-from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
-from ..hdf.hdf_utils import is_editable_h5
+from sidpy.sid.dimension import Dimension
+from sidpy.base.num_utils import get_slope
+from sidpy.viz.dataset_viz import CurveVisualizer, ImageVisualizer, \
+    ImageStackVisualizer, SpectralImageVisualizer
+from sidpy.hdf.hdf_utils import is_editable_h5
 
 
 def get_chunks(data, chunks=None):
@@ -124,8 +125,6 @@ def view_subclass(darr, cls):
 
 class Dataset(da.Array):
     """
-    ..autoclass::Dataset
-
     To instantiate from an existing array-like object,
     use :func:`Dataset.from_array` - requires numpy array, list or tuple
 
