@@ -18,7 +18,7 @@ import shutil
 import matplotlib
 matplotlib.use('agg')
 import sphinx_rtd_theme
-sys.path.insert(0, os.path.abspath('../../sidpy'))
+sys.path.insert(0, os.path.abspath('../..'))
 from sidpy import __version__ as sidpy_version
 
 # - Copy over examples folder to docs/source
@@ -441,6 +441,7 @@ intersphinx_mapping = {'python': ('https://docs.python.org/{.major}'.format(sys.
                        'matplotlib': ('https://matplotlib.org/', None),
                        'h5py': ('https://docs.h5py.org/en/latest/', None),
                        'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+                       'dask': ('https://docs.dask.org/en/latest/', None),
                        }
 
 # -------------------------------------------------
