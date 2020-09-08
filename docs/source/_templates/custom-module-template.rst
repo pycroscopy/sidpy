@@ -4,9 +4,10 @@
 
    {% block attributes %}
    {% if attributes %}
-   .. rubric:: {{ _('Module Attributes') }}
+   .. rubric:: Module attributes
 
    .. autosummary::
+      :toctree:
    {% for item in attributes %}
       {{ item }}
    {%- endfor %}
@@ -18,6 +19,8 @@
    .. rubric:: {{ _('Functions') }}
 
    .. autosummary::
+      :toctree:
+      :nosignatures:
    {% for item in functions %}
       {{ item }}
    {%- endfor %}
@@ -31,6 +34,7 @@
    .. autosummary::
       :toctree:
       :template: custom-class-template.rst
+      :nosignatures:
    {% for item in classes %}
       {{ item }}
    {%- endfor %}
@@ -51,8 +55,6 @@
 
 {% block modules %}
 {% if modules %}
-.. rubric:: Modules
-
 .. autosummary::
    :toctree:
       :template: custom-module-template.rst
