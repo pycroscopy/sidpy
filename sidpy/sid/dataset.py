@@ -398,7 +398,7 @@ class Dataset(da.Array):
         if verbose:
             print('Shape of dataset is: ', self.shape)
 
-        if DataTypes[self.data_type].value < 0:
+        if self.data_type.value < 0:
             raise NameError('Datasets with UNKNOWN data_types cannot be plotted')
         if len(self.shape) == 1:
             if verbose:
@@ -409,10 +409,10 @@ class Dataset(da.Array):
             # this can be an image or a set of line_plots
             if verbose:
                 print('2D dataset')
-            if DataTypes[self.data_type].value == DataTypes['IMAGE'].value:
+            if self.data_type.value == DataTypes['IMAGE'].value:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
-            elif DataTypes[self.data_type].value <= DataTypes['LINE_PLOT'].value:
+            elif self.data_type.value <= DataTypes['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
                 self.view = CurveVisualizer(self, **kwargs)
                 plt.show()
@@ -421,15 +421,15 @@ class Dataset(da.Array):
         elif len(self.shape) == 3:
             if verbose:
                 print('3D dataset')
-            if DataTypes[self.data_type].value == DataTypes['IMAGE'].value:
+            if self.data_type.value == DataTypes['IMAGE'].value:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
-            elif DataTypes[self.data_type].value == DataTypes['IMAGE_MAP'].value:
+            elif self.data_type.value == DataTypes['IMAGE_MAP'].value:
                 pass
-            elif DataTypes[self.data_type].value == DataTypes['IMAGE_STACK'].value:
+            elif self.data_type.value == DataTypes['IMAGE_STACK'].value:
                 self.view = ImageStackVisualizer(self, **kwargs)
                 plt.show()
-            elif DataTypes[self.data_type].value == DataTypes['SPECTRAL_IMAGE'].value:
+            elif self.data_type.value == DataTypes['SPECTRAL_IMAGE'].value:
                 self.view = SpectralImageVisualizer(self, **kwargs)
                 plt.show()
             else:
