@@ -14,7 +14,7 @@ objects**
 """
 # Ensure python 3 compatibility:
 from __future__ import division, print_function, absolute_import, unicode_literals
-import matplotlib.pylab as plt
+# import matplotlib.pylab as plt
 import numpy as np
 import sys
 
@@ -43,7 +43,7 @@ print(data_set)
 # Indexing of the dataset works like in numpy
 # Note, that we first index and then we make a numpy array for printing reasons
 
-print(np.array(data_set[:,0,2]))
+print(np.array(data_set[:, 0, 2]))
 
 ###############################################################################
 # Slicing and dicing:
@@ -57,9 +57,11 @@ print(np.array(data_set[:,0,2]))
 # Those attributes are set to ``generic`` originally but one would want to set them t
 # for the specific dataset. that will be important for plotting the data.
 # Here's how one could do that:
-data_set.data_type = 'spectrum_image'
+data_set.data_type = 'spectrum_image'  # Not supported
+data_set.data_type = 'spectral_image'  # supported
 data_set.units = 'nA'
 data_set.quantity = 'Current'
+
 
 ###############################################################################
 # Scientific metadata
@@ -75,7 +77,7 @@ data_set.quantity = 'Current'
 # Only in extreme cases should one resort to adding data as attributes (however these
 # attributes will be stored in pyNSID)
 # Here I made some up as an illustration:
-data_set.calibration =  np.arange(5)
+data_set.calibration = np.arange(5)
 data_set.metadata = {'nothing': ' ', 'value': 6.8, 'instrument': {'microscope': 'Nion', 'acceleration_voltage':60000}}
 data_set.metadata['acquired'] = 'nowhere'
 
