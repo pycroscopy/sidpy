@@ -409,7 +409,7 @@ class Dataset(da.Array):
             # this can be an image or a set of line_plots
             if verbose:
                 print('2D dataset')
-            if self.data_type.value == DataTypes['IMAGE'].value:
+            if self.data_type == DataTypes.IMAGE:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
             elif self.data_type.value <= DataTypes['LINE_PLOT'].value:
@@ -421,15 +421,15 @@ class Dataset(da.Array):
         elif len(self.shape) == 3:
             if verbose:
                 print('3D dataset')
-            if self.data_type.value == DataTypes['IMAGE'].value:
+            if self.data_type == DataTypes.IMAGE:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type.value == DataTypes['IMAGE_MAP'].value:
+            elif self.data_type == DataTypes.IMAGE_MAP:
                 pass
-            elif self.data_type.value == DataTypes['IMAGE_STACK'].value:
+            elif self.data_type == DataTypes.IMAGE_STACK:
                 self.view = ImageStackVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type.value == DataTypes['SPECTRAL_IMAGE'].value:
+            elif self.data_type == DataTypes.SPECTRAL_IMAGE:
                 self.view = SpectralImageVisualizer(self, **kwargs)
                 plt.show()
             else:
