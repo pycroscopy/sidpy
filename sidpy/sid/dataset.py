@@ -16,12 +16,25 @@ import matplotlib.pylab as plt
 import string
 import dask.array as da
 import h5py
+from enum import Enum
 
 from .dimension import Dimension
 from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
-from ..hdf.hdf_utils import is_editable_h5
+# from ..hdf.hdf_utils import is_editable_h5
+
+
+class DataTypes(Enum):
+    UNKNOWN = -1
+    SPECTRUM = 1
+    LINE_PLOT = 2
+    LINE_PLOT_FAMILY = 3
+    IMAGE = 4
+    IMAGE_MAP = 5
+    IMAGE_STACK = 6
+    SPECTRAL_IMAGE = 7
+    IMAGE_4D = 8
 
 
 def get_chunks(data, chunks=None):
@@ -216,7 +229,7 @@ class Dataset(da.Array):
 
         # view as sub-class
         cls = view_subclass(darr, cls)
-        cls.data_type = 'generic'
+        cls.data_type = 'UNKNOWN'
         cls.units = 'generic'
         cls.title = 'generic'
         cls.quantity = 'generic'
@@ -316,6 +329,17 @@ class Dataset(da.Array):
 
         return dset_copy
 
+    def set_dimension_name(self, dim, name):
+        if not isinstance(dim, int):
+            raise ValueError('Dimension must be an integer')
+        if 0 > dim >= len(self.shape):
+            raise ValueError('Dimension must be an integer between 0 and {}'.format(len(self.shape)-1))
+        if not isinstance(name, str):
+            raise ValueError('New Dimension name must be a string')
+        delattr(self, self.axes[dim].name)
+        self.axes[dim].name = name
+        setattr(self, name, self.axes[dim])
+
     def set_dimension(self, dim, dimension):
         """
         sets the dimension for the dataset including new name and updating the axes dictionary
@@ -370,8 +394,12 @@ class Dataset(da.Array):
             does not return anything but the view parameter is set with access to figure and axis.
 
         """
+
         if verbose:
             print('Shape of dataset is: ', self.shape)
+
+        if DataTypes[self.data_type].value < 0:
+            raise NameError('Datasets with UNKNOWN data_types cannot be plotted')
         if len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
@@ -381,31 +409,33 @@ class Dataset(da.Array):
             # this can be an image or a set of line_plots
             if verbose:
                 print('2D dataset')
-            if self.data_type == 'image':
+            if DataTypes[self.data_type].value == DataTypes['IMAGE'].value:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
-                print('not implemented yet')
+            elif DataTypes[self.data_type].value <= DataTypes['LINE_PLOT'].value:
+                # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
+                self.view = CurveVisualizer(self, **kwargs)
+                plt.show()
             else:
-                print('not implemented yet')
+                raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
             if verbose:
                 print('3D dataset')
-            if self.data_type == 'image':
+            if DataTypes[self.data_type].value == DataTypes['IMAGE'].value:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type == 'image_map':
+            elif DataTypes[self.data_type].value == DataTypes['IMAGE_MAP'].value:
                 pass
-            elif self.data_type == 'image_stack':
+            elif DataTypes[self.data_type].value == DataTypes['IMAGE_STACK'].value:
                 self.view = ImageStackVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type == 'spectrum_image':
+            elif DataTypes[self.data_type].value == DataTypes['SPECTRAL_IMAGE'].value:
                 self.view = SpectralImageVisualizer(self, **kwargs)
                 plt.show()
             else:
-                print('not implemented yet')
+                raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         else:
-            print('not implemented yet')
+            raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
 
     def get_extent(self, dimensions):
         """
@@ -480,7 +510,12 @@ class Dataset(da.Array):
     @data_type.setter
     def data_type(self, value):
         if isinstance(value, str):
-            self._data_type = value
+            if value.upper() in DataTypes._member_names_:
+                self._data_type = value.upper()
+            else:
+                self._data_type = 'UNKNOWN'
+                print('Supported data_types for plotting are only: ', DataTypes._member_names_)
+                print('Setting data_type to UNKNOWN')
         else:
             raise ValueError('data_type needs to be a string')
 
