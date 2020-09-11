@@ -23,14 +23,6 @@ if sys.version_info.major == 3:
 
 default_cmap = plt.cm.viridis
 
-class PlotTypes(Enum):
-    SPECTRUM = 1
-    LINE_PLOT= 1
-    IMAGE = 2
-    IMAGE_STACK =3
-    SPECTRAL_IMAGE = 4
-    IMAGE_4D = 5
-
 class CurveVisualizer(object):
     def __init__(self, dset, spectrum_number=None, figure=None, **kwargs):
         from ..sid.dataset import Dataset
