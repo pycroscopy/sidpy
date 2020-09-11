@@ -511,9 +511,9 @@ class Dataset(da.Array):
     def data_type(self, value):
         if isinstance(value, str):
             if value.upper() in DataTypes._member_names_:
-                self._data_type = value.upper()
+                self._data_type = DataTypes[value.upper()]
             else:
-                self._data_type = 'UNKNOWN'
+                self._data_type = DataTypes.UNKNOWN
                 print('Supported data_types for plotting are only: ', DataTypes._member_names_)
                 print('Setting data_type to UNKNOWN')
         else:
