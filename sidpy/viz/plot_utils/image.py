@@ -18,9 +18,9 @@ from dask import array as da
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid
 
-from ...base.num_utils import get_exponent
-from .misc import get_plot_grid_size, set_tick_font_size
-from .cmap import default_cmap
+from sidpy.base.num_utils import get_exponent
+from sidpy.viz.plot_utils.misc import get_plot_grid_size, set_tick_font_size
+from sidpy.viz.plot_utils.cmap import default_cmap
 
 if sys.version_info.major == 3:
     unicode = str

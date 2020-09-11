@@ -11,7 +11,7 @@ from __future__ import division, print_function, unicode_literals, \
     absolute_import
 import sys
 import numpy as np
-from ..base.string_utils import validate_single_string_arg
+from sidpy.base.string_utils import validate_single_string_arg
 
 __all__ = ['Dimension']
 
@@ -23,7 +23,6 @@ if sys.version_info.major == 3:
 
 class Dimension(object):
     """
-    ..autoclass::Dimension
     """
 
     def __init__(self, name, values, quantity='generic', units='generic',
