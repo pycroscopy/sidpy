@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib import ticker as mtick, pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from .cmap import default_cmap
+from sidpy.viz.plot_utils.cmap import default_cmap
 
 if sys.version_info.major == 3:
     unicode = str

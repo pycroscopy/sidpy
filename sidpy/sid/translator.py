@@ -12,7 +12,8 @@ import abc
 import sys
 import os
 from warnings import warn
-from ..base.string_utils import validate_single_string_arg, validate_list_of_strings
+from sidpy.base.string_utils import validate_single_string_arg, \
+    validate_list_of_strings
 
 if sys.version_info.major == 3:
     unicode = str
