@@ -113,6 +113,7 @@ def clean_reg_ref(h5_dset, reg_ref_tuple, verbose=False):
 
 def attempt_reg_ref_build(h5_dset, dim_names, verbose=False):
     """
+    Attempts to build region references
 
     Parameters
     ----------

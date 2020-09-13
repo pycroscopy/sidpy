@@ -407,8 +407,8 @@ def lazy_load_array(dataset):
 
     Parameters
     ----------
-    dataset : :class:`numpy.ndarray`, or :class:`h5py.Dataset`, or :class:`dask.array.core.Array`
-        Array to laod as dask array
+    dataset : :class:`numpy.ndarray`, or :class:`h5py.Dataset`, or
+        :class:`dask.array.core.Array` to laod as dask array
 
     Returns
     -------
@@ -430,6 +430,7 @@ def lazy_load_array(dataset):
 def copy_attributes(source, dest, skip_refs=True, verbose=False):
     """
     Copy attributes from one h5object to another
+
     Parameters
     ----------
     source : h5py.Dataset, :class:`h5py.Group`, or :class:`h5py.File`
@@ -438,7 +439,7 @@ def copy_attributes(source, dest, skip_refs=True, verbose=False):
         Object to which the attributes need to be copied to
     skip_refs : bool, optional. default = True
         Whether or not the references (dataset and region) should be skipped
-    verbose : bool, optional. Defualt = False
+    verbose : bool, optional. Default = False
         Whether or not to print logs for debugging
     """
     mesg = 'should be a h5py.Dataset, h5py.Group,or h5py.File object'
