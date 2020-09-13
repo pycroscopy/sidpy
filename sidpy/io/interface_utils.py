@@ -33,7 +33,7 @@ def get_QT_app():
 
     Returns: QApplication
     -------
-
+    instance : ``QApplication.instance``
     """
     try:
         from PyQt5.Qt import QApplication
@@ -53,29 +53,33 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False,
                     file_path='.', caption="Select a file..."):
     """
     Opens a File dialog which is used in open_file() function
-    This functon uses pyQt5.
-    In jupyter notebooks use "%gui Qt" early in the notebook.
+    This function uses pyQt5.
 
     Parameters
     ----------
-    file_types : string of the file type filter
-    multiple_files : Multiple
-    file_path: string of path to directory
-    caption: string of caption of the open file dialog
+    file_types : str, optional. Default = all
+        types of files accepted
+    multiple_files : bool, optional. Default = False
+        Whether or not multiple files can be selected
+    file_path: str, optional. Default = '.'
+        path to starting or root directory
+    caption: str, optional. Default = "Select a file..."
+        caption of the open file dialog
 
     Returns
     -------
-    filename : full filename with absolute path and extension as a string
+    filename : str
+        full filename with absolute path and extension
+
+    Notes
+    -----
+    In jupyter notebooks use ``%gui Qt`` early in the notebook.
 
     Examples
     --------
-
     >> import sidpy as sid
-    >>
     >> filename = sid.io.openfile_dialog()
-    >>
     >> print(filename)
-
     """
     # Check whether QT is available
     try:
@@ -119,8 +123,28 @@ def openfile_dialog(file_types="All files (*)", multiple_files=False,
 def savefile_dialog(initial_file='*.hf5', file_path='.',
                     file_types=None, caption="Save file as ..."):
     """
-        Opens a save dialog in QT and retuns an "*.hf5" file.
-        In jupyter notebooks use "%gui Qt" early in the notebook.
+    Produces a window / dialog to allow users to specify the location and name
+    of a file to save to.
+
+    Parameters
+    ----------
+    initial_file : str, optional. Default = ``*.hf5``
+        File extension? @gduscher to clarify
+    file_path : str, optional. Default = '.'
+        path to starting or root directory
+    file_types :  str, optional. Default = None
+        Filters for kinds of files to display in the window
+    caption: str, optional. Default = "Save file as..."
+        caption of the save file dialog
+
+    Returns
+    -------
+    fname : str
+        path to desired file
+
+    Notes
+    -----
+    In jupyter notebooks use ``%gui Qt`` early in the notebook.
 
     """
     # Check whether QT is available
@@ -144,7 +168,6 @@ def savefile_dialog(initial_file='*.hf5', file_path='.',
             get_QT_app()
         except:
             pass
-
 
         func = QtWidgets.QFileDialog.getSaveFileName
         fname, file_filter = func(None, caption,
@@ -187,17 +210,26 @@ except ImportError:
 def progress_bar(title='Progress', start=0, stop=100):
     """
     Opens a progress bar window
+
     Parameters
     ----------
-    title: str
-    start: int
-    stop: int
+    title: str, optional. Default = 'Progress'
+        Title for the progress window
+    start: int, optional. Default = 0
+        Start value
+    stop: int, optional. Default = 100
+        End value
 
-    Usage`
+    Returns
     -------
-        >> progress = sid.io.progress_bar('progress', 1,50)
-        >> for count in range(50):
-        >>      progress.setValue(count)
+    progress : QtWidgets.QProgressDialog
+        Progress dialog
+
+    Examples
+    --------
+    >> progress = sid.io.progress_bar('progress', 1,50)
+    >> for count in range(50):
+    >>      progress.setValue(count)
     """
     # Check whether QT is available
     try:
