@@ -37,27 +37,11 @@ dset.quantity = 'intensity'
 ###############################################################################
 # For plotting it is important to set the dimensions correctly.
 
-<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
 dset.set_dimension(0, sid.Dimension('x', np.arange(dset.shape[0])*.02))
 dset.x.dimension_type = 'spatial'
 dset.x.units = 'nm'
 dset.x.quantity = 'distance'
 dset.set_dimension(1, sid.Dimension('y', np.arange(dset.shape[1])*.02))
-=======
-<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
-dset.set_dimension(0, sidpy.Dimension('x',np.arange(dset.shape[0])*.02))
-dset.x.dimension_type = 'spatial'
-dset.x.units = 'nm'
-dset.x.quantity = 'distance'
-dset.set_dimension(1, sidpy.Dimension('y',np.arange(dset.shape[1])*.02))
-=======
-dset.set_dimension(0, sid.Dimension('x', np.arange(dset.shape[0])*.02))
-dset.x.dimension_type = 'spatial'
-dset.x.units = 'nm'
-dset.x.quantity = 'distance'
-dset.set_dimension(1, sid.Dimension('y', np.arange(dset.shape[1])*.02))
->>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
->>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 dset.y.dimension_type = 'spatial'
 dset.yunits = 'nm'
 dset.y.quantity = 'distance'
@@ -122,15 +106,7 @@ dset.plot(verbose=True, **kwargs)
 # Select the spectrum with the mouse (left click).
 
 dset.data_type = 'spectrum_image'
-<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
-dset.set_dimension(0, sid.Dimension('spectrum', np.arange(dset.shape[0])))
-=======
-<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
 dset.set_dimension(0, sidpy.Dimension('spectrum',np.arange(dset.shape[0])))
-=======
-dset.set_dimension(0, sid.Dimension('spectrum', np.arange(dset.shape[0])))
->>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
->>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 dset.spectrum.dimension_type = 'spectral'
 
 dset.plot()
