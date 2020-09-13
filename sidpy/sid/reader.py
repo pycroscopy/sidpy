@@ -36,9 +36,21 @@ class Reader(object):
         file_path : str
             Path to the file that needs to be read
             
-        Returns
-        -------
-        Reader object
+        Attributes
+        ----------
+        self._input_file_path : str
+            Path to the file that will be read
+
+        Notes
+        -----
+        * This method will check to make sure that the provided file_path is
+          indeed a string and a valid file path.
+        * Consider calling ``can_read()`` within ``__init__()`` for validating
+          the provided file
+
+        Raises
+        ------
+        FileNotFoundError
         """
         file_path = validate_single_string_arg(file_path, 'file_path')
         if not os.path.exists(file_path):
@@ -48,7 +60,22 @@ class Reader(object):
     @abc.abstractmethod
     def read(self, *args, **kwargs):
         """
-        Abstract method.
+        Extracts the data and metadata from the provided file and embeds this
+        information in one or more ``sidpy.Dataset`` objects that are returned
+        from this method
+
+        Returns
+        -------
+        objs : ``sidpy.Dataset`` or list of ``sidpy.Dataset`` objects
+
+        Raises
+        ------
+        NotImplementedError : if the child class does not implement this method
+
+        Notes
+        -----
+        Do **not** accept the file path at ``read``. Use self._input_file_path
+        when implementing this method
         """
         raise NotImplementedError('The read method needs to be '
                                   'implemented by the child class')
@@ -57,8 +84,9 @@ class Reader(object):
         """
         Checks whether the provided file can be read by this reader.
 
-        This basic function compares the file extension against the "extension"
-        keyword argument. If the extension matches, this function returns True
+        This basic function compares the file extension against the
+        ``extension`` keyword argument. If the extension matches, this function
+        returns True
 
         Parameters
         ----------
@@ -71,6 +99,17 @@ class Reader(object):
             Path to the file that needs to be provided to read()
             if the provided file was indeed a valid file
             Else, None
+
+        Raises
+        ------
+        NotImplementedError : if this function is called for this or a child
+        class that does not provide the ``extension`` keyword argument
+
+        Notes
+        -----
+        It is recommended to add additional checks as necessary to ensure that
+        the translator can indeed read the given file such as by validating the
+        headers or similar metadata.
         """
         targ_ext = kwargs.get('extension', None)
         if not targ_ext:
