@@ -329,7 +329,7 @@ class Dataset(da.Array):
 
         return dset_copy
 
-    def set_dimension_name(self, dim, name):
+    def rename_dimension(self, dim, name):
         if not isinstance(dim, int):
             raise ValueError('Dimension must be an integer')
         if 0 > dim >= len(self.shape):
