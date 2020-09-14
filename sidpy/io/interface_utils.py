@@ -227,9 +227,10 @@ def progress_bar(title='Progress', start=0, stop=100):
 
     Examples
     --------
-    >> progress = sid.io.progress_bar('progress', 1,50)
-    >> for count in range(50):
-    >>      progress.setValue(count)
+    >>> import sidpy
+    >>> progress = sidpy.interface_utils.progress_bar('progress', 1,50)
+    >>> for count in range(50):
+    >>>      progress.setValue(count)
     """
     # Check whether QT is available
     try:
