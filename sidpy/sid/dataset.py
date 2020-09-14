@@ -162,6 +162,43 @@ class Dataset(da.Array):
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initializes Dataset object which is essentially a Dask array
+        underneath
+
+        Attributes
+        ----------
+        self.quantity : str
+            Physical quantity. E.g. - current
+        self.units : str
+            Physical units. E.g. - amperes
+        self.data_type : enum
+            Type of data such as Image, Spectrum, Spectral Image etc.
+        self.title : str
+            Title for Dataset
+        self.view : Visualizer
+            Instance of class appropriate for visualizing this object
+        self.data_descriptor : str
+            Description of this dataset
+        self.modality : str
+            Isn't this the same as data_type?
+        self.source : str
+            Source of this dataset. Such as instrument, analysis, etc.?
+        self.h5_dataset : h5py.Dataset
+            Reference to HDF5 Dataset object from which this Dataset was
+            created
+        self.axes : dict
+            Dictionary of Dimension objects per dimension of the Dataset
+        self.group_attrs : dict
+            ?
+        self.attrs : dict
+            ?
+        self.original_metadata : dict
+            Metadata from the original source of the dataset. This dictionary
+            often contains the vendor-specific metadata or internal attributes
+            of the analysis algorithm
+        """
+        # TODO: Consider using python package - pint for quantities
         super(Dataset, self).__init__()
 
         self._units = ''
@@ -251,7 +288,7 @@ class Dataset(da.Array):
 
     def like_data(self, data,  name=None, lock=False):
         """
-        Returns pysid dataset of new values but with metadata of this dataset
+        Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
             then this scale will be applied to the new dataset (naming and units will stay the same),
             otherwise the dimension will be generic.
@@ -306,7 +343,7 @@ class Dataset(da.Array):
 
     def copy(self):
         """
-        actually a deep copy of this dataset.
+        Returns a deep copy of this dataset.
 
         Returns
         -------
