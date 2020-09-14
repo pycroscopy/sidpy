@@ -23,6 +23,18 @@ def check_ssh():
     -------
     output : bool
         Whether or not the kernel is running over SSH (remote machine)
+
+    Notes
+    -----
+    When developing workflows that need to work on remote or virtual machines
+    in addition to one's own personal computer such as a laptop, this function
+    is handy at letting the developer know where the code is being executed
+
+    Examples
+    --------
+    >>> import sidpy
+    >>> mode = sidpy.interface_utils.check_ssh()
+    >>> print('Running on remote machine: {}'.format(mode))
     """
     return 'SSH_CLIENT' in os.environ or 'SSH_TTY' in os.environ
 
