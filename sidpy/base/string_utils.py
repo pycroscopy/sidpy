@@ -39,6 +39,22 @@ def format_quantity(value, unit_names, factors, decimals=2):
     -------
     str
         String with value formatted correctly
+
+    See Also
+    --------
+    sidpy.string_utils.format_size
+    sidpy.string_utils.format_time
+
+    Examples
+    --------
+    If ``sidpy.string_utils.format_time()`` were not available, we could get
+    the same functionality via:
+    >>> import sidpy
+    >>> units = ['msec', 'sec', 'mins', 'hours']
+    >>> factors = [0.001, 1, 60, 3600]
+    >>> time_value = 14497.34
+    >>> str_form = sidpy.string_utils.format_quantity(time_value, units, factors)
+    >>> print('{} seconds = {}'.format(14497.34, str_form))
     """
     # assert isinstance(value, (int, float))
     if not isinstance(unit_names, Iterable):
@@ -75,6 +91,13 @@ def format_time(time_in_seconds, decimals=2):
     -------
     str
         String with time formatted correctly
+
+    Examples
+    --------
+    >>> import sidpy
+    >>> num_secs = 14497.34
+    >>> time_form = sidpy.string_utils.format_time(num_secs)
+    >>> print('{} seconds = {}'.format(num_secs, time_form))
     """
     units = ['msec', 'sec', 'mins', 'hours']
     factors = [0.001, 1, 60, 3600]
@@ -96,6 +119,19 @@ def format_size(size_in_bytes, decimals=2):
     -------
     str
         String with size formatted correctly
+
+    Examples
+    --------
+    One function that uses this functionality to print the size of files etc.
+    is format_size(). While one can manually print the available memory in
+    gibibytes (see above), ``format_size()`` simplifies this substantially:
+    >>> import sidpy
+    >>> mem_in_bytes = sidpy.comp_utils.get_available_memory()
+    >>> print('Available memory in this machine: {}'.format(sidpy.string_utils.format_size(mem_in_bytes)))
+
+    See Also
+    --------
+    sidpy.comp_utils.get_available_memory
     """
     units = ['bytes', 'kB', 'MB', 'GB', 'TB']
     factors = 1024 ** np.arange(len(units), dtype=np.int64)
@@ -121,6 +157,21 @@ def formatted_str_to_number(str_val, magnitude_names, magnitude_values, separato
     -------
     number
         Numeric value of the string
+
+    See Also
+    --------
+    sidpy.string_utils.format_quantity
+
+    Examples
+    --------
+    This function provides the inverse functionality of
+    ``sidpy.string_utils.format_quantity``
+    >>> import sidpy
+    >>> unit_names = ["MHz", "kHz"]
+    >>> unit_magnitudes = [1E+6, 1E+3]
+    >>> str_value = "4.32 MHz"
+    >>> num_value = sidpy.string_utils.formatted_str_to_number(str_value, unit_names, unit_magnitudes, separator=' ')
+    >>> print('formatted_str_to_number says: {} = {}'.format(str_value, num_value))
     """
     [str_val] = validate_string_args(str_val, 'str_val')
     magnitude_names = validate_list_of_strings(magnitude_names, 'magnitude_names')
@@ -241,6 +292,26 @@ def clean_string_att(att_val):
     -------
     att_val : object
         Attribute object
+
+    Notes
+    -----
+    The ``h5py`` package used for reading and manipulating HDF5 files has
+    issues which necessitate the encoding of attributes whose values are lists
+    of strings. This method encodes lists of strings correctly so that they can
+    directly be written to HDF5 without causing any errors. All other kinds of
+    simple attributes - single strings, numbers, lists of numbers are
+    unmodified by this function.
+
+    Examples
+    --------
+    >>> import sidpy
+    >>> expected = ['a', 'bc', 'def']
+    >>> returned = sidpy.string_utils.clean_string_att(expected)
+    >>> print('List of strings value: {} encoded to: {}'.format(expected, returned))
+    >>>
+    >>> expected = [1, 2, 3.456]
+    >>> returned = sidpy.string_utils.clean_string_att(expected)
+    >>> print('List of numbers value: {} returned as is: {}'.format(expected, returned))
     """
     try:
         if isinstance(att_val, Iterable):
@@ -258,14 +329,20 @@ def clean_string_att(att_val):
 def get_time_stamp():
     """
     Returns the current date and time as a string formatted as:
-    Year_Month_Dat-Hour_Minute_Second
-
-    Parameters
-    ----------
+    Year_Month_Day-Hour_Minute_Second
 
     Returns
     -------
-    String
+    str
+
+    Examples
+    --------
+    We try to use a standardized format for storing time stamps in HDF5 files.
+    This function below generates the time as a string that can be easily
+    parsed if need be
+    >>> import sidpy
+    >>> stamp = sidpy.string_utils.get_time_stamp()
+    >>> print('Current time is: {}'.format(stamp))
     """
     return strftime('%Y_%m_%d-%H_%M_%S')
 
