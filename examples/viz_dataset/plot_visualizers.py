@@ -24,7 +24,7 @@ print(sidpy.__version__)
 # Plotting an Image
 # -----------------
 # First, we make a sidpy dataset from a numpy array
-x = np.random.normal(3, 2.5, size=(512, 512))
+x = np.random.normal(loc=3, scale=2.5, size=(128, 128))
 dset = sidpy.Dataset.from_array(x)
 
 ###############################################################################
@@ -37,11 +37,11 @@ dset.quantity = 'intensity'
 ###############################################################################
 # For plotting it is important to set the dimensions correctly.
 
-dset.set_dimension(0, sid.Dimension('x', np.arange(dset.shape[0])*.02))
+dset.set_dimension(0, sidpy.Dimension('x', np.arange(dset.shape[0])*.02))
 dset.x.dimension_type = 'spatial'
 dset.x.units = 'nm'
 dset.x.quantity = 'distance'
-dset.set_dimension(1, sid.Dimension('y', np.arange(dset.shape[1])*.02))
+dset.set_dimension(1, sidpy.Dimension('y', np.arange(dset.shape[1])*.02))
 dset.y.dimension_type = 'spatial'
 dset.yunits = 'nm'
 dset.y.quantity = 'distance'
@@ -59,7 +59,7 @@ dset.plot()
 # 
 # The dimensions have to contain at least two ``spatial`` dimensions and one that is identifiable as a stack dimension ('stack, 'frame', 'time').
 # First we make a stack of images
-x = np.random.normal(3, 2.5, size=(25, 512, 512))
+x = np.random.normal(loc=3, scale=2.5, size=(25, 128, 128))
 
 dset = sidpy.Dataset.from_array(x)
 dset.data_type = 'image_stack'
@@ -92,7 +92,7 @@ dset.plot()
 ###############################################################################
 # The kwargs dictionary is used to plot the image stack in TEM style with scale bar
 
-kwargs = {'scale_bar': True, 'cmap': 'hot'}  # or maby 'cmap': 'gray'
+kwargs = {'scale_bar': True, 'cmap': 'hot'}  # or maybe 'cmap': 'gray'
  
 dset.plot(verbose=True, **kwargs)
 
@@ -114,27 +114,13 @@ dset.plot()
 ###############################################################################
 # We make the selection more visible by setting the binning of the spectra selection.
 # 
-<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
-# The binning avrages over the binning box.
-# 
-# Run the code-cell below and look in the plot above.
-
-dset.view.set_bin([20, 20])
-
-=======
 # The binning averages over the binning box.
+# Run the code-cell below and look in the plot above.
 # While you can make the modifications in a jupyter noteboook in a code-cell after the
-# dset.plot() command is executed, that does not work in a program.
+# dset.plot() command is executed, that does not work in a script.
 # Here we use the explicit visualization command followed by a plt.show() command.
 
-<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
-view = sidpy.viz.dataset_viz.SpectralImageVisualizer(dset)
-view.set_bin([40,40])
-=======
 dset.view.set_bin([20, 20])
-
->>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
->>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 plt.show()
 
 ###############################################################################
@@ -188,20 +174,16 @@ plt.show()
 ###############################################################################
 =======
 dset.data_type = 'spectrum_image'
-dset.set_dimension(0, sid.Dimension('spectrum',np.arange(dset.shape[0])))
+dset.set_dimension(0, sidpy.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
-view = sid.viz.dataset_viz.SpectralImageVisualizer(dset)
+view = sidpy.viz.dataset_viz.SpectralImageVisualizer(dset)
 view.set_bin([30, 40])
 plt.show()
 
 ###############################################################################
 #
 dset.data_type = 'spectrum_image'
-dset.set_dimension(0, sid.Dimension('spectrum',np.arange(dset.shape[0])))
+dset.set_dimension(0, sidpy.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
 # view = SpectralImageVisualizer(dset)
 # dset.plot()
-<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
-=======
->>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
->>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
