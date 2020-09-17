@@ -33,7 +33,7 @@ setup(
     description='Python utilities for storing, visualizing, and processing Spectroscopic and Imaging Data (SID)',
     long_description=long_description,
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
