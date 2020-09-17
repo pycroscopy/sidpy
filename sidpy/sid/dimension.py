@@ -56,6 +56,19 @@ class Dimension(object):
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
             image dimensions. 'spectral' indicate spectroscopy data dimensions.
+
+        Attributes
+        ----------
+        self.name : str
+            Name of the dimension
+        self.quantity : str
+            Physical quantity. E.g. - current
+        self.units : str
+            Physical units. E.g. - amperes
+        self.dimension_type : enum
+            Type of dimension. E.g. - Spectral, Spatial, etc.
+        self.values : array-like
+            Values over which this dimension was varied
         """
 
         self.name = name
@@ -131,10 +144,12 @@ class Dimension(object):
 
     def copy(self):
         """
+        Returns a copy of this Dimension
 
         Returns
         -------
-
+        sidpy.Dimension
+            Copy of this sidpy.Dimension
         """
         return Dimension(self.name, self.values, self.quantity, self.units,
                          self.dimension_type)
