@@ -107,3 +107,5 @@ ENV/
 test_scripts/
 
 \.pytest_cache/
+/docs/source/_autosummary/
+/docs/source/notebooks/
