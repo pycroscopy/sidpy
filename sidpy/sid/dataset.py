@@ -150,7 +150,8 @@ class Dataset(da.Array):
     -modality
     -source
     -axes: dictionary of Dimensions one for each data dimension
-                    (the axes are dimension datasets with name, label, units, and 'dimension_type' attributes).
+                    (the axes are dimension datasets with name, label, units,
+                    and 'dimension_type' attributes).
 
     -attrs: dictionary of additional metadata
     -orginal_metadata: dictionary of original metadata of file,
@@ -220,6 +221,7 @@ class Dataset(da.Array):
         rep = rep + '\n and Dimensions: '
 
         for key in self.axes:
+            # TODO: This should be using the repr of Dimension
             rep = rep + '\n  {}:  {} ({}) of size {}'.format(self.axes[key].name, self.axes[key].quantity,
                                                              self.axes[key].units, len(self.axes[key].values))
         return rep
@@ -366,16 +368,27 @@ class Dataset(da.Array):
 
         return dset_copy
 
-    def rename_dimension(self, dim, name):
-        if not isinstance(dim, int):
+    def rename_dimension(self, ind, name):
+        """
+        Renames Dimension at the specified index
+
+        Parameters
+        ----------
+        ind : int
+            Index of the dimension
+        name : str
+            New name for Dimension
+        """
+        if not isinstance(ind, int):
             raise ValueError('Dimension must be an integer')
-        if 0 > dim >= len(self.shape):
-            raise ValueError('Dimension must be an integer between 0 and {}'.format(len(self.shape)-1))
+        if 0 > ind >= len(self.shape):
+            raise ValueError('Dimension must be an integer between 0 and {}'
+                             ''.format(len(self.shape)-1))
         if not isinstance(name, str):
             raise ValueError('New Dimension name must be a string')
-        delattr(self, self.axes[dim].name)
-        self.axes[dim].name = name
-        setattr(self, name, self.axes[dim])
+        delattr(self, self.axes[ind].name)
+        self.axes[ind].name = name
+        setattr(self, name, self.axes[ind])
 
     def set_dimension(self, dim, dimension):
         """
@@ -383,8 +396,10 @@ class Dataset(da.Array):
 
         Parameters
         ----------
-        dim: integer - dimension of dataset
-        dimension: sidpy dimension - name, values, ... of dimension
+        dim: int
+            Index of dimension
+        dimension: sidpy.Dimension
+            Dimension object describing this dimension of the Dataset
 
         Returns
         -------
@@ -398,10 +413,24 @@ class Dataset(da.Array):
             raise ValueError('dimension needs to be a sidpy dimension object')
 
     def view_metadata(self):
+        """
+        Prints the metadata to stdout
+
+        Returns
+        -------
+        None
+        """
         if isinstance(self.metadata, dict):
             print_nested_dict(self.metadata)
             
     def view_original_metadata(self):
+        """
+        Prints the original_metadata dictionary to stdout
+
+        Returns
+        -------
+        None
+        """
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
 
@@ -476,8 +505,9 @@ class Dataset(da.Array):
 
     def get_extent(self, dimensions):
         """
-        get image extend as needed i.e. in matplotlib's imshow function.
-        This function works for equi or non-equi spaced axes and is suitable for subpixel accuracy of positions
+        get image extents as needed i.e. in matplotlib's imshow function.
+        This function works for equi- or non-equi spaced axes and is suitable
+        for subpixel accuracy of positions
 
         Parameters
         ----------
@@ -487,12 +517,13 @@ class Dataset(da.Array):
         -------
         list of floats
         """
+        # TODO : Should this method not be internal? i.e. start with _
         extend = []
-        for i, dim in enumerate(dimensions):
+        for ind, dim in enumerate(dimensions):
             temp = self.axes[dim].values
             start = temp[0] - (temp[1] - temp[0])/2
             end = temp[-1] + (temp[-1] - temp[-2])/2
-            if i == 1:
+            if ind == 1:
                 extend.append(end)  # y axis starts on top
                 extend.append(start)
             else:
