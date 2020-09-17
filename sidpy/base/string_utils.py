@@ -40,21 +40,21 @@ def format_quantity(value, unit_names, factors, decimals=2):
     str
         String with value formatted correctly
 
-    See Also
-    --------
-    sidpy.string_utils.format_size
-    sidpy.string_utils.format_time
-
     Examples
     --------
-    If ``sidpy.string_utils.format_time()`` were not available, we could get
-    the same functionality via:
+    >>> # If ``sidpy.string_utils.format_time()`` were not available, we could
+    >>> # get the same functionality via:
     >>> import sidpy
     >>> units = ['msec', 'sec', 'mins', 'hours']
     >>> factors = [0.001, 1, 60, 3600]
     >>> time_value = 14497.34
-    >>> str_form = sidpy.string_utils.format_quantity(time_value, units, factors)
+    >>> str_form = sidpy.string_utils.format_quantity(time_value,units,factors)
     >>> print('{} seconds = {}'.format(14497.34, str_form))
+
+    See Also
+    --------
+    sidpy.string_utils.format_size
+    sidpy.string_utils.format_time
     """
     # assert isinstance(value, (int, float))
     if not isinstance(unit_names, Iterable):
@@ -73,7 +73,8 @@ def format_quantity(value, unit_names, factors, decimals=2):
 
     index = max(0, index)  # handles sub msec
 
-    return '{} {}'.format(np.round(value / factors[index], decimals), unit_names[index])
+    return '{} {}'.format(np.round(value / factors[index], decimals),
+                          unit_names[index])
 
 
 def format_time(time_in_seconds, decimals=2):
@@ -122,12 +123,11 @@ def format_size(size_in_bytes, decimals=2):
 
     Examples
     --------
-    One function that uses this functionality to print the size of files etc.
-    is format_size(). While one can manually print the available memory in
-    gibibytes (see above), ``format_size()`` simplifies this substantially:
+    >>> # using the function to print available memory / RAM in system:
     >>> import sidpy
     >>> mem_in_bytes = sidpy.comp_utils.get_available_memory()
-    >>> print('Available memory in this machine: {}'.format(sidpy.string_utils.format_size(mem_in_bytes)))
+    >>> print('Available memory in this machine: {}'
+    >>>       ''.format(sidpy.string_utils.format_size(mem_in_bytes)))
 
     See Also
     --------
@@ -140,7 +140,9 @@ def format_size(size_in_bytes, decimals=2):
 
 def formatted_str_to_number(str_val, magnitude_names, magnitude_values, separator=' '):
     """
-    Takes a formatted string like '4.32 MHz' to 4.32 E+6
+    Takes a formatted string like '4.32 MHz' to 4.32 E+6.
+    This function provides the inverse functionality of
+    ``sidpy.string_utils.format_quantity``
 
     Parameters
     ----------
@@ -149,7 +151,8 @@ def formatted_str_to_number(str_val, magnitude_names, magnitude_values, separato
     magnitude_names : Iterable
         List of names of units like ['seconds', 'minutes', 'hours']
     magnitude_values : Iterable
-        List of values (corresponding to magnitude_names) that scale the numeric value. Example [1, 60, 3600]
+        List of values (corresponding to magnitude_names) that scale the
+        numeric value. Example [1, 60, 3600]
     separator : str / unicode, optional. Default = ' ' (space)
         The text that separates the numeric value and the units.
 
@@ -158,23 +161,25 @@ def formatted_str_to_number(str_val, magnitude_names, magnitude_values, separato
     number
         Numeric value of the string
 
-    See Also
-    --------
-    sidpy.string_utils.format_quantity
-
     Examples
     --------
-    This function provides the inverse functionality of
-    ``sidpy.string_utils.format_quantity``
     >>> import sidpy
     >>> unit_names = ["MHz", "kHz"]
     >>> unit_magnitudes = [1E+6, 1E+3]
     >>> str_value = "4.32 MHz"
-    >>> num_value = sidpy.string_utils.formatted_str_to_number(str_value, unit_names, unit_magnitudes, separator=' ')
-    >>> print('formatted_str_to_number says: {} = {}'.format(str_value, num_value))
+    >>> num_value = sidpy.string_utils.formatted_str_to_number(str_value,
+    >>>                                                       unit_names,
+    >>>                                                       unit_magnitudes,
+    >>>                                                       separator=' ')
+    >>> print('formatted_str_to_number: {} = {}'.format(str_value, num_value))
+
+    See Also
+    --------
+    sidpy.string_utils.format_quantity
     """
     [str_val] = validate_string_args(str_val, 'str_val')
-    magnitude_names = validate_list_of_strings(magnitude_names, 'magnitude_names')
+    magnitude_names = validate_list_of_strings(magnitude_names,
+                                               'magnitude_names')
 
     if not isinstance(separator, (str, unicode)):
         raise TypeError('separator must be a string')
@@ -183,11 +188,13 @@ def formatted_str_to_number(str_val, magnitude_names, magnitude_values, separato
     if not np.all([isinstance(_, Number) for _ in magnitude_values]):
         raise TypeError('magnitude_values should contain numbers')
     if len(magnitude_names) != len(magnitude_values):
-        raise ValueError('magnitude_names and magnitude_values should be of the same length')
+        raise ValueError('magnitude_names and magnitude_values should be of '
+                         'the same length')
 
     components = str_val.split(separator)
     if len(components) != 2:
-        raise ValueError('String value should be of format "123.45<separator>Unit')
+        raise ValueError('String value should be of format '
+                         '"123.45<separator>Unit')
 
     for unit_name, scaling in zip(magnitude_names, magnitude_values):
         if unit_name == components[1]:
@@ -197,7 +204,8 @@ def formatted_str_to_number(str_val, magnitude_names, magnitude_values, separato
 
 def validate_single_string_arg(value, name):
     """
-    This function is to be used when validating a SINGLE string parameter for a function. Trims the provided value
+    This function is to be used when validating a SINGLE string parameter for a
+    function. Trims the provided value.
     Errors in the string will result in Exceptions
 
     Parameters
@@ -222,47 +230,54 @@ def validate_single_string_arg(value, name):
 
 def validate_list_of_strings(str_list, parm_name='parameter'):
     """
-    This function is to be used when validating and cleaning a list of strings. Trims the provided strings
-    Errors in the strings will result in Exceptions
+    This function is to be used when validating and cleaning a list of strings.
+    Trims the provided strings. Errors in the strings will result in Exceptions
 
     Parameters
     ----------
     str_list : array-like
         list or tuple of strings
     parm_name : str, Optional. Default = 'parameter'
-        Name of the parameter corresponding to this string list that will be reported in the raised Errors
+        Name of the parameter corresponding to this string list that will be
+        reported in the raised Errors
 
     Returns
     -------
     array-like
-        List of trimmed and validated strings when ALL objects within the list are found to be valid strings
+        List of trimmed and validated strings when ALL objects within the list
+        are found to be valid strings
     """
 
     if isinstance(str_list, (str, unicode)):
         return [validate_single_string_arg(str_list, parm_name)]
 
     if not isinstance(str_list, (list, tuple)):
-        raise TypeError(parm_name + ' should be a string or list / tuple of strings')
+        raise TypeError(parm_name + ' should be a string or list / tuple of '
+                                    'strings')
 
     return [validate_single_string_arg(x, parm_name) for x in str_list]
 
 
 def validate_string_args(arg_list, arg_names):
     """
-    This function is to be used when validating string parameters for a function. Trims the provided strings.
+    This function is to be used when validating string parameters for a
+    function. Trims the provided strings.
     Errors in the strings will result in Exceptions
 
     Parameters
     ----------
     arg_list : array-like
-        List of str objects that signify the value for a position argument in a function
+        List of str objects that signify the value for a position argument in
+        a function
     arg_names : array-like
-        List of str objects with the names of the corresponding parameters in the function
+        List of str objects with the names of the corresponding parameters in
+        the function
 
     Returns
     -------
     array-like
-        List of str objects that signify the value for a position argument in a function with spaces on ends removed
+        List of str objects that signify the value for a position argument in a
+        function with spaces on ends removed
     """
     if isinstance(arg_list, (str, unicode)):
         arg_list = [arg_list]
@@ -280,8 +295,9 @@ def validate_string_args(arg_list, arg_names):
 
 def clean_string_att(att_val):
     """
-    Replaces any unicode objects within lists with their string counterparts to ensure compatibility with python 3.
-    If the attribute is indeed a list of unicodes, the changes will be made in-place
+    Replaces any unicode objects within lists with their string counterparts to
+    ensure compatibility with python 3. If the attribute is indeed a list of
+    unicodes, the changes will be made in-place
 
     Parameters
     ----------
@@ -337,9 +353,6 @@ def get_time_stamp():
 
     Examples
     --------
-    We try to use a standardized format for storing time stamps in HDF5 files.
-    This function below generates the time as a string that can be easily
-    parsed if need be
     >>> import sidpy
     >>> stamp = sidpy.string_utils.get_time_stamp()
     >>> print('Current time is: {}'.format(stamp))
