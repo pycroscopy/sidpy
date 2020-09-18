@@ -4,7 +4,7 @@
 #
 # This file does only contain a selection of the most common options. For a
 # full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
+# http://www.fsphinx-doc.org/en/master/config
 
 # -- Path setup --------------------------------------------------------------
 
@@ -18,7 +18,7 @@ import shutil
 import matplotlib
 matplotlib.use('agg')
 import sphinx_rtd_theme
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../..'))
 from sidpy import __version__ as sidpy_version
 
 # - Copy over examples folder to docs/source
@@ -45,8 +45,8 @@ for root, dirs, files in os.walk(examples_source):
 # -- Project information -----------------------------------------------------
 
 project = 'sidpy'
-copyright = '2020, Suhas Somnath, Cris R. Smith, and contributors'
-author = 'Suhas Somnath, Cris R. Smith, and contributors'
+copyright = '2020, Suhas Somnath, Gerd Duscher, and contributors'
+author = 'Suhas Somnath, Gerd Duscher, and contributors'
 
 # The short X.Y version
 version = sidpy_version
@@ -157,7 +157,12 @@ autodoc_default_flags = ['members',
                          # 'show-inheritance'
                          ]
 
+autodoc_inherit_docstrings = True  # If no class summary, inherit base class summary
+
 # -- Options for HTML output -------------------------------------------------
+
+# on_rtd is whether on readthedocs.org, this line of code grabbed from docs.readthedocs.org...
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -296,7 +301,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'sidpy.tex', 'sidpy Documentation',
-     'Suhas Somnath, Cris R. Smith, and contributors', 'manual'),
+     'Suhas Somnath, Gerd Duscher, and contributors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -431,11 +436,12 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'python': ('https://docs.python.org/{.major}'.format(sys.version_info), None),
-                       'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+                       'numpy': ('https://numpy.org/doc/stable/', None),
                        'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
                        'matplotlib': ('https://matplotlib.org/', None),
-                       'h5py': ('http://docs.h5py.org/en/latest/', None),
-                       'sphinx': ('http://www.sphinx-doc.org/en/stable', None),
+                       'h5py': ('https://docs.h5py.org/en/latest/', None),
+                       'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+                       'dask': ('https://docs.dask.org/en/latest/', None),
                        }
 
 # -------------------------------------------------

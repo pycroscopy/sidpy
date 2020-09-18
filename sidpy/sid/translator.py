@@ -12,7 +12,8 @@ import abc
 import sys
 import os
 from warnings import warn
-from ..base.string_utils import validate_single_string_arg, validate_list_of_strings
+from sidpy.base.string_utils import validate_single_string_arg, \
+    validate_list_of_strings
 
 if sys.version_info.major == 3:
     unicode = str
@@ -38,9 +39,9 @@ class Translator(object):
         -------
         Translator object
         """
-        warn('sidpy.Translator will soon be replaced by sidpy.Reader. Consider'
-             'restructuring code from Translator to Reader',
-             DeprecationWarning)
+        warn('Consider using sidpy.Reader instead of sidpy.Translator if '
+             'possible and contribute your reader to ScopeReaders',
+             FutureWarning)
         pass
 
     @abc.abstractmethod

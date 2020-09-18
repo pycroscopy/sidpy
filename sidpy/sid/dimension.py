@@ -11,7 +11,8 @@ from __future__ import division, print_function, unicode_literals, \
     absolute_import
 import sys
 import numpy as np
-from ..base.string_utils import validate_single_string_arg
+from enum import Enum
+from sidpy.base.string_utils import validate_single_string_arg
 
 __all__ = ['Dimension']
 
@@ -21,13 +22,20 @@ if sys.version_info.major == 3:
 # todo: Consider extending numpy.ndarray instead of generic python object
 
 
+class DimensionTypes(Enum):
+    UNKNOWN = -1
+    SPATIAL = 1
+    RECIPROCAL = 2
+    SPECTRAL = 3
+    TEMPORAL = 4
+
+
 class Dimension(object):
     """
-    ..autoclass::Dimension
     """
 
     def __init__(self, name, values, quantity='generic', units='generic',
-                 dimension_type='generic'):
+                 dimension_type=DimensionTypes.UNKNOWN):
         """
         Simple object that describes a dimension in a dataset by its name,
         units, and values
@@ -48,6 +56,19 @@ class Dimension(object):
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
             image dimensions. 'spectral' indicate spectroscopy data dimensions.
+
+        Attributes
+        ----------
+        self.name : str
+            Name of the dimension
+        self.quantity : str
+            Physical quantity. E.g. - current
+        self.units : str
+            Physical units. E.g. - amperes
+        self.dimension_type : enum
+            Type of dimension. E.g. - Spectral, Spatial, etc.
+        self.values : array-like
+            Values over which this dimension was varied
         """
 
         self.name = name
@@ -87,8 +108,19 @@ class Dimension(object):
 
     @dimension_type.setter
     def dimension_type(self, value):
-        self._dimension_type = validate_single_string_arg(value,
-                                                          'dimension_type')
+        if isinstance(value, DimensionTypes):
+            self._dimension_type = value
+        else:
+            dimension_type = validate_single_string_arg(value, 'dimension_type')
+
+            if dimension_type.upper() in DimensionTypes._member_names_:
+                self._dimension_type = DimensionTypes[dimension_type.upper()]
+            elif dimension_type.lower() in ['frame', 'time', 'stack']:
+                self._dimension_type = DimensionTypes.TEMPORAL
+            else:
+                self._dimension_type = DimensionTypes.UNKNOWN
+                print('Supported dimension_types for plotting are only: ', DimensionTypes._member_names_)
+                print('Setting DimensionTypes to UNKNOWN')
 
     @property
     def values(self):
@@ -112,10 +144,12 @@ class Dimension(object):
 
     def copy(self):
         """
+        Returns a copy of this Dimension
 
         Returns
         -------
-
+        sidpy.Dimension
+            Copy of this sidpy.Dimension
         """
         return Dimension(self.name, self.values, self.quantity, self.units,
                          self.dimension_type)

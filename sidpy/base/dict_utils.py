@@ -46,6 +46,13 @@ def flatten_dict(nested_dict, parent_key='', sep='-'):
         new_key = parent_key + sep + key if parent_key else key
         if isinstance(value, MutableMapping):
             items.extend(flatten_dict(value, new_key, sep=sep).items())
+        elif isinstance(value, list):  # nion files contain lists of dictionaries, oops
+            for i in range(len(value)):
+                if isinstance(value[i], dict):
+                    for kk in value[i]:
+                        items.append(('dim-' + kk + '-' + str(i), value[i][kk]))
+                else:
+                    items.append((new_key, value))
         else:
             items.append((new_key, value))
     return dict(items)
@@ -176,7 +183,8 @@ def merge_dicts(left, right, path=None):
     -----
     https://stackoverflow.com/questions/7204805/how-to-merge-dictionaries-of-dictionaries
     """
-    if path is None: path = []
+    if path is None:
+        path = []
     for key in right:
         if key in left:
             if isinstance(left[key], dict) and isinstance(right[key], dict):
@@ -199,4 +207,3 @@ def merge_dicts(left, right, path=None):
         else:
             left[key] = right[key]
     return left
-
