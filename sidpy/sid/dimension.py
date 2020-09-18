@@ -9,6 +9,7 @@ Created on Thu Jul  7 21:14:25 2020
 
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
+from warnings import warn
 import sys
 import numpy as np
 from enum import Enum
@@ -25,6 +26,7 @@ class DimensionTypes(Enum):
     Physical type of Dimension object. This information will be used for
     visualization and processing purposes.
     """
+    # TODO: Rename class to DimensionType - singular rather than plural
     UNKNOWN = -1
     SPATIAL = 1
     RECIPROCAL = 2
@@ -36,7 +38,8 @@ class Dimension(np.ndarray):
     """
     """
 
-    def __new__(cls, values, name='none', quantity='generic', units='generic', dimension_type=DimensionTypes.UNKNOWN):
+    def __new__(cls, values, name='none', quantity='generic', units='generic',
+                dimension_type=DimensionTypes.UNKNOWN):
         """
         Parameters
         ----------
@@ -120,7 +123,8 @@ class Dimension(np.ndarray):
         if isinstance(value, DimensionTypes):
             self._dimension_type = value
         else:
-            dimension_type = validate_single_string_arg(value, 'dimension_type')
+            dimension_type = validate_single_string_arg(value,
+                                                        'dimension_type')
 
             if dimension_type.upper() in DimensionTypes._member_names_:
                 self._dimension_type = DimensionTypes[dimension_type.upper()]
@@ -128,8 +132,9 @@ class Dimension(np.ndarray):
                 self._dimension_type = DimensionTypes.TEMPORAL
             else:
                 self._dimension_type = DimensionTypes.UNKNOWN
-                print('Supported dimension_types for plotting are only: ', DimensionTypes._member_names_)
-                print('Setting DimensionTypes to UNKNOWN')
+                warn('Supported dimension types for plotting are only: {}'
+                     ''.format(DimensionTypes._member_names_))
+                warn('Setting DimensionType to UNKNOWN')
 
     @property
     def values(self):
