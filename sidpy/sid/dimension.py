@@ -14,12 +14,10 @@ import numpy as np
 from enum import Enum
 from sidpy.base.string_utils import validate_single_string_arg
 
-__all__ = ['Dimension']
+__all__ = ['Dimension', 'DimensionTypes']
 
 if sys.version_info.major == 3:
     unicode = str
-
-# todo: Consider extending numpy.ndarray instead of generic python object
 
 
 class DimensionTypes(Enum):
@@ -52,7 +50,8 @@ class Dimension(object):
             Values over which this dimension was varied. A linearly increasing
             set of values will be generated if an integer is provided instead
             of an array.
-        dimension_type : str or unicode for example: 'spectral' or 'spatial',
+        dimension_type : str or sidpy.sid.dimension.DimensionTypes
+            For example: 'spectral', 'spatial', 'reciprocal', or 'UNKNOWN'
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
             image dimensions. 'spectral' indicate spectroscopy data dimensions.
