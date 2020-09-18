@@ -55,12 +55,12 @@ def view_subclass(darr, cls):
     ----------
     darr : dask.array.Array
         Dask array of interest
-    cls : ?
-        ?
+    cls : sidpy.Dataset
+        Dataset instance
 
     Returns
     -------
-
+    dask array
     """
     return cls(darr.dask, name=darr.name, chunks=darr.chunks,
                dtype=darr.dtype, shape=darr.shape)
