@@ -35,6 +35,7 @@ class DataTypes(Enum):
     the Dataset object. In the future, this information could be used for
     guiding certain generic processing as well.
     """
+    # TODO: Rename to DataType - remove plural
     UNKNOWN = -1
     SPECTRUM = 1
     LINE_PLOT = 2
