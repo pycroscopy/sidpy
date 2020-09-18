@@ -144,15 +144,15 @@ class Dataset(da.Array):
     use :func:`Dataset.from_array` - requires numpy array, list or tuple
 
     This dask array is extended to have the following attributes:
-    -data_type: str ('image', 'image_stack',  spectrum_image', ...
+    -data_type: DataType ('image', 'image_stack',  spectral_image', ...
     -units: str
-    -title: name of the data set
-    -modality
-    -source
+    -title: str name of the data set
+    -modality: str type of data
+    -source: str what kind of instrument or method
     -axes: dictionary of Dimensions one for each data dimension
                     (the axes are dimension datasets with name, label, units, and 'dimension_type' attributes).
 
-    -attrs: dictionary of additional metadata
+    -metadata: dictionary of additional metadata
     -orginal_metadata: dictionary of original metadata of file,
 
     -labels: returns labels of all dimensions.
@@ -164,14 +164,17 @@ class Dataset(da.Array):
     def __init__(self, *args, **kwargs):
         super(Dataset, self).__init__()
 
-        self._units = ''
         self._title = ''
-        self._data_type = ''
+        self._quantity = ''
+        self._units = ''
+        self._data_type = DataTypes['UNKNOWN']
         self._data_descriptor = ''
-        self._modality = ''
-        self._source = ''
+        self._modality = ''  # what kind of data
+        self._source = ''    # source of data
+        self._axes = {}      # dictionary of dimensions
 
         self._h5_dataset = None
+
         self.metadata = {}
         self.original_metadata = {}
         self.view = None  # this will hold the figure and axis reference for a plot
@@ -182,9 +185,9 @@ class Dataset(da.Array):
         rep = rep + '\n data contains: {} ({})'.format(self.quantity, self.units)
         rep = rep + '\n and Dimensions: '
 
-        for key in self.axes:
-            rep = rep + '\n  {}:  {} ({}) of size {}'.format(self.axes[key].name, self.axes[key].quantity,
-                                                             self.axes[key].units, len(self.axes[key].values))
+        for key in self._axes:
+            rep = rep + '\n  {}:  {} ({}) of size {}'.format(self._axes[key].name, self._axes[key].quantity,
+                                                             self._axes[key].units, len(self._axes[key].values))
         return rep
 
     def hdf_close(self):
@@ -228,26 +231,24 @@ class Dataset(da.Array):
         darr = da.from_array(np.array(x), chunks=chunks, name=name, lock=lock)
 
         # view as sub-class
-        cls = view_subclass(darr, cls)
-        cls.data_type = 'UNKNOWN'
-        cls.units = 'generic'
-        cls.title = 'generic'
-        cls.quantity = 'generic'
+        new_dset = view_subclass(darr, cls)
+        new_dset.title = 'generic'
+        new_dset.quantity = 'generic'
+        new_dset.units = 'generic'
+        new_dset.data_type = 'UNKNOWN'
 
-        cls.modality = 'generic'
-        cls.source = 'generic'
-        cls.data_descriptor = 'generic'
+        new_dset.modality = 'generic'
+        new_dset.source = 'generic'
 
-        cls.axes = {}
-        for dim in range(cls.ndim):
+        new_dset._axes = {}
+        for dim in range(new_dset.ndim):
             # TODO: add parent to dimension to set attribute if name changes
-            cls.set_dimension(dim,
-                              Dimension(string.ascii_lowercase[dim],
-                                        np.arange(cls.shape[dim])))
-        cls.attrs = {}
-        cls.group_attrs = {}
-        cls.original_metadata = {}
-        return cls
+            new_dset.set_dimension(dim, Dimension(np.arange(new_dset.shape[dim]), name=string.ascii_lowercase[dim]))
+
+        new_dset.attrs = {}
+        new_dset.group_attrs = {}
+        new_dset.original_metadata = {}
+        return new_dset
 
     def like_data(self, data,  name=None, lock=False):
         """
@@ -286,20 +287,18 @@ class Dataset(da.Array):
         for dim in range(new_data.ndim):
             # TODO: add parent to dimension to set attribute if name changes
             new_data.labels.append(string.ascii_lowercase[dim])
-            if len(self.axes[dim].values) == new_data.shape[dim]:
-                new_data.set_dimension(dim, self.axes[dim])
+            if len(self._axes[dim].values) == new_data.shape[dim]:
+                new_data.set_dimension(dim, self._axes[dim])
             else:
                 # assuming the axis scale is equidistant
                 try:
-                    scale = get_slope(self.axes[dim].values)
-                    axis = self.axes[dim].copy()
+                    scale = get_slope(self._axes[dim].values)
+                    axis = self._axes[dim].copy()
                     axis.values = np.arange(new_data.shape[dim])*scale
                     new_data.set_dimension(dim, axis)
                 except ValueError:
                     print('using generic parameters for dimension ', dim)
 
-        new_data.attrs = dict(self.attrs).copy()
-        new_data.group_attrs = {}  # dict(self.group_attrs).copy()
         new_data.original_metadata = {}
         new_data.metadata = {}
         return new_data
@@ -322,10 +321,9 @@ class Dataset(da.Array):
         dset_copy.modality = self.modality
         dset_copy.source = self.source
 
-        dset_copy.axes = {}
+        dset_copy._axes = {}
         for dim in range(dset_copy.ndim):
-            dset_copy.set_dimension(dim, self.axes[dim].copy())
-        dset_copy.attrs = dict(self.attrs).copy()
+            dset_copy.set_dimension(dim, self._axes[dim].copy())
 
         return dset_copy
 
@@ -336,9 +334,9 @@ class Dataset(da.Array):
             raise ValueError('Dimension must be an integer between 0 and {}'.format(len(self.shape)-1))
         if not isinstance(name, str):
             raise ValueError('New Dimension name must be a string')
-        delattr(self, self.axes[dim].name)
-        self.axes[dim].name = name
-        setattr(self, name, self.axes[dim])
+        delattr(self, self._axes[dim].name)
+        self._axes[dim].name = name
+        setattr(self, name, self._axes[dim])
 
     def set_dimension(self, dim, dimension):
         """
@@ -354,9 +352,10 @@ class Dataset(da.Array):
 
         """
         if isinstance(dimension, Dimension):
+
             setattr(self, dimension.name, dimension)
             setattr(self, 'dim_{}'.format(dim), dimension)
-            self.axes[dim] = dimension
+            self._axes[dim] = dimension
         else:
             raise ValueError('dimension needs to be a sidpy dimension object')
 
@@ -452,7 +451,7 @@ class Dataset(da.Array):
         """
         extend = []
         for i, dim in enumerate(dimensions):
-            temp = self.axes[dim].values
+            temp = self._axes[dim].values
             start = temp[0] - (temp[1] - temp[0])/2
             end = temp[-1] + (temp[-1] - temp[-2])/2
             if i == 1:
@@ -466,7 +465,7 @@ class Dataset(da.Array):
     @property
     def labels(self):
         labels = []
-        for key, dim in self.axes.items():
+        for key, dim in self._axes.items():
             labels.append(dim.name)
         return labels
 
@@ -491,6 +490,17 @@ class Dataset(da.Array):
             self._units = value
         else:
             raise ValueError('units needs to be a string')
+
+    @property
+    def quantity(self):
+        return self._quantity
+
+    @quantity.setter
+    def quantity(self, value):
+        if isinstance(value, str):
+            self._quantity = value
+        else:
+            raise ValueError('quantity needs to be a string')
 
     @property
     def data_descriptor(self):

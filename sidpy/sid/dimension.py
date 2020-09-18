@@ -30,16 +30,12 @@ class DimensionTypes(Enum):
     TEMPORAL = 4
 
 
-class Dimension(object):
+class Dimension(np.ndarray):
     """
     """
 
-    def __init__(self, name, values, quantity='generic', units='generic',
-                 dimension_type=DimensionTypes.UNKNOWN):
+    def __new__(cls, values, name='none', quantity='generic', units='generic', dimension_type=DimensionTypes.UNKNOWN):
         """
-        Simple object that describes a dimension in a dataset by its name,
-        units, and values
-
         Parameters
         ----------
         name : str or unicode
@@ -56,14 +52,38 @@ class Dimension(object):
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
             image dimensions. 'spectral' indicate spectroscopy data dimensions.
+
+        :param values: array-like or int
+            Values over which this dimension was varied. A linearly increasing
+            set of values will be generated if an integer is provided instead
+            of an array.
+        :param name: str or unicode
+            Name of the dimension. For example 'X'
+        :param quantity:   str or unicode
+            Quantity for this dimension. For example: 'Length'
+        :param units: str or unicode
+            Units for this dimension. For example: 'um'
+        :param dimension_type: Dimension_Type: i.e: 'spectral', 'spatial', 'reciprocal', 'temporal' or 'UNKNOWN'
+            This will determine how the data are visualized. 'spatial' are
+            image dimensions. 'spectral' indicate spectroscopy data dimensions.
         """
 
-        self.name = name
-        self.values = values
+        new_dim = np.asarray(values).view(cls)
+        new_dim.name = name
+        new_dim.quantity = quantity
+        new_dim.units = units
+        new_dim.dimension_type = dimension_type
+        print(new_dim.name)
+        return new_dim
 
-        self.quantity = quantity
-        self.units = units
-        self.dimension_type = dimension_type
+    def __repr__(self):
+        return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
+                                         self.values)
+
+    @property
+    def info(self):
+        return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
+                                         self.values)
 
     @property
     def name(self):
@@ -111,37 +131,7 @@ class Dimension(object):
 
     @property
     def values(self):
-        return self._values
-
-    @values.setter
-    def values(self, values):
-        if isinstance(values, int):
-            if values < 1:
-                raise ValueError('values should at least be specified as a '
-                                 'positive integer')
-            values = np.arange(values)
-        if not isinstance(values, (np.ndarray, list, tuple)):
-            raise TypeError('values should be array-like')
-        values = np.array(values)
-        if values.ndim > 1:
-            raise ValueError('Values for dimension: {} are not 1-dimensional'
-                             ''.format(self.name))
-
-        self._values = values
-
-    def copy(self):
-        """
-
-        Returns
-        -------
-
-        """
-        return Dimension(self.name, self.values, self.quantity, self.units,
-                         self.dimension_type)
-
-    def __repr__(self):
-        return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
-                                         self.values)
+        return self
 
     def __eq__(self, other):
         if isinstance(other, Dimension):
