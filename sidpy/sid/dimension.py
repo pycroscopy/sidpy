@@ -21,6 +21,10 @@ if sys.version_info.major == 3:
 
 
 class DimensionTypes(Enum):
+    """
+    Physical type of Dimension object. This information will be used for
+    visualization and processing purposes.
+    """
     UNKNOWN = -1
     SPATIAL = 1
     RECIPROCAL = 2
