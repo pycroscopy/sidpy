@@ -14,12 +14,10 @@ import numpy as np
 from enum import Enum
 from sidpy.base.string_utils import validate_single_string_arg
 
-__all__ = ['Dimension']
+__all__ = ['Dimension', 'DimensionTypes']
 
 if sys.version_info.major == 3:
     unicode = str
-
-# todo: Consider extending numpy.ndarray instead of generic python object
 
 
 class DimensionTypes(Enum):
@@ -48,24 +46,24 @@ class Dimension(np.ndarray):
             Values over which this dimension was varied. A linearly increasing
             set of values will be generated if an integer is provided instead
             of an array.
-        dimension_type : str or unicode for example: 'spectral' or 'spatial',
+        dimension_type : str or sidpy.sid.dimension.DimensionTypes
+            For example: 'spectral', 'spatial', 'reciprocal', or 'UNKNOWN'
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
             image dimensions. 'spectral' indicate spectroscopy data dimensions.
 
-        :param values: array-like or int
-            Values over which this dimension was varied. A linearly increasing
-            set of values will be generated if an integer is provided instead
-            of an array.
-        :param name: str or unicode
-            Name of the dimension. For example 'X'
-        :param quantity:   str or unicode
-            Quantity for this dimension. For example: 'Length'
-        :param units: str or unicode
-            Units for this dimension. For example: 'um'
-        :param dimension_type: Dimension_Type: i.e: 'spectral', 'spatial', 'reciprocal', 'temporal' or 'UNKNOWN'
-            This will determine how the data are visualized. 'spatial' are
-            image dimensions. 'spectral' indicate spectroscopy data dimensions.
+        Attributes
+        ----------
+        self.name : str
+            Name of the dimension
+        self.quantity : str
+            Physical quantity. E.g. - current
+        self.units : str
+            Physical units. E.g. - amperes
+        self.dimension_type : enum
+            Type of dimension. E.g. - Spectral, Spatial, etc.
+        self.values : array-like
+            Values over which this dimension was varied
         """
 
         new_dim = np.asarray(values).view(cls)
