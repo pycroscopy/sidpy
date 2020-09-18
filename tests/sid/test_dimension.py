@@ -4,17 +4,22 @@ Created on Tue Nov  3 15:07:16 2017
 
 @author: Suhas Somnath
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
-import unittest
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
 import sys
+import unittest
+
 import numpy as np
+from numpy.testing import assert_array_equal
+from sidpy.sid.dimension import Dimension
 
 sys.path.append("../../sidpy/")
-from sidpy.sid.dimension import Dimension
 
 if sys.version_info.major == 3:
     unicode = str
-    
+
+
 class TestDimension(unittest.TestCase):
 
     def test_values_as_array(self):
@@ -86,3 +91,42 @@ class TestDimension(unittest.TestCase):
 
         self.assertNotEqual(Dimension(name, [0, 1, 2]),
                             Dimension(name, [0, 1, 2, 3]))
+
+    def test_dimensionality(self):
+        vals = np.ones((2, 2))
+        expected = "Values for dimension: x are not 1-dimensional"
+        with self.assertRaises(Exception) as context:
+            _ = Dimension("x", vals)
+        self.assertTrue(expected in str(context.exception))
+
+    def test_nonposint_values(self):
+        vals = [-1, .5]
+        expected = ["values should at least be specified as a positive integer",
+                    "values should be array-like"]
+        for v, e in zip(vals, expected):
+            with self.assertRaises(Exception) as context:
+                _ = Dimension("x", v)
+            self.assertTrue(e in str(context.exception))
+
+    def test_conv2arr_values(self):
+        arr = np.arange(5)
+        vals = [5, arr, arr.tolist(), tuple(arr)]
+        vals_expected = arr
+        for v in vals:
+            dim = Dimension("x", v)
+            self.assertIsInstance(dim.values, np.ndarray)
+            assert_array_equal(dim.values, vals_expected)
+
+    def test_dimension_type(self):
+        dim_types = ["spatial", "Spatial", "reciprocal", "Reciprocal",
+                     "spectral", "Spectral", "temporal", "Temporal",
+                     "frame", "Frame",  "time", "Time", "stack", "Stack"]
+        dim_vals_expected = [1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
+        dim_names_expected = ["SPATIAL", "SPATIAL", "RECIPROCAL", "RECIPROCAL",
+                              "SPECTRAL", "SPECTRAL", "TEMPORAL", "TEMPORAL",
+                              "TEMPORAL", "TEMPORAL", "TEMPORAL", "TEMPORAL",
+                              "TEMPORAL", "TEMPORAL"]
+        for dt, dv, dn in zip(dim_types, dim_vals_expected, dim_names_expected):
+            dim = Dimension("x", 5, dimension_type=dt)
+            self.assertEqual(dim.dimension_type.value, dv)
+            self.assertEqual(dim.dimension_type.name, dn)
