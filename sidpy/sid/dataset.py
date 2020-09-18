@@ -236,39 +236,66 @@ class Dataset(da.Array):
             print(self.h5_dataset)
 
     @classmethod
-    def from_array(cls, x, chunks=None, name=None, lock=False):
+    def from_array(cls, x, chunks="auto", name=None, lock=False, asarray=None,
+                   fancy=True, getitem=None, meta=None,):
         """
         Initializes a sidpy.Dataset from an array-like object (i.e. numpy array)
-        All meta-data will be set to be generically.
+        All meta-data will be set to be generic values. Consider setting other
+        attributes manually
 
         Parameters
         ----------
-        x: array-like object
+        x: array_like
             the values which will populate this dataset
-        chunks: optional integer or list of integers
-            the shape of the chunks to be loaded
-        name: optional string
-            the name of this dataset
-        lock: boolean
+        chunks : int, tuple
+            How to chunk the array. Must be one of the following forms:
+            - A blocksize like 1000.
+            - A blockshape like (1000, 1000).
+            - Explicit sizes of all blocks along all dimensions like
+              ((1000, 1000, 500), (400, 400)).
+            - A size in bytes, like "100 MiB" which will choose a uniform
+              block-like shape
+            - The word "auto" which acts like the above, but uses a configuration
+              value ``array.chunk-size`` for the chunk size
+            -1 or None as a blocksize indicate the size of the corresponding
+            dimension.
+        name : str, optional
+            The key name to use for the array. Defaults to a hash of ``x``.
+            By default, hash uses python's standard sha1. This behaviour can be
+            changed by installing cityhash, xxhash or murmurhash. If installed,
+            a large-factor speedup can be obtained in the tokenisation step.
+            Use ``name=False`` to generate a random name instead of hashing (fast)
+            .. note::
+               Because this ``name`` is used as the key in task graphs, you should
+               ensure that it uniquely identifies the data contained within. If
+               you'd like to provide a descriptive name that is still unique, combine
+               the descriptive name with :func:`dask.base.tokenize` of the
+               ``array_like``. See :ref:`graphs` for more.
+        lock : bool or Lock, optional
+            If ``x`` doesn't support concurrent reads then provide a lock here, or
+            pass in True to have dask.array create one for you.
+        asarray : bool, optional
+            If True then call np.asarray on chunks to convert them to numpy arrays.
+            If False then chunks are passed through unchanged.
+            If None (default) then we use True if the ``__array_function__`` method
+            is undefined.
+        fancy : bool, optional
+            If ``x`` doesn't support fancy indexing (e.g. indexing with lists or
+            arrays) then set to False. Default is True.
+        meta : Array-like, optional
+            The metadata for the resulting dask array.  This is the kind of array
+            that will result from slicing the input array.
+            Defaults to the input array.
 
         Returns
         -------
-
+        new_dset : sidpy.Dataset
+            Dataset object
         """
-        # override this as a class method to allow sub-classes to return
-        # instances of themselves
-
-        # ensure array-like
-        x = ensure_array_like(x)
-        if hasattr(cls, 'check_input_data'):
-            cls.check_input_data(x)
-
-        # determine chunks, guessing something reasonable if user does not
-        # specify
-        chunks = get_chunks(np.array(x), chunks)
-
         # create vanilla dask array
-        darr = da.from_array(np.array(x), chunks=chunks, name=name, lock=lock)
+        darr = da.from_array(np.array(x), chunks=chunks, name=name, lock=lock,
+                             asarray=asarray, fancy=fancy, getitem=getitem,
+                             meta=meta)
 
         # view as sub-class
         new_dset = view_subclass(darr, cls)
