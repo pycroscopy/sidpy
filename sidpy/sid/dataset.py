@@ -18,14 +18,23 @@ import dask.array as da
 import h5py
 from enum import Enum
 
-from .dimension import Dimension
-from ..base.num_utils import get_slope
-from ..base.dict_utils import print_nested_dict
-from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
-# from ..hdf.hdf_utils import is_editable_h5
+from sidpy.base.dict_utils import print_nested_dict
+from sidpy.sid.dimension import Dimension
+from sidpy.base.num_utils import get_slope
+from sidpy.viz.dataset_viz import CurveVisualizer, ImageVisualizer, \
+    ImageStackVisualizer, SpectralImageVisualizer
 
 
 class DataTypes(Enum):
+    """
+    Types of information a Dataset can have
+
+    Notes
+    -----
+    For now, this information is only used for guiding the visualization of
+    the Dataset object. In the future, this information could be used for
+    guiding certain generic processing as well.
+    """
     UNKNOWN = -1
     SPECTRUM = 1
     LINE_PLOT = 2
@@ -137,32 +146,48 @@ def view_subclass(darr, cls):
 
 
 class Dataset(da.Array):
-    """
-    ..autoclass::Dataset
-
-    To instantiate from an existing array-like object,
-    use :func:`Dataset.from_array` - requires numpy array, list or tuple
-
-    This dask array is extended to have the following attributes:
-    -data_type: DataType ('image', 'image_stack',  spectral_image', ...
-    -units: str
-    -title: str name of the data set
-    -modality: str type of data
-    -source: str what kind of instrument or method
-    -axes: dictionary of Dimensions one for each data dimension
-                    (the axes are dimension datasets with name, label, units, and 'dimension_type' attributes).
-
-    -metadata: dictionary of additional metadata
-    -orginal_metadata: dictionary of original metadata of file,
-
-    -labels: returns labels of all dimensions.
-
-    functions:
-    set_dimension(axis, dimensions): set a Dimension to a specific axis
-    """
 
     def __init__(self, *args, **kwargs):
-        super(Dataset, self).__init__()
+        """
+        ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+        The Dataset class provides users with a self-contained object that
+        captures all necessary information to describe a scientific dataset
+        along with its provenance, axes, context, etc.
+
+        Attributes
+        ----------
+        self.quantity : str
+            Physical quantity. E.g. - current
+        self.units : str
+            Physical units. E.g. - amperes
+        self.data_type : sidpy.sid.dataset.DataTypes enum
+            Type of data such as Image, Spectrum, Spectral Image etc.
+        self.title : str
+            Title for Dataset
+        self.data_descriptor : str
+            Description of this dataset
+        self.modality : str
+            Scientific modality of data. E.g. "TEM Data"
+        self.source : str
+            Source of this dataset. Such as instrument, analysis, etc.
+        self.labels : list
+            List of names of the dimensions
+        self.metadata : dict
+            Dictionary containing primary metadata associated with this data
+        self.original_metadata : dict
+            Metadata from the original source of the dataset. This dictionary
+            often contains the vendor-specific metadata or internal attributes
+            of the analysis algorithm
+        self.view : Visualizer
+            Instance of class appropriate for visualizing this object
+        self._h5_dataset : h5py.Dataset
+            Reference to HDF5 Dataset object from which this Dataset was
+            created
+        self._axes : dict
+            Dictionary of Dimension objects per dimension of the Dataset
+        """
+        # TODO: Consider using python package - pint for quantities
+        super(Dataset, self).__init__(*args, **kwargs)
 
         self._title = ''
         self._quantity = ''
@@ -177,17 +202,22 @@ class Dataset(da.Array):
 
         self.metadata = {}
         self.original_metadata = {}
-        self.view = None  # this will hold the figure and axis reference for a plot
+        # this will hold the figure and axis reference for a plot
+        self.view = None
 
     def __repr__(self):
         rep = 'sipy Dataset of type {} with:\n '.format(self.data_type)
         rep = rep + super(Dataset, self).__repr__()
-        rep = rep + '\n data contains: {} ({})'.format(self.quantity, self.units)
+        rep = rep + '\n data contains: {} ({})' \
+                    ''.format(self.quantity, self.units)
         rep = rep + '\n and Dimensions: '
 
         for key in self._axes:
-            rep = rep + '\n  {}:  {} ({}) of size {}'.format(self._axes[key].name, self._axes[key].quantity,
-                                                             self._axes[key].units, len(self._axes[key].values))
+            rep = rep + '\n  {}:  {} ({}) of size {}' \
+                        ''.format(self._axes[key].name,
+                                  self._axes[key].quantity,
+                                  self._axes[key].units,
+                                  len(self._axes[key].values))
         return rep
 
     def hdf_close(self):
@@ -198,7 +228,7 @@ class Dataset(da.Array):
     @classmethod
     def from_array(cls, x, chunks=None, name=None, lock=False):
         """
-        Initializes a sidpy dataset from an array-like object (i.e. numpy array)
+        Initializes a sidpy.Dataset from an array-like object (i.e. numpy array)
         All meta-data will be set to be generically.
 
         Parameters
@@ -235,7 +265,7 @@ class Dataset(da.Array):
         new_dset.title = 'generic'
         new_dset.quantity = 'generic'
         new_dset.units = 'generic'
-        new_dset.data_type = 'UNKNOWN'
+        new_dset.data_type = DataTypes['UNKNOWN']
 
         new_dset.modality = 'generic'
         new_dset.source = 'generic'
@@ -252,7 +282,7 @@ class Dataset(da.Array):
 
     def like_data(self, data,  name=None, lock=False):
         """
-        Returns pysid dataset of new values but with metadata of this dataset
+        Returns sidpy.Dataset of new values but with metadata of this dataset.
         - if dimension of new dataset is different from this dataset and the scale is linear,
             then this scale will be applied to the new dataset (naming and units will stay the same),
             otherwise the dimension will be generic.
@@ -305,7 +335,7 @@ class Dataset(da.Array):
 
     def copy(self):
         """
-        actually a deep copy of this dataset.
+        Returns a deep copy of this dataset.
 
         Returns
         -------
@@ -327,16 +357,27 @@ class Dataset(da.Array):
 
         return dset_copy
 
-    def rename_dimension(self, dim, name):
-        if not isinstance(dim, int):
-            raise ValueError('Dimension must be an integer')
-        if 0 > dim >= len(self.shape):
-            raise ValueError('Dimension must be an integer between 0 and {}'.format(len(self.shape)-1))
+    def rename_dimension(self, ind, name):
+        """
+        Renames Dimension at the specified index
+
+        Parameters
+        ----------
+        ind : int
+            Index of the dimension
+        name : str
+            New name for Dimension
+        """
+        if not isinstance(ind, int):
+            raise TypeError('ind must be an integer')
+        if 0 > ind >= len(self.shape):
+            raise ValueError('ind must be an integer between 0 and {}'
+                             ''.format(len(self.shape)-1))
         if not isinstance(name, str):
-            raise ValueError('New Dimension name must be a string')
-        delattr(self, self._axes[dim].name)
-        self._axes[dim].name = name
-        setattr(self, name, self._axes[dim])
+            raise TypeError('name for new Dimension must be a string')
+        delattr(self, self._axes[ind].name)
+        self._axes[ind].name = name
+        setattr(self, name, self._axes[ind])
 
     def set_dimension(self, dim, dimension):
         """
@@ -344,8 +385,10 @@ class Dataset(da.Array):
 
         Parameters
         ----------
-        dim: integer - dimension of dataset
-        dimension: sidpy dimension - name, values, ... of dimension
+        dim: int
+            Index of dimension
+        dimension: sidpy.Dimension
+            Dimension object describing this dimension of the Dataset
 
         Returns
         -------
@@ -360,10 +403,24 @@ class Dataset(da.Array):
             raise ValueError('dimension needs to be a sidpy dimension object')
 
     def view_metadata(self):
+        """
+        Prints the metadata to stdout
+
+        Returns
+        -------
+        None
+        """
         if isinstance(self.metadata, dict):
             print_nested_dict(self.metadata)
             
     def view_original_metadata(self):
+        """
+        Prints the original_metadata dictionary to stdout
+
+        Returns
+        -------
+        None
+        """
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
 
@@ -438,8 +495,9 @@ class Dataset(da.Array):
 
     def get_extent(self, dimensions):
         """
-        get image extend as needed i.e. in matplotlib's imshow function.
-        This function works for equi or non-equi spaced axes and is suitable for subpixel accuracy of positions
+        get image extents as needed i.e. in matplotlib's imshow function.
+        This function works for equi- or non-equi spaced axes and is suitable
+        for subpixel accuracy of positions
 
         Parameters
         ----------
@@ -449,12 +507,13 @@ class Dataset(da.Array):
         -------
         list of floats
         """
+        # TODO : Should this method not be internal? i.e. start with _
         extend = []
-        for i, dim in enumerate(dimensions):
+        for ind, dim in enumerate(dimensions):
             temp = self._axes[dim].values
             start = temp[0] - (temp[1] - temp[0])/2
             end = temp[-1] + (temp[-1] - temp[-2])/2
-            if i == 1:
+            if ind == 1:
                 extend.append(end)  # y axis starts on top
                 extend.append(start)
             else:
