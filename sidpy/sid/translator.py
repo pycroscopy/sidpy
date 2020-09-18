@@ -39,9 +39,9 @@ class Translator(object):
         -------
         Translator object
         """
-        warn('sidpy.Translator will soon be replaced by sidpy.Reader. Consider'
-             'restructuring code from Translator to Reader',
-             DeprecationWarning)
+        warn('Consider using sidpy.Reader instead of sidpy.Translator if '
+             'possible and contribute your reader to ScopeReaders',
+             FutureWarning)
         pass
 
     @abc.abstractmethod
