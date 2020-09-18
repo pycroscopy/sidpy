@@ -54,12 +54,15 @@ def get_chunks(data, chunks=None):
 
     Parameters
     ----------
-    data
-    chunks
+    data : dask.array.Array
+        Dask array
+    chunks : tuple or str
+        Tuple of integers smaller than shape of ``data``
 
     Returns
     -------
-
+    chunks : tuple
+        Chunking configuration for dask array
     """
     if chunks is None:
 
@@ -92,11 +95,13 @@ def ensure_array_like(data):
 
     Parameters
     ----------
-    data
+    data : object
+        array-like object such as a numpy or dask array or iterable like list
 
     Returns
     -------
-
+    data : array-like
+        Array-like object (E.g. numpy or dask array)
     """
     if not hasattr(data, 'shape') or not hasattr(data, 'dtype'):
         a = np.asarray(data)
@@ -112,8 +117,10 @@ def ensure_dask_array(data, chunks=None):
 
     Parameters
     ----------
-    data
-    chunks
+    data : object
+        array-like object such as a numpy or dask array or iterable like list
+    chunks : tuple or str
+        Tuple of integers smaller than shape of ``data``
 
     Returns
     -------
@@ -135,8 +142,10 @@ def view_subclass(darr, cls):
 
     Parameters
     ----------
-    darr
-    cls
+    darr : dask.array.Array
+        Dask array of interest
+    cls : ?
+        ?
 
     Returns
     -------
