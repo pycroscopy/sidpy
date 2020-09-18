@@ -188,12 +188,10 @@ class Dataset(da.Array):
         self.h5_dataset : h5py.Dataset
             Reference to HDF5 Dataset object from which this Dataset was
             created
-        self.axes : dict
+        self._axes : dict
             Dictionary of Dimension objects per dimension of the Dataset
-        self.group_attrs : dict
-            ?
-        self.attrs : dict
-            ?
+        self.meta_data : dict
+            Metadata to store relevant additional information for the dataset.
         self.original_metadata : dict
             Metadata from the original source of the dataset. This dictionary
             often contains the vendor-specific metadata or internal attributes
@@ -205,7 +203,6 @@ class Dataset(da.Array):
         self._units = ''
         self._title = ''
         self._data_type = ''
-        self._data_descriptor = ''
         self._modality = ''
         self._source = ''
 
@@ -232,7 +229,7 @@ class Dataset(da.Array):
             print(self.h5_dataset)
 
     @classmethod
-    def from_array(cls, x, chunks=None, name=None, lock=False):
+    def from_array(cls, x, chunks='auto', name=None, lock=False):
         """
         Initializes a sidpy dataset from an array-like object (i.e. numpy array)
         All meta-data will be set to be generically.
@@ -254,14 +251,6 @@ class Dataset(da.Array):
         # override this as a class method to allow sub-classes to return
         # instances of themselves
 
-        # ensure array-like
-        x = ensure_array_like(x)
-        if hasattr(cls, 'check_input_data'):
-            cls.check_input_data(x)
-
-        # determine chunks, guessing something reasonable if user does not
-        # specify
-        chunks = get_chunks(np.array(x), chunks)
 
         # create vanilla dask array
         darr = da.from_array(np.array(x), chunks=chunks, name=name, lock=lock)
@@ -275,7 +264,6 @@ class Dataset(da.Array):
 
         cls.modality = 'generic'
         cls.source = 'generic'
-        cls.data_descriptor = 'generic'
 
         cls.axes = {}
         for dim in range(cls.ndim):
@@ -320,7 +308,7 @@ class Dataset(da.Array):
 
         new_data.modality = self.modality
         new_data.source = self.source
-        new_data.data_descriptor = ''
+
 
         for dim in range(new_data.ndim):
             # TODO: add parent to dimension to set attribute if name changes
@@ -561,17 +549,6 @@ class Dataset(da.Array):
             raise ValueError('units needs to be a string')
 
     @property
-    def data_descriptor(self):
-        return self._data_descriptor
-
-    @data_descriptor.setter
-    def data_descriptor(self, value):
-        if isinstance(value, str):
-            self._data_descriptor = value
-        else:
-            raise ValueError('data_descriptor needs to be a string')
-
-    @property
     def data_type(self):
         return self._data_type
 
@@ -621,3 +598,7 @@ class Dataset(da.Array):
             self.hdf_close()
         else:
             raise ValueError('h5_dataset needs to be a hdf5 Dataset')
+
+    @property
+    def data_descriptor(self):
+        return '{} ({})'.format(self.quantity, self.units)

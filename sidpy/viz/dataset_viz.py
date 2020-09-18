@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 # import matplotlib.animation as animation
 
-
+from ..hdf.dtype_utils import is_complex_dtype
 if sys.version_info.major == 3:
     unicode = str
 
@@ -63,7 +63,7 @@ class CurveVisualizer(object):
             fig_args['figsize'] = temp
 
         self.dim = self.dset.axes[self.spectral_dims[0]]
-        if False:  # is_complex_dtype(np.array(dset)):
+        if is_complex_dtype(dset.dtype):
             # Plot real and image
             fig, axes = plt.subplots(nrows=2, **fig_args)
 
@@ -154,20 +154,34 @@ class ImageVisualizer(object):
         if len(self.image_dims) != 2:
             raise ValueError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
 
-        if False:  # is_complex_dtype(self.dset):
-            # Plot real and image
-            fig, axes = plt.subplots(nrows=2, **fig_args)
-            for axis, ufunc, comp_name in zip(axes.flat, [np.abs, np.angle], ['Magnitude', 'Phase']):
-                cbar_label = self.data_descriptor
-                if comp_name == 'Phase':
-                    cbar_label = 'Phase (rad)'
-                plot_map(axis, ufunc(np.squeeze(img)), show_xy_ticks=True, show_cbar=True,
-                         cbar_label=cbar_label, x_vec=ref_dims[1].values, y_vec=ref_dims[0].values,
-                         **kwargs)
-                axis.set_title(self.name + '\n(' + comp_name + ')', pad=15)
-                axis.set_xlabel(ref_dims[1].name + ' (' + ref_dims[1].units + ')' + suffix[1])
-                axis.set_ylabel(ref_dims[0].name + ' (' + ref_dims[0].units + ')' + suffix[0])
-            fig.tight_layout()
+        if is_complex_dtype(dset.dtype):
+            # Plot complex image
+            ax1 = self.fig.add_subplot(121)
+            self.img = ax1.imshow(np.abs(np.squeeze(self.dset[tuple(self.selection)])).T,
+                                  extent=self.dset.get_extent(self.image_dims), **kwargs)
+            ax1.set_xlabel("{} [{}]".format(self.dset.axes[self.image_dims[0]].quantity,
+                                                  self.dset.axes[self.image_dims[0]].units))
+            ax1.set_ylabel("{} [{}]".format(self.dset.axes[self.image_dims[1]].quantity,
+                                                  self.dset.axes[self.image_dims[1]].units))
+            ax1.set_title(dset.title + '\n(Magnitude)', pad=15)
+            cbar = self.fig.colorbar(self.img)
+            cbar.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
+            ax1.ticklabel_format(style='sci', scilimits=(-2, 3))
+
+
+            ax2 = self.fig.add_subplot(122)
+            self.img_c = ax2.imshow(np.angle(np.squeeze(self.dset[tuple(self.selection)])).T,
+                                      extent=self.dset.get_extent(self.image_dims), **kwargs)
+            ax2.set_xlabel("{} [{}]".format(self.dset.axes[self.image_dims[0]].quantity,
+                                            self.dset.axes[self.image_dims[0]].units))
+            ax2.set_ylabel("{} [{}]".format(self.dset.axes[self.image_dims[1]].quantity,
+                                            self.dset.axes[self.image_dims[1]].units))
+            ax2.set_title(dset.title + '\n(Phase)', pad=15)
+            cbar_c = self.fig.colorbar(self.img)
+            cbar_c.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
+            ax2.ticklabel_format(style='sci', scilimits=(-2, 3))
+
+            self.fig.tight_layout()
 
         else:
             self.axis = self.fig.add_subplot(1, 1, 1)
