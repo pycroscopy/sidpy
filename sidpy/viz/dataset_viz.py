@@ -16,24 +16,17 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 # import matplotlib.animation as animation
 
-from enum import Enum
 
 if sys.version_info.major == 3:
     unicode = str
 
 default_cmap = plt.cm.viridis
 
-class PlotTypes(Enum):
-    SPECTRUM = 1
-    LINE_PLOT= 1
-    IMAGE = 2
-    IMAGE_STACK =3
-    SPECTRAL_IMAGE = 4
-    IMAGE_4D = 5
 
 class CurveVisualizer(object):
     def __init__(self, dset, spectrum_number=None, figure=None, **kwargs):
         from ..sid.dataset import Dataset
+        from ..sid.dimension import DimensionTypes
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -53,7 +46,7 @@ class CurveVisualizer(object):
         self.spectral_dims = []
 
         for dim, axis in dset.axes.items():
-            if axis.dimension_type == 'spectral':
+            if axis.dimension_type == DimensionTypes.SPECTRAL:
                 self.selection.append(slice(None))
                 self.spectral_dims.append(dim)
             else:
@@ -63,13 +56,11 @@ class CurveVisualizer(object):
                     self.spectrum_number = 0
                     self.selection.append(slice(0, 1))
 
-
         # Handle the simple cases first:
         fig_args = dict()
         temp = kwargs.pop('figsize', None)
         if temp is not None:
             fig_args['figsize'] = temp
-
 
         self.dim = self.dset.axes[self.spectral_dims[0]]
         if False:  # is_complex_dtype(np.array(dset)):
@@ -106,7 +97,7 @@ class ImageVisualizer(object):
     Interactive display of image plot
 
     The stack can be scrolled through with a mouse wheel or the slider
-    The ususal zoom effects of matplotlib apply.
+    The usual zoom effects of matplotlib apply.
     Works on every backend because it only depends on matplotlib.
 
     Important: keep a reference to this class to maintain interactive properties so usage is:
@@ -127,9 +118,10 @@ class ImageVisualizer(object):
 
     def __init__(self, dset, figure=None, image_number=0, **kwargs):
         from ..sid.dataset import Dataset
+        from ..sid.dimension import DimensionTypes
 
         """
-        plotting of data according to two axis marked as 'spatial' in the dimensions
+        plotting of data according to two axis marked as SPATIAL in the dimensions
         """
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -150,7 +142,7 @@ class ImageVisualizer(object):
         self.image_dims = []
 
         for dim, axis in dset.axes.items():
-            if axis.dimension_type == 'spatial':
+            if axis.dimension_type in [DimensionTypes.SPATIAL, DimensionTypes.RECIPROCAL]:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
             else:
@@ -160,7 +152,7 @@ class ImageVisualizer(object):
                     self.image_number = 0
                     self.selection.append(slice(0, 1))
         if len(self.image_dims) != 2:
-            raise ValueError('We need two dimensions with dimension_type spatial to plot an image')
+            raise ValueError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
 
         if False:  # is_complex_dtype(self.dset):
             # Plot real and image
@@ -228,7 +220,7 @@ class ImageStackVisualizer(object):
     Interactive display of image stack plot
 
     The stack can be scrolled through with a mouse wheel or the slider
-    The ususal zoom effects of matplotlib apply.
+    The usual zoom effects of matplotlib apply.
     Works on every backend because it only depends on matplotlib.
 
     Important: keep a reference to this class to maintain interactive properties so usage is:
@@ -248,6 +240,8 @@ class ImageStackVisualizer(object):
 
     def __init__(self, dset, figure=None, **kwargs):
         from ..sid.dataset import Dataset
+        from ..sid.dimension import DimensionTypes
+
         from IPython.display import display
 
         if not isinstance(dset, Dataset):
@@ -269,10 +263,10 @@ class ImageStackVisualizer(object):
         self.image_dims = []
         self.selection = []
         for dim, axis in dset.axes.items():
-            if axis.dimension_type == 'spatial':
+            if axis.dimension_type == DimensionTypes.SPATIAL:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
-            elif axis.dimension_type in ['frame', 'time', 'stack'] or len(dset) == 3:
+            elif axis.dimension_type == DimensionTypes.TEMPORAL or len(dset) == 3:
                 self.selection.append(slice(0, 1))
                 self.stack_dim = dim
             else:
@@ -285,7 +279,7 @@ class ImageStackVisualizer(object):
             raise KeyError('We need one dimensions with dimension_type stack, time or frame')
 
         if len(self.image_dims) < 2:
-            raise KeyError('spatial key in dimension_dictionary must be list of length 2')
+            raise KeyError('Two SPATIAL dimension are necessary for this plot')
 
         self.dset = dset
 
@@ -413,6 +407,7 @@ class SpectralImageVisualizer(object):
 
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
         from ..sid.dataset import Dataset
+        from ..sid.dimension import DimensionTypes
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -436,22 +431,19 @@ class SpectralImageVisualizer(object):
         image_dims = []
         spectral_dims = []
         for dim, axis in dset.axes.items():
-            if axis.dimension_type == 'spatial':
+            if axis.dimension_type == DimensionTypes.SPATIAL:
                 selection.append(slice(None))
                 image_dims.append(dim)
-            elif axis.dimension_type == 'spectral':
+            elif axis.dimension_type == DimensionTypes.SPECTRAL:
                 selection.append(slice(0, 1))
                 spectral_dims.append(dim)
             else:
                 selection.append(slice(0, 1))
         if len(image_dims) != 2:
-            raise ValueError('We need two dimensions with dimension_type spatial to plot an image')
-
-        if len(image_dims) != 2:
-            raise KeyError('spatial key in dimension_dictionary must be list of length 2')
+            raise ValueError('We need two dimensions with dimension_type SPATIA: to plot an image')
 
         if len(spectral_dims) != 1:
-            raise KeyError('spectral key in dimension_dictionary must be list of length 1')
+            raise KeyError('We need one dimension with dimension_type SPECTRAL for a spectral image plot')
 
         self.horizontal = horizontal
         self.x = 0
@@ -540,6 +532,7 @@ class SpectralImageVisualizer(object):
         self._update()
 
     def get_spectrum(self):
+        from ..sid.dimension import DimensionTypes
 
         if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
             self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
@@ -549,13 +542,13 @@ class SpectralImageVisualizer(object):
 
         for dim, axis in self.dset.axes.items():
             # print(dim, axis.dimension_type)
-            if axis.dimension_type == 'spatial':
+            if axis.dimension_type == DimensionTypes.SPATIAL:
                 if dim == self.image_dims[0]:
                     selection.append(slice(self.x, self.x + self.bin_x))
                 else:
                     selection.append(slice(self.y, self.y + self.bin_y))
 
-            elif axis.dimension_type == 'spectral':
+            elif axis.dimension_type == DimensionTypes.SPECTRAL:
                 selection.append(slice(None))
             else:
                 selection.append(slice(0, 1))
