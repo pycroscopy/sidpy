@@ -63,12 +63,12 @@ class Dataset(da.Array):
     use :func:`Dataset.from_array` - requires numpy array, list or tuple
 
     This dask array is extended to have the following attributes:
-    -data_type: str ('image', 'image_stack',  spectrum_image', ...
+    -data_type: DataTypes ('image', 'image_stack',  spectral_image', ...
     -units: str
     -quantity: str what kind of data ('intensity', 'height', ..)
     -title: name of the data set
-    -modality
-    -source
+    -modality: character of data such as 'STM, 'AFM', 'TEM', 'SEM', 'DFT', 'simulation', ..)
+    -source: origin of data such as acquisition instrument ('Nion US100', 'VASP', ..)
     -_axes: dictionary of Dimensions one for each data dimension
                     (the axes are dimension datasets with name, label, units,
                     and 'dimension_type' attributes).
@@ -80,10 +80,16 @@ class Dataset(da.Array):
     -data_descriptor: returns a label for the colorbar in matplotlib and such
 
     functions:
-    from_array(data, name): constructs the dataset form a array like object (numpy array, dask array, ...)
-    set_dimension(axis, dimensions): set a Dimension to a specific axis
-
-
+    -from_array(data, name): constructs the dataset form a array like object (numpy array, dask array, ...)
+    -like_data(data,name): constructs the dataset form a array like object and copies attributes and
+    metadata from parent dataset
+    -copy()
+    -plot(): plots dataset dependend on data_typw and dimension_types.
+    -get_extent(): extent to be used with imshow function of matplotlib
+    -set_dimension(axis, dimensions): set a Dimension to a specific axis
+    -rename_dimension(dimension, name): renames attribute of dimension
+    -view_metadata: pretty plot of metadata dictionary
+    -view_original_metadata: pretty plot of original_metadata dictionary
     """
 
     def __init__(self, *args, **kwargs):
@@ -106,7 +112,7 @@ class Dataset(da.Array):
         self.data_descriptor : str
             Description of this dataset
         self.modality : str
-            Isn't this the same as data_type?
+            character of data such as 'STM', 'TEM', 'DFT'
         self.source : str
             Source of this dataset. Such as instrument, analysis, etc.?
         self.h5_dataset : h5py.Dataset
