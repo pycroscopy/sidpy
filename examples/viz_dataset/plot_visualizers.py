@@ -136,36 +136,36 @@ plt.show()
 # Note that you always have to keep a reference for an interactive plot (here view)
 
 
-<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+# <<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
 
 view = sidpy.viz.dataset_viz.SpectralImageVisualizer(dset)
 view.set_bin([40,40])
 x, y = np.mgrid[0:501:100, 0:501:100] + 5
 view.axes[0].scatter(x, y, color='red');
-=======
+# =======
 ###############################################################################
 #
 kwargs = {'scale_bar': True, 'cmap': 'hot'}
 dset.dim_0.dimension_type = 'TEMPORAL'
 print(dset.dim_0.name)
 view = sidpy.viz.dataset_viz.ImageStackVisualizer(dset, **kwargs)
-<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
-=======
->>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
->>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
+# <<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
+# =======
+# >>>>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+# >>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 plt.show()
 
 ###############################################################################
 
-<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
-=======
+#<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+# =======
 print(dset.shape)
 kwargs = {'scale_bar': True, 'cmap': 'hot'}
 view = sidpy.viz.dataset_viz.ImageVisualizer(dset, image_number=5, **kwargs)
-<<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
-=======
->>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
->>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
+# <<<<<<< Updated upstream:examples/viz_dataset/plot_visualizers.py
+# =======
+# >>>>> 608507c4c878dbbaaf7968979bd27d058695deed:examples/viz_dataset/plot_visualizers.py
+# >>>>>>> Stashed changes:examples/viz/dataset/plot_visualizers.py
 
 ###############################################################################
 # The generic plot command of a dispy dataset looks for the ``data_type`` to
@@ -173,14 +173,14 @@ view = sidpy.viz.dataset_viz.ImageVisualizer(dset, image_number=5, **kwargs)
 # We cn force any plot with the expliit plot command, but we need to provide the
 # ``dimension_type`` as information what axis to be used for the plot.
 
-<<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
+# <<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
 print(dset.shape)
 kwargs = {'scale_bar': True, 'cmap': 'hot'}
 view = sidpy.viz.dataset_viz.ImageVisualizer(dset, image_number = 5, **kwargs)
 plt.show()
 
 ###############################################################################
-=======
+# =======
 dset.data_type = 'spectral_image'
 dset.set_dimension(0, sidpy.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
