@@ -14,7 +14,7 @@ import numpy as np
 from enum import Enum
 from sidpy.base.string_utils import validate_single_string_arg
 
-__all__ = ['Dimension']
+__all__ = ['Dimension', 'DimensionTypes']
 
 if sys.version_info.major == 3:
     unicode = str

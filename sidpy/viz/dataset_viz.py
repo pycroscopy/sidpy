@@ -45,7 +45,7 @@ class CurveVisualizer(object):
         self.selection = []
         self.spectral_dims = []
 
-        for dim, axis in dset.axes.items():
+        for dim, axis in dset._axes.items():
             if axis.dimension_type == DimensionTypes.SPECTRAL:
                 self.selection.append(slice(None))
                 self.spectral_dims.append(dim)
@@ -62,23 +62,23 @@ class CurveVisualizer(object):
         if temp is not None:
             fig_args['figsize'] = temp
 
-        self.dim = self.dset.axes[self.spectral_dims[0]]
+        self.dim = self.dset._axes[self.spectral_dims[0]]
+
         if is_complex_dtype(dset.dtype):
             # Plot real and image
             fig, axes = plt.subplots(nrows=2, **fig_args)
 
-            for axis, ufunc, comp_name in zip(axes.flat, [np.abs, np.angle], ['Magnitude', 'Phase']):
-                axis.plot(self.dset.axes[ref_dims].values, ufunc(np.squeeze(curve)), **kwargs)
-                if comp_name == 'Magnitude':
-                    axis.set_title(self.dset.title + '\n(' + comp_name + ')', pad=15)
-                    axis.set_xlabel(self.dset.axes[ref_dims[0]].name)  # + x_suffix)
-                    axis.set_ylabel(self.dset.data_descriptor)
-                    axis.ticklabel_format(style='sci', scilimits=(-2, 3))
-                else:
-                    axis.set_title(comp_name, pad=15)
-                    axis.set_ylabel('Phase (rad)')
-                    axis.set_xlabel(self.get_dimension_labels()[ref_dims[0]])  # + x_suffix)
-                    axis.ticklabel_format(style='sci', scilimits=(-2, 3))
+            axes[0].plot(self.dim.values, np.abs(np.squeeze(self.dset)), **kwargs)
+
+            axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
+            axes[0].set_xlabel(self.dset.labels[self.dim])
+            axes[0].set_ylabel(self.dset.data_descriptor)
+            axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
+
+            axes[1].set_title(self.dset.title + '\n(Phase)', pad=15)
+            axes[1].set_ylabel('Phase (rad)')
+            axes[1].set_xlabel(self.dset.labels[self.dim])  # + x_suffix)
+            axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
 
             fig.tight_layout()
 
@@ -86,8 +86,8 @@ class CurveVisualizer(object):
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
             self.axis.plot(self.dim.values, self.dset, **kwargs)
             self.axis.set_title(self.dset.title, pad=15)
-            self.axis.set_xlabel('{}, [{}]'.format(self.dim.quantity, self.dim.units))  # + x_suffix)
-            self.axis.set_ylabel('{}, [{}]'.format(self.dset.quantity, self.dset.units))
+            self.axis.set_xlabel(self.dset.labels[self.dim])
+            self.axis.set_ylabel(self.dset.data_descriptor)
             self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
             self.fig.canvas.draw_idle()
 
@@ -141,7 +141,7 @@ class ImageVisualizer(object):
         self.selection = []
         self.image_dims = []
 
-        for dim, axis in dset.axes.items():
+        for dim, axis in dset._axes.items():
             if axis.dimension_type in [DimensionTypes.SPATIAL, DimensionTypes.RECIPROCAL]:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
@@ -156,30 +156,26 @@ class ImageVisualizer(object):
 
         if is_complex_dtype(dset.dtype):
             # Plot complex image
-            ax1 = self.fig.add_subplot(121)
-            self.img = ax1.imshow(np.abs(np.squeeze(self.dset[tuple(self.selection)])).T,
-                                  extent=self.dset.get_extent(self.image_dims), **kwargs)
-            ax1.set_xlabel("{} [{}]".format(self.dset.axes[self.image_dims[0]].quantity,
-                                                  self.dset.axes[self.image_dims[0]].units))
-            ax1.set_ylabel("{} [{}]".format(self.dset.axes[self.image_dims[1]].quantity,
-                                                  self.dset.axes[self.image_dims[1]].units))
-            ax1.set_title(dset.title + '\n(Magnitude)', pad=15)
+            self.axes = []
+            self.axes.append(self.fig.add_subplot(121))
+            self.img = self.axes[0].imshow(np.abs(np.squeeze(self.dset[tuple(self.selection)])).T,
+                                           extent=self.dset.get_extent(self.image_dims), **kwargs)
+            self.axes[0].set_xlabel(self.dset.labels[self.image_dims[0]])
+            self.axes[0].set_ylabel(self.dset.labels[self.image_dims[1]])
+            self.axes[0].set_title(dset.title + '\n(Magnitude)', pad=15)
             cbar = self.fig.colorbar(self.img)
             cbar.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
-            ax1.ticklabel_format(style='sci', scilimits=(-2, 3))
+            self.axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
 
-
-            ax2 = self.fig.add_subplot(122)
-            self.img_c = ax2.imshow(np.angle(np.squeeze(self.dset[tuple(self.selection)])).T,
-                                      extent=self.dset.get_extent(self.image_dims), **kwargs)
-            ax2.set_xlabel("{} [{}]".format(self.dset.axes[self.image_dims[0]].quantity,
-                                            self.dset.axes[self.image_dims[0]].units))
-            ax2.set_ylabel("{} [{}]".format(self.dset.axes[self.image_dims[1]].quantity,
-                                            self.dset.axes[self.image_dims[1]].units))
-            ax2.set_title(dset.title + '\n(Phase)', pad=15)
-            cbar_c = self.fig.colorbar(self.img)
-            cbar_c.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
-            ax2.ticklabel_format(style='sci', scilimits=(-2, 3))
+            self.axes.append(self.fig.add_subplot(122))
+            self.img_c = self.axes[1].imshow(np.angle(np.squeeze(self.dset[tuple(self.selection)])).T,
+                                             extent=self.dset.get_extent(self.image_dims), **kwargs)
+            self.axes[1].set_xlabel(self.dset.labels[self.image_dims[0]])
+            self.axes[1].set_ylabel(self.dset.labels[self.image_dims[1]])
+            self.axes[1].set_title(dset.title + '\n(Phase)', pad=15)
+            cbar_c = self.fig.colorbar(self.img_c)
+            cbar_c.set_label(self.dset.data_descriptor)
+            self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
 
             self.fig.tight_layout()
 
@@ -198,10 +194,8 @@ class ImageVisualizer(object):
 
         self.img = self.axis.imshow(np.squeeze(self.dset[tuple(self.selection)]).T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
-        self.axis.set_xlabel("{} [{}]".format(self.dset.axes[self.image_dims[0]].quantity,
-                                              self.dset.axes[self.image_dims[0]].units))
-        self.axis.set_ylabel("{} [{}]".format(self.dset.axes[self.image_dims[1]].quantity,
-                                              self.dset.axes[self.image_dims[1]].units))
+        self.axis.set_xlabel(self.dset.labels[self.image_dims[0]])
+        self.axis.set_ylabel(self.dset.labels[self.image_dims[1]])
         if scale_bar:
 
             plt.axis('off')
@@ -211,7 +205,7 @@ class ImageVisualizer(object):
                 size_of_bar = 1
             scalebar = AnchoredSizeBar(plt.gca().transData,
                                        size_of_bar, '{} {}'.format(size_of_bar,
-                                                                   self.dset.axes[self.image_dims[0]].units),
+                                                                   self.dset._axes[self.image_dims[0]].units),
                                        'lower left',
                                        pad=1,
                                        color='white',
@@ -222,7 +216,7 @@ class ImageVisualizer(object):
 
         else:
             cbar = self.fig.colorbar(self.img)
-            cbar.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
+            cbar.set_label(self.dset.data_descriptor)
 
             self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
             self.fig.tight_layout()
@@ -276,7 +270,7 @@ class ImageStackVisualizer(object):
         self.stack_dim = -1
         self.image_dims = []
         self.selection = []
-        for dim, axis in dset.axes.items():
+        for dim, axis in dset._axes.items():
             if axis.dimension_type == DimensionTypes.SPATIAL:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
@@ -303,6 +297,7 @@ class ImageStackVisualizer(object):
         self.number_of_slices = self.dset.shape[self.stack_dim]
         self.axis = None
         self.plot_image(**kwargs)
+        self.axis = plt.gca()
         self.axis.set_title('image stack: ' + dset.title + '\n use scroll wheel to navigate images')
         self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
 
@@ -354,10 +349,8 @@ class ImageStackVisualizer(object):
 
         self.img = self.axis.imshow(np.squeeze(self.dset[tuple(self.selection)]).T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
-        self.axis.set_xlabel("{} [{}]".format(self.dset.axes[self.image_dims[0]].quantity,
-                                              self.dset.axes[self.image_dims[0]].units))
-        self.axis.set_ylabel("{} [{}]".format(self.dset.axes[self.image_dims[1]].quantity,
-                                              self.dset.axes[self.image_dims[1]].units))
+        self.axis.set_xlabel(self.dset.labels[self.image_dims[0]])
+        self.axis.set_ylabel(self.dset.labels[self.image_dims[1]])
 
         if scale_bar:
 
@@ -368,7 +361,7 @@ class ImageStackVisualizer(object):
                 size_of_bar = 1
             scalebar = AnchoredSizeBar(plt.gca().transData,
                                        size_of_bar, '{} {}'.format(size_of_bar,
-                                                                   self.dset.axes[self.image_dims[0]].units),
+                                                                   self.dset._axes[self.image_dims[0]].units),
                                        'lower left',
                                        pad=1,
                                        color='white',
@@ -379,10 +372,11 @@ class ImageStackVisualizer(object):
 
         else:
             cbar = self.fig.colorbar(self.img)
-            cbar.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
+            cbar.set_label(self.dset.data_descriptor)
 
             self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
             self.fig.tight_layout()
+
         self.img.axes.figure.canvas.draw_idle()
 
     def _average_slices(self, event):
@@ -444,7 +438,7 @@ class SpectralImageVisualizer(object):
         selection = []
         image_dims = []
         spectral_dims = []
-        for dim, axis in dset.axes.items():
+        for dim, axis in dset._axes.items():
             if axis.dimension_type == DimensionTypes.SPATIAL:
                 selection.append(slice(None))
                 image_dims.append(dim)
@@ -469,7 +463,7 @@ class SpectralImageVisualizer(object):
         size_y = dset.shape[image_dims[1]]
 
         self.dset = dset
-        self.energy_scale = dset.axes[spectral_dims[0]].values
+        self.energy_scale = dset._axes[spectral_dims[0]].values
 
         self.extent = [0, size_x, size_y, 0]
         self.rectangle = [0, size_x, 0, size_y]
@@ -491,9 +485,9 @@ class SpectralImageVisualizer(object):
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         if horizontal:
-            self.axes[0].set_xlabel('{} [pixels]'.format(self.dset.axes[image_dims[0]].quantity))
+            self.axes[0].set_xlabel('{} [pixels]'.format(self.dset._axes[image_dims[0]].quantity))
         else:
-            self.axes[0].set_ylabel('{} [pixels]'.format(self.dset.axes[image_dims[1]].quantity))
+            self.axes[0].set_ylabel('{} [pixels]'.format(self.dset._axes[image_dims[1]].quantity))
         self.axes[0].set_aspect('equal')
 
         # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
@@ -506,10 +500,10 @@ class SpectralImageVisualizer(object):
 
         self.axes[1].plot(self.energy_scale, self.spectrum)
         self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
-        self.xlabel = "{}  ({})".format(self.dset.axes[self.spec_dim].quantity, self.dset.axes[self.spec_dim].units)
-        self.axes[1].set_xlabel(self.xlabel)  # + x_suffix)
-        self.ylabel = "{}  ({})".format(self.dset.axes[self.spec_dim].quantity, self.dset.axes[self.spec_dim].units)
-        self.axes[1].set_ylabel(self.ylabel)
+        self.xlabel = self.dset.labels[self.spec_dim]
+        self.ylabel = self.dset.data_descriptor
+        self.axes[1].set_xlabel(self.dset.labels[self.spec_dim])  # + x_suffix)
+        self.axes[1].set_ylabel(self.dset.data_descriptor)
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
@@ -554,7 +548,7 @@ class SpectralImageVisualizer(object):
             self.y = self.dset.shape[self.image_dims[1]] - self.bin_y
         selection = []
 
-        for dim, axis in self.dset.axes.items():
+        for dim, axis in self.dset._axes.items():
             # print(dim, axis.dimension_type)
             if axis.dimension_type == DimensionTypes.SPATIAL:
                 if dim == self.image_dims[0]:
