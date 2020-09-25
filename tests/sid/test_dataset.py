@@ -262,6 +262,16 @@ class TestLikeData(unittest.TestCase):
         self.assertEqual(descriptor.metadata, source_dset.metadata)
         self.assertEqual(descriptor.original_metadata, source_dset.original_metadata)
 
+    def test_changing_size(self):
+        values = np.ones([4, 5])
+        source_dset = Dataset.from_array(values)
+        source_dset.a *= 0.5
+        source_dset.quantity = 'test'
+        values = np.zeros([3, 5])
+        descriptor = source_dset.like_data(values)
+
+        self.assertEqual(descriptor.a, np.arange(3)*.5)
+
 
 class TestCopy(unittest.TestCase):
 

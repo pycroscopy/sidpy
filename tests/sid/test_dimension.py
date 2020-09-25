@@ -61,6 +61,7 @@ class TestDimension(unittest.TestCase):
         copy_descriptor = descriptor+1
         self.assertFalse(np.allclose(copy_descriptor.values, descriptor.values))
     
+    """
 
     def test_repr(self):
         name = 'Bias'
@@ -74,7 +75,6 @@ class TestDimension(unittest.TestCase):
         units = 'generic'
         expected = '{}:  {} ({}) of size {}'.format(name, quantity, units, values.shape)
         self.assertEqual(actual, expected)
-    """
 
     def test_equality(self):
         name = 'Bias'
