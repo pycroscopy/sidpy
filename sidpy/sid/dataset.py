@@ -11,6 +11,7 @@ https://scikit-allel.readthedocs.io/en/v0.21.1/_modules/allel/model/dask.html
 """
 
 from __future__ import division, print_function, absolute_import, unicode_literals
+import sys
 import numpy as np
 import matplotlib.pylab as plt
 import string
@@ -18,24 +19,14 @@ import dask.array as da
 import h5py
 from enum import Enum
 
-from sidpy.base.dict_utils import print_nested_dict
-from sidpy.sid.dimension import Dimension
-from sidpy.base.num_utils import get_slope
-from sidpy.viz.dataset_viz import CurveVisualizer, ImageVisualizer, \
-    ImageStackVisualizer, SpectralImageVisualizer
+from .dimension import Dimension
+from ..base.num_utils import get_slope
+from ..base.dict_utils import print_nested_dict
+from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
+# from ..hdf.hdf_utils import is_editable_h5
 
 
 class DataTypes(Enum):
-    """
-    Types of information a Dataset can have
-
-    Notes
-    -----
-    For now, this information is only used for guiding the visualization of
-    the Dataset object. In the future, this information could be used for
-    guiding certain generic processing as well.
-    """
-    # TODO: Rename to DataType - remove plural
     UNKNOWN = -1
     SPECTRUM = 1
     LINE_PLOT = 2
@@ -53,27 +44,58 @@ def view_subclass(darr, cls):
 
     Parameters
     ----------
-    darr : dask.array.Array
-        Dask array of interest
-    cls : sidpy.Dataset
-        Dataset instance
+    darr
+    cls
 
     Returns
     -------
-    dask array
+
     """
     return cls(darr.dask, name=darr.name, chunks=darr.chunks,
                dtype=darr.dtype, shape=darr.shape)
 
 
 class Dataset(da.Array):
+    """
+    ..autoclass::Dataset
+
+    To instantiate from an existing array-like object,
+    use :func:`Dataset.from_array` - requires numpy array, list or tuple
+
+    This dask array is extended to have the following attributes:
+    -data_type: DataTypes ('image', 'image_stack',  spectral_image', ...
+    -units: str
+    -quantity: str what kind of data ('intensity', 'height', ..)
+    -title: name of the data set
+    -modality: character of data such as 'STM, 'AFM', 'TEM', 'SEM', 'DFT', 'simulation', ..)
+    -source: origin of data such as acquisition instrument ('Nion US100', 'VASP', ..)
+    -_axes: dictionary of Dimensions one for each data dimension
+                    (the axes are dimension datasets with name, label, units,
+                    and 'dimension_type' attributes).
+
+    -metadata: dictionary of additional metadata
+    -original_metadata: dictionary of original metadata of file,
+
+    -labels: returns labels of all dimensions.
+    -data_descriptor: returns a label for the colorbar in matplotlib and such
+
+    functions:
+    -from_array(data, name): constructs the dataset form a array like object (numpy array, dask array, ...)
+    -like_data(data,name): constructs the dataset form a array like object and copies attributes and
+    metadata from parent dataset
+    -copy()
+    -plot(): plots dataset dependend on data_typw and dimension_types.
+    -get_extent(): extent to be used with imshow function of matplotlib
+    -set_dimension(axis, dimensions): set a Dimension to a specific axis
+    -rename_dimension(dimension, name): renames attribute of dimension
+    -view_metadata: pretty plot of metadata dictionary
+    -view_original_metadata: pretty plot of original_metadata dictionary
+    """
 
     def __init__(self, *args, **kwargs):
         """
-        ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-        The Dataset class provides users with a self-contained object that
-        captures all necessary information to describe a scientific dataset
-        along with its provenance, axes, context, etc.
+        Initializes Dataset object which is essentially a Dask array
+        underneath
 
         Attributes
         ----------
@@ -81,65 +103,60 @@ class Dataset(da.Array):
             Physical quantity. E.g. - current
         self.units : str
             Physical units. E.g. - amperes
-        self.data_type : sidpy.sid.dataset.DataTypes enum
+        self.data_type : enum
             Type of data such as Image, Spectrum, Spectral Image etc.
         self.title : str
             Title for Dataset
+        self.view : Visualizer
+            Instance of class appropriate for visualizing this object
         self.data_descriptor : str
             Description of this dataset
         self.modality : str
-            Scientific modality of data. E.g. "TEM Data"
+            character of data such as 'STM', 'TEM', 'DFT'
         self.source : str
-            Source of this dataset. Such as instrument, analysis, etc.
-        self.labels : list
-            List of names of the dimensions
-        self.metadata : dict
-            Dictionary containing primary metadata associated with this data
-        self.original_metadata : dict
-            Metadata from the original source of the dataset. This dictionary
-            often contains the vendor-specific metadata or internal attributes
-            of the analysis algorithm
-        self.view : Visualizer
-            Instance of class appropriate for visualizing this object
-        self._h5_dataset : h5py.Dataset
+            Source of this dataset. Such as instrument, analysis, etc.?
+        self.h5_dataset : h5py.Dataset
             Reference to HDF5 Dataset object from which this Dataset was
             created
         self._axes : dict
             Dictionary of Dimension objects per dimension of the Dataset
+        self.meta_data : dict
+            Metadata to store relevant additional information for the dataset.
+        self.original_metadata : dict
+            Metadata from the original source of the dataset. This dictionary
+            often contains the vendor-specific metadata or internal attributes
+            of the analysis algorithm
         """
         # TODO: Consider using python package - pint for quantities
-        super(Dataset, self).__init__(*args, **kwargs)
+        super(Dataset, self).__init__()
 
-        self._title = ''
-        self._quantity = ''
         self._units = ''
-        self._data_type = DataTypes['UNKNOWN']
-        self._data_descriptor = ''
-        self._modality = ''  # what kind of data
-        self._source = ''    # source of data
-        self._axes = {}      # dictionary of dimensions
+        self._quantity = ''
+        self._title = ''
+        self._data_type = DataTypes.UNKNOWN
+        self._modality = ''
+        self._source = ''
 
         self._h5_dataset = None
+        self._metadata = {}
+        self._original_metadata = {}
+        self._axes = {}
 
-        self.metadata = {}
-        self.original_metadata = {}
-        # this will hold the figure and axis reference for a plot
-        self.view = None
+        self.view = None  # this will hold the figure and axis reference for a plot
 
     def __repr__(self):
-        rep = 'sidpy.Dataset of type {} with:\n '.format(self.data_type)
+        rep = 'sidpy Dataset of type {} with:\n '.format(self.data_type.name)
         rep = rep + super(Dataset, self).__repr__()
-        rep = rep + '\n data contains: {} ({})' \
-                    ''.format(self.quantity, self.units)
+        rep = rep + '\n data contains: {} ({})'.format(self.quantity, self.units)
         rep = rep + '\n and Dimensions: '
 
-        # TODO: Why are we not using the repr of Dimension?
         for key in self._axes:
-            rep = rep + '\n  {}:  {} ({}) of size {}' \
-                        ''.format(self._axes[key].name,
-                                  self._axes[key].quantity,
-                                  self._axes[key].units,
-                                  len(self._axes[key].values))
+            # TODO: This should be using the repr of Dimension
+            rep = rep + '\n  {}'.format(self._axes[key].__repr__())
+
+        if hasattr(self, 'metadata'):
+            if len(self.metadata) > 0:
+                rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
 
     def hdf_close(self):
@@ -148,90 +165,52 @@ class Dataset(da.Array):
             print(self.h5_dataset)
 
     @classmethod
-    def from_array(cls, x, chunks="auto", name=None, lock=False, asarray=None,
-                   fancy=True, getitem=None, meta=None,):
+    def from_array(cls, x, name='generic', chunks='auto',  lock=False):
         """
-        Initializes a sidpy.Dataset from an array-like object (i.e. numpy array)
-        All meta-data will be set to be generic values. Consider setting other
-        attributes manually
+        Initializes a sidpy dataset from an array-like object (i.e. numpy array)
+        All meta-data will be set to be generically.
 
         Parameters
         ----------
-        x: array_like
+        x: array-like object
             the values which will populate this dataset
-        chunks : int, tuple
-            How to chunk the array. Must be one of the following forms:
-            - A blocksize like 1000.
-            - A blockshape like (1000, 1000).
-            - Explicit sizes of all blocks along all dimensions like
-              ((1000, 1000, 500), (400, 400)).
-            - A size in bytes, like "100 MiB" which will choose a uniform
-              block-like shape
-            - The word "auto" which acts like the above, but uses a configuration
-              value ``array.chunk-size`` for the chunk size
-            -1 or None as a blocksize indicate the size of the corresponding
-            dimension.
-        name : str, optional
-            The key name to use for the array. Defaults to a hash of ``x``.
-            By default, hash uses python's standard sha1. This behaviour can be
-            changed by installing cityhash, xxhash or murmurhash. If installed,
-            a large-factor speedup can be obtained in the tokenisation step.
-            Use ``name=False`` to generate a random name instead of hashing (fast)
-            .. note::
-               Because this ``name`` is used as the key in task graphs, you should
-               ensure that it uniquely identifies the data contained within. If
-               you'd like to provide a descriptive name that is still unique, combine
-               the descriptive name with :func:`dask.base.tokenize` of the
-               ``array_like``. See :ref:`graphs` for more.
-        lock : bool or Lock, optional
-            If ``x`` doesn't support concurrent reads then provide a lock here, or
-            pass in True to have dask.array create one for you.
-        asarray : bool, optional
-            If True then call np.asarray on chunks to convert them to numpy arrays.
-            If False then chunks are passed through unchanged.
-            If None (default) then we use True if the ``__array_function__`` method
-            is undefined.
-        fancy : bool, optional
-            If ``x`` doesn't support fancy indexing (e.g. indexing with lists or
-            arrays) then set to False. Default is True.
-        meta : Array-like, optional
-            The metadata for the resulting dask array.  This is the kind of array
-            that will result from slicing the input array.
-            Defaults to the input array.
+        chunks: optional integer or list of integers
+            the shape of the chunks to be loaded
+        name: optional string
+            the name of this dataset
+        lock: boolean
 
         Returns
         -------
-        new_dset : sidpy.Dataset
-            Dataset object
+         sidpy dataset
+
         """
+
         # create vanilla dask array
-        darr = da.from_array(np.array(x), chunks=chunks, name=name, lock=lock,
-                             asarray=asarray, fancy=fancy, getitem=getitem,
-                             meta=meta)
+        darr = da.from_array(np.array(x), name=name, chunks=chunks, lock=lock)
 
         # view as sub-class
-        new_dset = view_subclass(darr, cls)
-        new_dset.title = 'generic'
-        new_dset.quantity = 'generic'
-        new_dset.units = 'generic'
-        new_dset.data_type = DataTypes['UNKNOWN']
+        sid_dset = view_subclass(darr, cls)
+        sid_dset.data_type = 'UNKNOWN'
+        sid_dset.units = 'generic'
+        sid_dset.title = name
+        sid_dset.quantity = 'generic'
 
-        new_dset.modality = 'generic'
-        new_dset.source = 'generic'
+        sid_dset.modality = 'generic'
+        sid_dset.source = 'generic'
 
-        new_dset._axes = {}
-        for dim in range(new_dset.ndim):
+        sid_dset._axes = {}
+        for dim in range(sid_dset.ndim):
             # TODO: add parent to dimension to set attribute if name changes
-            new_dset.set_dimension(dim, Dimension(np.arange(new_dset.shape[dim]), name=string.ascii_lowercase[dim]))
+            sid_dset.set_dimension(dim,
+                                   Dimension(np.arange(sid_dset.shape[dim]),string.ascii_lowercase[dim]))
+        sid_dset.metadata = {}
+        sid_dset.original_metadata = {}
+        return sid_dset
 
-        new_dset.attrs = {}
-        new_dset.group_attrs = {}
-        new_dset.original_metadata = {}
-        return new_dset
-
-    def like_data(self, data,  name=None, lock=False):
+    def like_data(self, data, name=None, chunks='auto', lock=False):
         """
-        Returns sidpy.Dataset of new values but with metadata of this dataset.
+        Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
             then this scale will be applied to the new dataset (naming and units will stay the same),
             otherwise the dimension will be generic.
@@ -242,14 +221,20 @@ class Dataset(da.Array):
             values of new sidpy dataset
         name: optional string
             name of new sidpy dataset
-        lock:  boolean
+        chunks: optional list of integers
+            size of chunks for dask array
+        lock: optional boolean
+            for dask array
+
 
         Returns
         -------
         sidpy dataset
         """
+        if name is None:
+            name = 'like {}'.format(self.title)
 
-        new_data = self.from_array(data, chunks=None, name=None, lock=False)
+        new_data = self.from_array(data, name=name, chunks=chunks, lock=lock)
 
         new_data.data_type = self.data_type
         new_data.units = self.units
@@ -261,11 +246,9 @@ class Dataset(da.Array):
 
         new_data.modality = self.modality
         new_data.source = self.source
-        new_data.data_descriptor = ''
 
         for dim in range(new_data.ndim):
             # TODO: add parent to dimension to set attribute if name changes
-            new_data.labels.append(string.ascii_lowercase[dim])
             if len(self._axes[dim].values) == new_data.shape[dim]:
                 new_data.set_dimension(dim, self._axes[dim])
             else:
@@ -278,8 +261,8 @@ class Dataset(da.Array):
                 except ValueError:
                     print('using generic parameters for dimension ', dim)
 
+        new_data.metadata = dict(self.metadata).copy()
         new_data.original_metadata = {}
-        new_data.metadata = {}
         return new_data
 
     def copy(self):
@@ -291,7 +274,7 @@ class Dataset(da.Array):
         sidpy dataset
 
         """
-        dset_copy = Dataset.from_array(self, self.chunks, self.name)
+        dset_copy = Dataset.from_array(self, self.name, self.chunks)
 
         dset_copy.title = self.title
         dset_copy.units = self.units
@@ -300,26 +283,12 @@ class Dataset(da.Array):
         dset_copy.modality = self.modality
         dset_copy.source = self.source
 
-        dset_copy._axes = {}
+        dset_copy.axes = {}
         for dim in range(dset_copy.ndim):
-            dset_copy.set_dimension(dim, self._axes[dim].copy())
+            dset_copy.set_dimension(dim, self.metadata[dim].copy())
+        dset_copy.metadata = dict(self.metadata).copy()
 
         return dset_copy
-
-    def __validate_dim_index(self, ind):
-        """
-        Validates index for dimension
-
-        Parameters
-        ----------
-        ind : int
-            Index of the dimension
-        """
-        if not isinstance(ind, int):
-            raise TypeError('ind must be an integer')
-        if 0 > ind >= len(self.shape):
-            raise IndexError('ind must be an integer between 0 and {}'
-                             ''.format(len(self.shape)-1))
 
     def rename_dimension(self, ind, name):
         """
@@ -332,31 +301,44 @@ class Dataset(da.Array):
         name : str
             New name for Dimension
         """
-        self.__validate_dim_index(ind)
+        if not isinstance(ind, int):
+            raise ValueError('Dimension must be an integer')
+        if 0 > ind >= len(self.shape):
+            raise ValueError('Dimension must be an integer between 0 and {}'
+                             ''.format(len(self.shape)-1))
         if not isinstance(name, str):
-            raise TypeError('name for new Dimension must be a string')
+            raise ValueError('New Dimension name must be a string')
+        for key, dim in self._axes.items():
+            if key != ind:
+                if name == dim.name:
+                    raise ValueError('New Dimension name already used, but must be unique')
         delattr(self, self._axes[ind].name)
         self._axes[ind].name = name
         setattr(self, name, self._axes[ind])
 
-    def set_dimension(self, ind, dimension):
+    def set_dimension(self, dim, dimension):
         """
         sets the dimension for the dataset including new name and updating the axes dictionary
 
         Parameters
         ----------
-        ind: int
+        dim: int
             Index of dimension
         dimension: sidpy.Dimension
             Dimension object describing this dimension of the Dataset
+
+        Returns
+        -------
+
         """
-        self.__validate_dim_index(ind)
-
+        if not isinstance(dim, int):
+            raise ValueError('Dimension must be an integer')
+        if dim < 0  or  dim > len(self.shape):
+            raise ValueError('Dimension must be an integer in range 0 and {}'.format(len(self.shape)-1))
         if isinstance(dimension, Dimension):
-
             setattr(self, dimension.name, dimension)
-            setattr(self, 'dim_{}'.format(ind), dimension)
-            self._axes[ind] = dimension
+            setattr(self, 'dim_{}'.format(dim), dimension)
+            self._axes[dim] = dimension
         else:
             raise ValueError('dimension needs to be a sidpy dimension object')
 
@@ -483,7 +465,7 @@ class Dataset(da.Array):
     def labels(self):
         labels = []
         for key, dim in self._axes.items():
-            labels.append(dim.name)
+            labels.append('{} ({})'.format(dim.quantity, dim.units))
         return labels
 
     @property
@@ -520,17 +502,6 @@ class Dataset(da.Array):
             raise ValueError('quantity needs to be a string')
 
     @property
-    def data_descriptor(self):
-        return self._data_descriptor
-
-    @data_descriptor.setter
-    def data_descriptor(self, value):
-        if isinstance(value, str):
-            self._data_descriptor = value
-        else:
-            raise ValueError('data_descriptor needs to be a string')
-
-    @property
     def data_type(self):
         return self._data_type
 
@@ -541,8 +512,10 @@ class Dataset(da.Array):
                 self._data_type = DataTypes[value.upper()]
             else:
                 self._data_type = DataTypes.UNKNOWN
-                print('Supported data_types for plotting are only: ', DataTypes._member_names_)
+                raise Warning('Supported data_types for plotting are only: ', DataTypes._member_names_)
                 print('Setting data_type to UNKNOWN')
+        elif isinstance(value, DataTypes):
+            self._data_type = value
         else:
             raise ValueError('data_type needs to be a string')
 
@@ -580,3 +553,37 @@ class Dataset(da.Array):
             self.hdf_close()
         else:
             raise ValueError('h5_dataset needs to be a hdf5 Dataset')
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, value):
+        if isinstance(value, dict):
+            if sys.getsizeof(value) < 64000:
+                self._metadata = value
+            else:
+                raise ValueError('metadata dictionary too large, please use attributes for '
+                                 'large additional data sets')
+        else:
+            raise ValueError('metadata needs to be a python dictionary')
+
+    @property
+    def original_metadata(self):
+        return self._original_metadata
+
+    @original_metadata.setter
+    def original_metadata(self, value):
+        if isinstance(value, dict):
+            if sys.getsizeof(value) < 64000:
+                self._original_metadata = value
+            else:
+                raise ValueError('original_metadata dictionary too large, please use attributes for '
+                                 'large additional data sets')
+        else:
+            raise ValueError('original_metadata needs to be a python dictionary')
+
+    @property
+    def data_descriptor(self):
+        return '{} ({})'.format(self.quantity, self.units)

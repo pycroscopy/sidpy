@@ -78,12 +78,11 @@ class Dimension(np.ndarray):
         new_dim.quantity = quantity
         new_dim.units = units
         new_dim.dimension_type = dimension_type
-        print(new_dim.name)
         return new_dim
 
     def __repr__(self):
-        return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
-                                         self.values)
+        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units,
+                                         self.values.shape)
 
     @property
     def info(self):
