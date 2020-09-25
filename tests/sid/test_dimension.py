@@ -70,7 +70,7 @@ class TestDimension(unittest.TestCase):
 
         quantity = 'generic'
         units = 'generic'
-        expected = '{} - {} ({}): {}'.format(name, quantity, units, values)
+        expected = '{}:  {} ({}) of size {}'.format(name, quantity, units, values.shape)
         self.assertEqual(actual, expected)
 
     def test_equality(self):
@@ -130,3 +130,6 @@ class TestDimension(unittest.TestCase):
             dim = Dimension("x", 5, dimension_type=dt)
             self.assertEqual(dim.dimension_type.value, dv)
             self.assertEqual(dim.dimension_type.name, dn)
+
+    if __name__ == '__main__':
+        unittest.main()
