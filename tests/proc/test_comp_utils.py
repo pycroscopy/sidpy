@@ -191,9 +191,6 @@ class TestParallelCompute(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(data.shape[0], len(result))
         self.assertTrue(np.allclose(expected, np.array(result)))
-        print(logs)
-        print('------------------------')
-        print(exp_log)
         self.assertTrue(exp_log in logs)
 
     def test_standard_joblib_compute_many_jobs(self):
