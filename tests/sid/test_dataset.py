@@ -327,7 +327,6 @@ class TestSetDimension(unittest.TestCase):
     def test_invalid_dim_object(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
-
         with self.assertRaises(ValueError):
             descriptor.set_dimension(3, Dimension(np.arange(4), 'x', quantity='test', units='test'))
         with self.assertRaises(ValueError):
