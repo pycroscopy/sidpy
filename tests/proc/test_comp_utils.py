@@ -173,7 +173,7 @@ class TestParallelCompute(unittest.TestCase):
         data = np.random.rand(MAX_CPU_CORES * num_job_scaler, 5)
         expected = np.mean(data, axis=1)
         if expected_cores is None:
-            expected_cores = MAX_CPU_CORES - 1 - int(MAX_CPU_CORES > 4)
+            expected_cores = max(1, MAX_CPU_CORES - 1 - int(MAX_CPU_CORES > 4))
         else:
             # Handles single core machines
             expected_cores = max(1, min(MAX_CPU_CORES, expected_cores))
