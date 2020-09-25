@@ -254,10 +254,15 @@ class Dataset(da.Array):
             else:
                 # assuming the axis scale is equidistant
                 try:
-                    scale = get_slope(self._axes[dim].values)
+                    scale = get_slope(self._axes[dim])
                     axis = self._axes[dim].copy()
-                    axis.values = np.arange(new_data.shape[dim])*scale
+                    axis = Dimension(np.arange(new_data.shape[dim])*scale, self._axes[dim].name)
+                    axis.quantity = self._axes[dim].quantity
+                    axis.units = self._axes[dim].units
+                    axis.dimension_type = self._axes[dim].dimension_type
+
                     new_data.set_dimension(dim, axis)
+
                 except ValueError:
                     print('using generic parameters for dimension ', dim)
 

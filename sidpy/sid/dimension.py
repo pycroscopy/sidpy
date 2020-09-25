@@ -39,7 +39,7 @@ class Dimension(np.ndarray):
     """
 
     def __new__(cls, values, name='none', quantity='generic', units='generic',
-                dimension_type=DimensionTypes.UNKNOWN):
+                dimension_type=DimensionTypes.UNKNOWN, *args, **kwargs):
         """
         Parameters
         ----------
@@ -72,6 +72,7 @@ class Dimension(np.ndarray):
         self.values : array-like
             Values over which this dimension was varied
         """
+        #super(Dimension, cls).__new__(cls,  *args **kwargs)
         if isinstance(values, int):
             if values < 0:
                 raise TypeError("values should at least be specified as a positive integer")
@@ -80,7 +81,7 @@ class Dimension(np.ndarray):
             raise TypeError("values should at least be specified as a positive integer")
         if np.array(values).ndim != 1:
             raise ValueError('Dimension can only be 1 dimensional')
-        new_dim = np.asarray(values).view(cls)
+        new_dim = np.asarray(values, dtype=float).view(cls)
         new_dim.name = name
         new_dim.quantity = quantity
         new_dim.units = units
@@ -90,7 +91,9 @@ class Dimension(np.ndarray):
     def __repr__(self):
         return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units,
                                                 self.shape)
-
+    def __str__(self):
+        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units,
+                                                self.shape)
     def __copy__(self):
         new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
         new_dim.dimension_type = self.dimension_type
