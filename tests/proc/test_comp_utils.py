@@ -176,7 +176,7 @@ class TestParallelCompute(unittest.TestCase):
             expected_cores = MAX_CPU_CORES - 1 - int(MAX_CPU_CORES > 4)
         else:
             # Handles single core machines
-            expected_cores = min(MAX_CPU_CORES, expected_cores)
+            expected_cores = max(1, min(MAX_CPU_CORES, expected_cores))
 
         exp_log = 'Rank 0 starting computing on {} cores (requested {} cores' \
                   ')'.format(expected_cores, cores)
@@ -250,9 +250,6 @@ class TestParallelCompute(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(data.shape[0], len(result))
         self.assertTrue(np.allclose(expected, np.array(result)))
-        print(logs)
-        print('~ ~ ~ ~ ~ ~~ ~ ~ ~~~~~~ ')
-        print(exp_log)
         self.assertTrue(exp_log in logs)
 
     def test_func_args_only_parallel(self):
