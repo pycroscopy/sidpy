@@ -72,7 +72,14 @@ class Dimension(np.ndarray):
         self.values : array-like
             Values over which this dimension was varied
         """
-
+        if isinstance(values, int):
+            if values < 0:
+                raise TypeError("values should at least be specified as a positive integer")
+            values = np.arange(values)
+        elif len(np.array(values)) == 0:
+            raise TypeError("values should at least be specified as a positive integer")
+        if np.array(values).ndim != 1:
+            raise ValueError('Dimension can only be 1 dimensional')
         new_dim = np.asarray(values).view(cls)
         new_dim.name = name
         new_dim.quantity = quantity
@@ -82,13 +89,17 @@ class Dimension(np.ndarray):
 
     def __repr__(self):
         return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units,
-                                         self.values.shape)
+                                                self.shape)
+
+    def __copy__(self):
+        new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
+        new_dim.dimension_type = self.dimension_type
+        return new_dim
 
     @property
     def info(self):
         return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
                                          self.values)
-
     @property
     def name(self):
         return self._name
