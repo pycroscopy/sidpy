@@ -11,7 +11,7 @@ import sys
 import h5py
 import numpy as np
 import dask.array as da
-
+from enum import Enum
 sys.path.append("../../sidpy/")
 from sidpy.hdf import hdf_utils
 
@@ -374,6 +374,29 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
             hdf_utils.write_simple_attrs(h5_f, attrs)
 
             self.assertTrue('att_1' not in h5_f.attrs.keys())
+
+        os.remove(file_path)
+
+    def test_enum_value(self):
+        file_path = 'test.h5'
+
+        class MyEnum(Enum):
+            BLUE = 1
+            RED = 2
+            GREEN = 3
+
+        data_utils.delete_existing_file(file_path)
+        with h5py.File(file_path, mode='w') as h5_f:
+
+            val = MyEnum.RED
+
+            key = 'att_1'
+            expected = val.name
+            attrs = {'att_1': val}
+
+            hdf_utils.write_simple_attrs(h5_f, attrs)
+
+            self.assertEqual(hdf_utils.get_attr(h5_f, key), expected)
 
         os.remove(file_path)
 

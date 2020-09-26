@@ -11,7 +11,7 @@ import socket
 import sys
 from warnings import warn
 from platform import platform
-
+from enum import Enum
 import h5py
 import numpy as np
 from dask import array as da
@@ -385,6 +385,10 @@ def write_simple_attrs(h5_obj, attrs, verbose=False):
 
         if val is None:
             continue
+        if isinstance(val, Enum):
+            if verbose:
+                print('taking the name: {} of Enum: {}'.format(val.name, val))
+            val = val.name
         if isinstance(val, dict):
             raise ValueError('provided dictionary was nested, not flat. '
                              'Flatten dictionary using sidpy.base.dict_utils.'
