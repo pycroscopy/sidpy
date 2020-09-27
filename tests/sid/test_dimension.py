@@ -41,7 +41,7 @@ class TestDimension(unittest.TestCase):
                                     [descriptor.name, descriptor.units]):
             self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
         self.assertTrue(np.allclose(values, descriptor.values))
-    """
+
     def test_copy(self):
         name = 'Bias'
         units = 'V'
@@ -49,6 +49,7 @@ class TestDimension(unittest.TestCase):
 
         descriptor = Dimension(values, name, units=units)
         copy_descriptor = descriptor.copy()
+
         for expected, actual in zip([copy_descriptor.name, copy_descriptor.units],
                                     [descriptor.name, descriptor.units]):
             self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
@@ -58,19 +59,15 @@ class TestDimension(unittest.TestCase):
         for expected, actual in zip([copy_descriptor.name, copy_descriptor.units],
                                     [descriptor.name, descriptor.units]):
             self.assertTrue(np.all([x != y for x, y in zip(expected, actual)]))
-        copy_descriptor = descriptor+1
+        copy_descriptor = descriptor +1
         self.assertFalse(np.allclose(copy_descriptor.values, descriptor.values))
-    
-    """
 
     def test_repr(self):
         name = 'Bias'
         values = np.arange(5)
 
         descriptor = Dimension(values, name)
-        print(descriptor)
         actual = '{}'.format(descriptor)
-        print(descriptor)
         quantity = 'generic'
         units = 'generic'
         expected = '{}:  {} ({}) of size {}'.format(name, quantity, units, values.shape)
@@ -82,17 +79,15 @@ class TestDimension(unittest.TestCase):
         dim_1 = Dimension([0, 1, 2, 3, 4], name)
         dim_2 = Dimension(np.arange(5, dtype=np.float32), name)
         self.assertEqual(dim_1, dim_2)
-
+        self.assertTrue(np.allclose(dim_1.values, dim_2.values))
 
     def test_inequality_req_inputs(self):
         name = 'Bias'
 
         self.assertTrue(Dimension([0, 1, 2, 3], name) == Dimension([0, 1, 2, 3], name))
-
         self.assertFalse(Dimension([0, 1, 2, 3], 'fdfd') == Dimension([0, 1, 2, 3], name))
 
-        self.assertNotEqual(Dimension([0, 1, 2], name),
-                            Dimension([0, 1, 2, 3], name))
+        self.assertFalse(Dimension([0, 1, 2], name)== Dimension([0, 1, 2, 3], name))
 
     def test_dimensionality(self):
         vals = np.ones((2, 2))
@@ -100,7 +95,6 @@ class TestDimension(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             _ = Dimension(vals, "x",)
         self.assertTrue(expected in str(context.exception))
-
 
     def test_nonposint_values(self):
         vals = [-1, .5]
@@ -111,7 +105,6 @@ class TestDimension(unittest.TestCase):
                 _ = Dimension(v, "x")
             self.assertTrue(e in str(context.exception))
 
-
     def test_conv2arr_values(self):
         arr = np.arange(5)
         vals = [5, arr, arr.tolist(), tuple(arr)]
@@ -120,7 +113,6 @@ class TestDimension(unittest.TestCase):
             dim = Dimension(v, "x")
             self.assertIsInstance(dim,  Dimension)
             assert_array_equal(np.array(dim), vals_expected)
-
 
     def test_dimension_type(self):
         dim_types = ["spatial", "Spatial", "reciprocal", "Reciprocal",

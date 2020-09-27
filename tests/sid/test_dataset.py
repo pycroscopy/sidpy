@@ -205,7 +205,6 @@ class TestDatasetRepr(unittest.TestCase):
         expected = expected + '\n data contains: {} ({})'.format(out, out)
         expected = expected + '\n and Dimensions: '
         expected = expected + '\n  {}:  {} ({}) of size {}'.format('a', out, out, values.shape)
-
         self.assertEqual(actual, expected)
 
     def test_fully_configured(self):
