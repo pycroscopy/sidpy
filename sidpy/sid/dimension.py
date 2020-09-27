@@ -72,7 +72,7 @@ class Dimension(np.ndarray):
         self.values : array-like
             Values over which this dimension was varied
         """
-        #super(Dimension, cls).__new__(cls,  *args **kwargs)
+
         if isinstance(values, int):
             if values < 0:
                 raise TypeError("values should at least be specified as a positive integer")
@@ -88,21 +88,43 @@ class Dimension(np.ndarray):
         new_dim.dimension_type = dimension_type
         return new_dim
 
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None:
+            return
+        self.name = getattr(obj, 'name', 'generic')
+        self.quantity = getattr(obj, 'quantity', 'generic')
+        self.units = getattr(obj, 'name', 'units')
+        self.dimension_type = getattr(obj, 'dimension_type', 'UNKNOWN')
+
+    def __array_wrap__(self, out_arr, context=None):
+        # just call the parent
+        super(Dimension, self).__array_wrap__(self, out_arr, context)
+        # return correct values
+        return out_arr
+
     def __repr__(self):
-        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units,
-                                                self.shape)
+        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units, self.shape)
+
     def __str__(self):
-        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units,
-                                                self.shape)
+        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units, self.shape)
+
     def __copy__(self):
         new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
         new_dim.dimension_type = self.dimension_type
+        return new_dim
+
+    # TODO: Find out how to get rid of this
+    def copy(self):
+        # Not sure why __copy__() would not be called by itself
+        new_dim = self.__copy__()
         return new_dim
 
     @property
     def info(self):
         return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
                                          self.values)
+
     @property
     def name(self):
         return self._name
@@ -139,19 +161,19 @@ class Dimension(np.ndarray):
             dimension_type = validate_single_string_arg(value,
                                                         'dimension_type')
 
-            if dimension_type.upper() in DimensionTypes._member_names_:
+            if dimension_type.upper() in [member.name for member in DimensionTypes]:
                 self._dimension_type = DimensionTypes[dimension_type.upper()]
             elif dimension_type.lower() in ['frame', 'time', 'stack']:
                 self._dimension_type = DimensionTypes.TEMPORAL
             else:
                 self._dimension_type = DimensionTypes.UNKNOWN
                 warn('Supported dimension types for plotting are only: {}'
-                     ''.format(DimensionTypes._member_names_))
+                     ''.format([member.name for member in DimensionTypes]))
                 warn('Setting DimensionType to UNKNOWN')
 
     @property
     def values(self):
-        return self
+        return np.array(self)
 
     def __eq__(self, other):
         if isinstance(other, Dimension):
