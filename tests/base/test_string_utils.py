@@ -253,6 +253,5 @@ class TestRemoveExtraDelimiters(unittest.TestCase):
         self.assertEqual(clean, '='.join(words))
 
 
-
 if __name__ == '__main__':
     unittest.main()
