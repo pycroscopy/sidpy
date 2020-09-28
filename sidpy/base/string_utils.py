@@ -407,6 +407,12 @@ def remove_extra_delimiters(line, separator=' '):
     line : str
         Line with extra separators removed
     """
+    if not isinstance(line, (str, unicode)):
+        raise TypeError('line should be a string')
+    if not isinstance(separator, (str, unicode)):
+        raise TypeError('separator should be a string')
+    if len(separator) == 0:
+        raise ValueError('separator should not be empty')
     items = line.split(separator)
     real = list()
     for item in items:
