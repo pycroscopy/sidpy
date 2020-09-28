@@ -171,7 +171,42 @@ class TestValidateStringArgs(unittest.TestCase):
     def test_names_not_list_of_strings(self):
         with self.assertRaises(TypeError):
             _ = validate_string_args(['a', 'v'], {'a': 1, 'v': 43})
-            
+
+
+class TestStrToOther(unittest.TestCase):
+
+    def test_invalid_input_obj_type(self):
+        for val in [1.23, {'1we': 123}, ['dssd'], True, None]:
+            with self.assertRaises(TypeError):
+                str_to_other(val)
+
+    def base_test(self, inputs, out_type):
+        for val in inputs:
+            ret = str_to_other(str(val))
+            self.assertEqual(val, ret)
+            self.assertIsInstance(ret, out_type)
+
+    def test_int(self):
+        self.base_test([23, -235457842], int)
+
+    def test_float(self):
+        self.base_test([23.45643, -2354.57842], float)
+
+    def test_exp(self):
+        self.base_test([3.14E3, -4.3E-5], float)
+
+    def test_str(self):
+        self.base_test(['hello', '1fd353'], str)
+
+    def test_bool(self):
+        for val in ['true', 'TRUE', 'True']:
+            ret = str_to_other(val)
+            self.assertEqual(ret, True)
+            self.assertIsInstance(ret, bool)
+        for val in ['false', 'FALSE', 'False']:
+            ret = str_to_other(val)
+            self.assertEqual(ret, False)
+            self.assertIsInstance(ret, bool)
 
 if __name__ == '__main__':
     unittest.main()
