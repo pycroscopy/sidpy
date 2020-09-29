@@ -171,7 +171,87 @@ class TestValidateStringArgs(unittest.TestCase):
     def test_names_not_list_of_strings(self):
         with self.assertRaises(TypeError):
             _ = validate_string_args(['a', 'v'], {'a': 1, 'v': 43})
-            
+
+
+class TestStrToOther(unittest.TestCase):
+
+    def test_invalid_input_obj_type(self):
+        for val in [1.23, {'1we': 123}, ['dssd'], True, None]:
+            with self.assertRaises(TypeError):
+                str_to_other(val)
+
+    def base_test(self, inputs, out_type):
+        for val in inputs:
+            ret = str_to_other(str(val))
+            self.assertEqual(val, ret)
+            self.assertIsInstance(ret, out_type)
+
+    def test_int(self):
+        self.base_test([23, -235457842], int)
+
+    def test_float(self):
+        self.base_test([23.45643, -2354.57842], float)
+
+    def test_exp(self):
+        self.base_test([3.14E3, -4.3E-5], float)
+
+    def test_str(self):
+        self.base_test(['hello', '1fd353'], str)
+
+    def test_bool(self):
+        for val in ['true', 'TRUE', 'True']:
+            ret = str_to_other(val)
+            self.assertEqual(ret, True)
+            self.assertIsInstance(ret, bool)
+        for val in ['false', 'FALSE', 'False']:
+            ret = str_to_other(val)
+            self.assertEqual(ret, False)
+            self.assertIsInstance(ret, bool)
+
+
+class TestRemoveExtraDelimiters(unittest.TestCase):
+
+    def test_invalid_sep_type(self):
+        for sep in [14, {'fdfd': 45}, [' ', ', '], True, (23, None)]:
+            with self.assertRaises(TypeError):
+                remove_extra_delimiters('fddfdf dfref', separator=sep)
+
+    def test_invalid_line_type(self):
+        for line in [14, {'fdfd': 45}, [' ', ', '], True, (23, None)]:
+            with self.assertRaises(TypeError):
+                remove_extra_delimiters(line, separator='-')
+
+    def test_empty_delim(self):
+        with self.assertRaises(ValueError):
+            remove_extra_delimiters('this is a test', '')
+
+    def typical_case(self, pad=False):
+        words = ['this', 'is', 'a', 'test']
+        for sep in [' ', '-']:
+            line = sep.join(words)
+            if pad:
+                dirty = sep * 4 + line + sep * 3
+            else:
+                dirty = line
+            clean = remove_extra_delimiters(dirty, separator=sep)
+            self.assertEqual(line, clean)
+            self.assertIsInstance(clean, str)
+
+    def test_single_delim(self):
+        self.typical_case(pad=False)
+
+    def test_delims_before_or_after(self):
+        self.typical_case(pad=True)
+
+    def test_multiple_consecutive_delims(self):
+        line = 'this    is a   test  sentence'
+        words = ['this', 'is', 'a', 'test', 'sentence']
+        clean = remove_extra_delimiters(line, separator=' ')
+        self.assertEqual(clean, ' '.join(words))
+        line = 'this====is=a==test=========sentence'
+        clean = remove_extra_delimiters(line, separator='=')
+        self.assertEqual(clean, '='.join(words))
+
 
 if __name__ == '__main__':
     unittest.main()
