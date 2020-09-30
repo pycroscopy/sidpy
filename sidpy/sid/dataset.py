@@ -159,6 +159,8 @@ class Dataset(da.Array):
                 rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
 
+    # TODO: Implement __eq__
+
     def hdf_close(self):
         if self.h5_dataset is not None:
             self.h5_dataset.file.close()
