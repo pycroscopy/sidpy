@@ -23,6 +23,15 @@ if sys.version_info.major == 3:
 generic_attributes = ['title', 'quantity', 'units', 'modality', 'source']
 
 
+def validate_dataset_properties(self, dataset, values, name='generic',
+                                title='generic', units='generic',
+                                modality='generic', dimension_dict=None,
+                                # add anything I missed here
+                                ):
+    self.assertIsInstance(dataset, Dataset)
+    # TODO: Validate that EVERY property is set correctly
+
+
 class TestDatasetFromArray(unittest.TestCase):
 
     def test_std_inputs(self):
@@ -59,11 +68,13 @@ class TestDatasetConstructor(unittest.TestCase):
             Dataset.from_array()
         descriptor = Dataset.from_array(np.arange(3))
         self.assertIsInstance(descriptor, Dataset)
+        # TODO: call validate_dataset_properties instead
 
     def test_all_inputs(self):
 
         descriptor = Dataset.from_array(np.arange(3), name='test')
         self.assertEqual(descriptor.title, 'test')
+        # TODO: call validate_dataset_properties instead
 
     def test_user_defined_parms(self):
         descriptor = Dataset.from_array(np.arange(3), name='test')
@@ -77,12 +88,14 @@ class TestDatasetConstructor(unittest.TestCase):
         descriptor.original_metadata = test_dict.copy()
         self.assertEqual(descriptor.metadata, test_dict)
         self.assertEqual(descriptor.original_metadata, test_dict)
+        # TODO: call validate_dataset_properties instead
 
     def test_invalid_main_types(self):
         """
         anything that is not recognized by dask will make an empty dask array
         but name has to be a string
         """
+        # TODO: call validate_dataset_properties instead
         descriptor = Dataset.from_array(DataTypes.UNKNOWN)
         self.assertEqual(descriptor.shape, ())
 
@@ -94,27 +107,33 @@ class TestDatasetConstructor(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             Dataset.from_array(1, 1)
+        # TODO: Should be TypeError
 
     def test_numpy_array_input(self):
         x = np.ones([3, 4, 5])
         descriptor = Dataset.from_array(x, name='test')
         self.assertEqual(descriptor.shape, x.shape)
+        # TODO: call validate_dataset_properties instead
 
     def test_dask_array_input(self):
-        x = da.zeros([3, 4])
-        descriptor = Dataset.from_array(x, name='test')
+        x = da.zeros([3, 4], chunks='auto')
+        descriptor = Dataset.from_array(x, chunks='auto', name='test')
         self.assertEqual(descriptor.shape, x.shape)
+        # TODO: call validate_dataset_properties instead
 
     def test_list_input(self):
         x = [[3, 4, 6], [5, 6, 7]]
         descriptor = Dataset.from_array(x, name='test')
         self.assertEqual(descriptor.shape, np.array(x).shape)
+        # TODO: call validate_dataset_properties instead
 
     def test_1d_main_data(self):
         values = np.ones([10])
         descriptor = Dataset.from_array(values)
         self.assertTrue(np.all([x == y for x, y in zip(values, descriptor)]))
 
+        # TODO: call validate_dataset_properties instead
+        # Move such validation to validate_dataset_properties
         for dim in range(len(values.shape)):
             self.assertEqual(getattr(descriptor, string.ascii_lowercase[dim]),
                              getattr(descriptor, 'dim_{}'.format(dim)))
@@ -198,13 +217,21 @@ class TestDatasetRepr(unittest.TestCase):
         actual = '{}'.format(descriptor)
 
         out = 'generic'
-        da_array = da.from_array(values, name=out)
+        da_array = da.from_array(values, chunks='auto', name='generic')
 
-        expected = 'sidpy Dataset of type {} with:\n '.format(DataTypes.UNKNOWN.name)
+        expected = 'sidpy.Dataset of type {} with:\n '.format(DataTypes.UNKNOWN.name)
         expected = expected + '{}'.format(da_array)
         expected = expected + '\n data contains: {} ({})'.format(out, out)
         expected = expected + '\n and Dimensions: '
         expected = expected + '\n  {}:  {} ({}) of size {}'.format('a', out, out, values.shape)
+
+        """
+        for exp, act in zip(expected.split('\n'), actual.split('\n')):
+            print('Expected:\t' + exp)
+            print('Actual:\t' + act)
+            print(exp == act)
+        """
+
         self.assertEqual(actual, expected)
 
     def test_fully_configured(self):
@@ -218,14 +245,21 @@ class TestDatasetRepr(unittest.TestCase):
         actual = '{}'.format(descriptor)
 
         out = 'test'
-        da_array = da.from_array(values, name='generic')
+        da_array = da.from_array(values, chunks='auto', name='generic')
 
-        expected = 'sidpy Dataset of type {} with:\n '.format(DataTypes.UNKNOWN.name)
+        expected = 'sidpy.Dataset of type {} with:\n '.format(DataTypes.UNKNOWN.name)
         expected = expected + '{}'.format(da_array)
         expected = expected + '\n data contains: {} ({})'.format(out, out)
         expected = expected + '\n and Dimensions: '
         expected = expected + '\n  {}:  {} ({}) of size {}'.format('a', 'generic', 'generic', values.shape)
         expected = expected + '\n with metadata: {}'.format([0])
+
+        """
+        for exp, act in zip(expected.split('\n'), actual.split('\n')):
+            print('Expected:\t' + exp)
+            print('Actual:\t' + act)
+            print(exp == act)
+        """
 
         self.assertEqual(actual, expected)
 
@@ -293,11 +327,10 @@ class TestRenameDimension(unittest.TestCase):
         descriptor.rename_dimension(0, 'v')
         self.assertEqual(descriptor.v, descriptor.dim_0)
 
-
     def test_invalid_index_object_type(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             descriptor.rename_dimension('v', 'v')
 
     def test_index_out_of_bounds(self):
@@ -309,7 +342,7 @@ class TestRenameDimension(unittest.TestCase):
     def test_invalid_name_object_types(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             descriptor.rename_dimension(0, 1)
 
     def test_empty_name_string(self):
@@ -337,13 +370,12 @@ class TestSetDimension(unittest.TestCase):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
 
-        with self.assertRaises(ValueError):
-            descriptor.set_dimension(3, Dimension(np.arange(4), 'x', quantity='test', units='test'))
-        with self.assertRaises(ValueError):
-            descriptor.set_dimension('2', Dimension(np.arange(4), 'x', quantity='test', units='test'))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
+            descriptor.set_dimension(3, "New dimension")
+        with self.assertRaises(TypeError):
+            descriptor.set_dimension('2', {'x': np.arange(4)})
+        with self.assertRaises(TypeError):
             descriptor.set_dimension(2, np.arange(4))
-
 
     # validity of index tested in TestRenameDimension
 
@@ -354,7 +386,6 @@ class TestViewMetadata(unittest.TestCase):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
         # self.assertEqual('{}'.format(descriptor.view_metadata()),'None')
-
 
     def test_entered_metadata(self):
         values = np.zeros([4, 5])

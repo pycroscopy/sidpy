@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Utilities that assist in writing USID related data to HDF5 files
+Objects that represent dimensions or axes of scientific datasets
 
 Created on Thu Jul  7 21:14:25 2020
 
@@ -183,6 +183,7 @@ class Dimension(np.ndarray):
                 return False
             if self.quantity != other.quantity:
                 return False
+            # TODO: Is this sufficient or do we need to call super
             if len(self.values) != len(other.values):
                 return False
             if not np.allclose(self.values, other.values):

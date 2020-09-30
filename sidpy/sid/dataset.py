@@ -145,7 +145,7 @@ class Dataset(da.Array):
         self.view = None  # this will hold the figure and axis reference for a plot
 
     def __repr__(self):
-        rep = 'sidpy Dataset of type {} with:\n '.format(self.data_type.name)
+        rep = 'sidpy.Dataset of type {} with:\n '.format(self.data_type.name)
         rep = rep + super(Dataset, self).__repr__()
         rep = rep + '\n data contains: {} ({})'.format(self.quantity, self.units)
         rep = rep + '\n and Dimensions: '
@@ -158,6 +158,8 @@ class Dataset(da.Array):
             if len(self.metadata) > 0:
                 rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
+
+    # TODO: Implement __eq__
 
     def hdf_close(self):
         if self.h5_dataset is not None:
@@ -295,6 +297,27 @@ class Dataset(da.Array):
 
         return dset_copy
 
+    def __validate_dim_index(self, ind):
+        """
+        Validates the provided index for a Dimension object
+
+        Parameters
+        ----------
+        ind : int
+            Index of the dimension
+
+        Raises
+        -------
+        TypeError : if ind is not an integer
+        IndexError : if ind is less than 0 or greater than maximum allowed
+            index for Dimension
+        """
+        if not isinstance(ind, int):
+            raise TypeError('Dimension must be an integer')
+        if 0 > ind >= len(self.shape):
+            raise IndexError('Dimension must be an integer between 0 and {}'
+                             ''.format(len(self.shape)-1))
+
     def rename_dimension(self, ind, name):
         """
         Renames Dimension at the specified index
@@ -306,13 +329,9 @@ class Dataset(da.Array):
         name : str
             New name for Dimension
         """
-        if not isinstance(ind, int):
-            raise ValueError('Dimension must be an integer')
-        if 0 > ind >= len(self.shape):
-            raise ValueError('Dimension must be an integer between 0 and {}'
-                             ''.format(len(self.shape)-1))
+        self.__validate_dim_index(ind)
         if not isinstance(name, str):
-            raise ValueError('New Dimension name must be a string')
+            raise TypeError('New Dimension name must be a string')
         for key, dim in self._axes.items():
             if key != ind:
                 if name == dim.name:
@@ -321,13 +340,13 @@ class Dataset(da.Array):
         self._axes[ind].name = name
         setattr(self, name, self._axes[ind])
 
-    def set_dimension(self, dim, dimension):
+    def set_dimension(self, ind, dimension):
         """
         sets the dimension for the dataset including new name and updating the axes dictionary
 
         Parameters
         ----------
-        dim: int
+        ind: int
             Index of dimension
         dimension: sidpy.Dimension
             Dimension object describing this dimension of the Dataset
@@ -336,16 +355,12 @@ class Dataset(da.Array):
         -------
 
         """
-        if not isinstance(dim, int):
-            raise ValueError('Dimension must be an integer')
-        if dim < 0  or  dim > len(self.shape):
-            raise ValueError('Dimension must be an integer in range 0 and {}'.format(len(self.shape)-1))
-        if isinstance(dimension, Dimension):
-            setattr(self, dimension.name, dimension)
-            setattr(self, 'dim_{}'.format(dim), dimension)
-            self._axes[dim] = dimension
-        else:
-            raise ValueError('dimension needs to be a sidpy dimension object')
+        self.__validate_dim_index(ind)
+        if not isinstance(dimension, Dimension):
+            raise TypeError('dimension needs to be a sidpy.Dimension object')
+        setattr(self, dimension.name, dimension)
+        setattr(self, 'dim_{}'.format(ind), dimension)
+        self._axes[ind] = dimension
 
     def view_metadata(self):
         """
