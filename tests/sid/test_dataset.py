@@ -24,12 +24,46 @@ generic_attributes = ['title', 'quantity', 'units', 'modality', 'source']
 
 
 def validate_dataset_properties(self, dataset, values, name='generic',
-                                title='generic', units='generic',
-                                modality='generic', dimension_dict=None,
-                                # add anything I missed here
+                                title='generic', quantity='generic', units='generic',
+                                modality='generic', source='generic', dimension_dict=None,
+                                data_type=DataTypes.UNKNOWN,
+                                metadata={}, original_metadata={}
                                 ):
+    self.assertIsInstance(self, unittest.TestCase)
     self.assertIsInstance(dataset, Dataset)
-    # TODO: Validate that EVERY property is set correctly
+    # DONE: Validate that EVERY property is set correctly
+    values = np.array(values)
+
+    self.assertTrue(np.all([hasattr(dataset, att) for att in generic_attributes]))
+
+    expected = values.flatten()
+    actual = np.array(dataset).flatten()
+    self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+
+    this_attributes = [title, quantity, units, modality, source]
+    dataset_attributes = [getattr(dataset, att) for att in generic_attributes]
+
+    for expected, actual in zip(dataset_attributes, this_attributes):
+        self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+
+    self.assertEqual(dataset.data_type, data_type)
+
+    self.assertEqual(dataset.metadata, metadata)
+    self.assertEqual(dataset.original_metadata, original_metadata)
+
+    if dimension_dict is None:
+        for dim in range(len(values.shape)):
+            self.assertEqual(getattr(dataset, string.ascii_lowercase[dim]),
+                             getattr(dataset, 'dim_{}'.format(dim)))
+    else:
+        for dim in range(len(values.shape)):
+            self.assertEqual(getattr(dataset, dimension_dict[dim].name),
+                             getattr(dataset, 'dim_{}'.format(dim)))
+            self.assertEqual(dataset._axes[dim], dimension_dict[dim])
+
+    # Make sure we do not have too many dimensions
+    self.assertFalse(hasattr(dataset, 'dim_{}'.format(len(values.shape))))
+    self.assertFalse(hasattr(dataset, string.ascii_lowercase[len(values.shape)]))
 
 
 class TestDatasetFromArray(unittest.TestCase):
@@ -39,24 +73,7 @@ class TestDatasetFromArray(unittest.TestCase):
         values = np.random.random([4, 5, 6])
         descriptor = Dataset.from_array(values)
 
-        for expected, actual in zip(values, descriptor):
-            self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
-
-        self.assertTrue(np.all([hasattr(descriptor, att) for att in generic_attributes]))
-
-        self.assertTrue(np.all([getattr(descriptor, att) == 'generic' for att in generic_attributes]))
-
-        self.assertEqual(descriptor.data_type, DataTypes.UNKNOWN)
-
-        self.assertEqual(descriptor.metadata, {})
-        self.assertEqual(descriptor.original_metadata, {})
-
-        for dim in range(len(values.shape)):
-            self.assertEqual(getattr(descriptor, string.ascii_lowercase[dim]),
-                             getattr(descriptor, 'dim_{}'.format(dim)))
-
-        self.assertFalse(hasattr(descriptor, 'dim_{}'.format(len(values.shape))))
-        self.assertFalse(hasattr(descriptor, string.ascii_lowercase[len(values.shape)]))
+        validate_dataset_properties(self, descriptor, values)
 
 
 class TestDatasetConstructor(unittest.TestCase):
@@ -67,28 +84,28 @@ class TestDatasetConstructor(unittest.TestCase):
         with self.assertRaises(TypeError):
             Dataset.from_array()
         descriptor = Dataset.from_array(np.arange(3))
-        self.assertIsInstance(descriptor, Dataset)
-        # TODO: call validate_dataset_properties instead
+        validate_dataset_properties(self, descriptor, np.arange(3))
 
     def test_all_inputs(self):
-
         descriptor = Dataset.from_array(np.arange(3), name='test')
-        self.assertEqual(descriptor.title, 'test')
-        # TODO: call validate_dataset_properties instead
+        validate_dataset_properties(self, descriptor, np.arange(3), title='test')
 
     def test_user_defined_parms(self):
         descriptor = Dataset.from_array(np.arange(3), name='test')
 
         for att in generic_attributes:
             setattr(descriptor, att, 'test')
-        self.assertTrue(np.all([getattr(descriptor, att) == 'test' for att in generic_attributes]))
 
         test_dict = {0: 'test'}
         descriptor.metadata = test_dict.copy()
         descriptor.original_metadata = test_dict.copy()
-        self.assertEqual(descriptor.metadata, test_dict)
-        self.assertEqual(descriptor.original_metadata, test_dict)
-        # TODO: call validate_dataset_properties instead
+
+        validate_dataset_properties(self, descriptor, np.arange(3), name='test',
+                                    title='test', quantity='test', units='test',
+                                    modality='test', source='test', dimension_dict=None,
+                                    data_type=DataTypes.UNKNOWN,
+                                    metadata=test_dict, original_metadata=test_dict
+                                    )
 
     def test_invalid_main_types(self):
         """
@@ -271,15 +288,15 @@ class TestDatasetRepr(unittest.TestCase):
 class TestLikeData(unittest.TestCase):
 
     def test_minimal_inputs(self):
-        values = np.ones([4,5])
+        values = np.ones([4, 5])
         source_dset = Dataset.from_array(values)
         values = np.zeros([4, 5])
         descriptor = source_dset.like_data(values)
-        self.assertTrue(descriptor.shape ==values.shape)
+        self.assertTrue(descriptor.shape == values.shape)
         self.assertIsInstance(descriptor, Dataset)
 
     def test_all_customized_properties(self):
-        values = np.ones([4,5])
+        values = np.ones([4, 5])
         source_dset = Dataset.from_array(values)
         for att in generic_attributes:
             setattr(source_dset, att, 'test')
@@ -309,14 +326,41 @@ class TestLikeData(unittest.TestCase):
 class TestCopy(unittest.TestCase):
 
     def test_minimal_inputs(self):
-        values = np.zeros([4, 5])
-        descriptor = Dataset.from_array(values)
+        values = np.random.random([4, 5])
+        dataset = Dataset.from_array(values)
 
-        # Just the main dataset
-        pass
+        descriptor = dataset.copy()
+
+        self.assertIsInstance(descriptor, Dataset)
+        for expected, actual in zip(dataset, descriptor):
+            self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+
+        self.assertTrue(np.all([hasattr(descriptor, att) for att in generic_attributes]))
+
+        self.assertTrue(np.all([getattr(descriptor, att) == 'generic' for att in generic_attributes]))
+
+        self.assertEqual(descriptor.data_type, DataTypes.UNKNOWN)
+
+        self.assertEqual(descriptor.metadata, {})
+        self.assertEqual(descriptor.original_metadata, {})
+
+        for dim in range(len(values.shape)):
+            self.assertEqual(getattr(descriptor, string.ascii_lowercase[dim]),
+                             getattr(descriptor, 'dim_{}'.format(dim)))
+
+        self.assertFalse(hasattr(descriptor, 'dim_{}'.format(len(dataset.shape))))
+        self.assertFalse(hasattr(descriptor, string.ascii_lowercase[len(dataset.shape)]))
 
     def test_all_customized_properties(self):
-        pass
+        values = np.random.random([4, 5])
+        dataset = Dataset.from_array(values)
+        dataset.rename_dimension(0, 'x')
+        dataset.quantity = 'test'
+        descriptor = dataset.copy()
+
+        self.assertIsInstance(descriptor, Dataset)
+        self.assertEqual(descriptor.quantity, dataset.quantity)
+        self.assertTrue(hasattr(descriptor, 'a'))
 
 
 class TestRenameDimension(unittest.TestCase):
@@ -363,7 +407,7 @@ class TestSetDimension(unittest.TestCase):
     def test_valid_index_and_dim_obj(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
-        descriptor.set_dimension(0,Dimension(np.arange(4),'x', quantity='test', units='test' ))
+        descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', units='test'))
         self.assertIsInstance(descriptor.x, Dimension)
 
     def test_invalid_dim_object(self):
@@ -390,13 +434,11 @@ class TestViewMetadata(unittest.TestCase):
     def test_entered_metadata(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
-        descriptor.metadata= {0: 'test'}
+        descriptor.metadata = {0: 'test'}
 
         # print('{}'.format(descriptor.view_metadata()))
 
         # self.assertEqual(descriptor.view_metadata(), '0 : test')
-
-
 
 
 class TestViewOriginalMetadata(unittest.TestCase):
@@ -405,12 +447,6 @@ class TestViewOriginalMetadata(unittest.TestCase):
         pass
 
     def test_entered_metadata(self):
-        pass
-
-
-class TestViewOriginalMetadata(unittest.TestCase):
-
-    def test_valid(self):
         pass
 
 

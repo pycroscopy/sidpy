@@ -290,9 +290,9 @@ class Dataset(da.Array):
         dset_copy.modality = self.modality
         dset_copy.source = self.source
 
-        dset_copy.axes = {}
-        for dim in range(dset_copy.ndim):
-            dset_copy.set_dimension(dim, self.metadata[dim].copy())
+        dset_copy._axes = {}
+        for dim in self._axes:
+            dset_copy.set_dimension(dim, self._axes[dim])
         dset_copy.metadata = dict(self.metadata).copy()
 
         return dset_copy
