@@ -81,7 +81,7 @@ class TestDimension(unittest.TestCase):
 
         dim_1 = Dimension([0, 1, 2, 3, 4], name, quantity, units)
         dim_2 = Dimension(np.arange(5, dtype=np.float32), name, quantity, units)
-        self.assertEqual(dim_1, dim_2)
+        self.assertEqual(dim_1.name, dim_2.name)
         self.assertEqual(dim_1.quantity, dim_2.quantity)
         self.assertEqual(dim_1.units, dim_2.units)
         assert_allclose(dim_1.values, dim_2.values)
@@ -90,11 +90,12 @@ class TestDimension(unittest.TestCase):
         dim_1 = Dimension(np.arange(5), "X", "Bias", "mV")
         dim_2 = Dimension(np.arange(5) + 1, "Y", "Length", "nm")
         dim_3 = Dimension(10)
-        self.assertNotEqual(dim_1.name, dim_2.name)
-        self.assertNotEqual(dim_1.quantity, dim_2.quantity)
-        self.assertNotEqual(dim_1.units, dim_2.units)
-        self.assertTrue(all(np.not_equal(dim_1.values, dim_2.values)))
+        self.assertFalse(dim_1.name == dim_2.name)
+        self.assertFalse(dim_1.quantity == dim_2.quantity)
+        self.assertFalse(dim_1.units == dim_2.units)
+        self.assertFalse(all(np.equal(dim_1.values, dim_2.values)))
         self.assertFalse(dim_1 == dim_3)
+
 
     def test_inequality_req_inputs(self):
         name = 'Bias'
@@ -110,6 +111,11 @@ class TestDimension(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             _ = Dimension(vals, "x",)
         self.assertTrue(expected in str(context.exception))
+
+    def test_info(self):
+        expected = "X - Bias (mV): [0. 1. 2. 3. 4.]"
+        dim = Dimension(np.arange(5), "X", "Bias", "mV")
+        self.assertTrue(dim.info, expected)
 
     def test_nonposint_values(self):
         vals = [-1, []]
