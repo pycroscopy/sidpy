@@ -259,6 +259,8 @@ def recommend_cpu_cores(num_jobs, requested_cores=None, min_free_cores=None,
     else:
         if logical_cores > 4:
             min_free_cores = 2
+        elif logical_cores == 1:
+            min_free_cores = 0
         else:
             min_free_cores = 1
         if verbose:

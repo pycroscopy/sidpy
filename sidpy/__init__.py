@@ -3,14 +3,11 @@ The sidpy package
 """
 from .__version__ import version as __version__
 from . import base, hdf, io, proc, sid, viz
-from .base import dict_utils, num_utils, string_utils
-from .hdf import hdf_utils, reg_ref, dtype_utils, prov_utils
-from .io import interface_utils
-from .proc import comp_utils
-from .sid.dimension import Dimension
-from .sid.translator import Translator
-from .sid.reader import Reader
-from .sid.dataset import Dataset
+from .base import *
+from .hdf import *
+from .io import *
+from .proc import *
+from .sid import *
 from .viz import plot_utils
 from .viz import jupyter_utils
 

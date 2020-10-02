@@ -11,7 +11,7 @@ import sys
 import h5py
 import numpy as np
 import dask.array as da
-
+from enum import Enum
 sys.path.append("../../sidpy/")
 from sidpy.hdf import hdf_utils
 
@@ -350,6 +350,23 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
 
         os.remove(file_path)
 
+    def test_nested_attrs(self):
+        file_path = 'test.h5'
+        data_utils.delete_existing_file(file_path)
+        with h5py.File(file_path, mode='w') as h5_f:
+
+            h5_group = h5_f.create_group('Blah')
+
+            attrs = {'att_1': 'string_val',
+                     'att_2': {'attr_3': [1, 2, 3.14, 4],
+                               'att_4': ['s', 'tr', 'str_3']},
+                               'att_5': {'att_6': 4},
+                     }
+            with self.assertRaises(ValueError):
+                hdf_utils.write_simple_attrs(h5_group, attrs)
+
+        os.remove(file_path)
+
     def test_np_array(self):
         file_path = 'test.h5'
         data_utils.delete_existing_file(file_path)
@@ -374,6 +391,29 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
             hdf_utils.write_simple_attrs(h5_f, attrs)
 
             self.assertTrue('att_1' not in h5_f.attrs.keys())
+
+        os.remove(file_path)
+
+    def test_enum_value(self):
+        file_path = 'test.h5'
+
+        class MyEnum(Enum):
+            BLUE = 1
+            RED = 2
+            GREEN = 3
+
+        data_utils.delete_existing_file(file_path)
+        with h5py.File(file_path, mode='w') as h5_f:
+
+            val = MyEnum.RED
+
+            key = 'att_1'
+            expected = val.name
+            attrs = {'att_1': val}
+
+            hdf_utils.write_simple_attrs(h5_f, attrs)
+
+            self.assertEqual(hdf_utils.get_attr(h5_f, key), expected)
 
         os.remove(file_path)
 

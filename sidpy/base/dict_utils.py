@@ -17,9 +17,10 @@ if sys.version_info.major == 3:
     from collections.abc import MutableMapping
 else:
     from collections import MutableMapping
+from sidpy.base.string_utils import validate_single_string_arg
 
 
-def flatten_dict(nested_dict, parent_key='', sep='-'):
+def flatten_dict(nested_dict, separator='-'):
     """
     Flattens a nested dictionary
 
@@ -27,9 +28,7 @@ def flatten_dict(nested_dict, parent_key='', sep='-'):
     ----------
     nested_dict : dict
         Nested dictionary
-    parent_key : str, Optional
-        Name of current parent
-    sep : str, Optional. Default='-'
+    separator : str, Optional. Default='-'
         Separator between the keys of different levels
 
     Returns
@@ -41,21 +40,29 @@ def flatten_dict(nested_dict, parent_key='', sep='-'):
     Taken from https://stackoverflow.com/questions/6027558/flatten-nested-
     dictionaries-compressing-keys
     """
-    items = []
-    for key, value in nested_dict.items():
-        new_key = parent_key + sep + key if parent_key else key
-        if isinstance(value, MutableMapping):
-            items.extend(flatten_dict(value, new_key, sep=sep).items())
-        elif isinstance(value, list):  # nion files contain lists of dictionaries, oops
-            for i in range(len(value)):
-                if isinstance(value[i], dict):
-                    for kk in value[i]:
-                        items.append(('dim-' + kk + '-' + str(i), value[i][kk]))
-                else:
-                    items.append((new_key, value))
-        else:
-            items.append((new_key, value))
-    return dict(items)
+    if not isinstance(nested_dict, dict):
+        raise TypeError('nested_dict should be a dict')
+    separator = validate_single_string_arg(separator, 'separator')
+
+    def __flatten_dict_int(nest_dict, sep, parent_key=''):
+        items = []
+        for key, value in nest_dict.items():
+            new_key = parent_key + sep + key if parent_key else key
+            if isinstance(value, MutableMapping):
+                items.extend(__flatten_dict_int(value, sep, parent_key=new_key).items())
+            # nion files contain lists of dictionaries, oops
+            elif isinstance(value, list):
+                for i in range(len(value)):
+                    if isinstance(value[i], dict):
+                        for kk in value[i]:
+                            items.append(('dim-' + kk + '-' + str(i), value[i][kk]))
+                    else:
+                        items.append((new_key, value))
+            else:
+                items.append((new_key, value))
+        return dict(items)
+
+    return __flatten_dict_int(nested_dict, separator)
 
 
 def nested_dict_from_flattened_key(single_pair, separator='-'):
