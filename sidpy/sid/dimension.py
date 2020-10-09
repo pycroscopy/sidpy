@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Utilities that assist in writing USID related data to HDF5 files
+Objects that represent dimensions or axes of scientific datasets
 
 Created on Thu Jul  7 21:14:25 2020
 
@@ -9,20 +9,24 @@ Created on Thu Jul  7 21:14:25 2020
 
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
+from warnings import warn
 import sys
 import numpy as np
 from enum import Enum
 from sidpy.base.string_utils import validate_single_string_arg
 
-__all__ = ['Dimension']
+__all__ = ['Dimension', 'DimensionTypes']
 
 if sys.version_info.major == 3:
     unicode = str
 
-# todo: Consider extending numpy.ndarray instead of generic python object
-
 
 class DimensionTypes(Enum):
+    """
+    Physical type of Dimension object. This information will be used for
+    visualization and processing purposes.
+    """
+    # TODO: Rename class to DimensionType - singular rather than plural
     UNKNOWN = -1
     SPATIAL = 1
     RECIPROCAL = 2
@@ -30,16 +34,13 @@ class DimensionTypes(Enum):
     TEMPORAL = 4
 
 
-class Dimension(object):
+class Dimension(np.ndarray):
     """
     """
 
-    def __init__(self, name, values, quantity='generic', units='generic',
-                 dimension_type=DimensionTypes.UNKNOWN):
+    def __new__(cls, values, name='none', quantity='generic', units='generic',
+                dimension_type=DimensionTypes.UNKNOWN, *args, **kwargs):
         """
-        Simple object that describes a dimension in a dataset by its name,
-        units, and values
-
         Parameters
         ----------
         name : str or unicode
@@ -52,7 +53,8 @@ class Dimension(object):
             Values over which this dimension was varied. A linearly increasing
             set of values will be generated if an integer is provided instead
             of an array.
-        dimension_type : str or unicode for example: 'spectral' or 'spatial',
+        dimension_type : str or sidpy.sid.dimension.DimensionTypes
+            For example: 'spectral', 'spatial', 'reciprocal', or 'UNKNOWN'
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
             image dimensions. 'spectral' indicate spectroscopy data dimensions.
@@ -71,12 +73,57 @@ class Dimension(object):
             Values over which this dimension was varied
         """
 
-        self.name = name
-        self.values = values
+        if isinstance(values, int):
+            if values < 0:
+                raise TypeError("values should at least be specified as a positive integer")
+            values = np.arange(values)
+        elif len(np.array(values)) == 0:
+            raise TypeError("values should at least be specified as a positive integer")
+        if np.array(values).ndim != 1:
+            raise ValueError('Dimension can only be 1 dimensional')
+        new_dim = np.asarray(values, dtype=float).view(cls)
+        new_dim.name = name
+        new_dim.quantity = quantity
+        new_dim.units = units
+        new_dim.dimension_type = dimension_type
+        return new_dim
 
-        self.quantity = quantity
-        self.units = units
-        self.dimension_type = dimension_type
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None:
+            return
+        self.name = getattr(obj, 'name', 'generic')
+        self.quantity = getattr(obj, 'quantity', 'generic')
+        self.units = getattr(obj, 'name', 'units')
+        self.dimension_type = getattr(obj, 'dimension_type', 'UNKNOWN')
+
+    def __array_wrap__(self, out_arr, context=None):
+        # just call the parent
+        super(Dimension, self).__array_wrap__(self, out_arr, context)
+        # return correct values
+        return out_arr
+
+    def __repr__(self):
+        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units, self.shape)
+
+    def __str__(self):
+        return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units, self.shape)
+
+    def __copy__(self):
+        new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
+        new_dim.dimension_type = self.dimension_type
+        return new_dim
+
+    # TODO: Find out how to get rid of this
+    def copy(self):
+        # Not sure why __copy__() would not be called by itself
+        new_dim = self.__copy__()
+        return new_dim
+
+    @property
+    def info(self):
+        return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
+                                         self.values)
 
     @property
     def name(self):
@@ -111,52 +158,22 @@ class Dimension(object):
         if isinstance(value, DimensionTypes):
             self._dimension_type = value
         else:
-            dimension_type = validate_single_string_arg(value, 'dimension_type')
+            dimension_type = validate_single_string_arg(value,
+                                                        'dimension_type')
 
-            if dimension_type.upper() in DimensionTypes._member_names_:
+            if dimension_type.upper() in [member.name for member in DimensionTypes]:
                 self._dimension_type = DimensionTypes[dimension_type.upper()]
             elif dimension_type.lower() in ['frame', 'time', 'stack']:
                 self._dimension_type = DimensionTypes.TEMPORAL
             else:
                 self._dimension_type = DimensionTypes.UNKNOWN
-                print('Supported dimension_types for plotting are only: ', DimensionTypes._member_names_)
-                print('Setting DimensionTypes to UNKNOWN')
+                warn('Supported dimension types for plotting are only: {}'
+                     ''.format([member.name for member in DimensionTypes]))
+                warn('Setting DimensionType to UNKNOWN')
 
     @property
     def values(self):
-        return self._values
-
-    @values.setter
-    def values(self, values):
-        if isinstance(values, int):
-            if values < 1:
-                raise ValueError('values should at least be specified as a '
-                                 'positive integer')
-            values = np.arange(values)
-        if not isinstance(values, (np.ndarray, list, tuple)):
-            raise TypeError('values should be array-like')
-        values = np.array(values)
-        if values.ndim > 1:
-            raise ValueError('Values for dimension: {} are not 1-dimensional'
-                             ''.format(self.name))
-
-        self._values = values
-
-    def copy(self):
-        """
-        Returns a copy of this Dimension
-
-        Returns
-        -------
-        sidpy.Dimension
-            Copy of this sidpy.Dimension
-        """
-        return Dimension(self.name, self.values, self.quantity, self.units,
-                         self.dimension_type)
-
-    def __repr__(self):
-        return '{} - {} ({}): {}'.format(self.name, self.quantity, self.units,
-                                         self.values)
+        return np.array(self)
 
     def __eq__(self, other):
         if isinstance(other, Dimension):
@@ -166,6 +183,7 @@ class Dimension(object):
                 return False
             if self.quantity != other.quantity:
                 return False
+            # TODO: Is this sufficient or do we need to call super
             if len(self.values) != len(other.values):
                 return False
             if not np.allclose(self.values, other.values):

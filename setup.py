@@ -53,7 +53,7 @@ setup(
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     url='https://pycroscopy.github.io/sidpy/about.html',
     license='MIT',
-    author='Suhas Somnath, Gerd Duscher, and contributors',
+    author='Pycroscopy contributors',
     author_email='pycroscopy@gmail.com',
     install_requires=requirements,
     setup_requires=['pytest-runner'],

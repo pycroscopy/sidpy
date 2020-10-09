@@ -23,34 +23,50 @@ class TestRecommendCPUCores(unittest.TestCase):
         num_jobs = 14035
         if MAX_CPU_CORES > 4:
             min_free_cores = 2
+        elif MAX_CPU_CORES == 1:
+            min_free_cores = 0
         else:
             min_free_cores = 1
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, lengthy_computation=False)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 lengthy_computation=False)
         self.assertEqual(ret_val, max(1, MAX_CPU_CORES-min_free_cores))
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, requested_cores=1, lengthy_computation=False)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 requested_cores=1,
+                                                 lengthy_computation=False)
         self.assertEqual(ret_val, 1)
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, requested_cores=MAX_CPU_CORES, lengthy_computation=False)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 requested_cores=MAX_CPU_CORES,
+                                                 lengthy_computation=False)
         self.assertEqual(ret_val, MAX_CPU_CORES)
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, requested_cores=5000, lengthy_computation=False)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 requested_cores=5000,
+                                                 lengthy_computation=False)
         self.assertEqual(ret_val, MAX_CPU_CORES)
 
     def test_changing_min_cores(self):
         num_jobs = 14035
         for min_free_cores in range(1, MAX_CPU_CORES):
-            ret_val = comp_utils.recommend_cpu_cores(num_jobs, lengthy_computation=False, min_free_cores=min_free_cores)
+            ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                     lengthy_computation=False,
+                                                     min_free_cores=min_free_cores)
             self.assertEqual(ret_val, max(1, MAX_CPU_CORES - min_free_cores))
 
     def test_illegal_min_free_cores(self):
         num_jobs = 14035
         min_free_cores = MAX_CPU_CORES
         with self.assertRaises(ValueError):
-            _ = comp_utils.recommend_cpu_cores(num_jobs, lengthy_computation=False, min_free_cores=min_free_cores)
+            _ = comp_utils.recommend_cpu_cores(num_jobs,
+                                               lengthy_computation=False,
+                                               min_free_cores=min_free_cores)
 
     def test_few_small_jobs(self):
         num_jobs = 13
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, lengthy_computation=False)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 lengthy_computation=False)
         self.assertEqual(ret_val, 1)
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, requested_cores=MAX_CPU_CORES, lengthy_computation=False)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 requested_cores=MAX_CPU_CORES,
+                                                 lengthy_computation=False)
         self.assertEqual(ret_val, 1)
 
     def test_few_large_jobs(self):
@@ -59,9 +75,12 @@ class TestRecommendCPUCores(unittest.TestCase):
             min_free_cores = 2
         else:
             min_free_cores = 1
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, lengthy_computation=True)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 lengthy_computation=True)
         self.assertEqual(ret_val, max(1, MAX_CPU_CORES-min_free_cores))
-        ret_val = comp_utils.recommend_cpu_cores(num_jobs, requested_cores=MAX_CPU_CORES - 1, lengthy_computation=True)
+        ret_val = comp_utils.recommend_cpu_cores(num_jobs,
+                                                 requested_cores=max(1, MAX_CPU_CORES - 1),
+                                                 lengthy_computation=True)
         self.assertEqual(ret_val, max(1, MAX_CPU_CORES - 1))
 
     def test_invalid_min_cores(self):
@@ -154,7 +173,10 @@ class TestParallelCompute(unittest.TestCase):
         data = np.random.rand(MAX_CPU_CORES * num_job_scaler, 5)
         expected = np.mean(data, axis=1)
         if expected_cores is None:
-            expected_cores = MAX_CPU_CORES - 1 - int(MAX_CPU_CORES > 4)
+            expected_cores = max(1, MAX_CPU_CORES - 1 - int(MAX_CPU_CORES > 4))
+        else:
+            # Handles single core machines
+            expected_cores = max(1, min(MAX_CPU_CORES, expected_cores))
 
         exp_log = 'Rank 0 starting computing on {} cores (requested {} cores' \
                   ')'.format(expected_cores, cores)
@@ -169,7 +191,6 @@ class TestParallelCompute(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(data.shape[0], len(result))
         self.assertTrue(np.allclose(expected, np.array(result)))
-        print(logs)
         self.assertTrue(exp_log in logs)
 
     def test_standard_joblib_compute_many_jobs(self):
@@ -211,7 +232,7 @@ class TestParallelCompute(unittest.TestCase):
         data = np.random.rand(MAX_CPU_CORES * 50, 5)
         expected = (data - 0.5) * 3
         if expected_cores is None:
-            expected_cores = MAX_CPU_CORES - 1 - int(MAX_CPU_CORES > 4)
+            expected_cores = max(1, MAX_CPU_CORES - 1 - int(MAX_CPU_CORES > 4))
 
         exp_log = 'Rank 0 starting computing on {} cores (requested {} cores' \
                   ')'.format(expected_cores, cores)
@@ -226,20 +247,22 @@ class TestParallelCompute(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(data.shape[0], len(result))
         self.assertTrue(np.allclose(expected, np.array(result)))
-        print(logs)
         self.assertTrue(exp_log in logs)
 
     def test_func_args_only_parallel(self):
-        self.base_with_custom_func(use_args=True, use_kwargs=False,
-                                   cores=None, expected_cores=None)
+        if MAX_CPU_CORES > 1:
+            self.base_with_custom_func(use_args=True, use_kwargs=False,
+                                       cores=None, expected_cores=None)
 
     def test_func_kwargs_only_parallel(self):
-        self.base_with_custom_func(use_args=False, use_kwargs=True,
-                                   cores=None, expected_cores=None)
+        if MAX_CPU_CORES > 1:
+            self.base_with_custom_func(use_args=False, use_kwargs=True,
+                                       cores=None, expected_cores=None)
 
     def test_func_args_and_kwargs_parallel(self):
-        self.base_with_custom_func(use_args=True, use_kwargs=True,
-                                   cores=None, expected_cores=None)
+        if MAX_CPU_CORES > 1:
+            self.base_with_custom_func(use_args=True, use_kwargs=True,
+                                       cores=None, expected_cores=None)
 
     def test_func_args_only_serial(self):
         self.base_with_custom_func(use_args=True, use_kwargs=False,
