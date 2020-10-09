@@ -46,7 +46,7 @@ for root, dirs, files in os.walk(examples_source):
 
 project = 'sidpy'
 copyright = '2020, Suhas Somnath, Gerd Duscher, and contributors'
-author = 'Suhas Somnath, Gerd Duscher, and contributors'
+author = 'Pycroscopy contributors'
 
 # The short X.Y version
 version = sidpy_version
@@ -301,7 +301,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'sidpy.tex', 'sidpy Documentation',
-     'Suhas Somnath, Gerd Duscher, and contributors', 'manual'),
+     'Pycroscopy contributors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
