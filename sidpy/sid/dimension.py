@@ -74,10 +74,10 @@ class Dimension(np.ndarray):
         """
 
         if isinstance(values, int):
-            if values < 0:
+            if values < 2:
                 raise TypeError("values should at least be specified as a positive integer")
             values = np.arange(values)
-        elif len(np.array(values)) == 0:
+        elif len(np.array(values)) < 2:
             raise TypeError("values should at least be specified as a positive integer")
         if np.array(values).ndim != 1:
             raise ValueError('Dimension can only be 1 dimensional')
