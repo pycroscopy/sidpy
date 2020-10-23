@@ -114,6 +114,8 @@ class Dimension(np.ndarray):
         new_dim.dimension_type = self.dimension_type
         return new_dim
 
+    # TODO: Implement equality
+
     # TODO: Find out how to get rid of this
     def copy(self):
         # Not sure why __copy__() would not be called by itself
