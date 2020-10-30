@@ -15,18 +15,17 @@ import numpy as np
 from enum import Enum
 from sidpy.base.string_utils import validate_single_string_arg
 
-__all__ = ['Dimension', 'DimensionTypes']
+__all__ = ['Dimension', 'DimensionType']
 
 if sys.version_info.major == 3:
     unicode = str
 
 
-class DimensionTypes(Enum):
+class DimensionType(Enum):
     """
     Physical type of Dimension object. This information will be used for
     visualization and processing purposes.
     """
-    # TODO: Rename class to DimensionType - singular rather than plural
     UNKNOWN = -1
     SPATIAL = 1
     RECIPROCAL = 2
@@ -39,7 +38,7 @@ class Dimension(np.ndarray):
     """
 
     def __new__(cls, values, name='none', quantity='generic', units='generic',
-                dimension_type=DimensionTypes.UNKNOWN, *args, **kwargs):
+                dimension_type=DimensionType.UNKNOWN, *args, **kwargs):
         """
         Parameters
         ----------
@@ -53,7 +52,7 @@ class Dimension(np.ndarray):
             Values over which this dimension was varied. A linearly increasing
             set of values will be generated if an integer is provided instead
             of an array.
-        dimension_type : str or sidpy.sid.dimension.DimensionTypes
+        dimension_type : str or sidpy.sid.dimension.DimensionType
             For example: 'spectral', 'spatial', 'reciprocal', or 'UNKNOWN'
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
@@ -157,20 +156,20 @@ class Dimension(np.ndarray):
 
     @dimension_type.setter
     def dimension_type(self, value):
-        if isinstance(value, DimensionTypes):
+        if isinstance(value, DimensionType):
             self._dimension_type = value
         else:
             dimension_type = validate_single_string_arg(value,
                                                         'dimension_type')
 
-            if dimension_type.upper() in [member.name for member in DimensionTypes]:
-                self._dimension_type = DimensionTypes[dimension_type.upper()]
+            if dimension_type.upper() in [member.name for member in DimensionType]:
+                self._dimension_type = DimensionType[dimension_type.upper()]
             elif dimension_type.lower() in ['frame', 'time', 'stack']:
-                self._dimension_type = DimensionTypes.TEMPORAL
+                self._dimension_type = DimensionType.TEMPORAL
             else:
-                self._dimension_type = DimensionTypes.UNKNOWN
+                self._dimension_type = DimensionType.UNKNOWN
                 warn('Supported dimension types for plotting are only: {}'
-                     ''.format([member.name for member in DimensionTypes]))
+                     ''.format([member.name for member in DimensionType]))
                 warn('Setting DimensionType to UNKNOWN')
 
     @property
@@ -178,16 +177,18 @@ class Dimension(np.ndarray):
         return np.array(self)
 
     def __eq__(self, other):
-        if isinstance(other, Dimension):
-            if self.name != other.name:
-                return False
-            if self.units != other.units:
-                return False
-            if self.quantity != other.quantity:
-                return False
-            # TODO: Is this sufficient or do we need to call super
-            if len(self.values) != len(other.values):
-                return False
-            if not np.allclose(self.values, other.values):
-                return False
+        if not isinstance(other, Dimension):
+            return False
+        if self.name != other.name:
+            return False
+        if self.units != other.units:
+            return False
+        if self.quantity != other.quantity:
+            return False
+        if len(self.values) != len(other):
+            return False
+        if not (np.array(self) == np.array(other)).all():
+            return False
+        if not (self.values==other.values).all():
+            return False
         return True

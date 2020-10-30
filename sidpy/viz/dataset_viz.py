@@ -26,7 +26,7 @@ default_cmap = plt.cm.viridis
 class CurveVisualizer(object):
     def __init__(self, dset, spectrum_number=None, figure=None, **kwargs):
         from ..sid.dataset import Dataset
-        from ..sid.dimension import DimensionTypes
+        from ..sid.dimension import DimensionType
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -46,7 +46,7 @@ class CurveVisualizer(object):
         self.spectral_dims = []
 
         for dim, axis in dset._axes.items():
-            if axis.dimension_type == DimensionTypes.SPECTRAL:
+            if axis.dimension_type == DimensionType.SPECTRAL:
                 self.selection.append(slice(None))
                 self.spectral_dims.append(dim)
             else:
@@ -118,7 +118,7 @@ class ImageVisualizer(object):
 
     def __init__(self, dset, figure=None, image_number=0, **kwargs):
         from ..sid.dataset import Dataset
-        from ..sid.dimension import DimensionTypes
+        from ..sid.dimension import DimensionType
 
         """
         plotting of data according to two axis marked as SPATIAL in the dimensions
@@ -142,7 +142,7 @@ class ImageVisualizer(object):
         self.image_dims = []
 
         for dim, axis in dset._axes.items():
-            if axis.dimension_type in [DimensionTypes.SPATIAL, DimensionTypes.RECIPROCAL]:
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
             else:
@@ -248,7 +248,7 @@ class ImageStackVisualizer(object):
 
     def __init__(self, dset, figure=None, **kwargs):
         from ..sid.dataset import Dataset
-        from ..sid.dimension import DimensionTypes
+        from ..sid.dimension import DimensionType
 
         from IPython.display import display
 
@@ -271,10 +271,10 @@ class ImageStackVisualizer(object):
         self.image_dims = []
         self.selection = []
         for dim, axis in dset._axes.items():
-            if axis.dimension_type == DimensionTypes.SPATIAL:
+            if axis.dimension_type == DimensionType.SPATIAL:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
-            elif axis.dimension_type == DimensionTypes.TEMPORAL or len(dset) == 3:
+            elif axis.dimension_type == DimensionType.TEMPORAL or len(dset) == 3:
                 self.selection.append(slice(0, 1))
                 self.stack_dim = dim
             else:
@@ -386,9 +386,9 @@ class ImageStackVisualizer(object):
             else:
                 stack_selection = self.selection.copy()
                 stack_selection[self.stack_dim] = slice(None)
-                image_stack = np.squeeze(self.dset[stack_selection])
+                image_stack = self.dset[stack_selection].squeeze()
 
-            self.img.set_data(np.average(image_stack, axis=self.stack_dim))
+            self.img.set_data(image_stack.mean(axis=self.stack_dim))
             self.fig.canvas.draw_idle()
         elif event.old:
             self._update(self.ind)
@@ -415,7 +415,7 @@ class SpectralImageVisualizer(object):
 
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
         from ..sid.dataset import Dataset
-        from ..sid.dimension import DimensionTypes
+        from ..sid.dimension import DimensionType
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -439,10 +439,10 @@ class SpectralImageVisualizer(object):
         image_dims = []
         spectral_dims = []
         for dim, axis in dset._axes.items():
-            if axis.dimension_type == DimensionTypes.SPATIAL:
+            if axis.dimension_type == DimensionType.SPATIAL:
                 selection.append(slice(None))
                 image_dims.append(dim)
-            elif axis.dimension_type == DimensionTypes.SPECTRAL:
+            elif axis.dimension_type == DimensionType.SPECTRAL:
                 selection.append(slice(0, 1))
                 spectral_dims.append(dim)
             else:
@@ -540,7 +540,7 @@ class SpectralImageVisualizer(object):
         self._update()
 
     def get_spectrum(self):
-        from ..sid.dimension import DimensionTypes
+        from ..sid.dimension import DimensionType
 
         if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
             self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
@@ -550,13 +550,13 @@ class SpectralImageVisualizer(object):
 
         for dim, axis in self.dset._axes.items():
             # print(dim, axis.dimension_type)
-            if axis.dimension_type == DimensionTypes.SPATIAL:
+            if axis.dimension_type == DimensionType.SPATIAL:
                 if dim == self.image_dims[0]:
                     selection.append(slice(self.x, self.x + self.bin_x))
                 else:
                     selection.append(slice(self.y, self.y + self.bin_y))
 
-            elif axis.dimension_type == DimensionTypes.SPECTRAL:
+            elif axis.dimension_type == DimensionType.SPECTRAL:
                 selection.append(slice(None))
             else:
                 selection.append(slice(0, 1))

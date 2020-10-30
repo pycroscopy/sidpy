@@ -7,14 +7,15 @@ Created on Fri Sep 18 17:07:16 2020
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
 import unittest
-import sys
+
 import numpy as np
 import dask.array as da
 import string
+import sys
+sys.path.insert(0, "../../sidpy/")
 
-sys.path.append("../../sidpy/")
-from sidpy.sid.dimension import Dimension, DimensionTypes
-from sidpy.sid.dataset import DataTypes, Dataset
+from sidpy.sid.dimension import Dimension, DimensionType
+from sidpy.sid.dataset import DataType, Dataset
 
 if sys.version_info.major == 3:
     unicode = str
@@ -26,7 +27,7 @@ generic_attributes = ['title', 'quantity', 'units', 'modality', 'source']
 def validate_dataset_properties(self, dataset, values, name='generic',
                                 title='generic', quantity='generic', units='generic',
                                 modality='generic', source='generic', dimension_dict=None,
-                                data_type=DataTypes.UNKNOWN,
+                                data_type=DataType.UNKNOWN,
                                 metadata={}, original_metadata={}
                                 ):
     self.assertIsInstance(self, unittest.TestCase)
@@ -103,7 +104,7 @@ class TestDatasetConstructor(unittest.TestCase):
         validate_dataset_properties(self, descriptor, np.arange(3), name='test',
                                     title='test', quantity='test', units='test',
                                     modality='test', source='test', dimension_dict=None,
-                                    data_type=DataTypes.UNKNOWN,
+                                    data_type=DataType.UNKNOWN,
                                     metadata=test_dict, original_metadata=test_dict
                                     )
 
@@ -113,7 +114,7 @@ class TestDatasetConstructor(unittest.TestCase):
         but name has to be a string
         """
         # TODO: call validate_dataset_properties instead
-        descriptor = Dataset.from_array(DataTypes.UNKNOWN)
+        descriptor = Dataset.from_array(DataType.UNKNOWN)
         self.assertEqual(descriptor.shape, ())
 
         descriptor = Dataset.from_array('test')
@@ -213,14 +214,14 @@ class TestDatasetConstructor(unittest.TestCase):
     def test_enum_data_type(self):
         values = np.random.random([4])
         descriptor = Dataset.from_array(values)
-        for dt_type in DataTypes:
+        for dt_type in DataType:
             descriptor.data_type = dt_type
             self.assertTrue(descriptor.data_type == dt_type)
 
     def test_string_data_type(self):
         values = np.random.random([4])
         descriptor = Dataset.from_array(values)
-        for dt_type in DataTypes:
+        for dt_type in DataType:
             descriptor.data_type = str(dt_type.name)
             self.assertTrue(descriptor.data_type == dt_type)
 
@@ -236,11 +237,11 @@ class TestDatasetRepr(unittest.TestCase):
         out = 'generic'
         da_array = da.from_array(values, chunks='auto', name='generic')
 
-        expected = 'sidpy.Dataset of type {} with:\n '.format(DataTypes.UNKNOWN.name)
+        expected = 'sidpy.Dataset of type {} with:\n '.format(DataType.UNKNOWN.name)
         expected = expected + '{}'.format(da_array)
         expected = expected + '\n data contains: {} ({})'.format(out, out)
         expected = expected + '\n and Dimensions: '
-        expected = expected + '\n  {}:  {} ({}) of size {}'.format('a', out, out, values.shape)
+        expected = expected + '\n{}:  {} ({}) of size {}'.format('a', out, out, values.shape)
 
         """
         for exp, act in zip(expected.split('\n'), actual.split('\n')):
@@ -264,11 +265,11 @@ class TestDatasetRepr(unittest.TestCase):
         out = 'test'
         da_array = da.from_array(values, chunks='auto', name='generic')
 
-        expected = 'sidpy.Dataset of type {} with:\n '.format(DataTypes.UNKNOWN.name)
+        expected = 'sidpy.Dataset of type {} with:\n '.format(DataType.UNKNOWN.name)
         expected = expected + '{}'.format(da_array)
         expected = expected + '\n data contains: {} ({})'.format(out, out)
         expected = expected + '\n and Dimensions: '
-        expected = expected + '\n  {}:  {} ({}) of size {}'.format('a', 'generic', 'generic', values.shape)
+        expected = expected + '\n{}:  {} ({}) of size {}'.format('a', 'generic', 'generic', values.shape)
         expected = expected + '\n with metadata: {}'.format([0])
 
         """
@@ -320,7 +321,10 @@ class TestLikeData(unittest.TestCase):
         values = np.zeros([3, 5])
         descriptor = source_dset.like_data(values)
 
-        self.assertEqual(descriptor.a, np.arange(3)*.5)
+        # self.assertEqual(descriptor.a.values), np.arange(3)*.5)
+        expected = descriptor.a.values
+        actual = np.arange(3)*.5
+        self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
 
 class TestCopy(unittest.TestCase):
@@ -339,7 +343,7 @@ class TestCopy(unittest.TestCase):
 
         self.assertTrue(np.all([getattr(descriptor, att) == 'generic' for att in generic_attributes]))
 
-        self.assertEqual(descriptor.data_type, DataTypes.UNKNOWN)
+        self.assertEqual(descriptor.data_type, DataType.UNKNOWN)
 
         self.assertEqual(descriptor.metadata, {})
         self.assertEqual(descriptor.original_metadata, {})
