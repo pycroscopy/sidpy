@@ -362,3 +362,33 @@ def check_for_matching_attrs(h5_obj, new_parms=None, verbose=False):
 
     return all(tests)
 
+
+def get_source_dataset(h5_group):
+    """
+    Find the name of the source dataset used to create the input `h5_group`,
+    so long as the source dataset is in the same HDF5 file
+    Parameters
+    ----------
+    h5_group : :class:`h5py.Group`
+        Child group whose source dataset will be returned
+    Returns
+    -------
+    h5_source : NSIDataset object
+        Main dataset from which this group was generated
+    """
+    if not isinstance(h5_group, h5py.Group):
+        raise TypeError('h5_group should be a h5py.Group object')
+
+    h5_parent_group = h5_group.parent
+    group_name = h5_group.name.split('/')[-1]
+    # What if the group name was not formatted according to Pycroscopy rules?
+    name_split = group_name.split('-')
+    if len(name_split) != 2:
+        raise ValueError("The provided group's name could not be split by '-' as expected in "
+                         "SourceDataset-ProcessName_000")
+    h5_source = h5_parent_group[name_split[0]]
+
+    if not isinstance(h5_source, h5py.Dataset):
+        raise ValueError('Source object was not a dataset!')
+
+    return h5_source
