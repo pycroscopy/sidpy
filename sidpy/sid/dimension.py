@@ -74,11 +74,13 @@ class Dimension(np.ndarray):
         """
 
         if isinstance(values, int):
-            if values < 2:
-                raise TypeError("values should at least be specified as a positive integer")
+            if values < 1:
+                raise TypeError("When specifying the size of a Dimension, "
+                                "values should at be integers > 1")
             values = np.arange(values)
-        elif len(np.array(values)) < 2:
-            raise TypeError("values should at least be specified as a positive integer")
+        elif len(np.array(values)) < 1:
+            raise TypeError("When specifying values over which a parameter is "
+                            "varied, values should not be an empty array")
         if np.array(values).ndim != 1:
             raise ValueError('Dimension can only be 1 dimensional')
         new_dim = np.asarray(values, dtype=float).view(cls)
