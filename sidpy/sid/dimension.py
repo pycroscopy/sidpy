@@ -175,16 +175,18 @@ class Dimension(np.ndarray):
         return np.array(self)
 
     def __eq__(self, other):
-        if isinstance(other, Dimension):
-            if not (self.values==other.values).all():
-                print(self.values)
-                print(other.values)
-                print('wrong')
-                return False
-            if self.name != other.name:
-                return False
-            if self.units != other.units:
-                return False
-            if self.quantity != other.quantity:
-                return False
+        if not isinstance(other, Dimension):
+            return False
+        if self.name != other.name:
+            return False
+        if self.units != other.units:
+            return False
+        if self.quantity != other.quantity:
+            return False
+        if len(self.values) != len(other):
+            return False
+        if not (np.array(self) == np.array(other)).all():
+            return False
+        if not (self.values==other.values).all():
+            return False
         return True

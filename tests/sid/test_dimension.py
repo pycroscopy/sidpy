@@ -15,7 +15,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from sidpy.sid.dimension import Dimension
 
-sys.path.append("../../sidpy/")
+sys.path.insert(0, "../../sidpy/")
 
 if sys.version_info.major == 3:
     unicode = str
@@ -147,3 +147,6 @@ class TestDimension(unittest.TestCase):
             _ = Dimension(5, "x", dimension_type=dim_type)
         self.assertTrue(expected_wrn[0] in str(w[0].message))
         self.assertTrue(expected_wrn[1] in str(w[1].message))
+
+if __name__ == '__main__':
+    unittest.main()

@@ -12,7 +12,8 @@ import numpy as np
 import dask.array as da
 import string
 import sys
-sys.path.insert(0,"../../sidpy/")
+sys.path.insert(0, "../../sidpy/")
+
 from sidpy.sid.dimension import Dimension, DimensionType
 from sidpy.sid.dataset import DataType, Dataset
 
@@ -320,7 +321,10 @@ class TestLikeData(unittest.TestCase):
         values = np.zeros([3, 5])
         descriptor = source_dset.like_data(values)
 
-        self.assertEqual(descriptor.a, np.arange(3)*.5)
+        # self.assertEqual(descriptor.a.values), np.arange(3)*.5)
+        expected = descriptor.a.values
+        actual = np.arange(3)*.5
+        self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
 
 class TestCopy(unittest.TestCase):

@@ -45,8 +45,16 @@ def flatten_dict(nested_dict, separator='-'):
     separator = validate_single_string_arg(separator, 'separator')
 
     def __flatten_dict_int(nest_dict, sep, parent_key=''):
+        if sep == '_':
+            repl = '-'
+        else:
+            repl = '_'
         items = []
         for key, value in nest_dict.items():
+            if not isinstance(key, str):
+                key = str(key)
+            if sep in key:
+                key = key.replace(sep, repl)
             new_key = parent_key + sep + key if parent_key else key
             if isinstance(value, MutableMapping):
                 items.extend(__flatten_dict_int(value, sep, parent_key=new_key).items())
@@ -57,9 +65,11 @@ def flatten_dict(nested_dict, separator='-'):
                         for kk in value[i]:
                             items.append(('dim-' + kk + '-' + str(i), value[i][kk]))
                     else:
-                        items.append((new_key, value))
+                        if type(value) != bytes:
+                            items.append((new_key, value))
             else:
-                items.append((new_key, value))
+                if type(value) != bytes:
+                    items.append((new_key, value))
         return dict(items)
 
     return __flatten_dict_int(nested_dict, separator)
