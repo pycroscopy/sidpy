@@ -66,9 +66,11 @@ def flatten_dict(nested_dict, separator='-'):
                         for kk in value[i]:
                             items.append(('dim-' + kk + '-' + str(i), value[i][kk]))
                     else:
-                        items.append((new_key, value))
+                        if type(value) != bytes:
+                            items.append((new_key, value))
             else:
-                items.append((new_key, value))
+                if type(value) != bytes:
+                    items.append((new_key, value))
         return dict(items)
 
     return __flatten_dict_int(nested_dict, separator)
