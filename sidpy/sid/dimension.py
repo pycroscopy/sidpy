@@ -72,7 +72,6 @@ class Dimension(np.ndarray):
         self.values : array-like
             Values over which this dimension was varied
         """
-
         if isinstance(values, int):
             if values < 1:
                 raise TypeError("When specifying the size of a Dimension, "

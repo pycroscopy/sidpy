@@ -108,13 +108,18 @@ class TestDimension(unittest.TestCase):
         dim = Dimension(np.arange(5), "X", "Bias", "mV")
         self.assertTrue(dim.info, expected)
 
-    def test_nonposint_values(self):
-        vals = [-1, []]
-        expected = 2*["values should at least be specified as a positive integer"]
-        for v, e in zip(vals, expected):
-            with self.assertRaises(TypeError) as context:
-                _ = Dimension(v, "x")
-            self.assertTrue(e in str(context.exception))
+    def test_values_smaller_than_min_size(self):
+        with self.assertRaises(TypeError) as context:
+            _ = Dimension(0, name="x")
+        self.assertTrue("When specifying the size of a Dimension, values "
+                        "should at be integers > 1" in str(context.exception))
+
+    def test_empty_array_values(self):
+        with self.assertRaises(TypeError) as context:
+            _ = Dimension([], name="x")
+        self.assertTrue("When specifying values over which a parameter is "
+                        "varied, values should not be an empty array"
+                        "" in str(context.exception))
 
     def test_conv2arr_values(self):
         arr = np.arange(5)
