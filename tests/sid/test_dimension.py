@@ -121,6 +121,16 @@ class TestDimension(unittest.TestCase):
                         "varied, values should not be an empty array"
                         "" in str(context.exception))
 
+    def test_dimension_size_1(self):
+        dim = Dimension(1)
+        self.assertIsInstance(dim, Dimension)
+        assert_array_equal(np.array(dim), [0])
+
+    def test_single_valued_dimension(self):
+        dim = Dimension([1.23])
+        self.assertIsInstance(dim, Dimension)
+        assert_array_equal(np.array(dim), [1.23])
+
     def test_conv2arr_values(self):
         arr = np.arange(5)
         vals = [5, arr, arr.tolist(), tuple(arr)]
