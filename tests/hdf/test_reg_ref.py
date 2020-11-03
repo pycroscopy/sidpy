@@ -24,37 +24,6 @@ if sys.version_info.major == 3:
 
 class TestRegRef(unittest.TestCase):
 
-    @staticmethod
-    def __delete_existing_file(file_path):
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-    @staticmethod
-    def __write_safe_attrs(h5_object, attrs):
-        for key, val in attrs.items():
-            h5_object.attrs[key] = val
-
-    @staticmethod
-    def __write_string_list_as_attr(h5_object, attrs):
-        for key, val in attrs.items():
-            h5_object.attrs[key] = np.array(val, dtype='S')
-
-    @staticmethod
-    def __write_aux_reg_ref(h5_dset, labels, is_spec=True):
-        for index, reg_ref_name in enumerate(labels):
-            if is_spec:
-                reg_ref_tuple = (slice(index, index + 1), slice(None))
-            else:
-                reg_ref_tuple = (slice(None), slice(index, index + 1))
-            h5_dset.attrs[reg_ref_name] = h5_dset.regionref[reg_ref_tuple]
-
-    @staticmethod
-    def __write_main_reg_refs(h5_dset, attrs):
-        for reg_ref_name, reg_ref_tuple in attrs.items():
-            h5_dset.attrs[reg_ref_name] = h5_dset.regionref[reg_ref_tuple]
-        TestRegRef.__write_string_list_as_attr(h5_dset,
-                                               {'labels': list(attrs.keys())})
-
     def setUp(self):
         data_utils.make_beps_file()
 
