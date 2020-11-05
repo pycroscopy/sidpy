@@ -315,6 +315,15 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
                 hdf_utils.write_simple_attrs(h5_group, ['attrs', 1.234, 'should be dict', np.arange(3)])
         os.remove(file_path)
 
+    def test_invalid_val_type_in_dict(self):
+        file_path = 'test.h5'
+        data_utils.delete_existing_file(file_path)
+        with h5py.File(file_path, mode='w') as h5_f:
+            h5_group = h5_f.create_group('Blah')
+            with self.assertRaises(TypeError):
+                hdf_utils.write_simple_attrs(h5_group, {'att_1': [{'a': 'b'}]})
+        os.remove(file_path)
+
     def test_key_not_str(self):
         file_path = 'test.h5'
         data_utils.delete_existing_file(file_path)
