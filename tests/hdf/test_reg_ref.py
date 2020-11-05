@@ -223,7 +223,7 @@ class TestGetRegion(TestRegRef):
         with h5py.File(data_utils.std_beps_path, mode='r') as h5_f:
             h5_source = h5_f['/Raw_Measurement/source_main']
             returned = reg_ref.get_region(h5_source, 'even_rows')
-            expected = h5_source[range(0, h5_source.shape[0], 2)]
+            expected = h5_source[slice(0, h5_source.shape[0], 2)]
             self.assertTrue(np.allclose(returned, expected))
 
 
