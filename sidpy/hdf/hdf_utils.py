@@ -352,7 +352,7 @@ def write_book_keeping_attrs(h5_obj):
                        verbose=False)
 
 
-def write_simple_attrs(h5_obj, attrs, verbose=False):
+def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
     """
     Writes attributes to a h5py object
 
@@ -362,6 +362,9 @@ def write_simple_attrs(h5_obj, attrs, verbose=False):
         h5py object to which the attributes will be written to
     attrs : dict
         Dictionary containing the attributes as key-value pairs
+    force_to_str : bool, optional. Default = True
+        Whether or not to cast keys or values to string when they do not have
+        the correct types
     verbose : bool, optional. Default=False
         Whether or not to print debugging statements
 
@@ -376,9 +379,14 @@ def write_simple_attrs(h5_obj, attrs, verbose=False):
 
     for key, val in attrs.items():
         if not isinstance(key, (str, unicode)):
-            warn('Skipping attribute with key: {}. Expected str, got {}'
-                 ''.format(key, type(key)))
-            continue
+            if force_to_str:
+                warn('Converted key: {} from type: {} to str'
+                     ''.format(key, type(key)))
+                key = str(key)
+            else:
+                warn('Skipping attribute with key: {}. Expected str, got {}'
+                     ''.format(key, type(key)))
+                continue
 
         # Get rid of spaces in the key
         key = key.strip()
@@ -399,7 +407,16 @@ def write_simple_attrs(h5_obj, attrs, verbose=False):
         clean_val = clean_string_att(val)
         if verbose:
             print('Attribute cleaned into: {}'.format(clean_val))
-        h5_obj.attrs[key] = clean_val
+        try:
+            h5_obj.attrs[key] = clean_val
+        except Exception as excp:
+            if force_to_str:
+                warn('Casting attribute value: {} of type: {} to str'
+                     ''.format(val, type(val)))
+                h5_obj.attrs[key] = str(val)
+            else:
+                raise excp('Could not write attribute value: {} of type: {}'
+                           ''.format(val, type(val)))
     if verbose:
         print('Wrote all (simple) attributes to {}: {}\n'
               ''.format(type(h5_obj), h5_obj.name.split('/')[-1]))

@@ -8,6 +8,7 @@ from __future__ import division, print_function, unicode_literals, absolute_impo
 import unittest
 import os
 import sys
+from numbers import Number
 import h5py
 import numpy as np
 import dask.array as da
@@ -315,7 +316,16 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
                 hdf_utils.write_simple_attrs(h5_group, ['attrs', 1.234, 'should be dict', np.arange(3)])
         os.remove(file_path)
 
-    def test_key_not_str(self):
+    def test_invalid_val_type_in_dict(self):
+        file_path = 'test.h5'
+        data_utils.delete_existing_file(file_path)
+        with h5py.File(file_path, mode='w') as h5_f:
+            h5_group = h5_f.create_group('Blah')
+            with self.assertRaises(TypeError):
+                hdf_utils.write_simple_attrs(h5_group, {'att_1': [{'a': 'b'}]})
+        os.remove(file_path)
+
+    def test_key_not_str_strict(self):
         file_path = 'test.h5'
         data_utils.delete_existing_file(file_path)
         with h5py.File(file_path, mode='w') as h5_f:
@@ -326,10 +336,42 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
 
                 if sys.version_info.major == 3:
                     with self.assertWarns(UserWarning):
-                        hdf_utils.write_simple_attrs(h5_f, attrs)
+                        hdf_utils.write_simple_attrs(h5_f, attrs,
+                                                     force_to_str=False)
                 else:
-                    hdf_utils.write_simple_attrs(h5_f, attrs)
-                self.assertEqual(len(h5_f.attrs.keys()), 0)
+                    hdf_utils.write_simple_attrs(h5_f, attrs,
+                                                 force_to_str=False)
+            self.assertEqual(len(h5_f.attrs.keys()), 0)
+
+        os.remove(file_path)
+
+    def test_key_not_str_relaxed(self):
+        file_path = 'test.h5'
+        data_utils.delete_existing_file(file_path)
+
+        with h5py.File(file_path, mode='w') as h5_f:
+            for attrs in [{15: 'hello'},
+                          {None: 23},
+                          {15.234: 'blah'},
+                          {True: False}]:
+
+                if sys.version_info.major == 3:
+                    with self.assertWarns(UserWarning):
+                        hdf_utils.write_simple_attrs(h5_f, attrs,
+                                                     force_to_str=True)
+                else:
+                    hdf_utils.write_simple_attrs(h5_f, attrs,
+                                                 force_to_str=True)
+                key = list(attrs.keys())[0]
+                val = attrs[key]
+                key = str(key)
+                if not isinstance(val, (str, unicode, Number)):
+                    val = str(val)
+
+                self.assertTrue(key in h5_f.attrs.keys())
+                self.assertEqual(val, h5_f.attrs[key])
+
+            self.assertEqual(len(h5_f.attrs.keys()), 4)
 
         os.remove(file_path)
 
