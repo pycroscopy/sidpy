@@ -123,13 +123,17 @@ def get_attr(h5_object, attr_name):
     if attr_name not in h5_object.attrs.keys():
         raise KeyError("'{}' is not an attribute in '{}'".format(attr_name, h5_object.name))
 
+    h5py_major = int(h5py.__version__.split('.')[0])
+
     att_val = h5_object.attrs.get(attr_name)
     if isinstance(att_val, np.bytes_) or isinstance(att_val, bytes):
         att_val = att_val.decode('utf-8')
 
-    elif type(att_val) == np.ndarray:
+    elif isinstance(att_val, np.ndarray):
         if sys.version_info.major == 3:
-            if att_val.dtype.type in [np.bytes_, np.object_]:
+            if att_val.dtype.type in [np.bytes_]:
+                att_val = np.array([str(x, 'utf-8') for x in att_val])
+            elif att_val.dtype.type in [np.object_] and h5py_major < 3:
                 att_val = np.array([str(x, 'utf-8') for x in att_val])
 
     return att_val
