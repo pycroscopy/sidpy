@@ -8,7 +8,6 @@ Created on Tue Nov  3 21:14:25 2015
 from __future__ import division, print_function, absolute_import, \
     unicode_literals
 import sys
-from collections import Iterable
 from warnings import warn
 import h5py
 import numpy as np
@@ -16,7 +15,10 @@ import numpy as np
 from sidpy.base.string_utils import clean_string_att
 
 if sys.version_info.major == 3:
+    from collections.abc import Iterable
     unicode = str
+else:
+    from collections import Iterable
 
 __all__ = ['get_region', 'clean_reg_ref', 'attempt_reg_ref_build',
            'copy_reg_ref_reduced_dim','create_region_reference',

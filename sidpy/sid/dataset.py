@@ -26,7 +26,7 @@ from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisual
 # from ..hdf.hdf_utils import is_editable_h5
 
 
-class DataTypes(Enum):
+class DataType(Enum):
     UNKNOWN = -1
     SPECTRUM = 1
     LINE_PLOT = 2
@@ -133,7 +133,7 @@ class Dataset(da.Array):
         self._units = ''
         self._quantity = ''
         self._title = ''
-        self._data_type = DataTypes.UNKNOWN
+        self._data_type = DataType.UNKNOWN
         self._modality = ''
         self._source = ''
 
@@ -151,15 +151,31 @@ class Dataset(da.Array):
         rep = rep + '\n and Dimensions: '
 
         for key in self._axes:
-            # TODO: This should be using the repr of Dimension
-            rep = rep + '\n  {}'.format(self._axes[key].__repr__())
+            rep = rep + '\n'+self._axes[key].__repr__()
 
         if hasattr(self, 'metadata'):
             if len(self.metadata) > 0:
                 rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
 
-    # TODO: Implement __eq__
+    def __eq__(self, other):  # TODO: Test __eq__
+        if not isinstance (other, Dataset):
+            return False
+        equivalent = super(Dataset, self).__eq__(super(Dataset,other))
+        if self._units != other._units:
+            equivalent = False
+        if self._quantity != other._quantity:
+            equivalent = False
+        if self._source != other._source:
+            equivalent = False
+        if self._data_type != other._data_type:
+            equivalent = False
+        if self._modality != other._modality:
+            equivalent = False
+        if self._axes != other._axes:
+            equivalent = False
+        return equivalent
+
 
     def hdf_close(self):
         if self.h5_dataset is not None:
@@ -297,7 +313,7 @@ class Dataset(da.Array):
 
         return dset_copy
 
-    def __validate_dim_index(self, ind):
+    def __validate_dim(self, ind, name):
         """
         Validates the provided index for a Dimension object
 
@@ -317,6 +333,10 @@ class Dataset(da.Array):
         if 0 > ind >= len(self.shape):
             raise IndexError('Dimension must be an integer between 0 and {}'
                              ''.format(len(self.shape)-1))
+        for key, dim in self._axes.items():
+            if key != ind:
+                if name == dim.name:
+                    raise ValueError('New Dimension name already used, but must be unique')
 
     def rename_dimension(self, ind, name):
         """
@@ -329,13 +349,9 @@ class Dataset(da.Array):
         name : str
             New name for Dimension
         """
-        self.__validate_dim_index(ind)
+        self.__validate_dim(ind, name)
         if not isinstance(name, str):
             raise TypeError('New Dimension name must be a string')
-        for key, dim in self._axes.items():
-            if key != ind:
-                if name == dim.name:
-                    raise ValueError('New Dimension name already used, but must be unique')
         delattr(self, self._axes[ind].name)
         self._axes[ind].name = name
         setattr(self, name, self._axes[ind])
@@ -355,9 +371,10 @@ class Dataset(da.Array):
         -------
 
         """
-        self.__validate_dim_index(ind)
         if not isinstance(dimension, Dimension):
             raise TypeError('dimension needs to be a sidpy.Dimension object')
+        self.__validate_dim(ind, dimension.name)
+        # delattr(self, self._axes[ind].name)
         setattr(self, dimension.name, dimension)
         setattr(self, 'dim_{}'.format(ind), dimension)
         self._axes[ind] = dimension
@@ -425,10 +442,10 @@ class Dataset(da.Array):
             # this can be an image or a set of line_plots
             if verbose:
                 print('2D dataset')
-            if self.data_type == DataTypes.IMAGE:
+            if self.data_type == DataType.IMAGE:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type.value <= DataTypes['LINE_PLOT'].value:
+            elif self.data_type.value <= DataType['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
                 self.view = CurveVisualizer(self, **kwargs)
                 plt.show()
@@ -437,15 +454,15 @@ class Dataset(da.Array):
         elif len(self.shape) == 3:
             if verbose:
                 print('3D dataset')
-            if self.data_type == DataTypes.IMAGE:
+            if self.data_type == DataType.IMAGE:
                 self.view = ImageVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type == DataTypes.IMAGE_MAP:
+            elif self.data_type == DataType.IMAGE_MAP:
                 pass
-            elif self.data_type == DataTypes.IMAGE_STACK:
+            elif self.data_type == DataType.IMAGE_STACK:
                 self.view = ImageStackVisualizer(self, **kwargs)
                 plt.show()
-            elif self.data_type == DataTypes.SPECTRAL_IMAGE:
+            elif self.data_type == DataType.SPECTRAL_IMAGE:
                 self.view = SpectralImageVisualizer(self, **kwargs)
                 plt.show()
             else:
@@ -467,7 +484,6 @@ class Dataset(da.Array):
         -------
         list of floats
         """
-        # TODO : Should this method not be internal? i.e. start with _
         extend = []
         for ind, dim in enumerate(dimensions):
             temp = self._axes[dim].values
@@ -528,13 +544,13 @@ class Dataset(da.Array):
     @data_type.setter
     def data_type(self, value):
         if isinstance(value, str):
-            if value.upper() in DataTypes._member_names_:
-                self._data_type = DataTypes[value.upper()]
+            if value.upper() in DataType._member_names_:
+                self._data_type = DataType[value.upper()]
             else:
-                self._data_type = DataTypes.UNKNOWN
-                raise Warning('Supported data_types for plotting are only: ', DataTypes._member_names_)
+                self._data_type = DataType.UNKNOWN
+                raise Warning('Supported data_types for plotting are only: ', DataType._member_names_)
                 print('Setting data_type to UNKNOWN')
-        elif isinstance(value, DataTypes):
+        elif isinstance(value, DataType):
             self._data_type = value
         else:
             raise ValueError('data_type needs to be a string')

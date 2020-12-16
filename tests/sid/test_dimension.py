@@ -15,7 +15,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from sidpy.sid.dimension import Dimension
 
-sys.path.append("../../sidpy/")
+sys.path.insert(0, "../../sidpy/")
 
 if sys.version_info.major == 3:
     unicode = str
@@ -108,13 +108,28 @@ class TestDimension(unittest.TestCase):
         dim = Dimension(np.arange(5), "X", "Bias", "mV")
         self.assertTrue(dim.info, expected)
 
-    def test_nonposint_values(self):
-        vals = [-1, []]
-        expected = 2*["values should at least be specified as a positive integer"]
-        for v, e in zip(vals, expected):
-            with self.assertRaises(TypeError) as context:
-                _ = Dimension(v, "x")
-            self.assertTrue(e in str(context.exception))
+    def test_values_smaller_than_min_size(self):
+        with self.assertRaises(TypeError) as context:
+            _ = Dimension(0, name="x")
+        self.assertTrue("When specifying the size of a Dimension, values "
+                        "should at be integers > 1" in str(context.exception))
+
+    def test_empty_array_values(self):
+        with self.assertRaises(TypeError) as context:
+            _ = Dimension([], name="x")
+        self.assertTrue("When specifying values over which a parameter is "
+                        "varied, values should not be an empty array"
+                        "" in str(context.exception))
+
+    def test_dimension_size_1(self):
+        dim = Dimension(1)
+        self.assertIsInstance(dim, Dimension)
+        assert_array_equal(np.array(dim), [0])
+
+    def test_single_valued_dimension(self):
+        dim = Dimension([1.23])
+        self.assertIsInstance(dim, Dimension)
+        assert_array_equal(np.array(dim), [1.23])
 
     def test_conv2arr_values(self):
         arr = np.arange(5)
@@ -147,3 +162,6 @@ class TestDimension(unittest.TestCase):
             _ = Dimension(5, "x", dimension_type=dim_type)
         self.assertTrue(expected_wrn[0] in str(w[0].message))
         self.assertTrue(expected_wrn[1] in str(w[1].message))
+
+if __name__ == '__main__':
+    unittest.main()

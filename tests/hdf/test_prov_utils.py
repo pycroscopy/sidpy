@@ -420,5 +420,26 @@ class TestCheckForOld(TestHDFUtilsBase):
             self.assertIsInstance(ret_val, list)
             self.assertEqual(len(ret_val), 0)
 
+
+class TestGetSourceDataset(TestHDFUtilsBase):
+
+    def test_legal(self):
+        with h5py.File(data_utils.std_beps_path, mode='r') as h5_f:
+            h5_groups = [h5_f['/Raw_Measurement/source_main-Fitter_000'],
+                        h5_f['/Raw_Measurement/source_main-Fitter_001']]
+            h5_main = h5_f['/Raw_Measurement/source_main']
+            for h5_grp in h5_groups:
+                self.assertEqual(h5_main, prov_utils.get_source_dataset(h5_grp))
+
+    def test_invalid_type(self):
+        with self.assertRaises(TypeError):
+            _ = prov_utils.get_source_dataset('/Raw_Measurement/Misc')
+
+    def test_illegal(self):
+        with h5py.File(data_utils.std_beps_path, mode='r') as h5_f:
+            with self.assertRaises(ValueError):
+                _ = prov_utils.get_source_dataset(h5_f['/Raw_Measurement/Misc'])
+
+
 if __name__ == '__main__':
     unittest.main()

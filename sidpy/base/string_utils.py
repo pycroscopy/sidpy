@@ -335,6 +335,15 @@ def clean_string_att(att_val):
                 return att_val
             elif np.any([type(x) in [str, unicode, bytes, np.str_] for x in att_val]):
                 return np.array(att_val, dtype='S')
+            elif isinstance(att_val, (list, tuple)):
+                # Not sure how to do this elegantly,
+                for item in att_val:
+                    if not isinstance(item, (str, unicode, bytes, np.str_,
+                                             Number)):
+                        raise TypeError('Provided object was a list or tuple '
+                                         'whose element was not a string or '
+                                         'number but was of type: {}'
+                                         ''.format(type(item)))
         if type(att_val) == np.str_:
             return str(att_val)
         return att_val
