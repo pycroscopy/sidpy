@@ -19,6 +19,7 @@ from dask import array as da
 from sidpy.__version__ import version as sidpy_version
 from sidpy.base.string_utils import validate_single_string_arg, \
     validate_list_of_strings, clean_string_att, get_time_stamp
+from sidpy.base.dict_utils import flatten_dict
 
 if sys.version_info.major == 3:
     unicode = str
@@ -725,3 +726,45 @@ def find_dataset(h5_group, dset_name):
     h5_group.visititems(__find_name)
 
     return datasets
+
+
+def write_dict_to_h5_group(h5_group, metadata, group_name):
+    """
+    If the provided metadata parameter is a non-empty dictionary, this function
+    will create a HDF5 group called group_name within the provided h5_group and
+    write the contents of metadata into the newly created group
+    Parameters
+    ----------
+    h5_group : h5py.Group
+        Parent group to write metadata into
+    metadata : dict
+        Dictionary that needs to be written into the group
+    group_name : str
+        Name of the group to write attributes into
+
+
+    Returns
+    -------
+    h5_metadata_grp : h5py.Group
+        Handle to the newly create group containing the metadata
+
+    Notes
+    -----
+    Nested dictionaries will be flattened until sidpy implements functions
+    to write and read nested dictionaries to and from HDF5 files
+    """
+    if not isinstance(metadata, dict):
+        raise TypeError('metadata is not a dict but of type: {}'
+                        ''.format(type(metadata)))
+    if len(metadata) < 1:
+        return None
+    if not isinstance(h5_group, (h5py.Group, h5py.File)):
+        raise TypeError('h5_group is neither a h5py.Group or h5py.File object'
+                        'and is of type: {}'.format(type(h5_group)))
+
+    validate_single_string_arg(group_name, 'group_name')
+    group_name = group_name.replace(' ', '_')
+    h5_md_group = h5_group.create_group(group_name)
+    flat_dict = flatten_dict(metadata)
+    write_simple_attrs(h5_md_group, flat_dict)
+    return h5_md_group
