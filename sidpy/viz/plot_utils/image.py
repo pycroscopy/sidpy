@@ -397,7 +397,8 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
 
         if color_bar_mode == 'each':
             cb = axes[count].cax.colorbar(im)
-            cb.set_label(colorbar_label)
+            if count % p_cols == p_cols-1:
+                cb.set_label(colorbar_label)
 
         if count % p_cols == 0:
             axes[count].set_ylabel(y_label)
