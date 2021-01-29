@@ -140,7 +140,8 @@ def plot_map(axis, img, show_xy_ticks=True, show_cbar=True, x_vec=None, y_vec=No
                     print(tick_labs)
                 tick_vals = np.linspace(0, tick_vals, img_size)
             else:
-                if not isinstance(tick_vals, (np.ndarray, list, tuple, range, da.core.Array)) or len(tick_vals) != img_size:
+                if not isinstance(tick_vals, (np.ndarray, list, tuple, range, da.core.Array)) or \
+                        len(tick_vals) != img_size:
                     raise ValueError(
                         '{} should be array-like with shape equal to axis {} of img'.format(tick_vals_var_name,
                                                                                             img_axis))
@@ -269,6 +270,8 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
     ---------
     fig, axes
     """
+    plt.rcParams["mpl_toolkits.legacy_colorbar"] = False
+
     if not isinstance(map_stack, (np.ndarray, da.core.Array)) or not map_stack.ndim == 3:
         raise TypeError('map_stack should be a 3 dimensional array arranged as [component, row, col]')
     if num_comps is None:
@@ -364,15 +367,15 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
                 'cbar_size': '5%',
                 'cbar_location': 'right',
                 'direction': 'row',
-                'add_all': True,
                 'share_all': False,
                 'aspect': True,
                 'label_mode': 'L'}
+    #            'add_all': True}
     for key in igkwargs.keys():
         if key in kwargs:
             igkwargs.update({key: kwargs.pop(key)})
 
-    axes = ImageGrid(fig, 111, nrows_ncols=(p_rows, p_cols),
+    axes = ImageGrid(fig=fig, rect=111, nrows_ncols=(p_rows, p_cols),
                      cbar_mode=color_bar_mode,
                      axes_pad=(pad_w * fig_w, pad_h * fig_h),
                      **igkwargs)
@@ -384,6 +387,7 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
     if title_size is None:
         title_size = 16 + (p_rows + p_cols)
     fig.suptitle(title, fontsize=title_size, y=title_yoffset)
+    plt.rcParams["mpl_toolkits.legacy_colorbar"] = False
 
     for count, index, curr_subtitle in zip(range(chosen_pos.size), chosen_pos, subtitle):
         im, im_cbar = plot_map(axes[count],
@@ -392,16 +396,18 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
         axes[count].set_title(curr_subtitle)
 
         if color_bar_mode == 'each':
-            cb = axes.cbar_axes[count].colorbar(im)
-            cb.set_label_text(colorbar_label)
+            cb = axes[count].cax.colorbar(im)
+            if count % p_cols == p_cols-1:
+                cb.set_label(colorbar_label)
 
         if count % p_cols == 0:
             axes[count].set_ylabel(y_label)
         if count >= (p_rows - 1) * p_cols:
             axes[count].set_xlabel(x_label)
 
+    # With cbar_mode="single", cax attribute of all axes are identical.
     if color_bar_mode == 'single':
-        cb = axes.cbar_axes[0].colorbar(im)
-        cb.set_label_text(colorbar_label)
+        cb = axes[0].cax.colorbar(im)
+        cb.set_label(colorbar_label)
 
     return fig, axes

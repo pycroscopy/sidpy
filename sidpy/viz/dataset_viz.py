@@ -388,7 +388,7 @@ class ImageStackVisualizer(object):
                 stack_selection[self.stack_dim] = slice(None)
                 image_stack = self.dset[stack_selection].squeeze()
 
-            self.img.set_data(image_stack.mean(axis=self.stack_dim))
+            self.img.set_data(image_stack.mean(axis=self.stack_dim).T)
             self.fig.canvas.draw_idle()
         elif event.old:
             self._update(self.ind)
@@ -403,7 +403,7 @@ class ImageStackVisualizer(object):
     def _update(self, frame=0):
         self.ind = frame
         self.selection[self.stack_dim] = slice(frame, frame + 1)
-        self.img.set_data(self.dset[tuple(self.selection)].T)
+        self.img.set_data((self.dset[tuple(self.selection)].squeeze()).T)
         self.img.axes.figure.canvas.draw_idle()
 
 
