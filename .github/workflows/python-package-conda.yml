@@ -48,6 +48,9 @@ jobs:
         coverage run --source sidpy setup.py test
         
     - name: Report to coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
       run: |
         coverage report -m
         coveralls
