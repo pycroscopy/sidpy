@@ -46,11 +46,14 @@ jobs:
     - name: Test with pytest / coverage
       run: |
         coverage run --source sidpy setup.py test
+        pwd
+        ls
         
     - name: Report to coveralls
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.info
         
     - name: Documentation build
       run: |
