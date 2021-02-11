@@ -55,16 +55,12 @@ jobs:
         sudo apt-get install pandoc
         sphinx-build -b html -aET docs/source docs/_build/html
         touch docs/_build/html/.nojekyll
-        pwd
-        ls
-        pwd
-        ls docs
         
     - name: Deploy to GitHub Pages
       uses: crazy-max/ghaction-github-pages@v2
       with:
         target_branch: gh-pages
-        build_dir: docs/_build
+        build_dir: docs/_build/html
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
