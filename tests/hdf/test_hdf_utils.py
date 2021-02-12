@@ -4,16 +4,19 @@ Created on Tue Nov  3 15:07:16 2017
 
 @author: Suhas Somnath
 """
-from __future__ import division, print_function, unicode_literals, absolute_import
+from __future__ import division, print_function, unicode_literals, \
+    absolute_import
 import unittest
 import os
 import sys
+import tempfile
 from numbers import Number
 import h5py
 import numpy as np
 import dask.array as da
 from enum import Enum
 sys.path.append("../../sidpy/")
+from sidpy.base.dict_utils import flatten_dict
 from sidpy.hdf import hdf_utils
 
 from . import data_utils
@@ -1326,6 +1329,88 @@ class TestFindDataset(TestHDFUtilsBase):
             h5_group = h5_f['/Raw_Measurement/']
             ret_val = hdf_utils.find_dataset(h5_group, 'Does_Not_Exist')
             self.assertEqual(len(ret_val), 0)
+
+
+class TestWriteDictToH5Group(unittest.TestCase):
+
+    def test_not_h5_group_object(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = tmp_dir + 'write_dict_to_h5_group.h5'
+            with h5py.File(file_path, mode='w') as h5_file:
+                h5_dset = h5_file.create_dataset("dataset", data=[1, 2, 3])
+                with self.assertRaises(TypeError):
+                    _ = hdf_utils.write_dict_to_h5_group(h5_dset, {'a': 1}, 'blah')
+
+    def test_metadata_not_dict(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = tmp_dir + 'write_dict_to_h5_group.h5'
+            with h5py.File(file_path, mode='w') as h5_file:
+                with self.assertRaises(TypeError):
+                    _ = hdf_utils.write_dict_to_h5_group(h5_file,
+                                                         ['not', 'dict'],
+                                                         'blah')
+
+    def test_not_valid_group_name(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = tmp_dir + 'write_dict_to_h5_group.h5'
+            with h5py.File(file_path, mode='w') as h5_file:
+                with self.assertRaises(ValueError):
+                    _ = hdf_utils.write_dict_to_h5_group(h5_file,
+                                                         {'s': 1},
+                                                         '   ')
+                with self.assertRaises(TypeError):
+                    _ = hdf_utils.write_dict_to_h5_group(h5_file,
+                                                         {'s': 1},
+                                                         [1, 4])
+
+    def test_group_name_already_exists(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = tmp_dir + 'write_dict_to_h5_group.h5'
+            with h5py.File(file_path, mode='w') as h5_file:
+                _ = h5_file.create_dataset("dataset", data=[1, 2, 3])
+                with self.assertRaises(ValueError):
+                    _ = hdf_utils.write_dict_to_h5_group(h5_file,
+                                                         {'a': 1},
+                                                         'dataset')
+
+    def test_metadata_is_empty(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = tmp_dir + 'write_dict_to_h5_group.h5'
+            with h5py.File(file_path, mode='w') as h5_file:
+                ret_val = hdf_utils.write_dict_to_h5_group(h5_file, {}, 'blah')
+                self.assertEqual(ret_val, None)
+                self.assertTrue(len(h5_file.keys()) == 0)
+
+    def test_metadata_is_nested(self):
+        metadata = {'a': 4, 'b': {'c': 2.353, 'd': 'nested'}}
+        flat_md = flatten_dict(metadata)
+        group_name = 'blah'
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = tmp_dir + 'write_dict_to_h5_group.h5'
+            with h5py.File(file_path, mode='w') as h5_file:
+                h5_grp = hdf_utils.write_dict_to_h5_group(h5_file,
+                                                          metadata, group_name)
+                self.assertIsInstance(h5_grp, h5py.Group)
+                grp_name = h5_grp.name.split('/')[-1]
+                self.assertEqual(grp_name, group_name)
+                self.assertEqual(len(h5_grp.attrs.keys()), len(flat_md))
+                for key, val in flat_md.items():
+                    self.assertEqual(val, hdf_utils.get_attr(h5_grp, key))
+
+    def test_metadata_is_flat(self):
+        metadata = {'a': 4, 'b': 'hello'}
+        group_name = 'blah'
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = tmp_dir + 'write_dict_to_h5_group.h5'
+            with h5py.File(file_path, mode='w') as h5_file:
+                h5_grp = hdf_utils.write_dict_to_h5_group(h5_file,
+                                                          metadata, group_name)
+                self.assertIsInstance(h5_grp, h5py.Group)
+                grp_name = h5_grp.name.split('/')[-1]
+                self.assertEqual(grp_name, group_name)
+                self.assertEqual(len(h5_grp.attrs.keys()), len(metadata))
+                for key, val in metadata.items():
+                    self.assertEqual(val, hdf_utils.get_attr(h5_grp, key))
 
 
 if __name__ == '__main__':

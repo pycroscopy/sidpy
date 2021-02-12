@@ -47,9 +47,9 @@ deploy:
   - provider: pypi
     skip_cleanup: true
     user:
-      secure: $PYPIUSER
+      secure: $PYPIUSER2
     password:
-      secure: $PYPIPASS
+      secure: $PYPIPASS2
     distributions: "sdist bdist_wheel"
     file_glob: true
     file:

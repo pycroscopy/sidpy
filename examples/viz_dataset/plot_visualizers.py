@@ -129,7 +129,7 @@ plt.show()
 # Again that does not work in a prgram and we use the explicit command.
 # Note that you always have to keep a reference for an interactive plot (here view)
 
-
+"""
 <<<<<<< HEAD:examples/viz/dataset/plot_visualizers.py
 view = sidpy.viz.dataset_viz.SpectralImageVisualizer(dset)
 view.set_bin([40,40])
@@ -187,3 +187,4 @@ dset.set_dimension(0, sidpy.Dimension('spectrum',np.arange(dset.shape[0])))
 dset.spectrum.dimension_type = 'spectral'
 # view = SpectralImageVisualizer(dset)
 # dset.plot()
+"""
