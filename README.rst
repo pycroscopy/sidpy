@@ -25,6 +25,6 @@ sidpy
    :target: https://zenodo.org/badge/latestdoi/138171750
    :alt: DOI
 
-Python utilities for storing, visualizing, and processing Spectroscopic and Imaging Data (SID)
+Python utilities for storing, visualizing of Spectroscopic and Imaging Data (SID)
 
 Please see our `website <https://pycroscopy.github.io/sidpy/index.html>`_ for more information.
