@@ -43,11 +43,24 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
-    - name: Test with pytest / coverage
+    - name: Generate coverage report
       run: |
-        coverage run --source sidpy setup.py test
-        pwd
-        ls
+        pip install pytest
+        pip install pytest-cov
+        pytest --cov=./ --cov-report=xml
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        # directory: ./coverage/reports/
+        flags: unittests
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        # path_to_write_report: ./coverage/codecov_report.txt
+        verbose: true
         
     - name: Documentation build
       run: |
@@ -62,28 +75,4 @@ jobs:
         target_branch: gh-pages
         build_dir: docs/_build/html
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Generate coverage report
-      run: |
-        pip install pytest
-        pip install pytest-cov
-        pytest --cov=./ --cov-report=xml
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.xml
-        # directory: ./coverage/reports/
-        flags: unittests
-        env_vars: OS,PYTHON
-        name: codecov-umbrella
-        fail_ci_if_error: true
-        # path_to_write_report: ./coverage/codecov_report.txt
-        # verbose: true
-        
-    - name: Report to coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lcov.info   
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
