@@ -1,5 +1,8 @@
-name: Python Package using Conda
+name: Python Package
 
+env:
+  PYTHON_MAIN_VERSION: 3.8
+  
 on:
   pull_request:
     branches:
@@ -14,7 +17,7 @@ jobs:
     strategy:
       max-parallel: 5
       matrix:
-        python-version: [3.8]
+        python-version: [3.8, 3.7, 3.6, 3.5, 3.9]
 
     steps:
     - uses: actions/checkout@v2
@@ -37,6 +40,7 @@ jobs:
         pip list
     
     - name: Lint with flake8
+      if: ${{ matrix.python-version == env.PYTHON_MAIN_VERSION }}
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -50,6 +54,7 @@ jobs:
         pytest --cov=./ --cov-report=xml
         
     - name: Upload coverage to Codecov
+      if: ${{ matrix.python-version == env.PYTHON_MAIN_VERSION }}
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -63,6 +68,7 @@ jobs:
         verbose: true
         
     - name: Documentation build
+      if: ${{ matrix.python-version == env.PYTHON_MAIN_VERSION }}
       run: |
         pip install sphinx>=3.1.1 sphinx-gallery sphinx-rtd-theme>=0.5.0 sphinx-autodoc-typehints numpydoc wget pysptools cvxopt scipy nbsphinx
         sudo apt-get install pandoc
@@ -70,6 +76,7 @@ jobs:
         touch docs/_build/html/.nojekyll
         
     - name: Deploy to GitHub Pages
+      if: ${{ matrix.python-version == env.PYTHON_MAIN_VERSION }}
       uses: crazy-max/ghaction-github-pages@v2
       with:
         target_branch: gh-pages
