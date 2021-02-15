@@ -1,16 +1,16 @@
 sidpy
 =====
 
-.. image:: https://travis-ci.com/pycroscopy/sidpy.svg?branch=master
-    :target: https://travis-ci.com/pycroscopy/sidpy
-    :alt: TravisCI
+.. image:: https://github.com/pycroscopy/sidpy/workflows/Python%20Package%20using%20Conda/badge.svg
+    :target: https://github.com/pycroscopy/sidpy/actions?query=workflow%3A%22Python+Package+using+Conda
+    :alt: GiHub Actions
 
 .. image:: https://img.shields.io/pypi/v/sidpy.svg
     :target: https://pypi.org/project/sidpy/
     :alt: PyPI
-
-.. image:: https://coveralls.io/repos/github/pycroscopy/sidpy/badge.svg?branch=master
-    :target: https://coveralls.io/github/pycroscopy/sidpy?branch=master
+   
+.. image:: https://codecov.io/gh/pycroscopy/sidpy/branch/master/graph/badge.svg?token=BCFR4FR6AL
+    :target: https://codecov.io/gh/pycroscopy/sidpy
     :alt: coverage
 
 .. image:: https://img.shields.io/pypi/l/sidpy.svg
@@ -23,8 +23,8 @@ sidpy
 
 .. image:: https://zenodo.org/badge/138171750.svg
    :target: https://zenodo.org/badge/latestdoi/138171750
-   :alt: DOI
+   :alt: USID DOI
 
-Python utilities for storing, visualizing of Spectroscopic and Imaging Data (SID)
+Python utilities for storing and visualizing Spectroscopic and Imaging Data (SID)
 
 Please see our `website <https://pycroscopy.github.io/sidpy/index.html>`_ for more information.
