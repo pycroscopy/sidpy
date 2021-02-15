@@ -13,6 +13,8 @@ import sys
 
 if sys.version_info.major == 3:
     unicode = str
+    if sys.version_info.minor < 6:
+        ModuleNotFoundError = ValueError
 
 
 def check_ssh():
