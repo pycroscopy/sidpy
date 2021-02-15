@@ -1,8 +1,8 @@
 sidpy
 =====
 
-.. image:: https://github.com/pycroscopy/sidpy/workflows/Python%20Package%20using%20Conda/badge.svg
-    :target: https://github.com/pycroscopy/sidpy/actions?query=workflow%3A%22Python+Package+using+Conda
+.. image:: https://github.com/pycroscopy/sidpy/workflows/Python%20Package/badge.svg?branch=master
+    :target: https://github.com/pycroscopy/sidpy/actions?query=workflow%3A%22Python+Package%22
     :alt: GiHub Actions
 
 .. image:: https://img.shields.io/pypi/v/sidpy.svg
