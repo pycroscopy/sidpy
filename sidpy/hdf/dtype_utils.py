@@ -112,7 +112,6 @@ def flatten_compound_to_real(dataset, lazy=False):
 
     >>> print('Structured array is of shape {} and have values:'.format(structured_array.shape))
     >>> print(structured_array)
-
     Structured array is of shape (5,) and have values:
     [(859.62445,  54, 1012.22256219) (959.5565 , 678,  296.19788769)
      (383.20737, 689,  192.45427816) (201.56635, 889,  939.01082338)
@@ -121,7 +120,6 @@ def flatten_compound_to_real(dataset, lazy=False):
     >>> real_array = sidpy.dtype_utils.flatten_compound_to_real(structured_array)
     >>> print("This array converted to regular scalar matrix has shape: {} and values:".format(real_array.shape))
     >>> print(real_array)
-
     This array converted to regular scalar matrix has shape: (15,) and values:
     [ 859.62445068  959.55651855  383.20736694  201.56634521  334.22015381
        54.          678.          689.          889.          467.
@@ -279,7 +277,6 @@ def check_dtype(h5_dset):
     >>> import sidpy
     >>> struct_dtype = np.dtype({'names': ['r', 'g', 'b'],
     >>>                      'formats': [np.float32, np.uint16, np.float64]})
-
     >>> file_path = 'dtype_utils_example.h5'
     >>> if os.path.exists(file_path):
     >>>     os.remove(file_path)
@@ -294,7 +291,6 @@ def check_dtype(h5_dset):
     >>>     _ = h5_f.create_dataset('complex', data=np.random.random(size=num_elems) + 1j * np.random.random(size=num_elems),
     >>>                             dtype=np.complex64)
     >>> h5_f.flush()
-
     >>> # Now, lets test the the function on compound-, complex-, and real-valued HDF5 datasets:
     >>> def check_dataset(h5_dset):
     >>>     print('\tDataset being tested: {}'.format(h5_dset))
@@ -305,7 +301,6 @@ def check_dtype(h5_dset):
     >>>     print('\tShape of dataset in its current form: {}'.format(h5_dset.shape))
     >>>     print('\tAfter flattening to real, shape is expected to be: ({}, {})'.format(h5_dset.shape[0], n_features))
     >>>     print('\tByte-size of a single element in its current form: {}'.format(type_mult))
-
     >>> with h5py.File(file_path, mode='r') as h5_f:
     >>>     print('Checking a compound-valued dataset:')
     >>>     check_dataset(h5_f['compound'])
@@ -316,33 +311,32 @@ def check_dtype(h5_dset):
     >>>     print('Checking a real-valued dataset:')
     >>>     check_dataset(h5_f['real'])
     >>> os.remove(file_path)
-
     Checking a compound-valued dataset:
-        Dataset being tested: <HDF5 dataset "compound": shape (5, 7), type "|V14">
-        Function to transform to real: <function flatten_compound_to_real at 0x112c130d0>
-        is_complex? False
-        is_compound? True
-        Shape of dataset in its current form: (5, 7)
-        After flattening to real, shape is expected to be: (5, 21)
-        Byte-size of a single element in its current form: 12
-
+    Dataset being tested: <HDF5 dataset "compound": shape (5, 7), type "|V14">
+    Function to transform to real: <function flatten_compound_to_real at 0x112c130d0>
+    is_complex? False
+    is_compound? True
+    Shape of dataset in its current form: (5, 7)
+    After flattening to real, shape is expected to be: (5, 21)
+    Byte-size of a single element in its current form: 12
+    - - - - - - - - - - - - - - - - - -
     Checking a complex-valued dataset:
-        Dataset being tested: <HDF5 dataset "complex": shape (5, 7), type "<c8">
-        Function to transform to real: <function flatten_complex_to_real at 0x112c13048>
-        is_complex? True
-        is_compound? False
-        Shape of dataset in its current form: (5, 7)
-        After flattening to real, shape is expected to be: (5, 14)
-        Byte-size of a single element in its current form: 8
-
+    Dataset being tested: <HDF5 dataset "complex": shape (5, 7), type "<c8">
+    Function to transform to real: <function flatten_complex_to_real at 0x112c13048>
+    is_complex? True
+    is_compound? False
+    Shape of dataset in its current form: (5, 7)
+    After flattening to real, shape is expected to be: (5, 14)
+    Byte-size of a single element in its current form: 8
+    - - - - - - - - - - - - - - - - - -
     Checking a real-valued dataset:
-        Dataset being tested: <HDF5 dataset "real": shape (5, 7), type "<f2">
-        Function to transform to real: <class 'numpy.float32'>
-        is_complex? False
-        is_compound? False
-        Shape of dataset in its current form: (5, 7)
-        After flattening to real, shape is expected to be: (5, 7)
-        Byte-size of a single element in its current form: 4
+    Dataset being tested: <HDF5 dataset "real": shape (5, 7), type "<f2">
+    Function to transform to real: <class 'numpy.float32'>
+    is_complex? False
+    is_compound? False
+    Shape of dataset in its current form: (5, 7)
+    After flattening to real, shape is expected to be: (5, 7)
+    Byte-size of a single element in its current form: 4
     """
     if not isinstance(h5_dset, h5py.Dataset):
         raise TypeError('h5_dset should be a h5py.Dataset object')
