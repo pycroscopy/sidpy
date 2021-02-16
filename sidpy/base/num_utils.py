@@ -99,6 +99,21 @@ def contains_integers(iter_int, min_val=None):
     -------
     bool
         Whether or not the provided object is an iterable of integers
+
+    Examples
+    --------
+    >>> item = [1, 2, -3, 4]
+    >>> print('{} : contains integers? : {}'.format(item, sidpy.base.num_utils.contains_integers(item)))
+    [1, 2, -3, 4] : contains integers? : True
+
+    >>> item = [1, 4.5, 2.2, -1]
+    >>> print('{} : contains integers? : {}'.format(item, sidpy.base.num_utils.contains_integers(item)))
+    [1, 4.5, 2.2, -1] : contains integers? : False
+
+    >>> item = [1, 5, 8, 3]
+    >>> min_val = 2
+    >>> print('{} : contains integers >= {} ? : {}'.format(item, min_val, sidpy.base.num_utils.contains_integers(item, min_val=min_val)))
+    [1, 5, 8, 3] : contains integers >= 2 ? : False
     """
     if not isinstance(iter_int, Iterable):
         raise TypeError('iter_int should be an Iterable')
