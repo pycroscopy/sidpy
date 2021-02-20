@@ -1,4 +1,4 @@
-name: Python Package
+name: build
 
 env:
   PYTHON_MAIN_VERSION: 3.8

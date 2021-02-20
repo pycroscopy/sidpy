@@ -1,8 +1,8 @@
 sidpy
 =====
 
-.. image:: https://github.com/pycroscopy/sidpy/workflows/Python%20Package/badge.svg?branch=master
-    :target: https://github.com/pycroscopy/sidpy/actions?query=workflow%3A%22Python+Package%22
+.. image:: https://github.com/pycroscopy/sidpy/workflows/build/badge.svg?branch=master
+    :target: https://github.com/pycroscopy/sidpy/actions?query=workflow%3Abuild
     :alt: GiHub Actions
 
 .. image:: https://img.shields.io/pypi/v/sidpy.svg
