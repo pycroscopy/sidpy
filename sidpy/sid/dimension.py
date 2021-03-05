@@ -160,8 +160,7 @@ class Dimension(np.ndarray):
         if isinstance(value, DimensionType):
             self._dimension_type = value
         else:
-            dimension_type = validate_single_string_arg(value,
-                                                        'dimension_type')
+            dimension_type = validate_single_string_arg(value,'dimension_type')
 
             if dimension_type.upper() in [member.name for member in DimensionType]:
                 self._dimension_type = DimensionType[dimension_type.upper()]
