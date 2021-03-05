@@ -38,21 +38,21 @@ class DataType(Enum):
     IMAGE_4D = 8
 
 
-def view_subclass(darr, cls):
+def view_subclass(dask_array, cls):
     """
     View a dask Array as an instance of a dask Array sub-class.
 
     Parameters
     ----------
-    darr
+    dask_array
     cls
 
     Returns
     -------
 
     """
-    return cls(darr.dask, name=darr.name, chunks=darr.chunks,
-               dtype=darr.dtype, shape=darr.shape)
+    return cls(dask_array.dask, name=dask_array.name, chunks=dask_array.chunks,
+               dtype=dask_array.dtype, shape=dask_array.shape)
 
 
 class Dataset(da.Array):
@@ -84,7 +84,7 @@ class Dataset(da.Array):
     -like_data(data,name): constructs the dataset form a array like object and copies attributes and
     metadata from parent dataset
     -copy()
-    -plot(): plots dataset dependend on data_typw and dimension_types.
+    -plot(): plots dataset dependent on data_type and dimension_types.
     -get_extent(): extent to be used with imshow function of matplotlib
     -set_dimension(axis, dimensions): set a Dimension to a specific axis
     -rename_dimension(dimension, name): renames attribute of dimension
@@ -159,9 +159,9 @@ class Dataset(da.Array):
         return rep
 
     def __eq__(self, other):  # TODO: Test __eq__
-        if not isinstance (other, Dataset):
+        if not isinstance(other, Dataset):
             return False
-        equivalent = super(Dataset, self).__eq__(super(Dataset,other))
+        equivalent = super(Dataset, self).__eq__(super(Dataset, other))
         if self._units != other._units:
             equivalent = False
         if self._quantity != other._quantity:
@@ -175,7 +175,6 @@ class Dataset(da.Array):
         if self._axes != other._axes:
             equivalent = False
         return equivalent
-
 
     def hdf_close(self):
         if self.h5_dataset is not None:
@@ -205,26 +204,26 @@ class Dataset(da.Array):
         """
 
         # create vanilla dask array
-        darr = da.from_array(np.array(x), name=name, chunks=chunks, lock=lock)
+        dask_array = da.from_array(np.array(x), name=name, chunks=chunks, lock=lock)
 
         # view as sub-class
-        sid_dset = view_subclass(darr, cls)
-        sid_dset.data_type = 'UNKNOWN'
-        sid_dset.units = 'generic'
-        sid_dset.title = name
-        sid_dset.quantity = 'generic'
+        sid_dataset = view_subclass(dask_array, cls)
+        sid_dataset.data_type = 'UNKNOWN'
+        sid_dataset.units = 'generic'
+        sid_dataset.title = name
+        sid_dataset.quantity = 'generic'
 
-        sid_dset.modality = 'generic'
-        sid_dset.source = 'generic'
+        sid_dataset.modality = 'generic'
+        sid_dataset.source = 'generic'
 
-        sid_dset._axes = {}
-        for dim in range(sid_dset.ndim):
+        sid_dataset._axes = {}
+        for dim in range(sid_dataset.ndim):
             # TODO: add parent to dimension to set attribute if name changes
-            sid_dset.set_dimension(dim,
-                                   Dimension(np.arange(sid_dset.shape[dim]),string.ascii_lowercase[dim]))
-        sid_dset.metadata = {}
-        sid_dset.original_metadata = {}
-        return sid_dset
+            sid_dataset.set_dimension(dim,
+                                      Dimension(np.arange(sid_dataset.shape[dim]), string.ascii_lowercase[dim]))
+        sid_dataset.metadata = {}
+        sid_dataset.original_metadata = {}
+        return sid_dataset
 
     def like_data(self, data, name=None, chunks='auto', lock=False):
         """
@@ -273,7 +272,7 @@ class Dataset(da.Array):
                 # assuming the axis scale is equidistant
                 try:
                     scale = get_slope(self._axes[dim])
-                    axis = self._axes[dim].copy()
+                    # axis = self._axes[dim].copy()
                     axis = Dimension(np.arange(new_data.shape[dim])*scale, self._axes[dim].name)
                     axis.quantity = self._axes[dim].quantity
                     axis.units = self._axes[dim].units
@@ -297,21 +296,21 @@ class Dataset(da.Array):
         sidpy dataset
 
         """
-        dset_copy = Dataset.from_array(self, self.name, self.chunks)
+        dataset_copy = Dataset.from_array(self, self.name, self.chunks)
 
-        dset_copy.title = self.title
-        dset_copy.units = self.units
-        dset_copy.quantity = self.quantity
-        dset_copy.data_type = self.data_type
-        dset_copy.modality = self.modality
-        dset_copy.source = self.source
+        dataset_copy.title = self.title
+        dataset_copy.units = self.units
+        dataset_copy.quantity = self.quantity
+        dataset_copy.data_type = self.data_type
+        dataset_copy.modality = self.modality
+        dataset_copy.source = self.source
 
-        dset_copy._axes = {}
+        dataset_copy._axes = {}
         for dim in self._axes:
-            dset_copy.set_dimension(dim, self._axes[dim])
-        dset_copy.metadata = dict(self.metadata).copy()
+            dataset_copy.set_dimension(dim, self._axes[dim])
+        dataset_copy.metadata = dict(self.metadata).copy()
 
-        return dset_copy
+        return dataset_copy
 
     def __validate_dim(self, ind, name):
         """
@@ -400,8 +399,6 @@ class Dataset(da.Array):
         """
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
-
-
 
     def plot(self, verbose=False, **kwargs):
         """
@@ -542,7 +539,6 @@ class Dataset(da.Array):
                 image_dims.append(dim)
         return image_dims
 
-
     @property
     def labels(self):
         labels = []
@@ -595,7 +591,7 @@ class Dataset(da.Array):
             else:
                 self._data_type = DataType.UNKNOWN
                 raise Warning('Supported data_types for plotting are only: ', DataType._member_names_)
-                print('Setting data_type to UNKNOWN')
+
         elif isinstance(value, DataType):
             self._data_type = value
         else:
@@ -669,4 +665,3 @@ class Dataset(da.Array):
     @property
     def data_descriptor(self):
         return '{} ({})'.format(self.quantity, self.units)
-
