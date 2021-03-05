@@ -19,7 +19,7 @@ import dask.array as da
 import h5py
 from enum import Enum
 
-from .dimension import Dimension
+from .dimension import Dimension, DimensionType
 from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
@@ -401,6 +401,8 @@ class Dataset(da.Array):
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
 
+
+
     def plot(self, verbose=False, **kwargs):
         """
         Plots the dataset according to the
@@ -496,6 +498,50 @@ class Dataset(da.Array):
                 extend.append(start)
                 extend.append(end)
         return extend
+
+    def get_dimensions_by_type(self, dims_in):
+        """ get dimension by dimension_type name
+
+        Parameters
+        ----------
+        dims_in: dimension_type/str or list of dimension_types/string
+
+
+        Returns
+        -------
+        dims_out: list of [index, dimension]
+            the kind of dimensions specified in input in numerical order of the dataset, not the input!
+        """
+
+        if isinstance(dims_in, (str, DimensionType)):
+            dims_in = [dims_in]
+        for i in range(len(dims_in)):
+            if isinstance(dims_in[i], str):
+                dims_in[i] = DimensionType[dims_in[i].upper()]
+        dims_out = []
+        for dim, axis in self._axes.items():
+            if axis.dimension_type in dims_in:
+                dims_out.append([dim, self._axes[dim]])
+        return dims_out
+
+    def get_image_dims(self):
+        """Get all spatial dimensions"""
+
+        image_dims = []
+        for dim, axis in self._axes.items():
+            if axis.dimension_type == DimensionType.SPATIAL:
+                image_dims.append(dim)
+        return image_dims
+
+    def get_spectrum_dims(self):
+        """Get all spectral dimensions"""
+
+        image_dims = []
+        for dim, axis in self._axes.items():
+            if axis.dimension_type == DimensionType.SPECTRAL:
+                image_dims.append(dim)
+        return image_dims
+
 
     @property
     def labels(self):
