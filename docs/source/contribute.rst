@@ -22,7 +22,7 @@ General guidelines
 ~~~~~~~~~~~~~~~~~~
 * Encapsulate independent sections of your code into functions that can be used individually if required.
 * Ensure that your code (functions) is well documented (`numpy format <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`_)
-  - expected inputs and outputs, purpose of functions
+  - expected inputs and outputs, examples, notes, purpose of functions
 * Please avoid very short names for variables like ``i`` or ``k``. This makes it challenging to follow code, find and fix bugs.
 * Please consider using packages that are easy to install on Windows, Mac, and Linux.
   It is quite likely that packages included within Anaconda
@@ -40,7 +40,7 @@ sidpy-specific guidelines
   Any code specific to the Universal Spectroscopic and Imaging Data (USID) or
   N-Dimensional Spectroscopic and Imaging Data (NSID) should go into pyUSID or pyNSID respectively.
   Code that provides scientific functionality goes into pycroscopy.
-* Please ensure that your code files fit into our :ref:`package structure <API Reference>` (``base``, ``hdf``, ``io``, ``proc``, ``sid`` and ``viz``)
+* Please ensure that your code files fit into our package structure (``base``, ``hdf``, ``io``, ``proc``, ``sid`` and ``viz``)
 * Once you decide where your code will sit, please use relative import statements instead of absolute / external paths.
   For example, if you are contributing code for a new submodule within ``sidpy.hdf``, you will need to turn your import statements and code from something like:
 
@@ -55,8 +55,8 @@ sidpy-specific guidelines
 
   .. code-block:: python
 
-     from ..hdf.hdf_utils import print_tree
-     from ..sid import Dimension
+     from sidpy.hdf.hdf_utils import print_tree
+     from sidpy.sid import Dimension
      ...
      print_tree(hdf_file_handle)
      x_dim = Dimension(...)
@@ -65,9 +65,11 @@ You can look at our code in our `GitHub project <https://github.com/pycroscopy/s
 
 Contributing code
 -----------------
+Please read this `beginner's guide to contributing <https://github.com/firstcontributions/first-contributions>`_ to open source projects.
+
 We recommend that you follow the steps below. Again, if you are ever need help, please contact us:
 
-1. Learn ``git`` if you are not already familiar with it. See our :ref:`compilation of tutorials and guides <Tutorials on Basics>`,
+1. Learn ``git`` if you are not already familiar with it. See our compilation of tutorials and guides,
    especially `this one <https://github.com/pycroscopy/sidpy/blob/master/docs/Using%20PyCharm%20to%20manage%20repository.pdf>`_.
 2. Create a ``fork`` of sidpy - this creates a separate copy of the entire sidpy repository under your user ID.
    For more information see `instructions here <https://help.github.com/articles/fork-a-repo/>`_.
