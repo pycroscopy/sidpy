@@ -197,10 +197,13 @@ class Dataset(da.Array):
     def abs(self):
         return self.like_data(np.abs(self))
 
-
     def fft(self, dimension_type=None):
-        """
-            Gets the 2D FFT for a single or stack of images by applying a blackman window
+        """ Gets the FFT of a sidpy.Dataset of any size
+
+        The data_type of the sidpy.Dataset determines the dimension_type over which the
+        fourier transform is performed over, if the dimension_type is not set explicitly.
+
+        The fourier transformed dataset is automatically shifted to center of dataset.
 
         Parameters
         ----------
@@ -220,7 +223,7 @@ class Dataset(da.Array):
         """
 
         if dimension_type is None:
-            # test for data_type of Dataset
+            # test for data_type of sidpy.Dataset
             if self.data_type.name in ['IMAGE_MAP', 'IMAGE_STACK', 'SPECTRAL_IMAGE', 'IMAGE_4D']:
                 dimension_type = self.dim_2.dimension_type
             else:
@@ -266,8 +269,8 @@ class Dataset(da.Array):
             fft_dset.set_dimension(axes[1],
                                    Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[1]],
                                                                             d=get_slope(self._axes[axes[1]].values))),
-                                                  name='v', units=units_y, dimension_type=new_dimension_type,
-                                                  quantity='reciprocal_length'))
+                                             name='v', units=units_y, dimension_type=new_dimension_type,
+                                             quantity='reciprocal_length'))
         return fft_dset
 
     # @staticmethod
@@ -617,7 +620,7 @@ class Dataset(da.Array):
         dims_out = []
         for dim, axis in self._axes.items():
             if axis.dimension_type in dims_in:
-                dims_out.append(dim) #, self._axes[dim]])
+                dims_out.append(dim)  # , self._axes[dim]])
         return dims_out
 
     def get_image_dims(self):
