@@ -533,7 +533,8 @@ class Dataset(da.Array):
             print('Shape of dataset is: ', self.shape)
 
         if self.data_type.value < 0:
-            raise NameError('Datasets with UNKNOWN data_types cannot be plotted')
+            raise NameError('Datasets with UNKNOWN data_types cannot be plotted n')
+
         if len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
