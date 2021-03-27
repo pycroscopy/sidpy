@@ -467,11 +467,7 @@ class TestHelperFunctions(unittest.TestCase):
 
         spatial_dims = descriptor.get_dimensions_by_type('spatial')
         self.assertEqual(len(spatial_dims), 1)
-        self.assertEqual(spatial_dims[0][0], 0)
-
-        spatial_dims = descriptor.get_dimensions_by_type(['spatial'])
-        self.assertEqual(len(spatial_dims), 1)
-        self.assertEqual(spatial_dims[0][0], 0)
+        self.assertEqual(spatial_dims[0], 0)
 
 
 class TestViewMetadata(unittest.TestCase):
