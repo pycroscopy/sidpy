@@ -161,20 +161,21 @@ class Dataset(da.Array):
     def __eq__(self, other):  # TODO: Test __eq__
         if not isinstance(other, Dataset):
             return False
-        equivalent = super(Dataset, self).__eq__(super(Dataset, other))
-        if self._units != other._units:
-            equivalent = False
-        if self._quantity != other._quantity:
-            equivalent = False
-        if self._source != other._source:
-            equivalent = False
-        if self._data_type != other._data_type:
-            equivalent = False
-        if self._modality != other._modality:
-            equivalent = False
-        if self._axes != other._axes:
-            equivalent = False
-        return equivalent
+        if (self.__array__() == other.__array__()).all():
+            if self._units != other._units:
+                return False
+            if self._quantity != other._quantity:
+                return False
+            if self._source != other._source:
+                return False
+            if self._data_type != other._data_type:
+                return False
+            if self._modality != other._modality:
+                return False
+            if self._axes != other._axes:
+                return False
+            return True
+        return False
 
     def __add__(self, x):
         return self.like_data(da.add(self, x))
@@ -586,18 +587,18 @@ class Dataset(da.Array):
         -------
         list of floats
         """
-        extend = []
+        extent = []
         for ind, dim in enumerate(dimensions):
             temp = self._axes[dim].values
             start = temp[0] - (temp[1] - temp[0])/2
             end = temp[-1] + (temp[-1] - temp[-2])/2
             if ind == 1:
-                extend.append(end)  # y axis starts on top
-                extend.append(start)
+                extent.append(end)  # y axis starts on top
+                extent.append(start)
             else:
-                extend.append(start)
-                extend.append(end)
-        return extend
+                extent.append(start)
+                extent.append(end)
+        return extent
 
     def get_dimensions_by_type(self, dims_in):
         """ get dimension by dimension_type name

@@ -154,6 +154,21 @@ class TestDimension(unittest.TestCase):
             self.assertEqual(dim.dimension_type.value, dv)
             self.assertEqual(dim.dimension_type.name, dn)
 
+    def test_dimension_type(self):
+        dim_types = ["spatial", "Spatial", "reciprocal", "Reciprocal",
+                     "spectral", "Spectral", "temporal", "Temporal",
+                     "frame", "Frame",  "time", "Time", "stack", "Stack"]
+        dim_vals_expected = [1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
+        dim_names_expected = ["SPATIAL", "SPATIAL", "RECIPROCAL", "RECIPROCAL",
+                              "SPECTRAL", "SPECTRAL", "TEMPORAL", "TEMPORAL",
+                              "TEMPORAL", "TEMPORAL", "TEMPORAL", "TEMPORAL",
+                              "TEMPORAL", "TEMPORAL"]
+        for dt, dv, dn in zip(dim_types, dim_vals_expected, dim_names_expected):
+            dim = Dimension(5, "x", dimension_type=dt)
+            self.assertEqual(dim.dimension_type.value, dv)
+            self.assertEqual(dim.dimension_type.name, dn)
+
+
     def test_unknown_dimension_type(self):
         dim_type = "bad_name"
         expected_wrn = ["Supported dimension types for plotting are only: [",
