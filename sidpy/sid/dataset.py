@@ -161,20 +161,123 @@ class Dataset(da.Array):
     def __eq__(self, other):  # TODO: Test __eq__
         if not isinstance(other, Dataset):
             return False
-        equivalent = super(Dataset, self).__eq__(super(Dataset, other))
-        if self._units != other._units:
-            equivalent = False
-        if self._quantity != other._quantity:
-            equivalent = False
-        if self._source != other._source:
-            equivalent = False
-        if self._data_type != other._data_type:
-            equivalent = False
-        if self._modality != other._modality:
-            equivalent = False
-        if self._axes != other._axes:
-            equivalent = False
-        return equivalent
+        if (self.__array__() == other.__array__()).all():
+            if self._units != other._units:
+                return False
+            if self._quantity != other._quantity:
+                return False
+            if self._source != other._source:
+                return False
+            if self._data_type != other._data_type:
+                return False
+            if self._modality != other._modality:
+                return False
+            if self._axes != other._axes:
+                return False
+            return True
+        return False
+
+    def __add__(self, x):
+        return self.like_data(da.add(self, x))
+
+    def __sub__(self, x):
+        return self.like_data(da.subtract(self, x))
+
+    def __mul__(self, x):
+        return self.like_data(da.multiply(self, x))
+
+    def __truediv__(self, x):
+        return self.like_data(da.true_divide(self, x))
+
+    def min(self):
+        return float(self.__array__().min())
+
+    def max(self):
+        return float(self.__array__().max())
+
+    def abs(self):
+        return self.like_data(np.abs(self))
+
+    def fft(self, dimension_type=None):
+        """ Gets the FFT of a sidpy.Dataset of any size
+
+        The data_type of the sidpy.Dataset determines the dimension_type over which the
+        fourier transform is performed over, if the dimension_type is not set explicitly.
+
+        The fourier transformed dataset is automatically shifted to center of dataset.
+
+        Parameters
+        ----------
+        dimension_type: None, str, or sidpy.DimensionType - optional
+            dimension_type over which fourier transform is performed, if None an educated guess will determine
+            that from dimensions of sidpy.Dataset
+
+        Returns
+        -------
+        fft_dset: 2D or 3D complex sidpy.Dataset (not tested for higher dimensions)
+            2 or 3 dimensional matrix arranged in the same way as input
+
+        Example
+        -------
+        >> fft_dataset = sidpy_dataset.fft()
+        >> fft_dataset.plot()
+        """
+
+        if dimension_type is None:
+            # test for data_type of sidpy.Dataset
+            if self.data_type.name in ['IMAGE_MAP', 'IMAGE_STACK', 'SPECTRAL_IMAGE', 'IMAGE_4D']:
+                dimension_type = self.dim_2.dimension_type
+            else:
+                dimension_type = self.dim_0.dimension_type
+
+        if isinstance(dimension_type, str):
+            dimension_type = DimensionType[dimension_type.upper()]
+
+        if not isinstance(dimension_type, DimensionType):
+            raise TypeError('Could not identify a dimension_type to perform Fourier transform on')
+
+        axes = self.get_dimensions_by_type(dimension_type)
+        if dimension_type.name in ['SPATIAL', 'RECIPROCAL']:
+            if len(axes) != 2:
+                raise TypeError('sidpy dataset of type', self.data_type,
+                                ' has no obvious dimension over which to perform fourier transform, please specify')
+            if dimension_type.name == 'SPATIAL':
+                new_dimension_type = DimensionType.RECIPROCAL
+            else:
+                new_dimension_type = DimensionType.SPATIAL
+
+        elif dimension_type.name == 'SPECTRAL':
+            if len(axes) != 1:
+                raise TypeError('sidpy dataset of type', self.data_type,
+                                ' has no obvious dimension over which to perform fourier transform, please specify')
+            new_dimension_type = DimensionType.SPECTRAL
+        else:
+            raise NotImplementedError('fourier transform not implemented for dimension_type ', dimension_type.name)
+
+        fft_transform = np.fft.fftshift(da.fft.fftn(self, axes=axes))
+        fft_dset = self.like_data(fft_transform)
+        fft_dset.units = 'a.u.'
+        fft_dset.modality = 'fft'
+
+        units_x = '1/' + self._axes[axes[0]].units
+        fft_dset.set_dimension(axes[0],
+                               Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[0]],
+                                                                        d=get_slope(self._axes[axes[0]].values))),
+                                         name='u', units=units_x, dimension_type=new_dimension_type,
+                                         quantity='reciprocal'))
+        if len(axes) > 1:
+            units_y = '1/' + self._axes[axes[0]].units
+            fft_dset.set_dimension(axes[1],
+                                   Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[1]],
+                                                                            d=get_slope(self._axes[axes[1]].values))),
+                                             name='v', units=units_y, dimension_type=new_dimension_type,
+                                             quantity='reciprocal_length'))
+        return fft_dset
+
+    # @staticmethod
+    # def __dask_postcompute__(self):
+    #    results = self.__array__().__dask_postcompute__()
+    #    return self.like_array(results)
 
     def hdf_close(self):
         if self.h5_dataset is not None:
@@ -432,6 +535,7 @@ class Dataset(da.Array):
 
         if self.data_type.value < 0:
             raise NameError('Datasets with UNKNOWN data_types cannot be plotted')
+
         if len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
@@ -483,18 +587,18 @@ class Dataset(da.Array):
         -------
         list of floats
         """
-        extend = []
+        extent = []
         for ind, dim in enumerate(dimensions):
             temp = self._axes[dim].values
             start = temp[0] - (temp[1] - temp[0])/2
             end = temp[-1] + (temp[-1] - temp[-2])/2
             if ind == 1:
-                extend.append(end)  # y axis starts on top
-                extend.append(start)
+                extent.append(end)  # y axis starts on top
+                extent.append(start)
             else:
-                extend.append(start)
-                extend.append(end)
-        return extend
+                extent.append(start)
+                extent.append(end)
+        return extent
 
     def get_dimensions_by_type(self, dims_in):
         """ get dimension by dimension_type name
@@ -518,7 +622,7 @@ class Dataset(da.Array):
         dims_out = []
         for dim, axis in self._axes.items():
             if axis.dimension_type in dims_in:
-                dims_out.append([dim, self._axes[dim]])
+                dims_out.append(dim)  # , self._axes[dim]])
         return dims_out
 
     def get_image_dims(self):

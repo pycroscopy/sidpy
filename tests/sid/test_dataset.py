@@ -460,18 +460,47 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(len(spec_dims), 2)
         self.assertEqual(spec_dims[1], 1)
 
-    def test_get_dimensions_by_type(self):
+    def test_get_extent(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
         descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', dimension_type='spatial'))
+        descriptor.dim_1.dimension_type = 'spatial'
+        descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', dimension_type='spatial'))
 
-        spatial_dims = descriptor.get_dimensions_by_type('spatial')
-        self.assertEqual(len(spatial_dims), 1)
-        self.assertEqual(spatial_dims[0][0], 0)
+        extent = descriptor.get_extent([0,1])
+        self.assertEqual(extent[0], -0.5)
+        self.assertEqual(extent[1], 3.5)
 
-        spatial_dims = descriptor.get_dimensions_by_type(['spatial'])
-        self.assertEqual(len(spatial_dims), 1)
-        self.assertEqual(spatial_dims[0][0], 0)
+    def test_get_labels(self):
+        values = np.zeros([4, 5])
+        descriptor = Dataset.from_array(values)
+        labels = descriptor.labels
+        self.assertEqual(labels[0], 'generic (generic)')
+
+    def test__equ__(self):
+        values = np.zeros([4, 5])
+        descriptor1 = Dataset.from_array(values)
+        descriptor2 = Dataset.from_array(values)
+        # TODO: why does direct comparison not work
+        self.assertTrue(descriptor1.__eq__(descriptor2))
+        self.assertFalse(descriptor1.__eq__(np.arange(4)))
+
+        descriptor1.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', dimension_type='spatial'))
+        self.assertFalse(descriptor1.__eq__(descriptor2))
+
+        descriptor2.modality = 'nix'
+        self.assertFalse(descriptor1.__eq__(descriptor2))
+
+        descriptor2.data_type = 'image'
+        self.assertFalse(descriptor1.__eq__(descriptor2))
+
+        descriptor2.source = 'image'
+        self.assertFalse(descriptor1.__eq__(descriptor2))
+
+        descriptor2.quantity = 'image'
+        self.assertFalse(descriptor1.__eq__(descriptor2))
+        descriptor2.units = 'image'
+        self.assertFalse(descriptor1.__eq__(descriptor2))
 
 
 class TestViewMetadata(unittest.TestCase):
