@@ -158,127 +158,6 @@ class Dataset(da.Array):
                 rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
 
-    def __eq__(self, other):  # TODO: Test __eq__
-        if not isinstance(other, Dataset):
-            return False
-        if (self.__array__() == other.__array__()).all():
-            if self._units != other._units:
-                return False
-            if self._quantity != other._quantity:
-                return False
-            if self._source != other._source:
-                return False
-            if self._data_type != other._data_type:
-                return False
-            if self._modality != other._modality:
-                return False
-            if self._axes != other._axes:
-                return False
-            return True
-        return False
-
-    def __add__(self, x):
-        return self.like_data(da.add(self, x))
-
-    def __sub__(self, x):
-        return self.like_data(da.subtract(self, x))
-
-    def __mul__(self, x):
-        return self.like_data(da.multiply(self, x))
-
-    def __truediv__(self, x):
-        return self.like_data(da.true_divide(self, x))
-
-    def min(self):
-        return float(self.__array__().min())
-
-    def max(self):
-        return float(self.__array__().max())
-
-    def abs(self):
-        return self.like_data(np.abs(self))
-
-    def fft(self, dimension_type=None):
-        """ Gets the FFT of a sidpy.Dataset of any size
-
-        The data_type of the sidpy.Dataset determines the dimension_type over which the
-        fourier transform is performed over, if the dimension_type is not set explicitly.
-
-        The fourier transformed dataset is automatically shifted to center of dataset.
-
-        Parameters
-        ----------
-        dimension_type: None, str, or sidpy.DimensionType - optional
-            dimension_type over which fourier transform is performed, if None an educated guess will determine
-            that from dimensions of sidpy.Dataset
-
-        Returns
-        -------
-        fft_dset: 2D or 3D complex sidpy.Dataset (not tested for higher dimensions)
-            2 or 3 dimensional matrix arranged in the same way as input
-
-        Example
-        -------
-        >> fft_dataset = sidpy_dataset.fft()
-        >> fft_dataset.plot()
-        """
-
-        if dimension_type is None:
-            # test for data_type of sidpy.Dataset
-            if self.data_type.name in ['IMAGE_MAP', 'IMAGE_STACK', 'SPECTRAL_IMAGE', 'IMAGE_4D']:
-                dimension_type = self.dim_2.dimension_type
-            else:
-                dimension_type = self.dim_0.dimension_type
-
-        if isinstance(dimension_type, str):
-            dimension_type = DimensionType[dimension_type.upper()]
-
-        if not isinstance(dimension_type, DimensionType):
-            raise TypeError('Could not identify a dimension_type to perform Fourier transform on')
-
-        axes = self.get_dimensions_by_type(dimension_type)
-        if dimension_type.name in ['SPATIAL', 'RECIPROCAL']:
-            if len(axes) != 2:
-                raise TypeError('sidpy dataset of type', self.data_type,
-                                ' has no obvious dimension over which to perform fourier transform, please specify')
-            if dimension_type.name == 'SPATIAL':
-                new_dimension_type = DimensionType.RECIPROCAL
-            else:
-                new_dimension_type = DimensionType.SPATIAL
-
-        elif dimension_type.name == 'SPECTRAL':
-            if len(axes) != 1:
-                raise TypeError('sidpy dataset of type', self.data_type,
-                                ' has no obvious dimension over which to perform fourier transform, please specify')
-            new_dimension_type = DimensionType.SPECTRAL
-        else:
-            raise NotImplementedError('fourier transform not implemented for dimension_type ', dimension_type.name)
-
-        fft_transform = np.fft.fftshift(da.fft.fftn(self, axes=axes))
-        fft_dset = self.like_data(fft_transform)
-        fft_dset.units = 'a.u.'
-        fft_dset.modality = 'fft'
-
-        units_x = '1/' + self._axes[axes[0]].units
-        fft_dset.set_dimension(axes[0],
-                               Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[0]],
-                                                                        d=get_slope(self._axes[axes[0]].values))),
-                                         name='u', units=units_x, dimension_type=new_dimension_type,
-                                         quantity='reciprocal'))
-        if len(axes) > 1:
-            units_y = '1/' + self._axes[axes[0]].units
-            fft_dset.set_dimension(axes[1],
-                                   Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[1]],
-                                                                            d=get_slope(self._axes[axes[1]].values))),
-                                             name='v', units=units_y, dimension_type=new_dimension_type,
-                                             quantity='reciprocal_length'))
-        return fft_dset
-
-    # @staticmethod
-    # def __dask_postcompute__(self):
-    #    results = self.__array__().__dask_postcompute__()
-    #    return self.like_array(results)
-
     def hdf_close(self):
         if self.h5_dataset is not None:
             self.h5_dataset.file.close()
@@ -769,3 +648,290 @@ class Dataset(da.Array):
     @property
     def data_descriptor(self):
         return '{} ({})'.format(self.quantity, self.units)
+
+    def __eq__(self, other):  # TODO: Test __eq__
+        if not isinstance(other, Dataset):
+            return False
+        # if (self.__array__() == other.__array__()).all():
+        if super().__eq__(other).all():
+            if self._units != other._units:
+                return False
+            if self._quantity != other._quantity:
+                return False
+            if self._source != other._source:
+                return False
+            if self._data_type != other._data_type:
+                return False
+            if self._modality != other._modality:
+                return False
+            if self._axes != other._axes:
+                return False
+            return True
+        return False
+
+    def fft(self, dimension_type=None):
+        """ Gets the FFT of a sidpy.Dataset of any size
+
+        The data_type of the sidpy.Dataset determines the dimension_type over which the
+        fourier transform is performed over, if the dimension_type is not set explicitly.
+
+        The fourier transformed dataset is automatically shifted to center of dataset.
+
+        Parameters
+        ----------
+        dimension_type: None, str, or sidpy.DimensionType - optional
+            dimension_type over which fourier transform is performed, if None an educated guess will determine
+            that from dimensions of sidpy.Dataset
+
+        Returns
+        -------
+        fft_dset: 2D or 3D complex sidpy.Dataset (not tested for higher dimensions)
+            2 or 3 dimensional matrix arranged in the same way as input
+
+        Example
+        -------
+        >> fft_dataset = sidpy_dataset.fft()
+        >> fft_dataset.plot()
+        """
+
+        if dimension_type is None:
+            # test for data_type of sidpy.Dataset
+            if self.data_type.name in ['IMAGE_MAP', 'IMAGE_STACK', 'SPECTRAL_IMAGE', 'IMAGE_4D']:
+                dimension_type = self.dim_2.dimension_type
+            else:
+                dimension_type = self.dim_0.dimension_type
+
+        if isinstance(dimension_type, str):
+            dimension_type = DimensionType[dimension_type.upper()]
+
+        if not isinstance(dimension_type, DimensionType):
+            raise TypeError('Could not identify a dimension_type to perform Fourier transform on')
+
+        axes = self.get_dimensions_by_type(dimension_type)
+        if dimension_type.name in ['SPATIAL', 'RECIPROCAL']:
+            if len(axes) != 2:
+                raise TypeError('sidpy dataset of type', self.data_type,
+                                ' has no obvious dimension over which to perform fourier transform, please specify')
+            if dimension_type.name == 'SPATIAL':
+                new_dimension_type = DimensionType.RECIPROCAL
+            else:
+                new_dimension_type = DimensionType.SPATIAL
+
+        elif dimension_type.name == 'SPECTRAL':
+            if len(axes) != 1:
+                raise TypeError('sidpy dataset of type', self.data_type,
+                                ' has no obvious dimension over which to perform fourier transform, please specify')
+            new_dimension_type = DimensionType.SPECTRAL
+        else:
+            raise NotImplementedError('fourier transform not implemented for dimension_type ', dimension_type.name)
+
+        fft_transform = np.fft.fftshift(da.fft.fftn(self, axes=axes))
+        fft_dset = self.like_data(fft_transform)
+        fft_dset.units = 'a.u.'
+        fft_dset.modality = 'fft'
+
+        units_x = '1/' + self._axes[axes[0]].units
+        fft_dset.set_dimension(axes[0],
+                               Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[0]],
+                                                                        d=get_slope(self._axes[axes[0]].values))),
+                                         name='u', units=units_x, dimension_type=new_dimension_type,
+                                         quantity='reciprocal'))
+        if len(axes) > 1:
+            units_y = '1/' + self._axes[axes[0]].units
+            fft_dset.set_dimension(axes[1],
+                                   Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[1]],
+                                                                            d=get_slope(self._axes[axes[1]].values))),
+                                             name='v', units=units_y, dimension_type=new_dimension_type,
+                                             quantity='reciprocal_length'))
+        return fft_dset
+
+    @property
+    def T(self):
+        return self.transpose()
+
+    def abs(self):
+        return self.like_data(super().__abs__())
+
+    ######################################################
+    # Original dask.array functions handed through
+    ##################################################
+    def dot(self, other):
+        return self.from_array(super().dot(other))
+
+    def transpose(self, *axes):
+        return self.like_data(super().transpose(*axes))
+
+    def ravel(self):
+        return self.like_data(super().ravel())
+
+    def choose(self, choices):
+        return self.like_data(super().choose(choices))
+
+    def __abs__(self):
+        return self.like_data(super().__abs__())
+
+    def __add__(self, other):
+        return self.like_data(super().__add__(other))
+
+    def __radd__(self, other):
+        return self.like_data(super().__radd__(other))
+
+    def __and__(self, other):
+        return self.like_data(super().__and__(other))
+
+    def __rand__(self, other):
+        return self.like_data(super().__rand__(other))
+
+    def __div__(self, other):
+        return self.like_data(super().__div__(other))
+
+    def __rdiv__(self, other):
+        return self.like_data(super().__rdiv__(other))
+
+    def __gt__(self, other):
+        return self.like_data(super().__gt__(other))
+
+    def __ge__(self, other):
+        return self.like_data(super().__ge__(other))
+
+    def __invert__(self):
+        return self.like_data(super().__invert__())
+
+    def __lshift__(self, other):
+        return self.like_data(super().__lshift__(other))
+
+    def __rlshift__(self, other):
+        return self.like_data(super().__rlshift__(other))
+
+    def __lt__(self, other):
+        return self.like_data(super().__lt__(other))
+
+    def __le__(self, other):
+        return self.like_data(super().__lt__(other))
+
+    def __mod__(self, other):
+        return self.like_data(super().__lshift__(other))
+
+    def __rmod__(self, other):
+        return self.like_data(super().__rmod__(other))
+
+    def __mul__(self, other):
+        return self.like_data(super().__mul__(other))
+
+    def __rmul__(self, other):
+        return self.like_data(super().__rmul__(other))
+
+    def __ne__(self, other):
+        return self.like_data(super().__ne__(other))
+
+    def __neg__(self):
+        return self.like_data(super().__neg__())
+
+    def __or__(self, other):
+        return self.like_data(super().__or__(other))
+
+    def __ror__(self, other):
+        return self.like_data(super().__ror__(other))
+
+    def __pos__(self):
+        return self.like_data(super().__pos__())
+
+    def __pow__(self, other):
+        return self.like_data(super().__pow__(other))
+
+    def __rpow__(self, other):
+        return self.like_data(super().__rpow__(other))
+
+    def __rshift__(self, other):
+        return self.like_data(super().__rshift__(other))
+
+    def __rrshift__(self, other):
+        return self.like_data(super().__rrshift__(other))
+
+    def __sub__(self, other):
+        return self.like_data(super().__sub__(other))
+
+    def __rsub__(self, other):
+        return self.like_data(super().__rsub__(other))
+
+    def __truediv__(self, other):
+        return self.like_data(super().__truediv__(other))
+
+    def __rtruediv__(self, other):
+        return self.like_data(super().__rtruediv__(other))
+
+    def __floordiv__(self, other):
+        return self.like_data(super().__floordiv__(other))
+
+    def __rfloordiv__(self, other):
+        return self.like_data(super().__rfloordiv__(other))
+
+    def __xor__(self, other):
+        return self.like_data(super().__xor__(other))
+
+    def __rxor__(self, other):
+        return self.like_data(super().__rxor__(other))
+
+    def __matmul__(self, other):
+        return self.like_data(super().__matmul__(other))
+
+    def __rmatmul__(self, other):
+        return self.like_data(super().__rmatmul__(other))
+
+
+
+    def min(self, axis=None, keepdims=False, split_every=None, out=None):
+        if axis is None:
+            return float(super().min())
+
+    def max(self, axis=None, keepdims=False, split_every=None, out=None):
+        if axis is None:
+            return float(super().max())
+        else:
+            return self.like_data(super().max(axis=axis, keepdims=keepdims, split_every=split_every, out=out))
+
+    @property
+    def real(self):
+        return self.like_data(super().real)
+
+    @property
+    def imag(self):
+        return self.like_data(super().imag)
+
+    def conj(self):
+        return self.like_data(super().conj())
+
+    def clip(self, min=None, max=None):
+        return self.like_data(super().clip(min, max))
+
+    def sum(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
+        result = super().sum(axis=axis, dtype=dtype, keepdims=keepdims, split_every=split_every, out=out)
+        if axis is None:
+            return float(result)
+        else:
+            dataset = self.like_data(result)
+            if not keepdims:
+                dim = 0
+                if isinstance(axis, int):
+                    axis = [axis]
+                for ax, dimension in self._axes.items():
+                    if int(ax) not in axis:
+                        dataset.set_dimension(dim, dimension)
+                        dim += 1
+            return dataset
+
+    def swapaxes(self, axis1, axis2):
+        result = super().swapaxes(axis1, axis2)
+        dataset = self.from_array(result)
+
+        delattr(self, self._axes[axis1].name)
+        delattr(self, self._axes[axis2].name)
+        del dataset._axes[axis1]
+        del dataset._axes[axis2]
+
+        dataset.set_dimension(axis1, self._axes[axis2])
+        dataset.set_dimension(axis2, self._axes[axis1])
+
+        return dataset
+
+    # def prod(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
