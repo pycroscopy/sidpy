@@ -222,7 +222,6 @@ class Dataset(da.Array):
         >> fft_dataset = sidpy_dataset.fft()
         >> fft_dataset.plot()
         """
-
         if dimension_type is None:
             # test for data_type of sidpy.Dataset
             if self.data_type.name in ['IMAGE_MAP', 'IMAGE_STACK', 'SPECTRAL_IMAGE', 'IMAGE_4D']:
@@ -253,6 +252,7 @@ class Dataset(da.Array):
             new_dimension_type = DimensionType.SPECTRAL
         else:
             raise NotImplementedError('fourier transform not implemented for dimension_type ', dimension_type.name)
+
 
         fft_transform = np.fft.fftshift(da.fft.fftn(self, axes=axes))
         fft_dset = self.like_data(fft_transform)
