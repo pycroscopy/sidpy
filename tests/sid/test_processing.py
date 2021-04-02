@@ -25,6 +25,7 @@ class TestUFunctions(unittest.TestCase):
         input_spectrum = np.zeros([512])
         dataset = sidpy.Dataset.from_array(input_spectrum)
         new_dataset = dataset+3.
+        new_dataset.compute()
         self.assertIsInstance(new_dataset, sidpy.Dataset)
         self.assertEqual(np.array(new_dataset)[0], 3)
 
@@ -76,6 +77,280 @@ class TestUFunctions(unittest.TestCase):
         self.assertIsInstance(abs_dataset, sidpy.Dataset)
         self.assertEqual(abs_dataset[0, 0, 0], 1)
 
+    def test_dot(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.dot(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_t(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.T
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_transpose(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.transpose()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_ravel(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.ravel()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_choose(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.choose([2, 3, 1, 0])
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+    def test_choose(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.choose([2, 3, 1, 0])
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_radd(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset+3.
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_and(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__and__(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rand(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rand__(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_div(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset/dataset
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rdiv(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset/np.array(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_gt(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset > 3
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_ge(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset >= 3
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_invert(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = ~dataset
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_lshift(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__lshift__(1)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rshift(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rshift__(1)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_lt(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset < 3
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_le(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset <= 3
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_mod(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset % 3
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rmod(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rmod__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rmul(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rmul__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_ne(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset != 2
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_neg(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__neg__()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_or(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__or__(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_ror(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__ror__(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_pos(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__pos__()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_pow(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset**2
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rpow(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rpow__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rshift(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rshift__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rrshift(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rrshift__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rsub(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rsub__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rtruediv(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rtruediv__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rfloordiv(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__floordiv__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rfloordiv(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rfloordiv__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_xor(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__xor__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rxor(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rxor__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_matmul(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset @ dataset
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rmatmul(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.__rmatmul__(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_divmod(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset, _ = dataset.__divmod__(2)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_rdivmod(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset, _ = dataset.__rdivmod__(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_real(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.real
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_imag(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.imag
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_conj(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.conj()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_clip(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.clip()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_sum(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.sum(axis=1)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_swapaxes(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.swapaxes(0,1)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
 
 class TestFftFunctions(unittest.TestCase):
 
