@@ -158,6 +158,7 @@ class Dataset(da.Array):
                 rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
 
+
     def hdf_close(self):
         if self.h5_dataset is not None:
             self.h5_dataset.file.close()
@@ -649,26 +650,6 @@ class Dataset(da.Array):
     def data_descriptor(self):
         return '{} ({})'.format(self.quantity, self.units)
 
-    def __eq__(self, other):  # TODO: Test __eq__
-        if not isinstance(other, Dataset):
-            return False
-        # if (self.__array__() == other.__array__()).all():
-        if super().__eq__(other).all():
-            if self._units != other._units:
-                return False
-            if self._quantity != other._quantity:
-                return False
-            if self._source != other._source:
-                return False
-            if self._data_type != other._data_type:
-                return False
-            if self._modality != other._modality:
-                return False
-            if self._axes != other._axes:
-                return False
-            return True
-        return False
-
     def fft(self, dimension_type=None):
         """ Gets the FFT of a sidpy.Dataset of any size
 
@@ -744,6 +725,30 @@ class Dataset(da.Array):
                                              name='v', units=units_y, dimension_type=new_dimension_type,
                                              quantity='reciprocal_length'))
         return fft_dset
+
+    # #####################################################
+    # Original dask.array functions replaced
+    # ##################################################
+
+    def __eq__(self, other):  # TODO: Test __eq__
+        if not isinstance(other, Dataset):
+            return False
+        # if (self.__array__() == other.__array__()).all():
+        if super().__eq__(other).all():
+            if self._units != other._units:
+                return False
+            if self._quantity != other._quantity:
+                return False
+            if self._source != other._source:
+                return False
+            if self._data_type != other._data_type:
+                return False
+            if self._modality != other._modality:
+                return False
+            if self._axes != other._axes:
+                return False
+            return True
+        return False
 
     @property
     def T(self):
