@@ -9,7 +9,6 @@ from __future__ import division, print_function, unicode_literals, \
 import unittest
 
 import numpy as np
-import string
 import sys
 sys.path.insert(0, "../../sidpy/")
 
@@ -24,7 +23,9 @@ class TestUFunctions(unittest.TestCase):
     def test_add(self):
         input_spectrum = np.zeros([512])
         dataset = sidpy.Dataset.from_array(input_spectrum)
+
         new_dataset = dataset+3.
+
         new_dataset.compute()
         self.assertIsInstance(new_dataset, sidpy.Dataset)
         self.assertEqual(np.array(new_dataset)[0], 3)
@@ -101,11 +102,6 @@ class TestUFunctions(unittest.TestCase):
         new_dataset = dataset.ravel()
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
-    def test_choose(self):
-        input_spectrum = np.ones([3, 3, 3])
-        dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset.choose([2, 3, 1, 0])
-        self.assertIsInstance(new_dataset, sidpy.Dataset)
     def test_choose(self):
         input_spectrum = np.ones([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
