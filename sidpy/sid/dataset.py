@@ -914,15 +914,26 @@ class Dataset(da.Array):
         if axis is None:
             return float(result)
         else:
-            dataset = self.like_data(result)
             if not keepdims:
                 dim = 0
+                dataset = self.from_array(result)
                 if isinstance(axis, int):
                     axis = [axis]
+
+
+
                 for ax, dimension in self._axes.items():
                     if int(ax) not in axis:
                         dataset.set_dimension(dim, dimension)
                         dim += 1
+            else:
+                dataset = self.like_data(result)
+            dataset.title='Sum_of_'+self.title
+            dataset.modality=f'sum axis {axis}'
+            dataset.quantity = self.quantity
+            dataset.source = self.source
+            dataset.units = self.units
+
             return dataset
 
     def swapaxes(self, axis1, axis2):
@@ -938,5 +949,9 @@ class Dataset(da.Array):
         dataset.set_dimension(axis2, self._axes[axis1])
 
         return dataset
+
+    # def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
+    #    result = super().__array_ufunc__(super(),numpy_ufunc, method, *inputs, **kwargs)
+    #    return self.like_data(result)
 
     # def prod(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):

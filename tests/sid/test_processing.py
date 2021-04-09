@@ -24,7 +24,10 @@ class TestUFunctions(unittest.TestCase):
     def test_add(self):
         input_spectrum = np.zeros([512])
         dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset+3.
+
+        new_dataset = np.sin(dataset)
+        #new_dataset = dataset+3.
+
         new_dataset.compute()
         self.assertIsInstance(new_dataset, sidpy.Dataset)
         self.assertEqual(np.array(new_dataset)[0], 3)
