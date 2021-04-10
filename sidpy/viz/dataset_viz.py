@@ -271,7 +271,7 @@ class ImageStackVisualizer(object):
         self.image_dims = []
         self.selection = []
         for dim, axis in dset._axes.items():
-            if axis.dimension_type == DimensionType.SPATIAL:
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
             elif axis.dimension_type == DimensionType.TEMPORAL or len(dset) == 3:
@@ -439,7 +439,7 @@ class SpectralImageVisualizer(object):
         image_dims = []
         spectral_dims = []
         for dim, axis in dset._axes.items():
-            if axis.dimension_type == DimensionType.SPATIAL:
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
                 selection.append(slice(None))
                 image_dims.append(dim)
             elif axis.dimension_type == DimensionType.SPECTRAL:

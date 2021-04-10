@@ -718,7 +718,7 @@ class Dataset(da.Array):
                                          name='u', units=units_x, dimension_type=new_dimension_type,
                                          quantity='reciprocal'))
         if len(axes) > 1:
-            units_y = '1/' + self._axes[axes[0]].units
+            units_y = '1/' + self._axes[axes[1]].units
             fft_dset.set_dimension(axes[1],
                                    Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[1]],
                                                                             d=get_slope(self._axes[axes[1]].values))),

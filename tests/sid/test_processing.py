@@ -50,13 +50,6 @@ class TestUFunctions(unittest.TestCase):
         self.assertIsInstance(new_dataset, sidpy.Dataset)
         self.assertEqual(np.array(new_dataset)[0, 0, 0], 3)
 
-    def test_div(self):
-        input_spectrum = np.ones([3, 3, 3])
-        dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset/3.
-        self.assertIsInstance(new_dataset, sidpy.Dataset)
-        self.assertEqual(np.array(new_dataset)[0, 0, 0], 1/3)
-
     def test_min(self):
         input_spectrum = np.zeros([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
@@ -162,12 +155,6 @@ class TestUFunctions(unittest.TestCase):
         new_dataset = dataset.__lshift__(1)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
-    def test_rshift(self):
-        input_spectrum = np.ones([3, 3, 3])
-        dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset.__rshift__(1)
-        self.assertIsInstance(new_dataset, sidpy.Dataset)
-
     def test_lt(self):
         input_spectrum = np.ones([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
@@ -267,12 +254,6 @@ class TestUFunctions(unittest.TestCase):
     def test_rfloordiv(self):
         input_spectrum = np.ones([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset.__floordiv__(2)
-        self.assertIsInstance(new_dataset, sidpy.Dataset)
-
-    def test_rfloordiv(self):
-        input_spectrum = np.ones([3, 3, 3])
-        dataset = sidpy.Dataset.from_array(input_spectrum)
         new_dataset = dataset.__rfloordiv__(2)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
@@ -345,8 +326,9 @@ class TestUFunctions(unittest.TestCase):
     def test_swapaxes(self):
         input_spectrum = np.ones([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset.swapaxes(0,1)
+        new_dataset = dataset.swapaxes(0, 1)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
+
 
 class TestFftFunctions(unittest.TestCase):
 
