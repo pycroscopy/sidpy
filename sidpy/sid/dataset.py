@@ -158,7 +158,6 @@ class Dataset(da.Array):
                 rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
 
-
     def hdf_close(self):
         if self.h5_dataset is not None:
             self.h5_dataset.file.close()
@@ -461,7 +460,7 @@ class Dataset(da.Array):
 
         Parameters
         ----------
-        dimensions: dictionary of dimensions
+        dimensions: list of dimensions
 
         Returns
         -------
@@ -883,8 +882,6 @@ class Dataset(da.Array):
     def __rmatmul__(self, other):
         return self.like_data(super().__rmatmul__(other))
 
-
-
     def min(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None:
             return float(super().min())
@@ -920,16 +917,14 @@ class Dataset(da.Array):
                 if isinstance(axis, int):
                     axis = [axis]
 
-
-
                 for ax, dimension in self._axes.items():
                     if int(ax) not in axis:
                         dataset.set_dimension(dim, dimension)
                         dim += 1
             else:
                 dataset = self.like_data(result)
-            dataset.title='Sum_of_'+self.title
-            dataset.modality=f'sum axis {axis}'
+            dataset.title = 'Sum_of_'+self.title
+            dataset.modality = f'sum axis {axis}'
             dataset.quantity = self.quantity
             dataset.source = self.source
             dataset.units = self.units
