@@ -50,13 +50,6 @@ class TestUFunctions(unittest.TestCase):
         self.assertIsInstance(new_dataset, sidpy.Dataset)
         self.assertEqual(np.array(new_dataset)[0, 0, 0], 3)
 
-    def test_div(self):
-        input_spectrum = np.ones([3, 3, 3])
-        dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset/3.
-        self.assertIsInstance(new_dataset, sidpy.Dataset)
-        self.assertEqual(np.array(new_dataset)[0, 0, 0], 1/3)
-
     def test_min(self):
         input_spectrum = np.zeros([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
@@ -77,6 +70,15 @@ class TestUFunctions(unittest.TestCase):
         abs_dataset = dataset.abs()
         self.assertIsInstance(abs_dataset, sidpy.Dataset)
         self.assertEqual(abs_dataset[0, 0, 0], 1)
+        new_dataset = dataset.__abs__()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_angle(self):
+        input_spectrum = np.ones([3, 3, 3]) * -1
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        angle_dataset = dataset.angle()
+        self.assertIsInstance(angle_dataset, sidpy.Dataset)
+        self.assertEqual(float(angle_dataset[0, 0, 0]), np.pi)
 
     def test_dot(self):
         input_spectrum = np.ones([3, 3, 3])
@@ -160,12 +162,6 @@ class TestUFunctions(unittest.TestCase):
         input_spectrum = np.ones([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
         new_dataset = dataset.__lshift__(1)
-        self.assertIsInstance(new_dataset, sidpy.Dataset)
-
-    def test_rshift(self):
-        input_spectrum = np.ones([3, 3, 3])
-        dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset.__rshift__(1)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
     def test_lt(self):
@@ -267,12 +263,6 @@ class TestUFunctions(unittest.TestCase):
     def test_rfloordiv(self):
         input_spectrum = np.ones([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset.__floordiv__(2)
-        self.assertIsInstance(new_dataset, sidpy.Dataset)
-
-    def test_rfloordiv(self):
-        input_spectrum = np.ones([3, 3, 3])
-        dataset = sidpy.Dataset.from_array(input_spectrum)
         new_dataset = dataset.__rfloordiv__(2)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
@@ -307,9 +297,9 @@ class TestUFunctions(unittest.TestCase):
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
     def test_rdivmod(self):
-        input_spectrum = np.ones([3, 3, 3])
+        input_spectrum = np.ones([3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset, _ = dataset.__rdivmod__(dataset)
+        new_dataset, _ = dataset.__rdivmod__(8)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
     def test_real(self):
@@ -342,11 +332,33 @@ class TestUFunctions(unittest.TestCase):
         new_dataset = dataset.sum(axis=1)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
+    def test_mean(self):
+        input_spectrum = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.mean(axis=1)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_squeeze(self):
+        input_spectrum = np.ones([3, 1, 3])
+        dataset = sidpy.Dataset.from_array(input_spectrum)
+        new_dataset = dataset.squeeze()
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
     def test_swapaxes(self):
         input_spectrum = np.ones([3, 3, 3])
         dataset = sidpy.Dataset.from_array(input_spectrum)
-        new_dataset = dataset.swapaxes(0,1)
+        new_dataset = dataset.swapaxes(0, 1)
         self.assertIsInstance(new_dataset, sidpy.Dataset)
+
+    def test_ufunc(self):
+        # Todo: More testing for better coverage
+        input_image = np.ones([3, 3, 3])
+        dataset = sidpy.Dataset.from_array(input_image)
+        new_dataset = np.sin(dataset)
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+        new_dataset = dataset @ dataset
+        self.assertIsInstance(new_dataset, sidpy.Dataset)
+
 
 class TestFftFunctions(unittest.TestCase):
 

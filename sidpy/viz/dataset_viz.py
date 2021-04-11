@@ -68,7 +68,7 @@ class CurveVisualizer(object):
             # Plot real and image
             fig, axes = plt.subplots(nrows=2, **fig_args)
 
-            axes[0].plot(self.dim.values, np.abs(np.squeeze(self.dset)), **kwargs)
+            axes[0].plot(self.dim.values, self.dset.squeeze().abs(), **kwargs)
 
             axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
             axes[0].set_xlabel(self.dset.labels[self.dim])
@@ -158,7 +158,7 @@ class ImageVisualizer(object):
             # Plot complex image
             self.axes = []
             self.axes.append(self.fig.add_subplot(121))
-            self.img = self.axes[0].imshow(np.abs(np.squeeze(np.array(self.dset[tuple(self.selection)]))).T,
+            self.img = self.axes[0].imshow(self.dset[tuple(self.selection)].squeeze().abs().T,
                                            extent=self.dset.get_extent(self.image_dims), **kwargs)
             self.axes[0].set_xlabel(self.dset.labels[self.image_dims[0]])
             self.axes[0].set_ylabel(self.dset.labels[self.image_dims[1]])
@@ -168,7 +168,7 @@ class ImageVisualizer(object):
             self.axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
 
             self.axes.append(self.fig.add_subplot(122, sharex=self.axes[0], sharey=self.axes[0]))
-            self.img_c = self.axes[1].imshow(np.angle(np.squeeze(np.array(self.dset[tuple(self.selection)]))).T,
+            self.img_c = self.axes[1].imshow(self.dset[tuple(self.selection)].squeeze().angle().T,
                                              extent=self.dset.get_extent(self.image_dims), **kwargs)
             self.axes[1].set_xlabel(self.dset.labels[self.image_dims[0]])
             self.axes[1].set_ylabel(self.dset.labels[self.image_dims[1]])
@@ -192,7 +192,7 @@ class ImageVisualizer(object):
         else:
             self.axis.set_title(self.dset.title)
 
-        self.img = self.axis.imshow(np.squeeze(np.array(self.dset[tuple(self.selection)])).T,
+        self.img = self.axis.imshow(self.dset[tuple(self.selection)].squeeze().T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
         self.axis.set_xlabel(self.dset.labels[self.image_dims[0]])
         self.axis.set_ylabel(self.dset.labels[self.image_dims[1]])
@@ -271,7 +271,7 @@ class ImageStackVisualizer(object):
         self.image_dims = []
         self.selection = []
         for dim, axis in dset._axes.items():
-            if axis.dimension_type == DimensionType.SPATIAL:
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
                 self.selection.append(slice(None))
                 self.image_dims.append(dim)
             elif axis.dimension_type == DimensionType.TEMPORAL or len(dset) == 3:
@@ -347,7 +347,7 @@ class ImageStackVisualizer(object):
         self.axis = plt.gca()
         self.axis.set_title(self.dset.title)
 
-        self.img = self.axis.imshow(np.squeeze(self.dset[tuple(self.selection)]).T,
+        self.img = self.axis.imshow(self.dset[tuple(self.selection)].squeeze().T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
         self.axis.set_xlabel(self.dset.labels[self.image_dims[0]])
         self.axis.set_ylabel(self.dset.labels[self.image_dims[1]])
@@ -391,6 +391,7 @@ class ImageStackVisualizer(object):
             self.img.set_data(image_stack.mean(axis=self.stack_dim).T)
             self.fig.canvas.draw_idle()
         elif event.old:
+            self.ind = self.ind % self.number_of_slices
             self._update(self.ind)
 
     def _onscroll(self, event):
@@ -439,7 +440,7 @@ class SpectralImageVisualizer(object):
         image_dims = []
         spectral_dims = []
         for dim, axis in dset._axes.items():
-            if axis.dimension_type == DimensionType.SPATIAL:
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
                 selection.append(slice(None))
                 image_dims.append(dim)
             elif axis.dimension_type == DimensionType.SPECTRAL:
@@ -481,7 +482,7 @@ class SpectralImageVisualizer(object):
             self.axes = self.fig.subplots(nrows=2, **fig_args)
 
         self.fig.canvas.set_window_title(self.dset.title)
-        self.image = np.average(np.array(self.dset), axis=spectral_dims[0])
+        self.image = dset.mean(axis=spectral_dims[0])
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         if horizontal:
@@ -561,9 +562,9 @@ class SpectralImageVisualizer(object):
             else:
                 selection.append(slice(0, 1))
 
-        self.spectrum = np.squeeze(np.average(self.dset[tuple(selection)], axis=tuple(self.image_dims)))
+        self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
         # * self.intensity_scale[self.x,self.y]
-        return np.squeeze(self.spectrum)
+        return self.spectrum.squeeze()
 
     def _onclick(self, event):
         self.event = event

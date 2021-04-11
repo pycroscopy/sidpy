@@ -12,6 +12,8 @@ https://scikit-allel.readthedocs.io/en/v0.21.1/_modules/allel/model/dask.html
 
 from __future__ import division, print_function, absolute_import, unicode_literals
 import sys
+
+import dask.array.core
 import numpy as np
 import matplotlib.pylab as plt
 import string
@@ -157,7 +159,6 @@ class Dataset(da.Array):
             if len(self.metadata) > 0:
                 rep = rep + '\n with metadata: {}'.format(list(self.metadata.keys()))
         return rep
-
 
     def hdf_close(self):
         if self.h5_dataset is not None:
@@ -461,7 +462,7 @@ class Dataset(da.Array):
 
         Parameters
         ----------
-        dimensions: dictionary of dimensions
+        dimensions: list of dimensions
 
         Returns
         -------
@@ -718,7 +719,7 @@ class Dataset(da.Array):
                                          name='u', units=units_x, dimension_type=new_dimension_type,
                                          quantity='reciprocal'))
         if len(axes) > 1:
-            units_y = '1/' + self._axes[axes[0]].units
+            units_y = '1/' + self._axes[axes[1]].units
             fft_dset.set_dimension(axes[1],
                                    Dimension(np.fft.fftshift(np.fft.fftfreq(self.shape[axes[1]],
                                                                             d=get_slope(self._axes[axes[1]].values))),
@@ -734,7 +735,7 @@ class Dataset(da.Array):
         if not isinstance(other, Dataset):
             return False
         # if (self.__array__() == other.__array__()).all():
-        if super().__eq__(other).all():
+        if (self.__array__().__eq__(other.__array__())).all():
             if self._units != other._units:
                 return False
             if self._quantity != other._quantity:
@@ -774,6 +775,9 @@ class Dataset(da.Array):
 
     def __abs__(self):
         return self.like_data(super().__abs__())
+
+    def angle(self):
+        return self.like_data(np.angle(super()))
 
     def __add__(self, other):
         return self.like_data(super().__add__(other))
@@ -883,8 +887,6 @@ class Dataset(da.Array):
     def __rmatmul__(self, other):
         return self.like_data(super().__rmatmul__(other))
 
-
-
     def min(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None:
             return float(super().min())
@@ -914,27 +916,45 @@ class Dataset(da.Array):
         if axis is None:
             return float(result)
         else:
-            if not keepdims:
-                dim = 0
-                dataset = self.from_array(result)
-                if isinstance(axis, int):
-                    axis = [axis]
+            return self.adjust_axis(result, axis, title='Sum_of_', keepdims=keepdims)
+
+    def mean(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
+        result = super().mean(axis=axis, dtype=dtype, keepdims=keepdims, split_every=split_every, out=out)
+        if axis is None:
+            return float(result)
+        else:
+            return self.adjust_axis(result, axis, title='Mean_of_', keepdims=keepdims)
+
+    def squeeze(self, axis=None):
+        result = super().squeeze(axis=axis)
+        if axis is None:
+            axis = []
+            for index, ax in enumerate(self.shape):
+                if ax == 1:
+                    axis.append(index)
+        return self.adjust_axis(result, axis, title='Squeezed_')
 
 
+    def adjust_axis(self, result, axis, title='', keepdims=False):
+        if not keepdims:
+            dim = 0
+            dataset = self.from_array(result)
+            if isinstance(axis, int):
+                axis = [axis]
 
-                for ax, dimension in self._axes.items():
-                    if int(ax) not in axis:
-                        dataset.set_dimension(dim, dimension)
-                        dim += 1
-            else:
-                dataset = self.like_data(result)
-            dataset.title='Sum_of_'+self.title
-            dataset.modality=f'sum axis {axis}'
-            dataset.quantity = self.quantity
-            dataset.source = self.source
-            dataset.units = self.units
+            for ax, dimension in self._axes.items():
+                if int(ax) not in axis:
+                    dataset.set_dimension(dim, dimension)
+                    dim += 1
+        else:
+            dataset = self.like_data(result)
+        dataset.title = title + self.title
+        dataset.modality = f'sum axis {axis}'
+        dataset.quantity = self.quantity
+        dataset.source = self.source
+        dataset.units = self.units
 
-            return dataset
+        return dataset
 
     def swapaxes(self, axis1, axis2):
         result = super().swapaxes(axis1, axis2)
@@ -950,8 +970,39 @@ class Dataset(da.Array):
 
         return dataset
 
-    # def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
-    #    result = super().__array_ufunc__(super(),numpy_ufunc, method, *inputs, **kwargs)
-    #    return self.like_data(result)
+    def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
+        out = kwargs.get("out", ())
+
+        if method == "__call__":
+            if numpy_ufunc is np.matmul:
+                from dask.array.routines import matmul
+
+                # special case until apply_gufunc handles optional dimensions
+                return self.like_data(matmul(*inputs, **kwargs))
+            if numpy_ufunc.signature is not None:
+                from dask.array.gufunc import apply_gufunc
+
+                return self.like_data(apply_gufunc(
+                    numpy_ufunc, numpy_ufunc.signature, *inputs, **kwargs))
+            if numpy_ufunc.nout > 1:
+                from dask.array import ufunc
+
+                try:
+                    da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
+                except AttributeError:
+                    return NotImplemented
+                return self.like_data(da_ufunc(*inputs, **kwargs))
+            else:
+                return self.like_data(dask.array.core.elemwise(numpy_ufunc, *inputs, **kwargs))
+        elif method == "outer":
+            from dask.array import ufunc
+
+            try:
+                da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
+            except AttributeError:
+                return NotImplemented
+            return self.like_data(da_ufunc.outer(*inputs, **kwargs))
+        else:
+            return NotImplemented
 
     # def prod(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
