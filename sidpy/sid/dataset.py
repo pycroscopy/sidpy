@@ -12,6 +12,8 @@ https://scikit-allel.readthedocs.io/en/v0.21.1/_modules/allel/model/dask.html
 
 from __future__ import division, print_function, absolute_import, unicode_literals
 import sys
+
+import dask.array.core
 import numpy as np
 import matplotlib.pylab as plt
 import string
@@ -774,6 +776,9 @@ class Dataset(da.Array):
     def __abs__(self):
         return self.like_data(super().__abs__())
 
+    def angle(self):
+        return self.like_data(np.angle(super()))
+
     def __add__(self, other):
         return self.like_data(super().__add__(other))
 
@@ -911,25 +916,45 @@ class Dataset(da.Array):
         if axis is None:
             return float(result)
         else:
-            if not keepdims:
-                dim = 0
-                dataset = self.from_array(result)
-                if isinstance(axis, int):
-                    axis = [axis]
+            return self.adjust_axis(result, axis, title='Sum_of_', keepdims=keepdims)
 
-                for ax, dimension in self._axes.items():
-                    if int(ax) not in axis:
-                        dataset.set_dimension(dim, dimension)
-                        dim += 1
-            else:
-                dataset = self.like_data(result)
-            dataset.title = 'Sum_of_'+self.title
-            dataset.modality = f'sum axis {axis}'
-            dataset.quantity = self.quantity
-            dataset.source = self.source
-            dataset.units = self.units
+    def mean(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
+        result = super().mean(axis=axis, dtype=dtype, keepdims=keepdims, split_every=split_every, out=out)
+        if axis is None:
+            return float(result)
+        else:
+            return self.adjust_axis(result, axis, title='Mean_of_', keepdims=keepdims)
 
-            return dataset
+    def squeeze(self, axis=None):
+        result = super().squeeze(axis=axis)
+        if axis is None:
+            axis = []
+            for index, ax in enumerate(self.shape):
+                if ax == 1:
+                    axis.append(index)
+        return self.adjust_axis(result, axis, title='Squeezed_')
+
+
+    def adjust_axis(self, result, axis, title='', keepdims=False):
+        if not keepdims:
+            dim = 0
+            dataset = self.from_array(result)
+            if isinstance(axis, int):
+                axis = [axis]
+
+            for ax, dimension in self._axes.items():
+                if int(ax) not in axis:
+                    dataset.set_dimension(dim, dimension)
+                    dim += 1
+        else:
+            dataset = self.like_data(result)
+        dataset.title = title + self.title
+        dataset.modality = f'sum axis {axis}'
+        dataset.quantity = self.quantity
+        dataset.source = self.source
+        dataset.units = self.units
+
+        return dataset
 
     def swapaxes(self, axis1, axis2):
         result = super().swapaxes(axis1, axis2)
@@ -945,8 +970,39 @@ class Dataset(da.Array):
 
         return dataset
 
-    # def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
-    #    result = super().__array_ufunc__(super(),numpy_ufunc, method, *inputs, **kwargs)
-    #    return self.like_data(result)
+    def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
+        out = kwargs.get("out", ())
+
+        if method == "__call__":
+            if numpy_ufunc is np.matmul:
+                from dask.array.routines import matmul
+
+                # special case until apply_gufunc handles optional dimensions
+                return self.like_data(matmul(*inputs, **kwargs))
+            if numpy_ufunc.signature is not None:
+                from dask.array.gufunc import apply_gufunc
+
+                return self.like_data(apply_gufunc(
+                    numpy_ufunc, numpy_ufunc.signature, *inputs, **kwargs))
+            if numpy_ufunc.nout > 1:
+                from dask.array import ufunc
+
+                try:
+                    da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
+                except AttributeError:
+                    return NotImplemented
+                return self.like_data(da_ufunc(*inputs, **kwargs))
+            else:
+                return self.like_data(dask.array.core.elemwise(numpy_ufunc, *inputs, **kwargs))
+        elif method == "outer":
+            from dask.array import ufunc
+
+            try:
+                da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
+            except AttributeError:
+                return NotImplemented
+            return self.like_data(da_ufunc.outer(*inputs, **kwargs))
+        else:
+            return NotImplemented
 
     # def prod(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
