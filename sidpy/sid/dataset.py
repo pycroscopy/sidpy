@@ -735,7 +735,7 @@ class Dataset(da.Array):
         if not isinstance(other, Dataset):
             return False
         # if (self.__array__() == other.__array__()).all():
-        if super().__eq__(other).all():
+        if (self.__array__().__eq__(other.__array__())).all():
             if self._units != other._units:
                 return False
             if self._quantity != other._quantity:
