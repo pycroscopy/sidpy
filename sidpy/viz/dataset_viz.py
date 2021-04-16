@@ -158,7 +158,7 @@ class ImageVisualizer(object):
             # Plot complex image
             self.axes = []
             self.axes.append(self.fig.add_subplot(121))
-            self.img = self.axes[0].imshow(self.dset[tuple(self.selection)].squeeze().abs().T,
+            self.img = self.axes[0].imshow(self.dset[tuple(self.selection)].abs().squeeze().T,
                                            extent=self.dset.get_extent(self.image_dims), **kwargs)
             self.axes[0].set_xlabel(self.dset.labels[self.image_dims[0]])
             self.axes[0].set_ylabel(self.dset.labels[self.image_dims[1]])

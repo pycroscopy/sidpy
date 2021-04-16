@@ -178,5 +178,15 @@ class TestDimension(unittest.TestCase):
         self.assertTrue(expected_wrn[0] in str(w[0].message))
         self.assertTrue(expected_wrn[1] in str(w[1].message))
 
+    def test_add(self):
+        name = 'Bias'
+        units = 'V'
+        values = np.arange(5)
+
+        descriptor = Dimension(values, name, units=units)
+        descriptor = descriptor + 3.
+        self.assertIsInstance(descriptor, Dimension)
+
+
 if __name__ == '__main__':
     unittest.main()

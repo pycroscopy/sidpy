@@ -5,6 +5,8 @@ Basic usage
 
 | `Create Dataset <./create_dataset.ipynb>`_
 | `Visualize Dataset <./plot_dataset.ipynb>`_
+| `Basic Mathematical Operations <./math_dataset.ipynb>`_
+
 
 .. toctree::
    :maxdepth: 1
@@ -12,3 +14,4 @@ Basic usage
 
    create_dataset.ipynb
    plot_dataset.ipynb
+   math_dataset.ipynb
