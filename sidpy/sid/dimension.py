@@ -97,6 +97,7 @@ class Dimension(np.ndarray):
         self.units = getattr(obj, 'name', 'units')
         self.dimension_type = getattr(obj, 'dimension_type', 'UNKNOWN')
 
+
     def __array_wrap__(self, out_arr, context=None):
         # just call the parent
         super(Dimension, self).__array_wrap__(self, out_arr, context)

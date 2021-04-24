@@ -24,7 +24,8 @@ from enum import Enum
 from .dimension import Dimension, DimensionType
 from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
-from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer, SpectralImageVisualizer
+from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer
+from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 
 
@@ -451,6 +452,29 @@ class Dataset(da.Array):
                 plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
+        elif len(self.shape) == 4:
+            if verbose:
+                print('4D dataset')
+            if self.data_type == DataType.IMAGE:
+                self.view = ImageVisualizer(self, **kwargs)
+                plt.show()
+            elif self.data_type == DataType.IMAGE_MAP:
+                pass
+            elif self.data_type == DataType.IMAGE_STACK:
+                self.view = ImageStackVisualizer(self, **kwargs)
+                plt.show()
+            elif self.data_type == DataType.SPECTRAL_IMAGE:
+                self.view = SpectralImageVisualizer(self, **kwargs)
+                plt.show()
+            elif self.data_type == DataType.IMAGE_4D:
+                self.view = FourDimImageVisualizer(self, **kwargs)
+                plt.show()
+            else:
+                raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
+
+                if verbose:
+                    print('4D dataset')
+
         else:
             raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
 
@@ -941,6 +965,12 @@ class Dataset(da.Array):
             dataset = self.from_array(result)
             if isinstance(axis, int):
                 axis = [axis]
+
+            # for ax, dimension in self._axes.items():
+            #    if int(ax) not in axis:
+            #        delattr(self, dimension.name)
+            #        delattr(self, f'dim_{ax}')
+            #        del self._axes[ax]
 
             for ax, dimension in self._axes.items():
                 if int(ax) not in axis:
