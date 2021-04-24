@@ -612,3 +612,235 @@ class SpectralImageVisualizer(object):
 
     def get_xy(self):
         return [self.x, self.y]
+
+
+class FourDimImageVisualizer(object):
+    """
+    ### Interactive 4D imaging plot
+
+    Either you specify only two spatial dimensions or you specify
+    scan_x and scan_y
+    image_4d_x, image_4d_y
+
+    If none of the key words are specified, it is assumed that the order is slowest to fastest dimension.
+
+    """
+
+    def __init__(self, dset, figure=None, horizontal=True, **kwargs):
+        from sidpy import Dataset
+        from sidpy import DimensionType
+
+        if not isinstance(dset, Dataset):
+            raise TypeError('dset should be a sidpy.Dataset object')
+
+        fig_args = dict()
+        temp = kwargs.pop('figsize', None)
+        if temp is not None:
+            fig_args['figsize'] = temp
+
+        if figure is None:
+            self.fig = plt.figure(**fig_args)
+        else:
+            self.fig = figure
+
+        if len(dset.shape) < 4:
+            raise KeyError('dataset must have at least four dimensions')
+
+        # Find scan and 4D_image dimension
+
+        scan_x = kwargs.pop('scan_x', None)
+        scan_y = kwargs.pop('scan_y', None)
+
+        image_x = kwargs.pop('image_4d_x', None)
+        image_y = kwargs.pop('image_4d_y', None)
+        for dim, axis in dset._axes.items():
+            if axis.dimension_type in [DimensionType.SPATIAL]:
+                if scan_y is None:
+                    scan_y = dim
+                elif scan_x is None:
+                    scan_x = dim
+
+        # We assume slow scan first order
+        if scan_y is None or scan_x is None:
+            scan_y = 0
+            scan_x = 1
+
+        if image_y is None:
+            for dim in range(4):
+                if dim not in [scan_x, scan_y]:
+                    image_y = dim
+                    break
+        if image_x is None:
+            for dim in range(4):
+                if dim not in [image_y, scan_x, scan_y]:
+                    image_x = dim
+                    break
+
+        image_dims = [scan_x, scan_y]
+        dims_4d = [image_x, image_y]
+
+        if len(image_dims) != 2:
+            raise ValueError('We need two dimensions with dimension_type SPATIAL: to plot an image')
+
+        if len(dims_4d) != 2:
+            raise KeyError('We need two dimension with dimension_type other than spatial for a 4D image plot')
+
+        self.horizontal = horizontal
+        self.x = 0
+        self.y = 0
+        self.bin_x = 1
+        self.bin_y = 1
+
+        image_dims = [scan_x, scan_y]
+
+        size_x = dset.shape[image_dims[0]]
+        size_y = dset.shape[image_dims[1]]
+
+        self.dset = dset
+
+        self.extent = [0, size_x, size_y, 0]
+        self.rectangle = [0, size_x, 0, size_y]
+        self.scaleX = 1.0
+        self.scaleY = 1.0
+        self.analysis = []
+        self.plot_legend = False
+
+        self.image_dims = image_dims
+        self.dims_4d = dims_4d
+
+        if horizontal:
+            self.axes = self.fig.subplots(ncols=2)
+        else:
+            self.axes = self.fig.subplots(nrows=2, **fig_args)
+
+        self.fig.canvas.set_window_title(self.dset.title)
+        self.image = np.array(dset).mean(axis=tuple(dims_4d))
+
+        self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
+        if horizontal:
+            self.axes[0].set_xlabel('{} [pixels]'.format(self.dset._axes[image_dims[0]].quantity))
+        else:
+            self.axes[0].set_ylabel('{} [pixels]'.format(self.dset._axes[image_dims[1]].quantity))
+        self.axes[0].set_aspect('equal')
+
+        # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
+        self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
+                                      facecolor='red', alpha=0.2)
+
+        self.axes[0].add_patch(self.rect)
+        self.intensity_scale = 1.
+        self.image_4d = self.get_image_4d()
+
+        self.axes[1].imshow(self.image_4d)
+        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+        self.xlabel = self.dset.labels[self.dims_4d[0]]
+        self.ylabel = self.dset.labels[self.dims_4d[1]]
+        self.axes[1].set_xlabel(self.xlabel)  # + x_suffix)
+        self.axes[1].set_ylabel(self.ylabel)
+        self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+        self.fig.tight_layout()
+        self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+
+        self.fig.canvas.draw_idle()
+
+    def set_bin(self, bin_xy):
+
+        old_bin_x = self.bin_x
+        old_bin_y = self.bin_y
+        if isinstance(bin_xy, list):
+
+            self.bin_x = int(bin_xy[0])
+            self.bin_y = int(bin_xy[1])
+
+        else:
+            self.bin_x = int(bin_xy)
+            self.bin_y = int(bin_xy)
+
+        if self.bin_x > self.dset.shape[self.image_dims[0]]:
+            self.bin_x = self.dset.shape[self.image_dims[0]]
+        if self.bin_y > self.dset.shape[self.image_dims[1]]:
+            self.bin_y = self.dset.shape[self.image_dims[1]]
+
+        self.rect.set_width(self.rect.get_width() * self.bin_x / old_bin_x)
+        self.rect.set_height((self.rect.get_height() * self.bin_y / old_bin_y))
+        if self.x + self.bin_x > self.dset.shape[self.image_dims[0]]:
+            self.x = self.dset.shape[0] - self.bin_x
+        if self.y + self.bin_y > self.dset.shape[self.image_dims[1]]:
+            self.y = self.dset.shape[1] - self.bin_y
+
+        self.rect.set_xy([self.x * self.rect.get_width() / self.bin_x + self.rectangle[0],
+                          self.y * self.rect.get_height() / self.bin_y + self.rectangle[2]])
+        self._update()
+
+    def get_image_4d(self):
+        from sidpy import DimensionType
+
+        if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
+            self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
+        if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:
+            self.y = self.dset.shape[self.image_dims[1]] - self.bin_y
+        selection = []
+
+        for dim, axis in self.dset._axes.items():
+            # print(dim, axis.dimension_type)
+            if dim == self.image_dims[0]:
+                selection.append(slice(self.x, self.x + self.bin_x))
+            elif dim == self.image_dims[1]:
+                selection.append(slice(self.y, self.y + self.bin_y))
+
+            elif dim in self.dims_4d:
+                selection.append(slice(None))
+            else:
+                selection.append(slice(0, 1))
+
+        self.image_4d = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
+        # * self.intensity_scale[self.x,self.y]
+
+        return self.image_4d.squeeze()
+
+    def _onclick(self, event):
+        self.event = event
+        if event.inaxes in [self.axes[0]]:
+            x = int(event.xdata)
+            y = int(event.ydata)
+
+            x = int(x - self.rectangle[0])
+            y = int(y - self.rectangle[2])
+
+            if x >= 0 and y >= 0:
+                if x <= self.rectangle[1] and y <= self.rectangle[3]:
+                    self.x = int(x / (self.rect.get_width() / self.bin_x))
+                    self.y = int(y / (self.rect.get_height() / self.bin_y))
+
+                    if self.x + self.bin_x > self.dset.shape[self.image_dims[0]]:
+                        self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
+                    if self.y + self.bin_y > self.dset.shape[self.image_dims[1]]:
+                        self.y = self.dset.shape[self.image_dims[1]] - self.bin_y
+
+                    self.rect.set_xy([self.x * self.rect.get_width() / self.bin_x + self.rectangle[0],
+                                      self.y * self.rect.get_height() / self.bin_y + self.rectangle[2]])
+        self._update()
+
+    def _update(self, ev=None):
+
+        xlim = self.axes[1].get_xlim()
+        ylim = self.axes[1].get_ylim()
+        self.axes[1].clear()
+        self.get_image_4d()
+
+        self.axes[1].imshow(self.image_4d)
+
+        self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
+
+        self.axes[1].set_xlim(xlim)
+        self.axes[1].set_ylim(ylim)
+        self.axes[1].set_xlabel(self.xlabel)
+        self.axes[1].set_ylabel(self.ylabel)
+
+        self.fig.canvas.draw_idle()
+
+    def set_legend(self, set_legend):
+        self.plot_legend = set_legend
+
+    def get_xy(self):
+        return [self.x, self.y]
