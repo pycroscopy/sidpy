@@ -1,0 +1,41 @@
+sidpy.base.string\_utils
+========================
+
+.. automodule:: sidpy.base.string_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      clean_string_att
+      format_quantity
+      format_size
+      format_time
+      formatted_str_to_number
+      get_time_stamp
+      remove_extra_delimiters
+      str_to_other
+      validate_list_of_strings
+      validate_single_string_arg
+      validate_string_args
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

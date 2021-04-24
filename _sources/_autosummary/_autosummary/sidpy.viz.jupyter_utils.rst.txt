@@ -1,0 +1,30 @@
+sidpy.viz.jupyter\_utils
+========================
+
+.. automodule:: sidpy.viz.jupyter_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      save_fig_filebox_button
+      simple_ndim_visualizer
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

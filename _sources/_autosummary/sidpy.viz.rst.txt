@@ -1,0 +1,32 @@
+sidpy.viz
+=========
+
+.. automodule:: sidpy.viz
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   sidpy.viz.dataset_viz
+   sidpy.viz.jupyter_utils
+   sidpy.viz.plot_utils
+

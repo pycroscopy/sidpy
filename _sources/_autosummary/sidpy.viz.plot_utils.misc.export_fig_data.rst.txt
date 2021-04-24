@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.misc.export\_fig\_data
+============================================
+
+.. currentmodule:: sidpy.viz.plot_utils.misc
+
+.. autofunction:: export_fig_data

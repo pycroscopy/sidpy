@@ -1,0 +1,36 @@
+sidpy.viz.dataset\_viz
+======================
+
+.. automodule:: sidpy.viz.dataset_viz
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      CurveVisualizer
+      FourDimImageVisualizer
+      ImageStackVisualizer
+      ImageVisualizer
+      SpectralImageVisualizer
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,122 @@
+sidpy.sid.dataset.Dataset
+=========================
+
+.. currentmodule:: sidpy.sid.dataset
+
+.. autoclass:: Dataset
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Dataset.abs
+      ~Dataset.adjust_axis
+      ~Dataset.all
+      ~Dataset.angle
+      ~Dataset.any
+      ~Dataset.argmax
+      ~Dataset.argmin
+      ~Dataset.argtopk
+      ~Dataset.astype
+      ~Dataset.choose
+      ~Dataset.clip
+      ~Dataset.compute
+      ~Dataset.compute_chunk_sizes
+      ~Dataset.conj
+      ~Dataset.copy
+      ~Dataset.cumprod
+      ~Dataset.cumsum
+      ~Dataset.dot
+      ~Dataset.fft
+      ~Dataset.flatten
+      ~Dataset.from_array
+      ~Dataset.get_dimensions_by_type
+      ~Dataset.get_extent
+      ~Dataset.get_image_dims
+      ~Dataset.get_spectrum_dims
+      ~Dataset.hdf_close
+      ~Dataset.like_data
+      ~Dataset.map_blocks
+      ~Dataset.map_overlap
+      ~Dataset.max
+      ~Dataset.mean
+      ~Dataset.min
+      ~Dataset.moment
+      ~Dataset.nonzero
+      ~Dataset.persist
+      ~Dataset.plot
+      ~Dataset.prod
+      ~Dataset.ravel
+      ~Dataset.rechunk
+      ~Dataset.rename_dimension
+      ~Dataset.repeat
+      ~Dataset.reshape
+      ~Dataset.round
+      ~Dataset.set_dimension
+      ~Dataset.squeeze
+      ~Dataset.std
+      ~Dataset.store
+      ~Dataset.sum
+      ~Dataset.swapaxes
+      ~Dataset.to_dask_dataframe
+      ~Dataset.to_delayed
+      ~Dataset.to_hdf5
+      ~Dataset.to_svg
+      ~Dataset.to_tiledb
+      ~Dataset.to_zarr
+      ~Dataset.topk
+      ~Dataset.trace
+      ~Dataset.transpose
+      ~Dataset.var
+      ~Dataset.view
+      ~Dataset.view_metadata
+      ~Dataset.view_original_metadata
+      ~Dataset.visualize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Dataset.A
+      ~Dataset.T
+      ~Dataset.blocks
+      ~Dataset.chunks
+      ~Dataset.chunksize
+      ~Dataset.dask
+      ~Dataset.data_descriptor
+      ~Dataset.data_type
+      ~Dataset.dtype
+      ~Dataset.h5_dataset
+      ~Dataset.imag
+      ~Dataset.itemsize
+      ~Dataset.labels
+      ~Dataset.metadata
+      ~Dataset.modality
+      ~Dataset.name
+      ~Dataset.nbytes
+      ~Dataset.ndim
+      ~Dataset.npartitions
+      ~Dataset.numblocks
+      ~Dataset.original_metadata
+      ~Dataset.partitions
+      ~Dataset.quantity
+      ~Dataset.real
+      ~Dataset.shape
+      ~Dataset.size
+      ~Dataset.source
+      ~Dataset.title
+      ~Dataset.units
+      ~Dataset.vindex
+   
+   

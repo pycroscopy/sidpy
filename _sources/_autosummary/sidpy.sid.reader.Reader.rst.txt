@@ -1,0 +1,26 @@
+sidpy.sid.reader.Reader
+=======================
+
+.. currentmodule:: sidpy.sid.reader
+
+.. autoclass:: Reader
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Reader.can_read
+      ~Reader.read
+   
+   
+
+   
+   
+   

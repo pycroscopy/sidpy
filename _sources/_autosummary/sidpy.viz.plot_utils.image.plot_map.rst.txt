@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.image.plot\_map
+=====================================
+
+.. currentmodule:: sidpy.viz.plot_utils.image
+
+.. autofunction:: plot_map

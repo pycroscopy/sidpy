@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.openfile\_dialog
+==========================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: openfile_dialog

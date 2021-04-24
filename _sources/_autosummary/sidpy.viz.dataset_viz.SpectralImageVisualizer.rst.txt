@@ -1,0 +1,28 @@
+sidpy.viz.dataset\_viz.SpectralImageVisualizer
+==============================================
+
+.. currentmodule:: sidpy.viz.dataset_viz
+
+.. autoclass:: SpectralImageVisualizer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SpectralImageVisualizer.get_spectrum
+      ~SpectralImageVisualizer.get_xy
+      ~SpectralImageVisualizer.set_bin
+      ~SpectralImageVisualizer.set_legend
+   
+   
+
+   
+   
+   

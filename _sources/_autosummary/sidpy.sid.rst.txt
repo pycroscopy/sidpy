@@ -1,0 +1,33 @@
+sidpy.sid
+=========
+
+.. automodule:: sidpy.sid
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   sidpy.sid.dataset
+   sidpy.sid.dimension
+   sidpy.sid.reader
+   sidpy.sid.translator
+

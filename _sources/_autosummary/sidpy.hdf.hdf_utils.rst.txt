@@ -1,0 +1,47 @@
+sidpy.hdf.hdf\_utils
+====================
+
+.. automodule:: sidpy.hdf.hdf_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      copy_attributes
+      copy_dataset
+      copy_linked_objects
+      find_dataset
+      get_attr
+      get_attributes
+      get_auxiliary_datasets
+      get_h5_obj_refs
+      is_editable_h5
+      lazy_load_array
+      link_h5_obj_as_alias
+      link_h5_objects_as_attrs
+      print_tree
+      validate_h5_objs_in_same_h5_file
+      write_book_keeping_attrs
+      write_dict_to_h5_group
+      write_simple_attrs
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

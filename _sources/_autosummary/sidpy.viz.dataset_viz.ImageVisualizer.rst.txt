@@ -1,0 +1,25 @@
+sidpy.viz.dataset\_viz.ImageVisualizer
+======================================
+
+.. currentmodule:: sidpy.viz.dataset_viz
+
+.. autoclass:: ImageVisualizer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ImageVisualizer.plot_image
+   
+   
+
+   
+   
+   
