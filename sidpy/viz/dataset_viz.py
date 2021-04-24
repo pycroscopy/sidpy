@@ -481,7 +481,7 @@ class SpectralImageVisualizer(object):
         else:
             self.axes = self.fig.subplots(nrows=2, **fig_args)
 
-        self.fig.canvas.set_window_title(self.dset.title)
+        self.fig.canvas.manager.set_window_title(self.dset.title)
         self.image = dset.mean(axis=spectral_dims[0])
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
@@ -713,7 +713,7 @@ class FourDimImageVisualizer(object):
         else:
             self.axes = self.fig.subplots(nrows=2, **fig_args)
 
-        self.fig.canvas.set_window_title(self.dset.title)
+        self.fig.canvas.manager.set_window_title(self.dset.title)
         self.image = np.array(dset).mean(axis=tuple(dims_4d))
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
