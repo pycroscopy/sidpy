@@ -146,6 +146,36 @@ class TestGetExponent(unittest.TestCase):
             _ = get_exponent('hello')
             _ = get_exponent([1, 2, 3])
                 
-                
+class TestBuildIndValMatrices(unittest.TestCase):
+    '''Testing the build_ind_val_matrices function'''
+    def test_not_list_or_tuple(self):
+        with self.assertRaises(TypeError):
+            #try putting in a dictionary
+            unit_values = {'values':(0,1,2)}
+            _,_ = build_ind_val_matrices (unit_values)
+
+            #try a numpy array
+            unit_values = np.array([0,1,2,3])
+            _, _ = build_ind_val_matrices(unit_values)
+
+    def test_not_1D(self):
+        with self.assertRaises(ValueError):
+            # try a 2D matrix
+            unit_values = [np.random.normal(loc=1,scale=1,size=(5,5))]
+            _, _ = build_ind_val_matrices(unit_values)
+
+    def test_standard_case(self):
+        #here we want to assert that a standard case works
+        #two spectroscopic dimensions - [[0,1], [10,20]]
+        unit_values = [[0,1], [10,20]]
+        ind_mat, val_mat = build_ind_val_matrices(unit_values)
+        ind_mat_true = np.array([[0,0],[1,0], [0,1],[1,1]])
+        val_mat_true =  np.array([[0., 10.], [1., 10.],
+                                  [0., 20.], [1., 20.]])
+        with self.assertTrue():
+            np.isclose(ind_mat, ind_mat_true).all() == True
+        with self.assertTrue():
+            np.isclose(val_mat, val_mat_true).all() ==True
+
 if __name__ == '__main__':
     unittest.main()
