@@ -20,7 +20,7 @@ else:
     from collections import Iterable
 
 __all__ = ['get_slope', 'to_ranges', 'contains_integers', 'integers_to_slices',
-           'get_exponent']
+           'get_exponent', 'build_ind_val_matrices']
 
 
 def get_slope(values, tol=1E-3):
@@ -205,3 +205,38 @@ def get_exponent(vector):
         # negative values
         exponent = np.log10(np.max(np.abs(vector)))
     return int(np.floor(exponent))
+
+def build_ind_val_matrices(unit_values):
+        """
+        Builds indices and values matrices using given unit values for each dimension.
+        This function is originally from pyUSID.io
+        Unit values must be arranged from fastest varying to slowest varying
+
+        Parameters
+        ----------
+        unit_values : list / tuple
+            Sequence of values vectors for each dimension
+
+        Returns
+        -------
+        ind_mat : 2D numpy array
+            Indices matrix
+        val_mat : 2D numpy array
+            Values matrix
+        """
+        if not isinstance(unit_values, (list, tuple)):
+            raise TypeError('unit_values should be a list or tuple')
+        if not np.all([np.array(x).ndim == 1 for x in unit_values]):
+            raise ValueError('unit_values should only contain 1D array')
+        lengths = [len(x) for x in unit_values]
+        tile_size = [np.prod(lengths[x:]) for x in range(1, len(lengths))] + [1]
+        rep_size = [1] + [np.prod(lengths[:x]) for x in range(1, len(lengths))]
+        val_mat = np.zeros(shape=(len(lengths), np.prod(lengths)))
+        ind_mat = np.zeros(shape=val_mat.shape, dtype=np.uint32)
+        for ind, ts, rs, vec in zip(range(len(lengths)), tile_size, rep_size, unit_values):
+            val_mat[ind] = np.tile(np.repeat(vec, rs), ts)
+            ind_mat[ind] = np.tile(np.repeat(np.arange(len(vec)), rs), ts)
+
+        val_mat = val_mat.T
+        ind_mat = ind_mat.T
+        return ind_mat, val_mat
