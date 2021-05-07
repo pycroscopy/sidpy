@@ -172,10 +172,9 @@ class TestBuildIndValMatrices(unittest.TestCase):
         ind_mat_true = np.array([[0,0],[1,0], [0,1],[1,1]])
         val_mat_true =  np.array([[0., 10.], [1., 10.],
                                   [0., 20.], [1., 20.]])
-        with self.assertTrue():
-            np.isclose(ind_mat, ind_mat_true).all() == True
-        with self.assertTrue():
-            np.isclose(val_mat, val_mat_true).all() ==True
+        self.assertTrue(np.isclose(ind_mat, ind_mat_true).all() == True)
+        self.assertTrue(np.isclose(val_mat, val_mat_true).all() ==True)
+
 
 if __name__ == '__main__':
     unittest.main()
