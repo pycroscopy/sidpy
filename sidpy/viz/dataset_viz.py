@@ -483,13 +483,27 @@ class SpectralImageVisualizer(object):
 
         self.fig.canvas.manager.set_window_title(self.dset.title)
         self.image = dset.mean(axis=spectral_dims[0])
+        if 1 in self.dset.shape:
+            self.image = dset.squeeze()
+            #self.extent[2]=self.image.shape[1]
+            #self.bin_y=self.image.shape[1]
+            self.axes[0].set_aspect('auto')
+        else:
+            self.axes[0].set_aspect('equal')
+
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         if horizontal:
             self.axes[0].set_xlabel('{} [pixels]'.format(self.dset._axes[image_dims[0]].quantity))
         else:
             self.axes[0].set_ylabel('{} [pixels]'.format(self.dset._axes[image_dims[1]].quantity))
-        self.axes[0].set_aspect('equal')
+
+        if 1 in self.dset.shape:
+            self.axes[0].set_aspect('auto')
+            self.axes[0].get_yaxis().set_visible(False)
+        else:
+            self.axes[0].set_aspect('equal')
+
 
         # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
         self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
