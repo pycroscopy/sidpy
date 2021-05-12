@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 sys.path.append("../../sidpy/")
 from sidpy.viz import plot_utils
-
+import h5py
 
 """
 class TestGridDecoration(unittest.TestCase):
@@ -502,6 +502,11 @@ class TestPlotScree(unittest.TestCase):
         scree = 'string'
         with self.assertRaises(TypeError):
             plot_utils.plot_scree(scree)
+
+    def test_scree_h5py_dataset(self):
+        h5_f = h5py.File('test.h5', 'a')
+        scree = h5_f.create_dataset("test", data=np.arange(1,25))
+        plot_utils.plot_scree(scree)
 
     """
     def test_scree_list(self):

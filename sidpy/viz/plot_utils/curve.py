@@ -515,6 +515,8 @@ def plot_scree(scree, title='Scree', **kwargs):
         raise TypeError('scree must be a 1D array or Dataset')
     if not isinstance(title, (str, unicode)):
         raise TypeError('title must be a string')
+    if h5py.__version__ >= '3' and isinstance(scree, h5py.Dataset):
+        scree = scree[()]
 
     fig = plt.figure(figsize=kwargs.pop('figsize', (6.5, 6)))
     axis = fig.add_axes([0.1, 0.1, .8, .8])  # left, bottom, width, height (range 0 to 1)
