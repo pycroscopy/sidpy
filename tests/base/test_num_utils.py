@@ -145,6 +145,7 @@ class TestGetExponent(unittest.TestCase):
         with self.assertRaises(TypeError):
             _ = get_exponent('hello')
             _ = get_exponent([1, 2, 3])
+            _ = get_exponent([0, 1, np.nan])
                 
 class TestBuildIndValMatrices(unittest.TestCase):
     '''Testing the build_ind_val_matrices function'''

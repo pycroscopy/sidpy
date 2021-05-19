@@ -199,11 +199,14 @@ def get_exponent(vector):
     """
     if not isinstance(vector, np.ndarray):
         raise TypeError('vector should be of type numpy.ndarray. Provided object of type: {}'.format(type(vector)))
+    if np.isnan(vector).any():
+        raise TypeError('vector should not contain NaN values')
     if np.max(np.abs(vector)) == np.max(vector):
         exponent = np.log10(np.max(vector))
     else:
         # negative values
         exponent = np.log10(np.max(np.abs(vector)))
+        
     return int(np.floor(exponent))
 
 def build_ind_val_matrices(unit_values):

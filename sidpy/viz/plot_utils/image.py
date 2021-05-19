@@ -107,7 +107,12 @@ def plot_map(axis, img, show_xy_ticks=True, show_cbar=True, x_vec=None, y_vec=No
     kwargs.update({'origin': kwargs.pop('origin', 'lower')})
 
     if show_cbar:
-        y_exp = get_exponent(np.squeeze(img))
+        
+        if np.isnan(img).any():
+            _img = img[np.where(~np.isnan(img))]
+            y_exp = get_exponent(np.squeeze(_img))
+        else:
+            y_exp = get_exponent(np.squeeze(img))
         z_suffix = ''
         if y_exp < -2 or y_exp > 3:
             img = np.squeeze(img) / 10 ** y_exp
