@@ -382,8 +382,6 @@ class TestPlotLineFamily(unittest.TestCase):
 
 class TestPlotMap(unittest.TestCase):
 
-    pass
-    """
     def test_plot_map(self):
         x_vec = np.linspace(0, 6 * np.pi, 256)
         y_vec = np.sin(x_vec) ** 2
@@ -396,7 +394,20 @@ class TestPlotMap(unittest.TestCase):
                             y_vec=np.linspace(0, 500, atom_intensities.shape[1]),
                             cbar_label='intensity (a. u.)', tick_font_size=16)
     
-    """
+    def test_plot_map_with_nan(self):
+        
+        x_vec = np.linspace(0, 6 * np.pi, 256)
+        y_vec = np.sin(x_vec) ** 2
+    
+        atom_intensities = y_vec * np.atleast_2d(y_vec).T
+        rand_nan = np.where(np.random.rand(256,256) < 0.2)
+        atom_intensities[rand_nan] = np.nan
+    
+        fig, axis = plt.subplots()
+        plot_utils.plot_map(axis, atom_intensities, stdevs=1.5, num_ticks=4,
+                            x_vec=np.linspace(-1, 1, atom_intensities.shape[0]),
+                            y_vec=np.linspace(0, 500, atom_intensities.shape[1]),
+                            cbar_label='intensity (a. u.)', tick_font_size=16)
 
 
 class TestPlotCurves(unittest.TestCase):
