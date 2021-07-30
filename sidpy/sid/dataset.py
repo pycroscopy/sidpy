@@ -11,6 +11,7 @@ https://scikit-allel.readthedocs.io/en/v0.21.1/_modules/allel/model/dask.html
 """
 
 from __future__ import division, print_function, absolute_import, unicode_literals
+from re import A
 import sys
 
 import dask.array.core
@@ -189,7 +190,10 @@ class Dataset(da.Array):
         """
 
         # create vanilla dask array
-        dask_array = da.from_array(np.array(x), name=name, chunks=chunks, lock=lock)
+        if isinstance(x, da.Array):
+            dask_array = x
+        else:
+            dask_array = da.from_array(np.array(x), name=name, chunks=chunks, lock=lock)
 
         # view as sub-class
         sid_dataset = view_subclass(dask_array, cls)
@@ -1031,6 +1035,9 @@ class Dataset(da.Array):
             return self.like_data(da_ufunc.outer(*inputs, **kwargs))
         else:
             return NotImplemented
+
+
+
 
     # def prod(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
 
