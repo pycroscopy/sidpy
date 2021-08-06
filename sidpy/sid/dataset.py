@@ -168,7 +168,7 @@ class Dataset(da.Array):
             print(self.h5_dataset)
 
     @classmethod
-    def from_array(cls, x, name='generic', chunks='auto',  lock=False):
+    def from_array(cls, x, name='generic', chunks='auto',  lock=False, **kwargs):
         """
         Initializes a sidpy dataset from an array-like object (i.e. numpy array)
         All meta-data will be set to be generically.
@@ -214,7 +214,7 @@ class Dataset(da.Array):
         sid_dataset.original_metadata = {}
         return sid_dataset
 
-    def like_data(self, data, name=None, chunks='auto', lock=False):
+    def like_data(self, data, name=None, chunks='auto', lock=False, **kwargs):
         """
         Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
@@ -237,44 +237,99 @@ class Dataset(da.Array):
         -------
         sidpy dataset
         """
+        name_suffix = kwargs.get('name_suffix', '')
+        name_prefix = kwargs.get('name_prefix', '')
+        reset_quantity = kwargs.get('reset_quantity', False)
+        reset_units = kwargs.get('reset_units', False)
+        check_dimensions = kwargs.get('check_dimensions', True)
+
         if name is None:
             name = 'like {}'.format(self.title)
 
         new_data = self.from_array(data, name=name, chunks=chunks, lock=lock)
-
+        
         new_data.data_type = self.data_type
-        new_data.units = self.units
+        
+        #units
+        if reset_units:
+            new_data.units = 'generic'
+        else:
+            new_data.units = self.units
+        
+        #name
         if name is None:
             new_data.title = self.title + "_new"
         else:
             new_data.title = name
-        new_data.quantity = self.quantity
+        
+        new_data.title = name_prefix+new_data.title+name_suffix
+
+        #quantity
+        if reset_quantity:
+            new_data.quantity = 'generic'
+        else:
+            new_data.quantity = self.quantity
 
         new_data.modality = self.modality
         new_data.source = self.source
 
-        for dim in range(new_data.ndim):
-            # TODO: add parent to dimension to set attribute if name changes
-            if len(self._axes[dim].values) == new_data.shape[dim]:
-                new_data.set_dimension(dim, self._axes[dim])
-            else:
-                # assuming the axis scale is equidistant
-                try:
-                    scale = get_slope(self._axes[dim])
-                    # axis = self._axes[dim].copy()
-                    axis = Dimension(np.arange(new_data.shape[dim])*scale, self._axes[dim].name)
-                    axis.quantity = self._axes[dim].quantity
-                    axis.units = self._axes[dim].units
-                    axis.dimension_type = self._axes[dim].dimension_type
+        if check_dimensions:
+            for dim in range(new_data.ndim):
+                # TODO: add parent to dimension to set attribute if name changes
+                if len(self._axes[dim].values) == new_data.shape[dim]:
+                    new_data.set_dimension(dim, self._axes[dim])
+                else:
+                    # assuming the axis scale is equidistant
+                    try:
+                        scale = get_slope(self._axes[dim])
+                        # axis = self._axes[dim].copy()
+                        axis = Dimension(np.arange(new_data.shape[dim])*scale, self._axes[dim].name)
+                        axis.quantity = self._axes[dim].quantity
+                        axis.units = self._axes[dim].units
+                        axis.dimension_type = self._axes[dim].dimension_type
 
-                    new_data.set_dimension(dim, axis)
+                        new_data.set_dimension(dim, axis)
 
-                except ValueError:
-                    print('using generic parameters for dimension ', dim)
+                    except ValueError:
+                        print('using generic parameters for dimension ', dim)
+        
+        else:
+            new_data._axes = self._axes
 
         new_data.metadata = dict(self.metadata).copy()
         new_data.original_metadata = {}
         return new_data
+
+    
+    def __rearrange_axes(self, new_order = None):
+        """Rearranges the dimension order of the current instance
+        Parameters:
+            new_order: list or tuple of integers
+
+        All the dimensions that are not in the new_order are deleted
+        """
+        new_axes = {}
+        for i in range(len(new_order)):
+            new_axes[i] = self._axes[new_order[i]]
+        
+        self._axes = new_axes
+    
+    def __get_new_order(self, axis):
+        """
+        Deletes the dimensions present in the axis parameter and
+        the order is unchanged.
+        Used for overriding top level dask array methods.
+        Eg: Mean, Min, Max
+        """
+        new_axes_order = list(range(self.ndim))
+        if isinstance(axis, int):
+            new_axes_order.remove(axis)
+        else:
+            for a in axis:
+                new_axes_order.remove(a)
+        
+        return new_axes_order
+        
 
     def copy(self):
         """
@@ -779,10 +834,11 @@ class Dataset(da.Array):
 
     @property
     def T(self):
+        # Why is this a property?
         return self.transpose()
 
     def abs(self):
-        return self.like_data(super().__abs__())
+        return self.like_data(super().__abs__(), name_suffix = '_absolute_value')
 
     ######################################################
     # Original dask.array functions handed through
@@ -791,19 +847,24 @@ class Dataset(da.Array):
         return self.from_array(super().dot(other))
 
     def transpose(self, *axes):
-        return self.like_data(super().transpose(*axes))
+        if axes is None:
+            new_axes_order = range(self.ndim)[::-1]
+        return self.__rearrange_axes(self.like_data(super().transpose(*axes), name_suffix = '_transposed'), new_axes_order)
 
     def ravel(self):
-        return self.like_data(super().ravel())
+        return self.like_data(super().ravel(), name_suffix = '_raveled')
 
     def choose(self, choices):
         return self.like_data(super().choose(choices))
 
     def __abs__(self):
-        return self.like_data(super().__abs__())
+        print(super().__abs__.__name__)
+        return self.like_data(super().__abs__(), name_suffix = '_absolute_value')
 
-    def angle(self):
-        return self.like_data(np.angle(super()))
+    def angle(self, deg = False):
+        # np.angle negates the usage of dask
+        return self.like_data(da.angle(self, deg = deg), reset_units = True, 
+            reset_quantity = True, name_suffix = '_angle')
 
     def __add__(self, other):
         return self.like_data(super().__add__(other))
@@ -916,6 +977,11 @@ class Dataset(da.Array):
     def min(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None:
             return float(super().min())
+        else:
+            a = self.like_data(super().min(self, axis=axis, keepdims=keepdims, split_every=split_every, out=out))
+
+            return a
+                    
 
     def max(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None:
