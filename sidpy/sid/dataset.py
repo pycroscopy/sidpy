@@ -6,6 +6,10 @@ Created on Tue Nov  3 15:07:16 2015
 
 @author: Gerd Duscher
 
+Modified by Mani Valleti.
+
+Look up dask source code to understand how numerical functions are implemented
+
 starting code from:
 https://scikit-allel.readthedocs.io/en/v0.21.1/_modules/allel/model/dask.html
 """
@@ -220,7 +224,7 @@ class Dataset(da.Array):
         - if dimension of new dataset is different from this dataset and the scale is linear,
             then this scale will be applied to the new dataset (naming and units will stay the same),
             otherwise the dimension will be generic.
-
+        -Additional functionality to override numeric functions
         Parameters
         ----------
         data: array like
@@ -300,7 +304,32 @@ class Dataset(da.Array):
         new_data.original_metadata = {}
         return new_data
 
-    
+    @staticmethod
+    def __reduce_dimensions(dataset, axis, old_dims, **kwargs):
+        dataset._axes = {}
+        keepdims = kwargs.get('keepdims', False)
+        func = kwargs.get('func', None)
+        if not keepdims:
+            new_axes_order = Dataset.__get_new_order(axis)
+            for i, new_axis in enumerate(new_axes_order):
+                dataset.set_dimension(i, old_dims[new_axis])
+        
+        else:
+            for i, old_dim in enumerate(old_dims):
+
+
+
+
+        if isinstance(dims, Dimension):
+            dims = [dims]
+        for i, dim in enumerate(dims):
+            reset_dimensions.append(Dimension(np.arange(1), 
+            name = dim.name,
+            quantity = dim.quantity, 
+            units = dim.units, 
+            dimension_type= dim.dimension_type))
+
+
     def __rearrange_axes(self, new_order = None):
         """Rearranges the dimension order of the current instance
         Parameters:
@@ -314,7 +343,8 @@ class Dataset(da.Array):
         
         self._axes = new_axes
     
-    def __get_new_order(self, axis):
+    @staticmethod
+    def __get_new_order(axis):
         """
         Deletes the dimensions present in the axis parameter and
         the order is unchanged.
@@ -373,9 +403,9 @@ class Dataset(da.Array):
         """
         if not isinstance(ind, int):
             raise TypeError('Dimension must be an integer')
-        if 0 > ind >= len(self.shape):
+        if (0 > ind) or (ind >= self.ndim):
             raise IndexError('Dimension must be an integer between 0 and {}'
-                             ''.format(len(self.shape)-1))
+                             ''.format(self.ndim-1))
         for key, dim in self._axes.items():
             if key != ind:
                 if name == dim.name:
@@ -843,16 +873,50 @@ class Dataset(da.Array):
     ######################################################
     # Original dask.array functions handed through
     ##################################################
+    @property
+    def real(self):
+        return self.like_data(super().real)
+
+    @property
+    def imag(self):
+        return self.like_data(super().imag)
+    
+    def all(self, axis=None, out=None, keepdims=False, where=True):
+        old_dims = self._axes
+
+        result = self.like_data(super().all(axis=None, 
+            out=None, 
+            keepdims=False, 
+            where=True))
+        
+        if axis is None:
+            axes = list(np.arange(self.ndim))
+        elif isinstance(axis, int):
+            axes = [axis]
+        else:
+            axes = axis
+        
+        if not keepdims:
+            result
+            
+        if axis is None:
+            return result
+        else:
+            
+    
+    def ravel(self):
+        return self.like_data(super().ravel(), name_suffix = '_raveled')
+    
     def dot(self, other):
         return self.from_array(super().dot(other))
 
     def transpose(self, *axes):
         if axes is None:
             new_axes_order = range(self.ndim)[::-1]
-        return self.__rearrange_axes(self.like_data(super().transpose(*axes), name_suffix = '_transposed'), new_axes_order)
+        return self.__rearrange_axes(self.like_data(super().transpose(*axes), 
+            name_suffix = '_transposed'), new_axes_order)
 
-    def ravel(self):
-        return self.like_data(super().ravel(), name_suffix = '_raveled')
+    
 
     def choose(self, choices):
         return self.like_data(super().choose(choices))
@@ -862,7 +926,6 @@ class Dataset(da.Array):
         return self.like_data(super().__abs__(), name_suffix = '_absolute_value')
 
     def angle(self, deg = False):
-        # np.angle negates the usage of dask
         return self.like_data(da.angle(self, deg = deg), reset_units = True, 
             reset_quantity = True, name_suffix = '_angle')
 
@@ -989,13 +1052,7 @@ class Dataset(da.Array):
         else:
             return self.like_data(super().max(axis=axis, keepdims=keepdims, split_every=split_every, out=out))
 
-    @property
-    def real(self):
-        return self.like_data(super().real)
-
-    @property
-    def imag(self):
-        return self.like_data(super().imag)
+    
 
     def conj(self):
         return self.like_data(super().conj())
