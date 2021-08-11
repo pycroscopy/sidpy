@@ -15,6 +15,8 @@ https://scikit-allel.readthedocs.io/en/v0.21.1/_modules/allel/model/dask.html
 """
 
 from __future__ import division, print_function, absolute_import, unicode_literals
+from hashlib import new
+from functools import wraps
 from re import A
 import sys
 
@@ -61,7 +63,6 @@ def view_subclass(dask_array, cls):
     """
     return cls(dask_array.dask, name=dask_array.name, chunks=dask_array.chunks,
                dtype=dask_array.dtype, shape=dask_array.shape)
-
 
 class Dataset(da.Array):
     """
@@ -245,7 +246,8 @@ class Dataset(da.Array):
         name_prefix = kwargs.get('name_prefix', '')
         reset_quantity = kwargs.get('reset_quantity', False)
         reset_units = kwargs.get('reset_units', False)
-        check_dimensions = kwargs.get('check_dimensions', True)
+        checkdims = kwargs.get('checkdims', True)
+        
 
         if name is None:
             name = 'like {}'.format(self.title)
@@ -277,7 +279,7 @@ class Dataset(da.Array):
         new_data.modality = self.modality
         new_data.source = self.source
 
-        if check_dimensions:
+        if checkdims:
             for dim in range(new_data.ndim):
                 # TODO: add parent to dimension to set attribute if name changes
                 if len(self._axes[dim].values) == new_data.shape[dim]:
@@ -296,70 +298,45 @@ class Dataset(da.Array):
 
                     except ValueError:
                         print('using generic parameters for dimension ', dim)
-        
-        else:
-            new_data._axes = self._axes
 
         new_data.metadata = dict(self.metadata).copy()
         new_data.original_metadata = {}
         return new_data
 
-    @staticmethod
-    def __reduce_dimensions(dataset, axis, old_dims, **kwargs):
-        dataset._axes = {}
-        keepdims = kwargs.get('keepdims', False)
-        func = kwargs.get('func', None)
-        if not keepdims:
-            new_axes_order = Dataset.__get_new_order(axis)
-            for i, new_axis in enumerate(new_axes_order):
-                dataset.set_dimension(i, old_dims[new_axis])
-        
-        else:
-            for i, old_dim in enumerate(old_dims):
-
-
-
-
-        if isinstance(dims, Dimension):
-            dims = [dims]
-        for i, dim in enumerate(dims):
-            reset_dimensions.append(Dimension(np.arange(1), 
-            name = dim.name,
-            quantity = dim.quantity, 
-            units = dim.units, 
-            dimension_type= dim.dimension_type))
-
-
-    def __rearrange_axes(self, new_order = None):
-        """Rearranges the dimension order of the current instance
-        Parameters:
-            new_order: list or tuple of integers
-
-        All the dimensions that are not in the new_order are deleted
-        """
-        new_axes = {}
-        for i in range(len(new_order)):
-            new_axes[i] = self._axes[new_order[i]]
-        
-        self._axes = new_axes
     
-    @staticmethod
-    def __get_new_order(axis):
-        """
-        Deletes the dimensions present in the axis parameter and
-        the order is unchanged.
-        Used for overriding top level dask array methods.
-        Eg: Mean, Min, Max
-        """
-        new_axes_order = list(range(self.ndim))
-        if isinstance(axis, int):
-            new_axes_order.remove(axis)
-        else:
-            for a in axis:
-                new_axes_order.remove(a)
+    def __reduce_dimensions(self, new_dataset, axes, keepdims):
+        new_dataset._axes = {}
+        if not keepdims:
+            i = 0
+            for key, dim in self._axes.items():
+                new_dim = dim.copy()
+                if key not in axes:
+                    new_dataset.set_dimension(i, new_dim)
+                    i+=1
         
-        return new_axes_order
+        if keepdims:
+            for key, dim in self._axes.items():
+                new_dim = dim.copy()
+                if key in axes:
+                    new_dim = Dimension(np.arange(1), name = new_dim.name,
+                                        quantity = new_dim.quantity, units = new_dim.units,
+                                        dimension_type=new_dim.dimension_type)
+                new_dataset.set_dimension(key, new_dim)
         
+        return new_dataset
+
+    # def __rearrange_axes(self, new_order = None):
+    #     """Rearranges the dimension order of the current instance
+    #     Parameters:
+    #         new_order: list or tuple of integers
+
+    #     All the dimensions that are not in the new_order are deleted
+    #     """
+    #     new_axes = {}
+    #     for i in range(len(new_order)):
+    #         new_axes[i] = self._axes[new_order[i]]
+        
+    #     self._axes = new_axes            
 
     def copy(self):
         """
@@ -409,7 +386,7 @@ class Dataset(da.Array):
         for key, dim in self._axes.items():
             if key != ind:
                 if name == dim.name:
-                    raise ValueError('New Dimension name already used, but must be unique')
+                    raise ValueError('name: {} already used, but must be unique'.format(name))
 
     def rename_dimension(self, ind, name):
         """
@@ -864,7 +841,6 @@ class Dataset(da.Array):
 
     @property
     def T(self):
-        # Why is this a property?
         return self.transpose()
 
     def abs(self):
@@ -880,30 +856,143 @@ class Dataset(da.Array):
     @property
     def imag(self):
         return self.like_data(super().imag)
-    
-    def all(self, axis=None, out=None, keepdims=False, where=True):
-        old_dims = self._axes
 
-        result = self.like_data(super().all(axis=None, 
-            out=None, 
-            keepdims=False, 
-            where=True))
-        
-        if axis is None:
-            axes = list(np.arange(self.ndim))
-        elif isinstance(axis, int):
-            axes = [axis]
-        else:
-            axes = axis
-        
-        if not keepdims:
-            result
+    def reduce_dims(original_method):
+        @wraps(original_method)
+        def wrapper_method(self, *args, **kwargs):
+            result, arguments =  original_method(self, *args, **kwargs)
+            axis, keepdims = arguments.get('axis'), arguments.get('keepdims', False)
+            if axis is None and not(keepdims):
+                return result
+
+            if axis is None:
+                axes = list(np.arange(self.ndim))
+            elif isinstance(axis, int):
+                axes = [axis]
+            else:
+                axes = list(axis)
             
-        if axis is None:
-            return result
-        else:
-            
+            return self.__reduce_dimensions(result, axes, keepdims)
+        
+        return wrapper_method
     
+
+    @reduce_dims
+    def all(self, axis=None, keepdims=False, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = bool(super().all())
+        
+        else:
+            result = self.like_data(super().all(axis = axis, keepdims = keepdims,
+                    split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+
+    @reduce_dims
+    def any(self, axis=None, keepdims=False, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = bool(super().any())
+        
+        else:
+            result = self.like_data(super().any(axis = axis, keepdims = keepdims,
+                    split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+
+    @reduce_dims
+    def min(self, axis=None, keepdims=False, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = float(super().min())
+        
+        else:
+            result = self.like_data(super().min(axis = axis, keepdims = keepdims,
+                    split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+        
+    
+    @reduce_dims
+    def max(self, axis=None, keepdims=False, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = float(super().max())
+        
+        else:
+            result = self.like_data(super().max(axis = axis, keepdims = keepdims,
+                    split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+
+    @reduce_dims
+    def sum(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = float(super().sum())
+        
+        else:
+            result = self.like_data(super().sum(axis = axis, dtype = dtype, keepdims = keepdims,
+                    split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+    
+    @reduce_dims
+    def mean(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = float(super().mean())
+        
+        else:
+            result = self.like_data(super().mean(axis = axis, dtype = dtype, keepdims = keepdims,
+                    split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+    
+    @reduce_dims
+    def std(self, axis=None, dtype=None, keepdims=False, ddof = 0, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = float(super().std())
+        
+        else:
+            result = self.like_data(super().std(axis = axis, dtype = dtype, keepdims = keepdims,
+                    ddof = 0, split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+
+    @reduce_dims
+    def var(self, axis=None, dtype=None, keepdims=False, ddof = 0, split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = float(super().var())
+        
+        else:
+            result = self.like_data(super().var(axis = axis, dtype = dtype, keepdims = keepdims,
+                    ddof = 0, split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+    
+    @reduce_dims
+    def argmin(self, axis=None, split_every=None, out=None):
+        if axis is None:
+            result = int(super().argmin(axis=axis, split_every=split_every, out=out))
+        else:
+            result = self.like_data(super().argmin(axis=axis, split_every=split_every, out=out),
+                    name_suffix = '_argmin_indices', reset_units = True, reset_quantity = True, check_dims = False)
+
+        return result, locals().copy()
+    
+    @reduce_dims
+    def argmax(self, axis=None, split_every=None, out=None):
+        if axis is None:
+            result = int(super().argmax(axis=axis, split_every=split_every, out=out))
+        else:
+            result = self.like_data(super().argmax(axis=axis, split_every=split_every, out=out),
+                    name_suffix = '_argmin_indices', reset_units = True, reset_quantity = True, check_dims = False)
+
+        return result, locals().copy()
+    
+
+    def angle(self, deg = False):
+        return self.like_data(da.angle(self, deg = deg), reset_units = True, 
+            reset_quantity = True, name_suffix = '_angle', checkdims = True)
+    
+    def conj(self):
+        return self.like_data(super().conj(), reset_units = True,
+            reset_quantity = True, name_suffix = '_conj', checkdims = True)
+
+    def astype(self, dtype, **kwargs):
+        return self.like_data(super().astype(dtype = dtype, **kwargs))
+
+    
+
+    #Need to be edited
     def ravel(self):
         return self.like_data(super().ravel(), name_suffix = '_raveled')
     
@@ -916,18 +1005,13 @@ class Dataset(da.Array):
         return self.__rearrange_axes(self.like_data(super().transpose(*axes), 
             name_suffix = '_transposed'), new_axes_order)
 
-    
-
     def choose(self, choices):
         return self.like_data(super().choose(choices))
+    
 
     def __abs__(self):
         print(super().__abs__.__name__)
         return self.like_data(super().__abs__(), name_suffix = '_absolute_value')
-
-    def angle(self, deg = False):
-        return self.like_data(da.angle(self, deg = deg), reset_units = True, 
-            reset_quantity = True, name_suffix = '_angle')
 
     def __add__(self, other):
         return self.like_data(super().__add__(other))
@@ -1037,42 +1121,9 @@ class Dataset(da.Array):
     def __rmatmul__(self, other):
         return self.like_data(super().__rmatmul__(other))
 
-    def min(self, axis=None, keepdims=False, split_every=None, out=None):
-        if axis is None:
-            return float(super().min())
-        else:
-            a = self.like_data(super().min(self, axis=axis, keepdims=keepdims, split_every=split_every, out=out))
-
-            return a
-                    
-
-    def max(self, axis=None, keepdims=False, split_every=None, out=None):
-        if axis is None:
-            return float(super().max())
-        else:
-            return self.like_data(super().max(axis=axis, keepdims=keepdims, split_every=split_every, out=out))
-
-    
-
-    def conj(self):
-        return self.like_data(super().conj())
 
     def clip(self, min=None, max=None):
         return self.like_data(super().clip(min, max))
-
-    def sum(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
-        result = super().sum(axis=axis, dtype=dtype, keepdims=keepdims, split_every=split_every, out=out)
-        if axis is None:
-            return float(result)
-        else:
-            return self.adjust_axis(result, axis, title='Sum_of_', keepdims=keepdims)
-
-    def mean(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
-        result = super().mean(axis=axis, dtype=dtype, keepdims=keepdims, split_every=split_every, out=out)
-        if axis is None:
-            return float(result)
-        else:
-            return self.adjust_axis(result, axis, title='Mean_of_', keepdims=keepdims)
 
     def squeeze(self, axis=None):
         result = super().squeeze(axis=axis)
