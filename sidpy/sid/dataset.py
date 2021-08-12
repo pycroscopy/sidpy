@@ -61,6 +61,7 @@ def view_subclass(dask_array, cls):
     -------
 
     """
+    
     return cls(dask_array.dask, name=dask_array.name, chunks=dask_array.chunks,
                dtype=dask_array.dtype, shape=dask_array.shape)
 
@@ -75,7 +76,7 @@ class Dataset(da.Array):
     -data_type: DataTypes ('image', 'image_stack',  spectral_image', ...
     -units: str
     -quantity: str what kind of data ('intensity', 'height', ..)
-    -title: name of the data set
+    -title: title of the data set
     -modality: character of data such as 'STM, 'AFM', 'TEM', 'SEM', 'DFT', 'simulation', ..)
     -source: origin of data such as acquisition instrument ('Nion US100', 'VASP', ..)
     -_axes: dictionary of Dimensions one for each data dimension
@@ -89,8 +90,8 @@ class Dataset(da.Array):
     -data_descriptor: returns a label for the colorbar in matplotlib and such
 
     functions:
-    -from_array(data, name): constructs the dataset form a array like object (numpy array, dask array, ...)
-    -like_data(data,name): constructs the dataset form a array like object and copies attributes and
+    -from_array(data, title): constructs the dataset form a array like object (numpy array, dask array, ...)
+    -like_data(data,title): constructs the dataset form a array like object and copies attributes and
     metadata from parent dataset
     -copy()
     -plot(): plots dataset dependent on data_type and dimension_types.
@@ -173,7 +174,9 @@ class Dataset(da.Array):
             print(self.h5_dataset)
 
     @classmethod
-    def from_array(cls, x, name='generic', chunks='auto',  lock=False, **kwargs):
+    def from_array(cls, x, title='generic', chunks='auto',  lock=False, 
+                    datatype = 'UNKNOWN', units = 'generic', quantity = 'generic', 
+                    modality = 'generic', source = 'source', **kwargs):
         """
         Initializes a sidpy dataset from an array-like object (i.e. numpy array)
         All meta-data will be set to be generically.
@@ -184,8 +187,8 @@ class Dataset(da.Array):
             the values which will populate this dataset
         chunks: optional integer or list of integers
             the shape of the chunks to be loaded
-        name: optional string
-            the name of this dataset
+        title: optional string
+            the title of this dataset
         lock: boolean
 
         Returns
@@ -198,17 +201,17 @@ class Dataset(da.Array):
         if isinstance(x, da.Array):
             dask_array = x
         else:
-            dask_array = da.from_array(np.array(x), name=name, chunks=chunks, lock=lock)
+            dask_array = da.from_array(np.array(x), chunks=chunks, lock=lock)
 
         # view as sub-class
         sid_dataset = view_subclass(dask_array, cls)
-        sid_dataset.data_type = 'UNKNOWN'
-        sid_dataset.units = 'generic'
-        sid_dataset.title = name
-        sid_dataset.quantity = 'generic'
+        sid_dataset.data_type = datatype
+        sid_dataset.units = units
+        sid_dataset.title = title
+        sid_dataset.quantity = quantity
 
-        sid_dataset.modality = 'generic'
-        sid_dataset.source = 'generic'
+        sid_dataset.modality = modality
+        sid_dataset.source = source
 
         sid_dataset._axes = {}
         for dim in range(sid_dataset.ndim):
@@ -219,7 +222,7 @@ class Dataset(da.Array):
         sid_dataset.original_metadata = {}
         return sid_dataset
 
-    def like_data(self, data, name=None, chunks='auto', lock=False, **kwargs):
+    def like_data(self, data, title=None, chunks='auto', lock=False, **kwargs):
         """
         Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
@@ -230,8 +233,8 @@ class Dataset(da.Array):
         ----------
         data: array like
             values of new sidpy dataset
-        name: optional string
-            name of new sidpy dataset
+        title: optional string
+            title of new sidpy dataset
         chunks: optional list of integers
             size of chunks for dask array
         lock: optional boolean
@@ -242,17 +245,14 @@ class Dataset(da.Array):
         -------
         sidpy dataset
         """
-        name_suffix = kwargs.get('name_suffix', '')
-        name_prefix = kwargs.get('name_prefix', '')
+        title_suffix = kwargs.get('title_suffix', '')
+        title_prefix = kwargs.get('title_prefix', '')
         reset_quantity = kwargs.get('reset_quantity', False)
         reset_units = kwargs.get('reset_units', False)
         checkdims = kwargs.get('checkdims', True)
         
 
-        if name is None:
-            name = 'like {}'.format(self.title)
-
-        new_data = self.from_array(data, name=name, chunks=chunks, lock=lock)
+        new_data = self.from_array(data, chunks=chunks, lock=lock)
         
         new_data.data_type = self.data_type
         
@@ -262,13 +262,14 @@ class Dataset(da.Array):
         else:
             new_data.units = self.units
         
-        #name
-        if name is None:
-            new_data.title = self.title + "_new"
-        else:
-            new_data.title = name
         
-        new_data.title = name_prefix+new_data.title+name_suffix
+        if (title is None):
+            if not(title_prefix or title_suffix):
+                new_data.title = self.title + "_new"
+        else:
+            new_data.title = title
+        
+        new_data.title = title_prefix+new_data.title+title_suffix
 
         #quantity
         if reset_quantity:
@@ -347,7 +348,7 @@ class Dataset(da.Array):
         sidpy dataset
 
         """
-        dataset_copy = Dataset.from_array(self, self.name, self.chunks)
+        dataset_copy = Dataset.from_array(self, self.title, self.chunks)
 
         dataset_copy.title = self.title
         dataset_copy.units = self.units
@@ -844,7 +845,7 @@ class Dataset(da.Array):
         return self.transpose()
 
     def abs(self):
-        return self.like_data(super().__abs__(), name_suffix = '_absolute_value')
+        return self.like_data(super().__abs__(), title_suffix = '_absolute_value')
 
     ######################################################
     # Original dask.array functions handed through
@@ -964,7 +965,7 @@ class Dataset(da.Array):
             result = int(super().argmin(axis=axis, split_every=split_every, out=out))
         else:
             result = self.like_data(super().argmin(axis=axis, split_every=split_every, out=out),
-                    name_suffix = '_argmin_indices', reset_units = True, reset_quantity = True, check_dims = False)
+                    title_suffix = '_argmin_indices', reset_units = True, reset_quantity = True, check_dims = False)
 
         return result, locals().copy()
     
@@ -974,27 +975,66 @@ class Dataset(da.Array):
             result = int(super().argmax(axis=axis, split_every=split_every, out=out))
         else:
             result = self.like_data(super().argmax(axis=axis, split_every=split_every, out=out),
-                    name_suffix = '_argmin_indices', reset_units = True, reset_quantity = True, check_dims = False)
+                    title_suffix = '_argmin_indices', reset_units = True, reset_quantity = True, check_dims = False)
 
         return result, locals().copy()
     
-
     def angle(self, deg = False):
-        return self.like_data(da.angle(self, deg = deg), reset_units = True, 
-            reset_quantity = True, name_suffix = '_angle', checkdims = True)
+        return self.like_data(da.angle(super(), deg = deg), reset_units = True, 
+            reset_quantity = True, title_suffix = '_angle', checkdims = True)
     
     def conj(self):
         return self.like_data(super().conj(), reset_units = True,
-            reset_quantity = True, name_suffix = '_conj', checkdims = True)
+            reset_quantity = True, title_suffix = '_conj', checkdims = True)
 
     def astype(self, dtype, **kwargs):
         return self.like_data(super().astype(dtype = dtype, **kwargs))
 
+    def flatten(self):
+        return self.like_data(super().flatten(), title_suffix = '_raveled',
+                check_dims = False)
+    
+    def ravel(self):
+        return self.flatten()
+
+    def clip(self, min=None, max=None):
+        return self.like_data(super().clip(min = min, max = max),
+                reset_quantity = True, title_suffix = '_clipped')
+    
+    def compute_chunk_sizes(self):
+        return self.like_data(super().compute_chunk_sizes())
+    
+    def cumprod(self, axis, dtype = None, out = None, method = 'sequential'):
+        if axis is None:
+            self = self.flatten()
+            axis = 0
+        
+        return self.like_data(super().cumprod(axis = axis, dtype=dtype, out=out, 
+                method=method), title_suffix = '_cumprod', reset_quantity = True)
+        
+    def cumsum(self, axis, dtype = None, out = None, method = 'sequential'):
+        if axis is None:
+            self = self.flatten()
+            axis = 0
+        
+        return self.like_data(super().cumsum(axis = axis, dtype=dtype, out=out, 
+                method=method), title_suffix = '_cumprod', reset_quantity = True)
+    
+    def transpose(self, *axes):
+        if axes is None:
+            new_axes_order = range(self.ndim)[::-1]
+        
+
+
+    
+    def view(self, dtype = None, order = 'C'):
+        return self.like_data(super().cumsum(dtype=dtype, order=order))
     
 
-    #Need to be edited
-    def ravel(self):
-        return self.like_data(super().ravel(), name_suffix = '_raveled')
+    
+   
+
+    #Following methods are to be edited
     
     def dot(self, other):
         return self.from_array(super().dot(other))
@@ -1011,7 +1051,7 @@ class Dataset(da.Array):
 
     def __abs__(self):
         print(super().__abs__.__name__)
-        return self.like_data(super().__abs__(), name_suffix = '_absolute_value')
+        return self.like_data(super().__abs__(), title_suffix = '_absolute_value')
 
     def __add__(self, other):
         return self.like_data(super().__add__(other))
@@ -1122,8 +1162,6 @@ class Dataset(da.Array):
         return self.like_data(super().__rmatmul__(other))
 
 
-    def clip(self, min=None, max=None):
-        return self.like_data(super().clip(min, max))
 
     def squeeze(self, axis=None):
         result = super().squeeze(axis=axis)
@@ -1244,7 +1282,7 @@ def convert_hyperspy(s):
             dataset.data_type = 'spectrum'
         elif s.data.ndim > 1:
             if s.data.ndim == 2:
-                dataset = Dataset.from_array(np.expand_dims(s, 2), name=s.metadata.General.title)
+                dataset = Dataset.from_array(np.expand_dims(s, 2), title=s.metadata.General.title)
                 dataset.set_dimension(2, Dimension([0], name='y', units='pixel',
                                                    quantity='distance', dimension_type='spatial'))
             dataset.data_type = DataType.SPECTRAL_IMAGE
