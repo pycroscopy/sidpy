@@ -19,6 +19,7 @@ from hashlib import new
 from functools import wraps
 from re import A
 import sys
+from collections.abc import Iterable, Iterator, Mapping
 
 import dask.array.core
 import numpy as np
@@ -263,14 +264,16 @@ class Dataset(da.Array):
             new_data.units = self.units
         
         
-        if (title is None):
-            if not(title_prefix or title_suffix):
-                new_data.title = self.title + "_new"
-        else:
+        if title is not None:
             new_data.title = title
+        else:
+            if not(title_prefix and title_suffix):
+                new_data.title = self.title
+            else:
+                new_data.title = self.title + '_new'
         
         new_data.title = title_prefix+new_data.title+title_suffix
-
+        
         #quantity
         if reset_quantity:
             new_data.quantity = 'generic'
@@ -305,7 +308,7 @@ class Dataset(da.Array):
         return new_data
 
     
-    def __reduce_dimensions(self, new_dataset, axes, keepdims):
+    def __reduce_dimensions(self, new_dataset, axes, keepdims = False):
         new_dataset._axes = {}
         if not keepdims:
             i = 0
@@ -326,18 +329,20 @@ class Dataset(da.Array):
         
         return new_dataset
 
-    # def __rearrange_axes(self, new_order = None):
-    #     """Rearranges the dimension order of the current instance
-    #     Parameters:
-    #         new_order: list or tuple of integers
+    def __rearrange_axes(self, new_dataset, new_order = None):
+        """Rearranges the dimension order of the current instance
+        Parameters:
+            new_order: list or tuple of integers
 
-    #     All the dimensions that are not in the new_order are deleted
-    #     """
-    #     new_axes = {}
-    #     for i in range(len(new_order)):
-    #         new_axes[i] = self._axes[new_order[i]]
+        All the dimensions that are not in the new_order are deleted
+        """
+        new_dataset._axes = {}
+
+
+        for i,dim in enumerate(new_order):
+            new_dataset.set_dimension(i, self._axes[dim])
         
-    #     self._axes = new_axes            
+        return new_dataset        
 
     def copy(self):
         """
@@ -865,7 +870,6 @@ class Dataset(da.Array):
             axis, keepdims = arguments.get('axis'), arguments.get('keepdims', False)
             if axis is None and not(keepdims):
                 return result
-
             if axis is None:
                 axes = list(np.arange(self.ndim))
             elif isinstance(axis, int):
@@ -980,8 +984,13 @@ class Dataset(da.Array):
         return result, locals().copy()
     
     def angle(self, deg = False):
-        return self.like_data(da.angle(super(), deg = deg), reset_units = True, 
+        result = self.like_data(da.angle(self, deg = deg), reset_units = True, 
             reset_quantity = True, title_suffix = '_angle', checkdims = True)
+        if deg:
+            result.units = 'degrees'
+        else:
+            result.units = 'radians'
+        return result
     
     def conj(self):
         return self.like_data(super().conj(), reset_units = True,
@@ -1020,30 +1029,81 @@ class Dataset(da.Array):
         return self.like_data(super().cumsum(axis = axis, dtype=dtype, out=out, 
                 method=method), title_suffix = '_cumprod', reset_quantity = True)
     
-    def transpose(self, *axes):
-        if axes is None:
-            new_axes_order = range(self.ndim)[::-1]
-        
+    #What happens to the dimensions??
+    def dot(self, other):
+        return self.from_array(super().dot(other))
 
+    def squeeze(self, axis = None):
+        result = self.like_data(super().squeeze(axis = axis), title_prefix = 'Squeezed_',
+                checkdims = False)
+        if axis is None:
+            shape_list = list(self.shape)
+            axes = [i for i in range(self.ndim) if shape_list[i]==1]
+        elif isinstance(axis, int):
+            axes = [axis]
+        else:
+            axes = list(axis)
+
+        return self.__reduce_dimensions(result, axes, keepdims = False)
+    
+    def swapaxes(self, axis1, axis2):
+        result =  self.like_data(super().swapaxes(axis1, axis2), 
+                title_prefix = 'Swapped_axes', checkdims = False)
+        new_order = np.arange(self.ndim)
+        new_order[axis1] = axis2
+        new_order[axis2] = axis1
+        print(new_order)
+        return self.__rearrange_axes(result, new_order)
+
+    def transpose(self, *axes):
+        result =  self.like_data(super().transpose(*axes), 
+                title_prefix = 'Transposed', checkdims = False)
+        if not axes:
+            new_axes_order = range(self.ndim)[::-1]
+        elif len(axes) == 1 and isinstance(axes[0], Iterable):
+            new_axes_order = axes[0]
+        else:
+            new_axes_order = axes
+        return self.__rearrange_axes(result, new_axes_order)
 
     
-    def view(self, dtype = None, order = 'C'):
-        return self.like_data(super().cumsum(dtype=dtype, order=order))
+    
+
     
 
     
    
 
     #Following methods are to be edited
-    
-    def dot(self, other):
-        return self.from_array(super().dot(other))
 
-    def transpose(self, *axes):
-        if axes is None:
-            new_axes_order = range(self.ndim)[::-1]
-        return self.__rearrange_axes(self.like_data(super().transpose(*axes), 
-            name_suffix = '_transposed'), new_axes_order)
+    def adjust_axis(self, result, axis, title='', keepdims=False):
+        if not keepdims:
+            dim = 0
+            dataset = self.from_array(result)
+            if isinstance(axis, int):
+                axis = [axis]
+
+            # for ax, dimension in self._axes.items():
+            #    if int(ax) not in axis:
+            #        delattr(self, dimension.name)
+            #        delattr(self, f'dim_{ax}')
+            #        del self._axes[ax]
+
+            for ax, dimension in self._axes.items():
+                if int(ax) not in axis:
+                    dataset.set_dimension(dim, dimension)
+                    dim += 1
+        else:
+            dataset = self.like_data(result)
+        dataset.title = title + self.title
+        dataset.modality = f'sum axis {axis}'
+        dataset.quantity = self.quantity
+        dataset.source = self.source
+        dataset.units = self.units
+
+        return dataset
+
+
 
     def choose(self, choices):
         return self.like_data(super().choose(choices))
@@ -1162,57 +1222,6 @@ class Dataset(da.Array):
         return self.like_data(super().__rmatmul__(other))
 
 
-
-    def squeeze(self, axis=None):
-        result = super().squeeze(axis=axis)
-        if axis is None:
-            axis = []
-            for index, ax in enumerate(self.shape):
-                if ax == 1:
-                    axis.append(index)
-        return self.adjust_axis(result, axis, title='Squeezed_')
-
-    def adjust_axis(self, result, axis, title='', keepdims=False):
-        if not keepdims:
-            dim = 0
-            dataset = self.from_array(result)
-            if isinstance(axis, int):
-                axis = [axis]
-
-            # for ax, dimension in self._axes.items():
-            #    if int(ax) not in axis:
-            #        delattr(self, dimension.name)
-            #        delattr(self, f'dim_{ax}')
-            #        del self._axes[ax]
-
-            for ax, dimension in self._axes.items():
-                if int(ax) not in axis:
-                    dataset.set_dimension(dim, dimension)
-                    dim += 1
-        else:
-            dataset = self.like_data(result)
-        dataset.title = title + self.title
-        dataset.modality = f'sum axis {axis}'
-        dataset.quantity = self.quantity
-        dataset.source = self.source
-        dataset.units = self.units
-
-        return dataset
-
-    def swapaxes(self, axis1, axis2):
-        result = super().swapaxes(axis1, axis2)
-        dataset = self.from_array(result)
-
-        delattr(self, self._axes[axis1].name)
-        delattr(self, self._axes[axis2].name)
-        del dataset._axes[axis1]
-        del dataset._axes[axis2]
-
-        dataset.set_dimension(axis1, self._axes[axis2])
-        dataset.set_dimension(axis2, self._axes[axis1])
-
-        return dataset
-
     def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
         out = kwargs.get("out", ())
 
@@ -1248,10 +1257,6 @@ class Dataset(da.Array):
         else:
             return NotImplemented
 
-
-
-
-    # def prod(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
 
 
 def convert_hyperspy(s):
