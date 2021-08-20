@@ -6,6 +6,7 @@ Created on Fri Sep 18 17:07:16 2020
 """
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
+from os import name
 import unittest
 
 import numpy as np
@@ -88,11 +89,11 @@ class TestDatasetConstructor(unittest.TestCase):
         validate_dataset_properties(self, descriptor, np.arange(3))
 
     def test_all_inputs(self):
-        descriptor = Dataset.from_array(np.arange(3), name='test')
+        descriptor = Dataset.from_array(np.arange(3), title='test')
         validate_dataset_properties(self, descriptor, np.arange(3), title='test')
 
     def test_user_defined_parms(self):
-        descriptor = Dataset.from_array(np.arange(3), name='test')
+        descriptor = Dataset.from_array(np.arange(3), title='test')
 
         for att in generic_attributes:
             setattr(descriptor, att, 'test')
@@ -235,7 +236,7 @@ class TestDatasetRepr(unittest.TestCase):
         actual = '{}'.format(descriptor)
 
         out = 'generic'
-        da_array = da.from_array(values, chunks='auto', name='generic')
+        da_array = da.from_array(values, chunks='auto')
 
         expected = 'sidpy.Dataset of type {} with:\n '.format(DataType.UNKNOWN.name)
         expected = expected + '{}'.format(da_array)
@@ -263,7 +264,7 @@ class TestDatasetRepr(unittest.TestCase):
         actual = '{}'.format(descriptor)
 
         out = 'test'
-        da_array = da.from_array(values, chunks='auto', name='generic')
+        da_array = da.from_array(values, chunks='auto')
 
         expected = 'sidpy.Dataset of type {} with:\n '.format(DataType.UNKNOWN.name)
         expected = expected + '{}'.format(da_array)
@@ -306,7 +307,7 @@ class TestLikeData(unittest.TestCase):
         values = np.zeros([4, 5])
         descriptor = source_dset.like_data(values)
 
-        self.assertEqual(descriptor.title, 'like test')
+        self.assertEqual(descriptor.title, 'test_new')
         descriptor.title = 'test'
         self.assertTrue(np.all([getattr(descriptor, att) == 'test' for att in generic_attributes]))
 
@@ -384,7 +385,7 @@ class TestRenameDimension(unittest.TestCase):
     def test_index_out_of_bounds(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
-        with self.assertRaises(KeyError):
+        with self.assertRaises(IndexError):
             descriptor.rename_dimension(3, 'v')
 
     def test_invalid_name_object_types(self):

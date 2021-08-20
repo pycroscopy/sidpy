@@ -178,7 +178,7 @@ class Dataset(da.Array):
     @classmethod
     def from_array(cls, x, title='generic', chunks='auto',  lock=False, 
                     datatype = 'UNKNOWN', units = 'generic', quantity = 'generic', 
-                    modality = 'generic', source = 'source', **kwargs):
+                    modality = 'generic', source = 'generic', **kwargs):
         """
         Initializes a sidpy dataset from an array-like object (i.e. numpy array)
         All meta-data will be set to be generically.
@@ -268,7 +268,7 @@ class Dataset(da.Array):
         if title is not None:
             new_data.title = title
         else:
-            if not(title_prefix and title_suffix):
+            if (title_prefix and title_suffix):
                 new_data.title = self.title
             else:
                 new_data.title = self.title + '_new'
