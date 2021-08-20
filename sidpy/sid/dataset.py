@@ -20,6 +20,7 @@ from functools import wraps
 from re import A
 import sys
 from collections.abc import Iterable, Iterator, Mapping
+import warnings
 
 import dask.array.core
 import numpy as np
@@ -1048,7 +1049,7 @@ class Dataset(da.Array):
     
     def swapaxes(self, axis1, axis2):
         result =  self.like_data(super().swapaxes(axis1, axis2), 
-                title_prefix = 'Swapped_axes', checkdims = False)
+                title_prefix = 'Swapped_axes_', checkdims = False)
         new_order = np.arange(self.ndim)
         new_order[axis1] = axis2
         new_order[axis2] = axis1
@@ -1057,7 +1058,7 @@ class Dataset(da.Array):
 
     def transpose(self, *axes):
         result =  self.like_data(super().transpose(*axes), 
-                title_prefix = 'Transposed', checkdims = False)
+                title_prefix = 'Transposed_', checkdims = False)
         if not axes:
             new_axes_order = range(self.ndim)[::-1]
         elif len(axes) == 1 and isinstance(axes[0], Iterable):
@@ -1065,14 +1066,99 @@ class Dataset(da.Array):
         else:
             new_axes_order = axes
         return self.__rearrange_axes(result, new_axes_order)
+    
+    def round(self, decimals = 0):
+        return self.like_data(super().round(decimals = decimals),
+                title_prefix = 'Rounded_')
+
+    def reshape(self, *shape, merge_chunks = True):
+        #This somehow adds an extra dimension at the end
+        # Will come back to this
+        warnings.warn('Dimensional information will be lost.\
+                Please use fold unfold to combine dimensions')
+        if len(shape) == 1 and isinstance(shape[0], Iterable):
+            new_shape = shape[0]
+        else: 
+            new_shape = shape
+        print(new_shape)
+        return super().reshape(*new_shape, merge_chunks)
+    
+    @reduce_dims
+    def prod(self, axis=None, dtype=None, keepdims=False, 
+            split_every=None, out=None):
+        if axis is None and not(keepdims):
+            result = float(super().prod())
+        
+        else:
+            result = self.like_data(super().prod(axis = axis, dtype = dtype, keepdims = keepdims,
+                    split_every = split_every, out = out), checkdims = False)
+        return result, locals().copy()
+    
+    @reduce_dims
+    def trace(self, offset=0, axis1 = 0, axis2 = 1, dtype=None):
+        
+        if self.ndim == 2:
+            axes = None
+            result = float(super().trace(offset = offset))
+        
+        else:
+            axes = [axis1, axis2]
+            result = self.like_data(super().trace(offset = offset, axis1 = axis1,
+                    axis2 = axis2, dtype = None), title_prefix = 'Trace_', checkdims = False)
+        local_args = locals().copy()
+        local_args['axis'] = axes
+        return result, local_args
+
+    def repeat(self, repeats, axis = None):
+        result = self.like_data(super().repeat(repeats = repeats, axis = axis), 
+                title_prefix = 'Repeated_', checkdims = False)
+        
+        result._axes = {}
+        for i, dim in self._axes.items():
+            if axis != i:
+                new_dim = dim.copy()
+            else:
+                new_dim = Dimension(np.repeat(dim.values, repeats = repeats),
+                         name=dim.name, quantity=dim.quantity, 
+                        units=dim.units, dimension_type=dim.dimension_type) 
+            result.set_dimension(i, new_dim)
+        
+        return result
+    
+    @reduce_dims
+    def moment(self, order, axis=None, dtype=None,
+        keepdims=False, ddof=0, split_every=None,
+        out=None):
+
+        if axis is None and not(keepdims):
+            result = float(super().moment(order = order))
+        
+        else:
+            result = self.like_data(super().moment(order = order, 
+                    axis = axis, 
+                    dtype = dtype, keepdims = keepdims,
+                    ddof = 0, split_every = split_every,
+                     out = out), checkdims = False)
+        return result, locals().copy()
+
+    def persist(self, **kwargs):
+        return self.like_data(super().persist(**kwargs), 
+                title_prefix = 'persisted_')
+    
+    def rechunk(self, chunks, threshold, block_size_limit, balance):
+        return self.like_data(super().rechunk(chunks=chunks, 
+                threshold=threshold, 
+                block_size_limit=block_size_limit, 
+                balance=balance), title_prefix = 'Rechunked_')
 
     
-    
+        
+        
+        
 
-    
 
-    
-   
+     
+  
 
     #Following methods are to be edited
 
