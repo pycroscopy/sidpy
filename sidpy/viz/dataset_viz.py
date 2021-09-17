@@ -667,6 +667,7 @@ class FourDimImageVisualizer(object):
 
         image_x = kwargs.pop('image_4d_x', None)
         image_y = kwargs.pop('image_4d_y', None)
+        self.gamma = kwargs.pop('gamma', False)
         for dim, axis in dset._axes.items():
             if axis.dimension_type in [DimensionType.SPATIAL]:
                 if scan_y is None:
@@ -721,14 +722,22 @@ class FourDimImageVisualizer(object):
 
         self.image_dims = image_dims
         self.dims_4d = dims_4d
+        if is_complex_dtype(dset.dtype):
+            number_of_plots = 3
+        else:
+            number_of_plots = 3
+
 
         if horizontal:
-            self.axes = self.fig.subplots(ncols=2)
+            self.axes = self.fig.subplots(ncols=number_of_plots)
         else:
-            self.axes = self.fig.subplots(nrows=2, **fig_args)
+            self.axes = self.fig.subplots(nrows=number_of_plots, **fig_args)
 
         self.fig.canvas.manager.set_window_title(self.dset.title)
         self.image = np.array(dset).mean(axis=tuple(dims_4d))
+        if is_complex_dtype(dset.dtype):
+            self.image = np.abs(np.array(dset)).mean(axis=tuple(dims_4d))
+            
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         if horizontal:
@@ -744,14 +753,25 @@ class FourDimImageVisualizer(object):
         self.axes[0].add_patch(self.rect)
         self.intensity_scale = 1.
         self.image_4d = self.get_image_4d()
-
+        if is_complex_dtype(dset.dtype):    
+            self.image_4d = np.abs(self.image_4d)
+        if self.gamma:
+            self.image_4d = np.log(1+self.image_4d)
         self.axes[1].imshow(self.image_4d)
-        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+        self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
         self.xlabel = self.dset.labels[self.dims_4d[0]]
         self.ylabel = self.dset.labels[self.dims_4d[1]]
         self.axes[1].set_xlabel(self.xlabel)  # + x_suffix)
         self.axes[1].set_ylabel(self.ylabel)
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+        if is_complex_dtype(dset.dtype):
+            self.axes[2].imshow(np.angle(self.image_4d))
+            self.axes[1].set_title('power {}, {}'.format(self.x, self.y))
+            self.axes[2].set_title('phase {}, {}'.format(self.x, self.y))
+            self.axes[2].set_xlabel(self.xlabel)  # + x_suffix)
+            self.axes[2].set_ylabel(self.ylabel)
+            self.axes[2].ticklabel_format(style='sci', scilimits=(-2, 3))
+            
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
@@ -841,10 +861,22 @@ class FourDimImageVisualizer(object):
         ylim = self.axes[1].get_ylim()
         self.axes[1].clear()
         self.get_image_4d()
-
+        if is_complex_dtype(self.dset.dtype):
+            self.axes[2].clear()
+            self.image_4d = np.abs(self.image_4d)
+            self.axes[2].imshow(np.angle(self.image_4d))
+            self.axes[1].set_title('power {}, {}'.format(self.x, self.y))
+            self.axes[2].set_title('phase {}, {}'.format(self.x, self.y))
+            self.axes[2].set_xlabel(self.xlabel)  # + x_suffix)
+            self.axes[2].set_ylabel(self.ylabel)
+            self.axes[2].ticklabel_format(style='sci', scilimits=(-2, 3))
+        else:
+            self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
+        if self.gamma:
+            self.image_4d = np.log(1+self.image_4d)
         self.axes[1].imshow(self.image_4d)
 
-        self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
+        
 
         self.axes[1].set_xlim(xlim)
         self.axes[1].set_ylim(ylim)
