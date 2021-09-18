@@ -68,6 +68,82 @@ def validate_dataset_properties(self, dataset, values, name='generic',
     self.assertFalse(hasattr(dataset, string.ascii_lowercase[len(values.shape)]))
 
 
+# Following 4 methods are used in testing the methods that reduce dimensions of the dataset
+def test_single_axis(self, func, **kwargs):
+    dset_np = np.random.rand(4,1,5)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset, func)
+    dset_1 = sid_func(axis=0, keepdims = False)
+    dim_dict = {0: dset._axes[1].copy(), 1: dset._axes[2].copy()}
+
+    title_prefix = kwargs.get('title_prefix')
+    validate_dataset_properties(self, dset_1, np_func(axis = 0, keepdims = False),
+                                 title = title_prefix+dset.title,
+                                 modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                 data_type=DataType.UNKNOWN,
+                                 metadata={}, original_metadata={}
+                                 )
+def test_multiple_axes(self, func, **kwargs):
+    dset_np = np.random.rand(1, 6, 4)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset, func)
+    dset_1 = sid_func(axis=(0,1), keepdims=False)
+    dim_dict = {0: dset._axes[2].copy()}
+
+    title_prefix = kwargs.get('title_prefix')
+    validate_dataset_properties(self, dset_1, np_func(axis = (0,1), keepdims = False),
+                                 title=title_prefix+dset.title,
+                                 modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                 data_type=DataType.UNKNOWN,
+                                 metadata={}, original_metadata={}
+                                 )
+def test_keepdims(self, func, **kwargs):
+    dset_np = np.random.rand(2, 1, 4)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset, func)
+
+    dset_1 = sid_func(axis=0, keepdims=True)
+
+    dim_dict = dset._axes.copy()
+    dim_dict[0] = Dimension(np.arange(1), name=dset._axes[0].name,
+                              quantity=dset._axes[0].quantity, units=dset._axes[0].units,
+                              dimension_type=dset._axes[0].dimension_type)
+
+
+
+    title_prefix = kwargs.get('title_prefix')
+    validate_dataset_properties(self, dset_1, np_func(axis=0, keepdims=True),
+                                title=title_prefix+dset.title,
+                                modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                data_type=DataType.UNKNOWN,
+                                metadata={}, original_metadata={}
+                                )
+def test_keepdims_multiple_axes(self, func, **kwargs):
+    dset_np = np.random.rand(1, 5, 4)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset, func)
+    title_prefix = kwargs.get('title_prefix')
+
+    dset_1 = sid_func(axis = (0,1), keepdims = True)
+    dim_dict = dset._axes.copy()
+    dim_dict[0] = Dimension(np.arange(1), name=dset._axes[0].name,
+                              quantity=dset._axes[0].quantity, units=dset._axes[0].units,
+                              dimension_type=dset._axes[0].dimension_type)
+    dim_dict[1] = Dimension(np.arange(1), name=dset._axes[1].name,
+                              quantity=dset._axes[1].quantity, units=dset._axes[1].units,
+                              dimension_type=dset._axes[1].dimension_type)
+    validate_dataset_properties(self, dset_1, np_func(axis = (0,1), keepdims = True),
+                                 title=title_prefix+dset.title,
+                                 modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                 data_type=DataType.UNKNOWN,
+                                 metadata={}, original_metadata={}
+                                 )
+
+
 class TestDatasetFromArray(unittest.TestCase):
 
     def test_std_inputs(self):
