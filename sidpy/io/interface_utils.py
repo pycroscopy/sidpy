@@ -40,8 +40,7 @@ class open_file_dialog(ipyfilechooser.FileChooser):
                 self._selected_filename,
                 'green'
             )
-        
-        save_path(selected)
+
         
     def _set_form_values(self, path: str, filename: str) -> None:
         """Set the form values."""
