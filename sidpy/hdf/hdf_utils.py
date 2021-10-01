@@ -19,7 +19,7 @@ from dask import array as da
 from sidpy.__version__ import version as sidpy_version
 from sidpy.base.string_utils import validate_single_string_arg, \
     validate_list_of_strings, clean_string_att, get_time_stamp
-from sidpy.base.dict_utils import flatten_dict
+# from sidpy.base.dict_utils import flatten_dict
 
 if sys.version_info.major == 3:
     unicode = str
@@ -402,26 +402,49 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
             if verbose:
                 print('taking the name: {} of Enum: {}'.format(val.name, val))
             val = val.name
+
+        if isinstance(val, list):
+            dictionaries = False
+            for item in val:
+                if isinstance(item, dict):
+                    dictionaries = True
+                    break
+            if dictionaries:
+                new_val = {}
+                for key, item in enumerate(val):
+                    new_val[str(key)] = item
+                val = new_val
+
         if isinstance(val, dict):
-            raise ValueError('provided dictionary was nested, not flat. '
-                             'Flatten dictionary using sidpy.base.dict_utils.'
-                             'flatten_dict before calling sidpy.hdf.hdf_utils.'
-                             'write_simple_attrs')
+            if isinstance(h5_obj, h5py.Dataset):
+                raise ValueError('provided dictionary was nested, not flat. '
+                                 'Flatten dictionary using sidpy.base.dict_utils.'
+                                 'flatten_dict before calling sidpy.hdf.hdf_utils.'
+                                 'write_simple_attrs')
+            else:
+                new_object = h5_obj.create_group(str(key))
+                write_simple_attrs(new_object, val, force_to_str=True, verbose=False)
+            
         if verbose:
             print('Writing attribute: {} with value: {}'.format(key, val))
-        clean_val = clean_string_att(val)
-        if verbose:
-            print('Attribute cleaned into: {}'.format(clean_val))
-        try:
-            h5_obj.attrs[key] = clean_val
-        except Exception as excp:
-            if force_to_str:
-                warn('Casting attribute value: {} of type: {} to str'
-                     ''.format(val, type(val)))
-                h5_obj.attrs[key] = str(val)
-            else:
-                raise excp('Could not write attribute value: {} of type: {}'
-                           ''.format(val, type(val)))
+        
+        if not (isinstance(val, dict)):  # not sure how this can happen
+            if verbose:
+                print(key,val)
+            clean_val = clean_string_att(val)
+            
+            if verbose:
+                print('Attribute cleaned into: {}'.format(clean_val))
+            try:
+                h5_obj.attrs[key] = clean_val
+            except Exception as excp:
+                if force_to_str:
+                    warn('Casting attribute value: {} of type: {} to str'
+                        ''.format(val, type(val)))
+                    h5_obj.attrs[key] = str(val)
+                else:
+                    raise excp('Could not write attribute value: {} of type: {}'
+                            ''.format(val, type(val)))
     if verbose:
         print('Wrote all (simple) attributes to {}: {}\n'
               ''.format(type(h5_obj), h5_obj.name.split('/')[-1]))
@@ -750,8 +773,8 @@ def write_dict_to_h5_group(h5_group, metadata, group_name):
 
     Notes
     -----
-    Nested dictionaries will be flattened until sidpy implements functions
-    to write and read nested dictionaries to and from HDF5 files
+    Writes now (sidpy version 0.0.6) nested dictionaries to HDF5 files.
+    Use h5_group_to_dict to read from HDF5 file.
     """
     if not isinstance(metadata, dict):
         raise TypeError('metadata is not a dict but of type: {}'
@@ -765,6 +788,32 @@ def write_dict_to_h5_group(h5_group, metadata, group_name):
     validate_single_string_arg(group_name, 'group_name')
     group_name = group_name.replace(' ', '_')
     h5_md_group = h5_group.create_group(group_name)
-    flat_dict = flatten_dict(metadata)
-    write_simple_attrs(h5_md_group, flat_dict)
+    # flat_dict = flatten_dict(metadata)
+    write_simple_attrs(h5_md_group, metadata)
     return h5_md_group
+
+
+def h5_group_to_dict(group, group_dict={}):
+    """ 
+    Reads a hdf5 group into a nested dictionary
+    
+    Parameters
+    ----------
+    group: hdf5.Group
+        starting group to read from
+    group_dict: dict
+        group dictionary; mostly needed for recursive reading of nested groups but can be used for initialization
+    Returns
+    -------
+    group_dict: dict
+    """
+
+    if not isinstance(group, h5py.Group):
+        raise TypeError('we need a hypy group to read from')
+    if not isinstance(group_dict, dict):
+        raise TypeError('group_dict needs to be a pytho dictionary')
+        
+    group_dict[group.name.split('/')[-1]] = dict(group.attrs)
+    for key in group.keys():
+         h5_group_to_dict(group[key], group_dict[group.name.split('/')[-1]])
+    return group_dict

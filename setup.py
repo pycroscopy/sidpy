@@ -20,6 +20,7 @@ requirements = ['numpy>=1.10',
                 'distributed>=2.0.0'
                 'psutil',
                 'six',
+                'ipyfilechooser',
                 'joblib>=0.11.0',
                 'ipywidgets>=5.2.2',
                 'ipython>=5.1.0,<6;python_version<"3.3"',  # IPython 6.0+ does not support Python 2.6, 2.7, 3.0, 3.1, or 3.2
