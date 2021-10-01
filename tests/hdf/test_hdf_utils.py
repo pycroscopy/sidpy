@@ -1383,7 +1383,7 @@ class TestWriteDictToH5Group(unittest.TestCase):
 
     def test_metadata_is_nested(self):
         metadata = {'a': 4, 'b': {'c': 2.353, 'd': 'nested'}}
-        # flat_md = flatten_dict(metadata)
+        flat_md = metadata
         group_name = 'blah'
         with tempfile.TemporaryDirectory() as tmp_dir:
             file_path = tmp_dir + 'write_dict_to_h5_group.h5'
