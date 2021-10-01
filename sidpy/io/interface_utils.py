@@ -168,11 +168,6 @@ class open_file_dialog(ipyfilechooser.FileChooser):
                 basename, extension = os.path.splitext(name)
                 if extension in ['.hf5']:
                     dircontent_display_names[i] = f" {dircontent_display_names[i]:50}  -- {size:.1f} MB"
-                
-                elif extension in ['.h5', '.ndata']:
-                    reader = NionReader(full_name)
-                    dataset_nion = reader.read()
-                    dircontent_display_names[i] = f"   {dataset_nion.title+extension:50}  - {size:.1f} MB"
                 else:
                     dircontent_display_names[i] = dircontent_display_names[i]
             
