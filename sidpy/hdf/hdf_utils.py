@@ -438,13 +438,15 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
             try:
                 h5_obj.attrs[key] = clean_val
             except Exception as excp:
-                if force_to_str:
-                    warn('Casting attribute value: {} of type: {} to str'
-                        ''.format(val, type(val)))
-                    h5_obj.attrs[key] = str(val)
-                else:
-                    raise excp('Could not write attribute value: {} of type: {}'
+                if verbose:
+                    if force_to_str:
+                        warn('Casting attribute value: {} of type: {} to str'
                             ''.format(val, type(val)))
+                        h5_obj.attrs[key] = str(val)
+                    else:
+                        raise excp('Could not write attribute value: {} of type: {}'
+                                ''.format(val, type(val)))
+
     if verbose:
         print('Wrote all (simple) attributes to {}: {}\n'
               ''.format(type(h5_obj), h5_obj.name.split('/')[-1]))

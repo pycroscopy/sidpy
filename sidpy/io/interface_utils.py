@@ -10,6 +10,7 @@ Created on Tue Aug  3 21:14:25 2020
 from __future__ import division, print_function, absolute_import, unicode_literals
 import os
 import sys
+import warnings
 import ipyfilechooser
 
 if sys.version_info.major == 3:
@@ -19,8 +20,9 @@ if sys.version_info.major == 3:
 
 class open_file_dialog(ipyfilechooser.FileChooser):
     def __init__(self, directory='.'):
-        super().__init__(directory) 
         self._use_dir_icons = True
+        super().__init__(directory) 
+
         
         
     def _apply_selection(self):
@@ -72,7 +74,7 @@ class open_file_dialog(ipyfilechooser.FileChooser):
         dircontent_real_names = ipyfilechooser.utils.get_dir_contents(
             path,
             show_hidden=self._show_hidden,
-            prepend_icons=False,
+            dir_icon_append=False,
             show_only_dirs=self._show_only_dirs,
             filter_pattern=self._filter_pattern
         )
@@ -81,7 +83,7 @@ class open_file_dialog(ipyfilechooser.FileChooser):
         dircontent_display_names = ipyfilechooser.utils.get_dir_contents(
             path,
             show_hidden=self._show_hidden,
-            prepend_icons=self._use_dir_icons,
+            dir_icon_append=self._use_dir_icons,
             show_only_dirs=self._show_only_dirs,
             filter_pattern=self._filter_pattern
         )
@@ -403,6 +405,7 @@ def progress_bar(title='Progress', start=0, stop=100):
     >>>      progress.setValue(count)
     """
     # Check whether QT is available
+    warnings.warn("progress_bar() is deprecated; use tqdm package instead", warnings.DeprecationWarning)
     try:
         from PyQt5 import QtGui, QtWidgets, QtCore
     except ImportError:
