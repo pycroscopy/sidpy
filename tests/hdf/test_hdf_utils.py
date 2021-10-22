@@ -231,15 +231,15 @@ class TestGetH5ObjRefs(TestHDFUtilsBase):
     def test_many(self):
         with h5py.File(data_utils.std_beps_path, mode='r') as h5_f:
             h5_obj_refs = [h5_f,
-                              4.123,
-                              np.arange(6),
-                              h5_f['/Raw_Measurement/Position_Indices'],
-                              h5_f['/Raw_Measurement/source_main-Fitter_000'],
-                              h5_f['/Raw_Measurement/source_main-Fitter_000/Spectroscopic_Indices'],
-                              h5_f['/Raw_Measurement/Spectroscopic_Values']]
+                           4.123,
+                           np.arange(6),
+                           h5_f['/Raw_Measurement/Position_Indices'],
+                           h5_f['/Raw_Measurement/source_main-Fitter_000'],
+                           h5_f['/Raw_Measurement/source_main-Fitter_000/Spectroscopic_Indices'],
+                           h5_f['/Raw_Measurement/Spectroscopic_Values']]
             chosen_objs = [h5_f['/Raw_Measurement/Position_Indices'],
-                              h5_f['/Raw_Measurement/source_main-Fitter_000'],
-                              h5_f['/Raw_Measurement/source_main-Fitter_000/Spectroscopic_Indices']]
+                           h5_f['/Raw_Measurement/source_main-Fitter_000'],
+                           h5_f['/Raw_Measurement/source_main-Fitter_000/Spectroscopic_Indices']]
 
             target_ref_names = ['Position_Indices', 'source_main-Fitter_000', 'Spectroscopic_Indices']
 
@@ -250,12 +250,12 @@ class TestGetH5ObjRefs(TestHDFUtilsBase):
     def test_single(self):
         with h5py.File(data_utils.std_beps_path, mode='r') as h5_f:
             h5_obj_refs = [h5_f,
-                              4.123,
-                              np.arange(6),
-                              h5_f['/Raw_Measurement/Position_Indices'],
-                              h5_f['/Raw_Measurement/source_main-Fitter_000'],
-                              h5_f['/Raw_Measurement/source_main-Fitter_000/Spectroscopic_Indices'],
-                              h5_f['/Raw_Measurement/Spectroscopic_Values']]
+                           4.123,
+                           np.arange(6),
+                           h5_f['/Raw_Measurement/Position_Indices'],
+                           h5_f['/Raw_Measurement/source_main-Fitter_000'],
+                           h5_f['/Raw_Measurement/source_main-Fitter_000/Spectroscopic_Indices'],
+                           h5_f['/Raw_Measurement/Spectroscopic_Values']]
             chosen_objs = [h5_f['/Raw_Measurement/Position_Indices']]
 
             target_ref_names = ['Position_Indices']
@@ -324,7 +324,7 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
         data_utils.delete_existing_file(file_path)
         with h5py.File(file_path, mode='w') as h5_f:
             h5_group = h5_f.create_group('Blah')
-            #with self.assertRaises(TypeError):
+            # with self.assertRaises(TypeError):
             #    hdf_utils.write_simple_attrs(h5_group, {'att_1': [{'a': 'b'}]})
         os.remove(file_path)
 
@@ -405,10 +405,10 @@ class TestWriteSimpleAttrs(TestHDFUtilsBase):
             attrs = {'att_1': 'string_val',
                      'att_2': {'attr_3': [1, 2, 3.14, 4],
                                'att_4': ['s', 'tr', 'str_3']},
-                               'att_5': {'att_6': 4},
+                     'att_5': {'att_6': 4},
                      }
-           # with self.assertRaises(ValueError):
-           #     hdf_utils.write_simple_attrs(h5_group, attrs)
+            # with self.assertRaises(ValueError):
+            #     hdf_utils.write_simple_attrs(h5_group, attrs)
 
         os.remove(file_path)
 
@@ -670,7 +670,7 @@ class TestWriteBookKeepingAttrs(unittest.TestCase):
         data_utils.delete_existing_file(file_path)
         with h5py.File(file_path, mode='w') as h5_f:
             hdf_utils.write_book_keeping_attrs(h5_f)
-            data_utils.verify_book_keeping_attrs (self, h5_f)
+            data_utils.verify_book_keeping_attrs(self, h5_f)
         os.remove(file_path)
 
     def test_group(self):
@@ -679,7 +679,7 @@ class TestWriteBookKeepingAttrs(unittest.TestCase):
         with h5py.File(file_path, mode='w') as h5_f:
             h5_g = h5_f.create_group('group')
             hdf_utils.write_book_keeping_attrs(h5_g)
-            data_utils.verify_book_keeping_attrs (self, h5_g)
+            data_utils.verify_book_keeping_attrs(self, h5_g)
         os.remove(file_path)
 
     def test_dset(self):
@@ -688,7 +688,7 @@ class TestWriteBookKeepingAttrs(unittest.TestCase):
         with h5py.File(file_path, mode='w') as h5_f:
             h5_dset = h5_f.create_dataset('dset', data=[1, 2, 3])
             hdf_utils.write_book_keeping_attrs(h5_dset)
-            data_utils.verify_book_keeping_attrs (self, h5_dset)
+            data_utils.verify_book_keeping_attrs(self, h5_dset)
         os.remove(file_path)
 
     def test_invalid(self):
@@ -1135,6 +1135,7 @@ class TestCopyDataset(TestHDFUtilsBase):
         self.base_test(exist_dset_same_data=False, use_alias=False,
                        exist_dset_diff_data_shape=False,
                        exist_dset_diff_data=True, exist_grp_inst_dset=False)
+
 
 """
     def test_linking_main_plus_other_dsets(self):
