@@ -417,6 +417,7 @@ class SpectralImageVisualizer(object):
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
         from ..sid.dataset import Dataset
         from ..sid.dimension import DimensionType
+        import matplotlib.widgets
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -601,7 +602,21 @@ class SpectralImageVisualizer(object):
 
                     self.rect.set_xy([self.x * self.rect.get_width() / self.bin_x + self.rectangle[0],
                                       self.y * self.rect.get_height() / self.bin_y + self.rectangle[2]])
-        self._update()
+            self._update()
+        else:
+            if event.dblclick:
+                bottom = float(self.spectrum.min())
+                if bottom < 0:
+                    bottom *= 1.02
+                else:
+                    bottom *= 0.98
+                top = float(self.spectrum.max())
+                if top > 0:
+                    top *= 1.02
+                else:
+                    top *= 0.98
+
+                self.axes[1].set_ylim(bottom=bottom, top=top)
 
     def _update(self, ev=None):
 
