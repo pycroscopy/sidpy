@@ -27,7 +27,7 @@ if sys.version_info.major == 3:
 
 def print_tree(parent, rel_paths=False):
     """
-    Simple function to recursively print the contents of an hdf5 group
+    Simple function to recursively print the contents of a hdf5 group
 
     Parameters
     ----------
@@ -178,12 +178,11 @@ def get_attributes(h5_object, attr_names=None, strict=False):
         try:
             att_dict[attr] = get_attr(h5_object, attr)
         except KeyError:
-            mesg = '"{}" is not an attribute of {}'.format(attr,
-                                                           h5_object.name)
+            message = '"{}" is not an attribute of {}'.format(attr, h5_object.name)
             if strict:
-                raise KeyError(mesg)
+                raise KeyError(message)
             else:
-                warn(mesg)
+                warn(message)
 
     return att_dict
 
@@ -292,7 +291,7 @@ def link_h5_obj_as_alias(h5_main, h5_ancillary, alias_name):
     Parameters
     ------------
     h5_main : h5py.Dataset
-        Reference to the the object to which attributes will be added
+        Reference to the object to which attributes will be added
     h5_ancillary : h5py.Dataset
         object whose reference that can be accessed from src.attrs
     alias_name : String
@@ -339,13 +338,13 @@ def is_editable_h5(h5_obj):
 
 def write_book_keeping_attrs(h5_obj):
     """
-    Writes basic book-keeping and posterity related attributes to groups
+    Writes basic bookkeeping and posterity related attributes to groups
     created using sidpy such as machine id, version, timestamp.
 
     Parameters
     ----------
     h5_obj : :class:`h5py.Dataset`, :class:`h5py.Group`, or :class:`h5py.File`
-        Object to which basic book-keeping attributes need to be written
+        Object to which basic bookkeeping attributes need to be written
 
     """
     if not isinstance(h5_obj, (h5py.Group, h5py.File, h5py.Dataset)):
@@ -411,8 +410,8 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
                     break
             if dictionaries:
                 new_val = {}
-                for key, item in enumerate(val):
-                    new_val[str(key)] = item
+                for key2, item in enumerate(val):
+                    new_val[str(key2)] = item
                 val = new_val
 
         if isinstance(val, dict):
@@ -430,7 +429,7 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
         
         if not (isinstance(val, dict)):  # not sure how this can happen
             if verbose:
-                print(key,val)
+                print(key, val)
             clean_val = clean_string_att(val)
             
             if verbose:
@@ -440,12 +439,10 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
             except Exception as excp:
                 if verbose:
                     if force_to_str:
-                        warn('Casting attribute value: {} of type: {} to str'
-                            ''.format(val, type(val)))
+                        warn('Casting attribute value: {} of type: {} to str'.format(val, type(val)))
                         h5_obj.attrs[key] = str(val)
                     else:
-                        raise excp('Could not write attribute value: {} of type: {}'
-                                ''.format(val, type(val)))
+                        raise excp('Could not write attribute value: {} of type: {}'.format(val, type(val)))
 
     if verbose:
         print('Wrote all (simple) attributes to {}: {}\n'
@@ -454,12 +451,12 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
 
 def lazy_load_array(dataset):
     """
-    Loads the provided object as a dask array (h5py.Dataset or numpy.ndarray
+    Loads the provided object as a dask array (h5py.Dataset or numpy.ndarray)
 
     Parameters
     ----------
     dataset : :class:`numpy.ndarray`, or :class:`h5py.Dataset`, or
-        :class:`dask.array.core.Array` to laod as dask array
+        :class:`dask.array.core.Array` to load as dask array
 
     Returns
     -------
@@ -493,11 +490,11 @@ def copy_attributes(source, dest, skip_refs=True, verbose=False):
     verbose : bool, optional. Default = False
         Whether or not to print logs for debugging
     """
-    mesg = 'should be a h5py.Dataset, h5py.Group,or h5py.File object'
+    message = 'should be a h5py.Dataset, h5py.Group,or h5py.File object'
     if not isinstance(source, (h5py.Dataset, h5py.Group, h5py.File)):
-        raise TypeError('source ' + mesg)
+        raise TypeError('source ' + message)
     if not isinstance(dest, (h5py.Dataset, h5py.Group, h5py.File)):
-        raise TypeError('dest ' + mesg)
+        raise TypeError('dest ' + message)
 
     skip_dset_refs = skip_refs
     try:
@@ -635,7 +632,7 @@ def copy_dataset(h5_orig_dset, h5_dest_grp, alias=None, verbose=False):
 def copy_linked_objects(h5_source, h5_dest, verbose=False):
     """
     Recursively copies datasets linked to the source h5 object to the
-    destination h5 object that are be in different HDF5 files.
+    destination h5 object that are in different HDF5 files.
 
     This is for copying ancillary datasets to a target dataset that is
     missing ancillary datasets. It is not meant for copying to a Group,
@@ -817,5 +814,5 @@ def h5_group_to_dict(group, group_dict={}):
         
     group_dict[group.name.split('/')[-1]] = dict(group.attrs)
     for key in group.keys():
-         h5_group_to_dict(group[key], group_dict[group.name.split('/')[-1]])
+        h5_group_to_dict(group[key], group_dict[group.name.split('/')[-1]])
     return group_dict
