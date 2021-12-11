@@ -24,13 +24,14 @@ default_cmap = plt.cm.viridis
 
 
 class CurveVisualizer(object):
-    def __init__(self, dset, spectrum_number=None, figure=None, **kwargs):
+    def __init__(self, dset, spectrum_number=0, figure=None, **kwargs):
         from ..sid.dataset import Dataset
         from ..sid.dimension import DimensionType
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
-
+        if dset.data_type.name != 'SPECTRUM':
+            raise TypeError("sidpy.Dataset should have DataType 'Spectrum' ")
         fig_args = dict()
         temp = kwargs.pop('figsize', None)
         if temp is not None:
@@ -52,9 +53,11 @@ class CurveVisualizer(object):
             else:
                 if spectrum_number <= dset.shape[dim]:
                     self.selection.append(slice(spectrum_number, spectrum_number + 1))
+                    self.spectral_dims.append(dim)
                 else:
                     self.spectrum_number = 0
                     self.selection.append(slice(0, 1))
+                    self.spectral_dims.append(dim)
 
         # Handle the simple cases first:
         fig_args = dict()
@@ -66,21 +69,22 @@ class CurveVisualizer(object):
 
         if is_complex_dtype(dset.dtype):
             # Plot real and image
-            fig, axes = plt.subplots(nrows=2, **fig_args)
+            self.fig, self.axes = plt.subplots(nrows=2, **fig_args)
 
-            axes[0].plot(self.dim.values, self.dset.squeeze().abs(), **kwargs)
+            self.axes[0].plot(self.dim.values, self.dset.squeeze().abs(), **kwargs)
 
-            axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
-            axes[0].set_xlabel(self.dset.labels[self.dim])
-            axes[0].set_ylabel(self.dset.data_descriptor)
-            axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
+            self.axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
+            self.axes[0].set_xlabel(self.dset.labels[0])
+            self.axes[0].set_ylabel(self.dset.data_descriptor)
+            self.axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
 
-            axes[1].set_title(self.dset.title + '\n(Phase)', pad=15)
-            axes[1].set_ylabel('Phase (rad)')
-            axes[1].set_xlabel(self.dset.labels[self.spectral_dims[0]])  # + x_suffix)
-            axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+            self.axes[1].set_title(self.dset.title + '\n(Phase)', pad=15)
+            self.axes[1].set_ylabel('Phase (rad)')
+            self.axes[1].set_xlabel(self.dset.labels[0])  # + x_suffix)
+            self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
 
-            fig.tight_layout()
+            self.fig.tight_layout()
+            self.fig.canvas.draw_idle()
 
         else:
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
@@ -152,7 +156,7 @@ class ImageVisualizer(object):
                     self.image_number = 0
                     self.selection.append(slice(0, 1))
         if len(self.image_dims) != 2:
-            raise ValueError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
+            raise TypeError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
 
         if is_complex_dtype(dset.dtype):
             # Plot complex image
@@ -265,7 +269,7 @@ class ImageStackVisualizer(object):
             self.fig = figure
 
         if dset.ndim < 3:
-            raise KeyError('dataset must have at least three dimensions')
+            raise TypeError('dataset must have at least three dimensions')
 
         self.stack_dim = -1
         self.image_dims = []
@@ -281,13 +285,13 @@ class ImageStackVisualizer(object):
                 self.selection.append(slice(0, 1))
 
         if len(self.image_dims) != 2:
-            raise ValueError('We need two dimensions with dimension_type spatial to plot an image')
+            raise TypeError('We need two dimensions with dimension_type spatial to plot an image')
 
         if self.stack_dim < 0:
-            raise KeyError('We need one dimensions with dimension_type stack, time or frame')
+            raise TypeError('We need one dimensions with dimension_type stack, time or frame')
 
         if len(self.image_dims) < 2:
-            raise KeyError('Two SPATIAL dimension are necessary for this plot')
+            raise TypeError('Two SPATIAL dimension are necessary for this plot')
 
         self.dset = dset
 
@@ -323,17 +327,17 @@ class ImageStackVisualizer(object):
         iwgt.jslink((self.play, 'value'), (self.slider, 'value'))
 
         # We add a button to average the images
-        button = iwgt.widgets.ToggleButton(
+        self.button = iwgt.widgets.ToggleButton(
             value=False,
             description='Average',
             disabled=False,
             button_style='',  # 'success', 'info', 'warning', 'danger' or ''
             tooltip='Average Images of Stack')
 
-        button.observe(self._average_slices, 'value')
+        self.button.observe(self._average_slices, 'value')
 
         # set play and slider widgets next to each other
-        widg = iwgt.HBox([self.play, self.slider, button])
+        widg = iwgt.HBox([self.play, self.slider, self.button])
         display(widg)
 
         # self.anim = animation.FuncAnimation(self.fig, self._updatefig, interval=200, blit=False, repeat=True)
@@ -432,7 +436,7 @@ class SpectralImageVisualizer(object):
             self.fig = figure
 
         if len(dset.shape) < 3:
-            raise KeyError('dataset must have at least three dimensions')
+            raise TypeError('dataset must have at least three dimensions')
 
         # We need one stack dim and two image dimes as lists in dictionary
 
@@ -449,10 +453,10 @@ class SpectralImageVisualizer(object):
             else:
                 selection.append(slice(0, 1))
         if len(image_dims) != 2:
-            raise ValueError('We need two dimensions with dimension_type SPATIA: to plot an image')
+            raise TypeError('We need two dimensions with dimension_type SPATIA: to plot an image')
 
         if len(spectral_dims) != 1:
-            raise KeyError('We need one dimension with dimension_type SPECTRAL for a spectral image plot')
+            raise TypeError('We need one dimension with dimension_type SPECTRAL for a spectral image plot')
 
         self.horizontal = horizontal
         self.x = 0
@@ -485,12 +489,11 @@ class SpectralImageVisualizer(object):
         self.image = dset.mean(axis=spectral_dims[0])
         if 1 in self.dset.shape:
             self.image = dset.squeeze()
-            #self.extent[2]=self.image.shape[1]
-            #self.bin_y=self.image.shape[1]
+            # self.extent[2]=self.image.shape[1]
+            # self.bin_y=self.image.shape[1]
             self.axes[0].set_aspect('auto')
         else:
             self.axes[0].set_aspect('equal')
-
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         if horizontal:
@@ -503,7 +506,6 @@ class SpectralImageVisualizer(object):
             self.axes[0].get_yaxis().set_visible(False)
         else:
             self.axes[0].set_aspect('equal')
-
 
         # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
         self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
@@ -658,7 +660,7 @@ class FourDimImageVisualizer(object):
             self.fig = figure
 
         if len(dset.shape) < 4:
-            raise KeyError('dataset must have at least four dimensions')
+            raise TypeError('dataset must have at least four dimensions')
 
         # Find scan and 4D_image dimension
 
@@ -695,10 +697,10 @@ class FourDimImageVisualizer(object):
         dims_4d = [image_x, image_y]
 
         if len(image_dims) != 2:
-            raise ValueError('We need two dimensions with dimension_type SPATIAL: to plot an image')
+            raise TypeError('We need two dimensions with dimension_type SPATIAL: to plot an image')
 
         if len(dims_4d) != 2:
-            raise KeyError('We need two dimension with dimension_type other than spatial for a 4D image plot')
+            raise TypeError('We need two dimension with dimension_type other than spatial for a 4D image plot')
 
         self.horizontal = horizontal
         self.x = 0
@@ -727,7 +729,6 @@ class FourDimImageVisualizer(object):
         else:
             number_of_plots = 3
 
-
         if horizontal:
             self.axes = self.fig.subplots(ncols=number_of_plots)
         else:
@@ -737,7 +738,6 @@ class FourDimImageVisualizer(object):
         self.image = np.array(dset).mean(axis=tuple(dims_4d))
         if is_complex_dtype(dset.dtype):
             self.image = np.abs(np.array(dset)).mean(axis=tuple(dims_4d))
-            
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         if horizontal:
