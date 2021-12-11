@@ -52,7 +52,7 @@ class DataType(Enum):
 
 def view_subclass(dask_array, cls):
     """
-    View a dask Array as an instance of a dask Array sub-class.
+    View a dask Array as an instance of a dask Array subclass.
 
     Parameters
     ----------
@@ -93,8 +93,8 @@ class Dataset(da.Array):
     -data_descriptor: returns a label for the colorbar in matplotlib and such
 
     functions:
-    -from_array(data, title): constructs the dataset form a array like object (numpy array, dask array, ...)
-    -like_data(data,title): constructs the dataset form a array like object and copies attributes and
+    -from_array(data, title): constructs the dataset form an array like object (numpy array, dask array, ...)
+    -like_data(data,title): constructs the dataset form an array like object and copies attributes and
     metadata from parent dataset
     -copy()
     -plot(): plots dataset dependent on data_type and dimension_types.
@@ -193,6 +193,12 @@ class Dataset(da.Array):
         title: optional string
             the title of this dataset
         lock: boolean
+        datatype: str or sidpy.DataType
+            data type of set: i.e.: 'image', spectrum', ..
+        units: str
+            units of dataset i.e. counts, A
+        quantity: str
+            quantity of dataset like intensity
 
         Returns
         -------
@@ -206,7 +212,7 @@ class Dataset(da.Array):
         else:
             dask_array = da.from_array(np.array(x), chunks=chunks, lock=lock)
 
-        # view as sub-class
+        # view as subclass
         sid_dataset = view_subclass(dask_array, cls)
         sid_dataset.data_type = datatype
         sid_dataset.units = units
@@ -567,7 +573,7 @@ class Dataset(da.Array):
             start = temp[0] - (temp[1] - temp[0])/2
             end = temp[-1] + (temp[-1] - temp[-2])/2
             if ind == 1:
-                extent.append(end)  # y axis starts on top
+                extent.append(end)  # y-axis starts on top
                 extent.append(start)
             else:
                 extent.append(start)
@@ -708,7 +714,7 @@ class Dataset(da.Array):
         elif value is None:
             self.hdf_close()
         else:
-            raise ValueError('h5_dataset needs to be a hdf5 Dataset')
+            raise TypeError('h5_dataset needs to be a hdf5 Dataset')
 
     @property
     def metadata(self):
@@ -911,7 +917,7 @@ class Dataset(da.Array):
     
     @reduce_dims
     def max(self, axis=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not(keepdims):
+        if axis is None and not keepdims:
             result = float(super().max())
         else:
             result = self.like_data(super().max(axis=axis, keepdims=keepdims,
@@ -920,7 +926,7 @@ class Dataset(da.Array):
 
     @reduce_dims
     def sum(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not(keepdims):
+        if axis is None and not keepdims:
             result = float(super().sum())
         
         else:
@@ -1070,7 +1076,7 @@ class Dataset(da.Array):
     
     @reduce_dims
     def prod(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not(keepdims):
+        if axis is None and not keepdims:
             result = float(super().prod())
         else:
             result = self.like_data(super().prod(axis=axis, dtype=dtype, keepdims=keepdims,

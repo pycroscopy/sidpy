@@ -16,7 +16,7 @@ sys.path.insert(0, "../../sidpy/")
 import sidpy
 
 
-def get_spectrum(dtype=float):
+def get_spectrum(dtype=np.float):
     x = np.array(np.random.normal(3, 2.5, size=1024), dtype=dtype)
 
     dset = sidpy.Dataset.from_array(x)

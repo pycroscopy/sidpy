@@ -444,6 +444,20 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(len(image_dims), 2)
         self.assertEqual(image_dims[1], 1)
 
+    def test_get_dimensions_by_type(self):
+        values = np.zeros([4, 5])
+        descriptor = Dataset.from_array(values)
+        descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', dimension_type='spatial'))
+
+        image_dims = descriptor.get_dimensions_by_type('spatial')
+        self.assertEqual(len(image_dims), 1)
+        self.assertEqual(image_dims[0], 0)
+
+        descriptor.dim_1.dimension_type = 'spatial'
+        image_dims = descriptor.get_dimensions_by_type('spatial')
+        self.assertEqual(len(image_dims), 2)
+        self.assertEqual(image_dims[1], 1)
+
     def test_get_spectrum_dims(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
@@ -503,12 +517,19 @@ class TestHelperFunctions(unittest.TestCase):
         descriptor2.units = 'image'
         self.assertFalse(descriptor1.__eq__(descriptor2))
 
+    def test_h4_dataset(self):
+        import p
+        values = np.ones([4, 5])
+        source_dset = Dataset.from_array(values)
+
+        h5_dataset
 
 class TestViewMetadata(unittest.TestCase):
 
     def test_default_empty_metadata(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
+        descriptor.view_metadata()
         # self.assertEqual('{}'.format(descriptor.view_metadata()),'None')
 
     def test_entered_metadata(self):
@@ -516,7 +537,7 @@ class TestViewMetadata(unittest.TestCase):
         descriptor = Dataset.from_array(values)
         descriptor.metadata = {0: 'test'}
 
-        # print('{}'.format(descriptor.view_metadata()))
+        print('{}'.format(descriptor.view_metadata()))
 
         # self.assertEqual(descriptor.view_metadata(), '0 : test')
 
