@@ -517,12 +517,10 @@ class TestHelperFunctions(unittest.TestCase):
         descriptor2.units = 'image'
         self.assertFalse(descriptor1.__eq__(descriptor2))
 
-    def test_h4_dataset(self):
-        import p
+    def test_h5_dataset(self):
         values = np.ones([4, 5])
         source_dset = Dataset.from_array(values)
 
-        h5_dataset
 
 class TestViewMetadata(unittest.TestCase):
 
