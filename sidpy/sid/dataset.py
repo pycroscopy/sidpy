@@ -461,7 +461,7 @@ class Dataset(da.Array):
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
 
-    def plot(self, verbose=False, **kwargs):
+    def plot(self, verbose=False, figure=None, **kwargs):
         """
         Plots the dataset according to the
          - shape of the sidpy Dataset,
@@ -497,35 +497,35 @@ class Dataset(da.Array):
         if len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
-            self.view = CurveVisualizer(self, **kwargs)
-            plt.show()
+            self.view = CurveVisualizer(self, figure=figure, **kwargs)
+            # plt.show()
         elif len(self.shape) == 2:
             # this can be an image or a set of line_plots
             if verbose:
                 print('2D dataset')
             if self.data_type == DataType.IMAGE:
-                self.view = ImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type.value <= DataType['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
-                self.view = CurveVisualizer(self, **kwargs)
-                plt.show()
+                self.view = CurveVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
             if verbose:
                 print('3D dataset')
             if self.data_type == DataType.IMAGE:
-                self.view = ImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
-                self.view = ImageStackVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
-                self.view = SpectralImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 4:
@@ -537,13 +537,13 @@ class Dataset(da.Array):
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
-                self.view = ImageStackVisualizer(self, **kwargs)
+                self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
                 plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
-                self.view = SpectralImageVisualizer(self, **kwargs)
+                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 plt.show()
             elif self.data_type == DataType.IMAGE_4D:
-                self.view = FourDimImageVisualizer(self, **kwargs)
+                self.view = FourDimImageVisualizer(self, figure=figure, **kwargs)
                 plt.show()
                 if verbose:
                     print('4D dataset')
@@ -553,7 +553,7 @@ class Dataset(da.Array):
             raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         return self.view.fig
         
-    def set_thumbnail(self, thumbnail_size=128):
+    def set_thumbnail(self, figure=None, thumbnail_size=128):
         """
         Creates a thumbnail which is stored in thumbnail attribute of sidpy Dataset
         Thumbnail data is saved to Thumbnail group of associated h5_file if it exists
@@ -571,7 +571,7 @@ class Dataset(da.Array):
         import imageio
         # Thumbnail configurations for matplotlib
         kwargs = {'figsize': (1,1), 'colorbar': False, 'set_title': False}
-        view = self.plot(**kwargs)
+        view = self.plot(figure=figure, **kwargs)
         for axis in view.axes:
             axis.set_axis_off()
         
@@ -581,7 +581,6 @@ class Dataset(da.Array):
         
         # Writing thumbnail to h5_file if it exists 
         if self.h5_dataset is not None:
-        
             if 'Thumbnail' not in self.h5_dataset.file:
                 thumb_group = self.h5_dataset.file.create_group("Thumbnail")
             else:
