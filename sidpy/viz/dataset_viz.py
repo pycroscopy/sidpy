@@ -27,6 +27,10 @@ class CurveVisualizer(object):
     def __init__(self, dset, spectrum_number=0, figure=None, **kwargs):
         from ..sid.dataset import Dataset
         from ..sid.dimension import DimensionType
+        
+        scale_bar = kwargs.pop('scale_bar', False)
+        colorbar = kwargs.pop('colorbar', True)
+        set_title = kwargs.pop('set_title', True)
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -72,13 +76,14 @@ class CurveVisualizer(object):
             self.fig, self.axes = plt.subplots(nrows=2, **fig_args)
 
             self.axes[0].plot(self.dim.values, self.dset.squeeze().abs(), **kwargs)
-
-            self.axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
+            if set_title:
+                self.axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
             self.axes[0].set_xlabel(self.dset.labels[0])
             self.axes[0].set_ylabel(self.dset.data_descriptor)
             self.axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
 
-            self.axes[1].set_title(self.dset.title + '\n(Phase)', pad=15)
+            if set_title:
+                self.axes[1].set_title(self.dset.title + '\n(Phase)', pad=15)
             self.axes[1].set_ylabel('Phase (rad)')
             self.axes[1].set_xlabel(self.dset.labels[0])  # + x_suffix)
             self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
@@ -89,7 +94,8 @@ class CurveVisualizer(object):
         else:
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
             self.axis.plot(self.dim.values, self.dset, **kwargs)
-            self.axis.set_title(self.dset.title, pad=15)
+            if set_title:
+                self.axis.set_title(self.dset.title, pad=15)
             self.axis.set_xlabel(self.dset.labels[self.spectral_dims[0]])
             self.axis.set_ylabel(self.dset.data_descriptor)
             self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
@@ -133,7 +139,7 @@ class ImageVisualizer(object):
         temp = kwargs.pop('figsize', None)
         if temp is not None:
             fig_args['figsize'] = temp
-
+        
         if figure is None:
             self.fig = plt.figure(**fig_args)
         else:
@@ -159,6 +165,7 @@ class ImageVisualizer(object):
             raise TypeError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
 
         if is_complex_dtype(dset.dtype):
+            colorbar = kwargs.pop('colorbar', True)
             # Plot complex image
             self.axes = []
             self.axes.append(self.fig.add_subplot(121))
@@ -167,7 +174,8 @@ class ImageVisualizer(object):
             self.axes[0].set_xlabel(self.dset.labels[self.image_dims[0]])
             self.axes[0].set_ylabel(self.dset.labels[self.image_dims[1]])
             self.axes[0].set_title(dset.title + '\n(Magnitude)', pad=15)
-            cbar = self.fig.colorbar(self.img)
+            if colorbar:
+                cbar = self.fig.colorbar(self.img)
             cbar.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
             self.axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
 
@@ -177,7 +185,8 @@ class ImageVisualizer(object):
             self.axes[1].set_xlabel(self.dset.labels[self.image_dims[0]])
             self.axes[1].set_ylabel(self.dset.labels[self.image_dims[1]])
             self.axes[1].set_title(dset.title + '\n(Phase)', pad=15)
-            cbar_c = self.fig.colorbar(self.img_c)
+            if colorbar:
+                cbar_c = self.fig.colorbar(self.img_c)
             cbar_c.set_label(self.dset.data_descriptor)
             self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
 
@@ -190,11 +199,13 @@ class ImageVisualizer(object):
     def plot_image(self, **kwargs):
         from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
         scale_bar = kwargs.pop('scale_bar', False)
-
-        if len(self.dset.shape) > 2:
-            self.axis.set_title(self.dset.title + '_image {}'.format(self.image_number))
-        else:
-            self.axis.set_title(self.dset.title)
+        colorbar = kwargs.pop('colorbar', True)
+        set_title = kwargs.pop('set_title', True)
+        if set_title:
+            if len(self.dset.shape) > 2:
+                self.axis.set_title(self.dset.title + '_image {}'.format(self.image_number))
+            else:
+                self.axis.set_title(self.dset.title)
 
         self.img = self.axis.imshow(self.dset[tuple(self.selection)].squeeze().T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
@@ -218,7 +229,8 @@ class ImageVisualizer(object):
 
             plt.gca().add_artist(scalebar)
 
-        else:
+        if colorbar:
+            
             cbar = self.fig.colorbar(self.img)
             cbar.set_label(self.dset.data_descriptor)
 
@@ -262,7 +274,8 @@ class ImageStackVisualizer(object):
         temp = kwargs.pop('figsize', None)
         if temp is not None:
             fig_args['figsize'] = temp
-
+        self.set_title = kwargs.pop('set_title', True)
+        
         if figure is None:
             self.fig = plt.figure(**fig_args)
         else:
@@ -302,54 +315,60 @@ class ImageStackVisualizer(object):
         self.axis = None
         self.plot_image(**kwargs)
         self.axis = plt.gca()
-        self.axis.set_title('image stack: ' + dset.title + '\n use scroll wheel to navigate images')
-        self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
+        if self.set_title:
+            self.axis.set_title('image stack: ' + dset.title + '\n use scroll wheel to navigate images')
+            self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
 
-        import ipywidgets as iwgt
-        self.play = iwgt.Play(
-            value=0,
-            min=0,
-            max=self.number_of_slices,
-            step=1,
-            interval=500,
-            description="Press play",
-            disabled=False
-        )
-        self.slider = iwgt.IntSlider(
-            value=0,
-            min=0,
-            max=self.number_of_slices,
-            continuous_update=False,
-            description="Frame:")
-        # set the slider function
-        iwgt.interactive(self._update, frame=self.slider)
-        # link slider and play function
-        iwgt.jslink((self.play, 'value'), (self.slider, 'value'))
+        
+            import ipywidgets as iwgt
+            self.play = iwgt.Play(
+                value=0,
+                min=0,
+                max=self.number_of_slices,
+                step=1,
+                interval=500,
+                description="Press play",
+                disabled=False
+            )
+            self.slider = iwgt.IntSlider(
+                value=0,
+                min=0,
+                max=self.number_of_slices,
+                continuous_update=False,
+                description="Frame:")
+            # set the slider function
+            iwgt.interactive(self._update, frame=self.slider)
+            # link slider and play function
+            iwgt.jslink((self.play, 'value'), (self.slider, 'value'))
 
-        # We add a button to average the images
-        self.button = iwgt.widgets.ToggleButton(
-            value=False,
-            description='Average',
-            disabled=False,
-            button_style='',  # 'success', 'info', 'warning', 'danger' or ''
-            tooltip='Average Images of Stack')
+            # We add a button to average the images
+            self.button = iwgt.widgets.ToggleButton(
+                value=False,
+                description='Average',
+                disabled=False,
+                button_style='',  # 'success', 'info', 'warning', 'danger' or ''
+                tooltip='Average Images of Stack')
 
-        self.button.observe(self._average_slices, 'value')
+            self.button.observe(self._average_slices, 'value')
 
-        # set play and slider widgets next to each other
-        widg = iwgt.HBox([self.play, self.slider, self.button])
-        display(widg)
+            # set play and slider widgets next to each other
+            widg = iwgt.HBox([self.play, self.slider, self.button])
+            display(widg)
 
-        # self.anim = animation.FuncAnimation(self.fig, self._updatefig, interval=200, blit=False, repeat=True)
-        self._update()
+            # self.anim = animation.FuncAnimation(self.fig, self._updatefig, interval=200, blit=False, repeat=True)
+            self._update()
 
     def plot_image(self, **kwargs):
 
         from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
         scale_bar = kwargs.pop('scale_bar', False)
+        colorbar = kwargs.pop('colorbar', True)
+        
+
         self.axis = plt.gca()
-        self.axis.set_title(self.dset.title)
+        if self.set_title:
+            self.axis.set_title(self.dset.title)
 
         self.img = self.axis.imshow(self.dset[tuple(self.selection)].squeeze().T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
@@ -375,11 +394,12 @@ class ImageStackVisualizer(object):
             plt.gca().add_artist(scalebar)
 
         else:
-            cbar = self.fig.colorbar(self.img)
-            cbar.set_label(self.dset.data_descriptor)
+            if colorbar:
+                cbar = self.fig.colorbar(self.img)
+                cbar.set_label(self.dset.data_descriptor)
 
-            self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
-            self.fig.tight_layout()
+                self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
+                self.fig.tight_layout()
 
         self.img.axes.figure.canvas.draw_idle()
 
@@ -424,7 +444,11 @@ class SpectralImageVisualizer(object):
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
-
+        
+        scale_bar = kwargs.pop('scale_bar', False)
+        colorbar = kwargs.pop('colorbar', True)
+        self.set_title = kwargs.pop('set_title', True)
+        
         fig_args = dict()
         temp = kwargs.pop('figsize', None)
         if temp is not None:
@@ -485,7 +509,8 @@ class SpectralImageVisualizer(object):
         else:
             self.axes = self.fig.subplots(nrows=2, **fig_args)
 
-        self.fig.canvas.manager.set_window_title(self.dset.title)
+        if self.set_title:
+            self.fig.canvas.manager.set_window_title(self.dset.title)
         self.image = dset.mean(axis=spectral_dims[0])
         if 1 in self.dset.shape:
             self.image = dset.squeeze()
@@ -614,7 +639,8 @@ class SpectralImageVisualizer(object):
 
         self.axes[1].plot(self.energy_scale, self.spectrum, label='experiment')
 
-        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+        if self.set_title:
+            self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
         self.axes[1].set_xlim(xlim)
         self.axes[1].set_ylim(ylim)
@@ -638,7 +664,7 @@ class FourDimImageVisualizer(object):
     scan_x and scan_y
     image_4d_x, image_4d_y
 
-    If none of the key words are specified, it is assumed that the order is slowest to fastest dimension.
+    If none of the keywords are specified, it is assumed that the order is slowest to fastest dimension.
 
     """
 
@@ -649,6 +675,10 @@ class FourDimImageVisualizer(object):
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
 
+        scale_bar = kwargs.pop('scale_bar', False)
+        colorbar = kwargs.pop('colorbar', True)
+        self.set_title = kwargs.pop('set_title', True)
+        
         fig_args = dict()
         temp = kwargs.pop('figsize', None)
         if temp is not None:
@@ -734,7 +764,8 @@ class FourDimImageVisualizer(object):
         else:
             self.axes = self.fig.subplots(nrows=number_of_plots, **fig_args)
 
-        self.fig.canvas.manager.set_window_title(self.dset.title)
+        if self.set_title:
+            self.fig.canvas.manager.set_window_title(self.dset.title)
         self.image = np.array(dset).mean(axis=tuple(dims_4d))
         if is_complex_dtype(dset.dtype):
             self.image = np.abs(np.array(dset)).mean(axis=tuple(dims_4d))
@@ -758,7 +789,8 @@ class FourDimImageVisualizer(object):
         if self.gamma:
             self.image_4d = np.log(1+self.image_4d)
         self.axes[1].imshow(self.image_4d)
-        self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
+        if self.set_title:
+            self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
         self.xlabel = self.dset.labels[self.dims_4d[0]]
         self.ylabel = self.dset.labels[self.dims_4d[1]]
         self.axes[1].set_xlabel(self.xlabel)  # + x_suffix)
@@ -766,8 +798,9 @@ class FourDimImageVisualizer(object):
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
         if is_complex_dtype(dset.dtype):
             self.axes[2].imshow(np.angle(self.image_4d))
-            self.axes[1].set_title('power {}, {}'.format(self.x, self.y))
-            self.axes[2].set_title('phase {}, {}'.format(self.x, self.y))
+            if self.set_title:
+                self.axes[1].set_title('power {}, {}'.format(self.x, self.y))
+                self.axes[2].set_title('phase {}, {}'.format(self.x, self.y))
             self.axes[2].set_xlabel(self.xlabel)  # + x_suffix)
             self.axes[2].set_ylabel(self.ylabel)
             self.axes[2].ticklabel_format(style='sci', scilimits=(-2, 3))
@@ -865,18 +898,18 @@ class FourDimImageVisualizer(object):
             self.axes[2].clear()
             self.image_4d = np.abs(self.image_4d)
             self.axes[2].imshow(np.angle(self.image_4d))
-            self.axes[1].set_title('power {}, {}'.format(self.x, self.y))
-            self.axes[2].set_title('phase {}, {}'.format(self.x, self.y))
+            if self.set_title:
+                self.axes[1].set_title('power {}, {}'.format(self.x, self.y))
+                self.axes[2].set_title('phase {}, {}'.format(self.x, self.y))
             self.axes[2].set_xlabel(self.xlabel)  # + x_suffix)
             self.axes[2].set_ylabel(self.ylabel)
             self.axes[2].ticklabel_format(style='sci', scilimits=(-2, 3))
         else:
-            self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
+            if self.set_title:
+                self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
         if self.gamma:
             self.image_4d = np.log(1+self.image_4d)
         self.axes[1].imshow(self.image_4d)
-
-        
 
         self.axes[1].set_xlim(xlim)
         self.axes[1].set_ylim(ylim)
