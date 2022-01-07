@@ -493,11 +493,11 @@ class Dataset(da.Array):
 
         if self.data_type.value < 0:
             raise NameError('Datasets with UNKNOWN data_types cannot be plotted')
-
+        
         if len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
-            self.view = CurveVisualizer(self)
+            self.view = CurveVisualizer(self, **kwargs)
             plt.show()
         elif len(self.shape) == 2:
             # this can be an image or a set of line_plots
@@ -552,6 +552,45 @@ class Dataset(da.Array):
         else:
             raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         return self.view.fig
+        
+    def set_thumbnail(self, thumbnail_size=128):
+        """
+        Creates a thumbnail which is stored in thumbnail attribute of sidpy Dataset
+        Thumbnail data is saved to Thumbnail group of associated h5_file if it exists
+
+        Parameters
+        ----------
+        thumbnail_size: int
+            size of icon in pixels (length of square)
+            
+        Returns
+        -------
+        thumbnail: numpy.ndarray
+        """
+        
+        import imageio
+        # Thumbnail configurations for matplotlib
+        kwargs = {'figsize': (1,1), 'colorbar': False, 'set_title': False}
+        view = self.plot(**kwargs)
+        for axis in view.axes:
+            axis.set_axis_off()
+        
+        # Creating Thumbnail as png image
+        view.savefig('thumb.png', dpi=thumbnail_size)
+        self.thumbnail = imageio.imread('thumb.png')
+        
+        # Writing thumbnail to h5_file if it exists 
+        if self.h5_dataset is not None:
+        
+            if 'Thumbnail' not in self.h5_dataset.file:
+                thumb_group = self.h5_dataset.file.create_group("Thumbnail")
+            else:
+                thumb_group = self.h5_dataset.file["Thumbnail"]
+            if "Thumbnail" in thumb_group:
+                del thumb_group["Thumbnail"]
+            thumb_dset = thumb_group.create_dataset("Thumbnail", data=self.thumbnail)
+            
+        return self.thumbnail
 
     def get_extent(self, dimensions):
         """

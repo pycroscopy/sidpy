@@ -42,14 +42,14 @@ def format_quantity(value, unit_names, factors, decimals=2):
 
     Examples
     --------
-    >>> # If ``sidpy.string_utils.format_time()`` were not available, we could
-    >>> # get the same functionality via:
-    >>> import sidpy
-    >>> units = ['msec', 'sec', 'mins', 'hours']
-    >>> factors = [0.001, 1, 60, 3600]
-    >>> time_value = 14497.34
-    >>> str_form = sidpy.string_utils.format_quantity(time_value,units,factors)
-    >>> print('{} seconds = {}'.format(14497.34, str_form))
+    >> # If ``sidpy.string_utils.format_time()`` were not available, we could
+    >> # get the same functionality via:
+    >> import sidpy
+    >> units = ['msec', 'sec', 'mins', 'hours']
+    >> factors = [0.001, 1, 60, 3600]
+    >> time_value = 14497.34
+    >> str_form = sidpy.string_utils.format_quantity(time_value,units,factors)
+    >> print('{} seconds = {}'.format(14497.34, str_form))
 
     See Also
     --------
@@ -79,7 +79,7 @@ def format_quantity(value, unit_names, factors, decimals=2):
 
 def format_time(time_in_seconds, decimals=2):
     """
-    Formats the provided time in seconds to seconds, minutes, or hours
+    Formats the provided time in seconds into seconds, minutes, or hours
 
     Parameters
     ----------
@@ -339,11 +339,11 @@ def clean_string_att(att_val):
                 # Not sure how to do this elegantly,
                 for item in att_val:
                     if not isinstance(item, (str, unicode, bytes, np.str_,
-                                             Number)):
+                                             Number, list)):
                         raise TypeError('Provided object was a list or tuple '
-                                         'whose element was not a string or '
-                                         'number but was of type: {}'
-                                         ''.format(type(item)))
+                                        'whose element was not a string or '
+                                        'number but was of type: {}'
+                                        ''.format(type(item)))
         if type(att_val) == np.str_:
             return str(att_val)
         return att_val
@@ -377,7 +377,7 @@ def str_to_other(value):
     Parameters
     ----------
     value : str / unicode
-        String to be casted into other appropriate python object
+        String to be cast into other appropriate python object
     """
     if not isinstance(value, (str, unicode)):
         raise TypeError('Expected object of type str. Provided object was: {}'
