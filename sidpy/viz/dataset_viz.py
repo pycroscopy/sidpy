@@ -201,13 +201,19 @@ class ImageVisualizer(object):
         scale_bar = kwargs.pop('scale_bar', False)
         colorbar = kwargs.pop('colorbar', True)
         set_title = kwargs.pop('set_title', True)
+        rgb = False
         if set_title:
+            self.axis.set_title(self.dset.title)
             if len(self.dset.shape) > 2:
-                self.axis.set_title(self.dset.title + '_image {}'.format(self.image_number))
-            else:
-                self.axis.set_title(self.dset.title)
+                if self.dset.shape[2]>4:
+                  self.axis.set_title(self.dset.title + '_image {}'.format(self.image_number))
+                else:
+                    rgb = True
 
-        self.img = self.axis.imshow(self.dset[tuple(self.selection)].squeeze().T,
+        if rgb:
+            self.img = self.axis.imshow(self.dset, extent=self.dset.get_extent(self.image_dims), **kwargs)
+        else:
+            self.img = self.axis.imshow(self.dset[tuple(self.selection)].squeeze().T,
                                     extent=self.dset.get_extent(self.image_dims), **kwargs)
         self.axis.set_xlabel(self.dset.labels[self.image_dims[0]])
         self.axis.set_ylabel(self.dset.labels[self.image_dims[1]])
