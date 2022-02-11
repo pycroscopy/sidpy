@@ -69,11 +69,11 @@ def validate_dataset_properties(self, dataset, values, name='generic',
 
 
 # Following 4 methods are used in testing the methods that reduce dimensions of the dataset
-def test_single_axis(self, func, **kwargs):
+def single_axis_test(self, func, **kwargs):
     dset_np = np.random.rand(4, 1, 5)
     dset = Dataset.from_array(dset_np, title='test')
     sid_func = getattr(dset, func)
-    np_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
     dset_1 = sid_func(axis=0, keepdims=False)
     dim_dict = {0: dset._axes[1].copy(), 1: dset._axes[2].copy()}
 
@@ -86,11 +86,11 @@ def test_single_axis(self, func, **kwargs):
                                 )
 
 
-def test_multiple_axes(self, func, **kwargs):
+def multiple_axes_test(self, func, **kwargs):
     dset_np = np.random.rand(1, 6, 4)
     dset = Dataset.from_array(dset_np, title='test')
     sid_func = getattr(dset, func)
-    np_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
     dset_1 = sid_func(axis=(0, 1), keepdims=False)
     dim_dict = {0: dset._axes[2].copy()}
 
@@ -104,11 +104,11 @@ def test_multiple_axes(self, func, **kwargs):
 
 
 # The following two tests are for when keep_dims is set to True
-def test_keepdims(self, func, **kwargs):
+def keepdims_test(self, func, **kwargs):
     dset_np = np.random.rand(2, 1, 4)
     dset = Dataset.from_array(dset_np, title='test')
     sid_func = getattr(dset, func)
-    np_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
 
     dset_1 = sid_func(axis=0, keepdims=True)
 
@@ -126,11 +126,11 @@ def test_keepdims(self, func, **kwargs):
                                 )
 
 
-def test_keepdims_multiple_axes(self, func, **kwargs):
+def keepdims_multiple_axes_test(self, func, **kwargs):
     dset_np = np.random.rand(1, 5, 4)
     dset = Dataset.from_array(dset_np, title='test')
     sid_func = getattr(dset, func)
-    np_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
     title_prefix = kwargs.get('title_prefix')
 
     dset_1 = sid_func(axis=(0, 1), keepdims=True)
@@ -632,72 +632,72 @@ class TestViewOriginalMetadata(unittest.TestCase):
 
 class Testallmethod(unittest.TestCase):
     def test_all_single_axis(self):
-        test_single_axis(self, 'all', title_prefix='all_aggregate_')
+        single_axis_test(self, 'all', title_prefix='all_aggregate_')
 
     def test_all_multiple_axes(self):
-        test_multiple_axes(self, 'all', title_prefix='all_aggregate_')
+        multiple_axes_test(self, 'all', title_prefix='all_aggregate_')
 
     def test_all_keepdims(self):
-        test_keepdims(self, 'all', title_prefix='all_aggregate_')
+        keepdims_test(self, 'all', title_prefix='all_aggregate_')
 
     def test_all_keepdims_multiple_axes(self):
-        test_keepdims_multiple_axes(self, 'all', title_prefix='all_aggregate_')
+        keepdims_multiple_axes_test(self, 'all', title_prefix='all_aggregate_')
 
 
 class Testanymethod(unittest.TestCase):
     def test_any_single_axis(self):
-        test_single_axis(self, 'any', title_prefix='any_aggregate_')
+        single_axis_test(self, 'any', title_prefix='any_aggregate_')
 
     def test_any_multiple_axes(self):
-        test_multiple_axes(self, 'any', title_prefix='any_aggregate_')
+        multiple_axes_test(self, 'any', title_prefix='any_aggregate_')
 
     def test_any_keepdims(self):
-        test_keepdims(self, 'any', title_prefix='any_aggregate_')
+        keepdims_test(self, 'any', title_prefix='any_aggregate_')
 
     def test_any_keepdims_multiple_axes(self):
-        test_keepdims_multiple_axes(self, 'any', title_prefix='any_aggregate_')
+        keepdims_multiple_axes_test(self, 'any', title_prefix='any_aggregate_')
 
 
 class Testminmethod(unittest.TestCase):
     def test_min_single_axis(self):
-        test_single_axis(self, 'min', title_prefix='min_aggregate_')
+        single_axis_test(self, 'min', title_prefix='min_aggregate_')
 
     def test_min_multiple_axes(self):
-        test_multiple_axes(self, 'min', title_prefix='min_aggregate_')
+        multiple_axes_test(self, 'min', title_prefix='min_aggregate_')
 
     def test_min_keepdims(self):
-        test_keepdims(self, 'min', title_prefix='min_aggregate_')
+        keepdims_test(self, 'min', title_prefix='min_aggregate_')
 
     def test_min_keepdims_multiple_axes(self):
-        test_keepdims_multiple_axes(self, 'min', title_prefix='min_aggregate_')
+        keepdims_multiple_axes_test(self, 'min', title_prefix='min_aggregate_')
 
 
 class Testmaxmethod(unittest.TestCase):
     def test_max_single_axis(self):
-        test_single_axis(self, 'max', title_prefix='max_aggregate_')
+        single_axis_test(self, 'max', title_prefix='max_aggregate_')
 
     def test_max_multiple_axes(self):
-        test_multiple_axes(self, 'max', title_prefix='max_aggregate_')
+        multiple_axes_test(self, 'max', title_prefix='max_aggregate_')
 
     def test_max_keepdims(self):
-        test_keepdims(self, 'max', title_prefix='max_aggregate_')
+        keepdims_test(self, 'max', title_prefix='max_aggregate_')
 
     def test_min_keepdims_multiple_axes(self):
-        test_keepdims_multiple_axes(self, 'max', title_prefix='max_aggregate_')
+        keepdims_multiple_axes_test(self, 'max', title_prefix='max_aggregate_')
 
 
 class Testsummethod(unittest.TestCase):
     def test_sum_single_axis(self):
-        test_single_axis(self, 'sum', title_prefix='sum_aggregate_')
+        single_axis_test(self, 'sum', title_prefix='sum_aggregate_')
 
     def test_sum_multiple_axis(self):
-        test_multiple_axes(self, 'sum', title_prefix='sum_aggregate_')
+        multiple_axes_test(self, 'sum', title_prefix='sum_aggregate_')
 
     def test_sum_keepdims(self):
-        test_keepdims(self, 'sum', title_prefix='sum_aggregate_')
+        keepdims_test(self, 'sum', title_prefix='sum_aggregate_')
 
     def test_sum_keepdims_multiple_axis(self):
-        test_keepdims_multiple_axes(self, 'sum', title_prefix='sum_aggregate_')
+        keepdims_multiple_axes_test(self, 'sum', title_prefix='sum_aggregate_')
 
     def test_sum_dtype(self):
         pass
