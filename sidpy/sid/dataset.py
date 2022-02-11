@@ -863,6 +863,7 @@ class Dataset(da.Array):
     def imag(self):
         return self.like_data(super().imag)
 
+    # This is wrapper method for the methods that reduce dimensions
     def reduce_dims(original_method):
         @wraps(original_method)
         def wrapper_method(self, *args, **kwargs):
@@ -881,6 +882,7 @@ class Dataset(da.Array):
 
         return wrapper_method
 
+    # tests written by mani
     @reduce_dims
     def all(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
@@ -892,6 +894,7 @@ class Dataset(da.Array):
                                     checkdims=False)
         return result, locals().copy()
 
+    # tests written by mani
     @reduce_dims
     def any(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
@@ -903,6 +906,7 @@ class Dataset(da.Array):
                                     checkdims=False)
         return result, locals().copy()
 
+    # tests written by mani
     @reduce_dims
     def min(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
@@ -914,6 +918,7 @@ class Dataset(da.Array):
                                     checkdims=False)
         return result, locals().copy()
 
+    # tests written by mani
     @reduce_dims
     def max(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
@@ -924,6 +929,7 @@ class Dataset(da.Array):
                                                 split_every=split_every, out=out), title_prefix='max_aggregate_',
                                     checkdims=False)
         return result, locals().copy()
+
 
     @reduce_dims
     def sum(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):

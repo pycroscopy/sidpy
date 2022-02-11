@@ -103,6 +103,7 @@ def test_multiple_axes(self, func, **kwargs):
                                 )
 
 
+# The following two tests are for when keep_dims is set to True
 def test_keepdims(self, func, **kwargs):
     dset_np = np.random.rand(2, 1, 4)
     dset = Dataset.from_array(dset_np, title='test')
@@ -614,13 +615,13 @@ class Testallmethod(unittest.TestCase):
     def test_all_single_axis(self):
         test_single_axis(self, 'all', title_prefix='all_aggregate_')
 
-    def test_all_multiple_axis(self):
+    def test_all_multiple_axes(self):
         test_multiple_axes(self, 'all', title_prefix='all_aggregate_')
 
     def test_all_keepdims(self):
         test_keepdims(self, 'all', title_prefix='all_aggregate_')
 
-    def test_all_keepdims_multiple_axis(self):
+    def test_all_keepdims_multiple_axes(self):
         test_keepdims_multiple_axes(self, 'all', title_prefix='all_aggregate_')
 
 
@@ -628,13 +629,13 @@ class Testanymethod(unittest.TestCase):
     def test_any_single_axis(self):
         test_single_axis(self, 'any', title_prefix='any_aggregate_')
 
-    def test_any_multiple_axis(self):
+    def test_any_multiple_axes(self):
         test_multiple_axes(self, 'any', title_prefix='any_aggregate_')
 
     def test_any_keepdims(self):
         test_keepdims(self, 'any', title_prefix='any_aggregate_')
 
-    def test_any_keepdims_multiple_axis(self):
+    def test_any_keepdims_multiple_axes(self):
         test_keepdims_multiple_axes(self, 'any', title_prefix='any_aggregate_')
 
 
@@ -642,13 +643,13 @@ class Testminmethod(unittest.TestCase):
     def test_min_single_axis(self):
         test_single_axis(self, 'min', title_prefix='min_aggregate_')
 
-    def test_min_multiple_axis(self):
+    def test_min_multiple_axes(self):
         test_multiple_axes(self, 'min', title_prefix='min_aggregate_')
 
     def test_min_keepdims(self):
         test_keepdims(self, 'min', title_prefix='min_aggregate_')
 
-    def test_min_keepdims_multiple_axis(self):
+    def test_min_keepdims_multiple_axes(self):
         test_keepdims_multiple_axes(self, 'min', title_prefix='min_aggregate_')
 
 
@@ -656,13 +657,13 @@ class Testmaxmethod(unittest.TestCase):
     def test_max_single_axis(self):
         test_single_axis(self, 'max', title_prefix='max_aggregate_')
 
-    def test_max_multiple_axis(self):
+    def test_max_multiple_axes(self):
         test_multiple_axes(self, 'max', title_prefix='max_aggregate_')
 
     def test_max_keepdims(self):
         test_keepdims(self, 'max', title_prefix='max_aggregate_')
 
-    def test_min_keepdims_multiple_axis(self):
+    def test_min_keepdims_multiple_axes(self):
         test_keepdims_multiple_axes(self, 'max', title_prefix='max_aggregate_')
 
 
