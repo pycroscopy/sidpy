@@ -700,6 +700,25 @@ class Testsummethod(unittest.TestCase):
         keepdims_multiple_axes_test(self, 'sum', title_prefix='sum_aggregate_')
 
     def test_sum_dtype(self):
+        # Have to take care of complex datasets when asked about the sum of the entire dataset
+        pass
+
+
+class Testmeanmethod(unittest.TestCase):
+    def test_mean_single_axis(self):
+        single_axis_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_multiple_axis(self):
+        multiple_axes_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_keepdims(self):
+        keepdims_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_keepdims_multiple_axis(self):
+        keepdims_multiple_axes_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_dtype(self):
+        # Have to take care of complex datasets when asked about the sum of the entire dataset
         pass
 
 

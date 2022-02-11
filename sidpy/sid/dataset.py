@@ -928,92 +928,68 @@ class Dataset(da.Array):
 
     @reduce_dims
     def all(self, axis=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not keepdims:
-            result = bool(super().all())
 
-        else:
-            result = self.like_data(super().all(axis=axis, keepdims=keepdims,
-                                                split_every=split_every, out=out), title_prefix='all_aggregate_',
-                                    checkdims=False)
+        result = self.like_data(super().all(axis=axis, keepdims=keepdims,
+                                            split_every=split_every, out=out), title_prefix='all_aggregate_',
+                                checkdims=False)
         return result, locals().copy()
 
     @reduce_dims
     def any(self, axis=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not keepdims:
-            result = bool(super().any())
 
-        else:
-            result = self.like_data(super().any(axis=axis, keepdims=keepdims,
-                                                split_every=split_every, out=out), title_prefix='any_aggregate_',
-                                    checkdims=False)
+        result = self.like_data(super().any(axis=axis, keepdims=keepdims,
+                                            split_every=split_every, out=out), title_prefix='any_aggregate_',
+                                checkdims=False)
         return result, locals().copy()
 
     @reduce_dims
     def min(self, axis=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not keepdims:
-            result = float(super().min())
-        
-        else:
-            result = self.like_data(super().min(axis=axis, keepdims=keepdims,
-                                                split_every=split_every, out=out), title_prefix='min_aggregate_',
-                                    checkdims=False)
+
+        result = self.like_data(super().min(axis=axis, keepdims=keepdims,
+                                            split_every=split_every, out=out), title_prefix='min_aggregate_',
+                                checkdims=False)
         return result, locals().copy()
 
 
     @reduce_dims
     def max(self, axis=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not keepdims:
-            result = float(super().max())
-        
-        else:
-            result = self.like_data(super().max(axis=axis, keepdims=keepdims,
-                                                split_every=split_every, out=out), title_prefix='max_aggregate_',
-                                    checkdims=False)
+
+        result = self.like_data(super().max(axis=axis, keepdims=keepdims,
+                                            split_every=split_every, out=out), title_prefix='max_aggregate_',
+                                checkdims=False)
         return result, locals().copy()
 
     @reduce_dims
     def sum(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not keepdims:
-            result = float(super().sum())
-        
-        else:
-            result = self.like_data(super().sum(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                split_every=split_every, out=out), title_prefix='sum_aggregate_',
-                                    checkdims=False)
+
+        result = self.like_data(super().sum(axis=axis, dtype=dtype, keepdims=keepdims,
+                                            split_every=split_every, out=out), title_prefix='sum_aggregate_',
+                                checkdims=False)
         return result, locals().copy()
 
     @reduce_dims
     def mean(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
-        if axis is None and not keepdims:
-            result = float(super().mean())
-        
-        else:
-            result = self.like_data(super().mean(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                 split_every=split_every, out=out), title_prefix='mean_aggregate_',
-                                    checkdims=False)
+
+        result = self.like_data(super().mean(axis=axis, dtype=dtype, keepdims=keepdims,
+                                             split_every=split_every, out=out), title_prefix='mean_aggregate_',
+                                checkdims=False)
         return result, locals().copy()
     
     @reduce_dims
     def std(self, axis=None, dtype=None, keepdims=False, ddof = 0, split_every=None, out=None):
-        if axis is None and not(keepdims):
-            result = float(super().std())
 
-        else:
-            result = self.like_data(super().std(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                ddof=0, split_every=split_every, out=out),
-                                    title_prefix='std_aggregate_', checkdims=False)
+        result = self.like_data(super().std(axis=axis, dtype=dtype, keepdims=keepdims,
+                                            ddof=0, split_every=split_every, out=out),
+                                title_prefix='std_aggregate_', checkdims=False)
 
         return result, locals().copy()
 
     @reduce_dims
     def var(self, axis=None, dtype=None, keepdims=False, ddof=0, split_every=None, out=None):
-        if axis is None and not keepdims:
-            result = float(super().var())
 
-        else:
-            result = self.like_data(super().var(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                ddof=ddof, split_every=split_every, out=out),
-                                    title_prefix='var_aggregate', checkdims=False)
+        result = self.like_data(super().var(axis=axis, dtype=dtype, keepdims=keepdims,
+                                            ddof=ddof, split_every=split_every, out=out),
+                                title_prefix='var_aggregate', checkdims=False)
         return result, locals().copy()
     
     @reduce_dims
