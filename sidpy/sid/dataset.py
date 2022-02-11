@@ -35,7 +35,6 @@ from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer
-
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
 
@@ -63,7 +62,7 @@ def view_subclass(dask_array, cls):
 
     Returns
     -------
-
+    cls: sidpy.Dataset
     """
 
     return cls(dask_array.dask, name=dask_array.name, chunks=dask_array.chunks,
@@ -95,8 +94,8 @@ class Dataset(da.Array):
     -data_descriptor: returns a label for the colorbar in matplotlib and such
 
     functions:
-    -from_array(data, title): constructs the dataset form a array like object (numpy array, dask array, ...)
-    -like_data(data,title): constructs the dataset form a array like object and copies attributes and
+    -from_array(data, title): constructs the dataset form an array like object (numpy array, dask array, ...)
+    -like_data(data,title): constructs the dataset form an array like object and copies attributes and
     metadata from parent dataset
     -copy()
     -plot(): plots dataset dependent on data_type and dimension_types.
@@ -179,7 +178,7 @@ class Dataset(da.Array):
             print(self.h5_dataset)
 
     @classmethod
-    def from_array(cls, x, title='generic', chunks='auto', lock=False,
+    def from_array(cls, x, title='generic', chunks='auto',  lock=False,
                    datatype='UNKNOWN', units='generic', quantity='generic',
                    modality='generic', source='generic', **kwargs):
         """
@@ -195,10 +194,16 @@ class Dataset(da.Array):
         title: optional string
             the title of this dataset
         lock: boolean
+        datatype: str or sidpy.DataType
+            data type of set: i.e.: 'image', spectrum', ..
+        units: str
+            units of dataset i.e. counts, A
+        quantity: str
+            quantity of dataset like intensity
 
         Returns
         -------
-         sidpy dataset
+        sidpy dataset
 
         """
 
@@ -208,7 +213,7 @@ class Dataset(da.Array):
         else:
             dask_array = da.from_array(np.array(x), chunks=chunks, lock=lock)
 
-        # view as sub-class
+        # view as subclass
         sid_dataset = view_subclass(dask_array, cls)
         sid_dataset.data_type = datatype
         sid_dataset.units = units
@@ -257,7 +262,7 @@ class Dataset(da.Array):
         checkdims = kwargs.get('checkdims', True)
 
         new_data = self.from_array(data, chunks=chunks, lock=lock)
-
+        
         new_data.data_type = self.data_type
 
         # units
@@ -273,9 +278,9 @@ class Dataset(da.Array):
                 new_data.title = self.title
             else:
                 new_data.title = self.title + '_new'
-
-        new_data.title = title_prefix + new_data.title + title_suffix
-
+        
+        new_data.title = title_prefix+new_data.title+title_suffix
+        
         # quantity
         if reset_quantity:
             new_data.quantity = 'generic'
@@ -295,7 +300,7 @@ class Dataset(da.Array):
                     try:
                         scale = get_slope(self._axes[dim])
                         # axis = self._axes[dim].copy()
-                        axis = Dimension(np.arange(new_data.shape[dim]) * scale, self._axes[dim].name)
+                        axis = Dimension(np.arange(new_data.shape[dim])*scale, self._axes[dim].name)
                         axis.quantity = self._axes[dim].quantity
                         axis.units = self._axes[dim].units
                         axis.dimension_type = self._axes[dim].dimension_type
@@ -388,7 +393,7 @@ class Dataset(da.Array):
             raise TypeError('Dimension must be an integer')
         if (0 > ind) or (ind >= self.ndim):
             raise IndexError('Dimension must be an integer between 0 and {}'
-                             ''.format(self.ndim - 1))
+                             ''.format(self.ndim-1))
         for key, dim in self._axes.items():
             if key != ind:
                 if name == dim.name:
@@ -457,7 +462,7 @@ class Dataset(da.Array):
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
 
-    def plot(self, verbose=False, **kwargs):
+    def plot(self, verbose=False, figure=None, **kwargs):
         """
         Plots the dataset according to the
          - shape of the sidpy Dataset,
@@ -480,7 +485,7 @@ class Dataset(da.Array):
 
         Returns
         -------
-            does not return anything but the view parameter is set with access to figure and axis.
+        self.view.fig: matplotlib figure reference
 
         """
 
@@ -493,35 +498,35 @@ class Dataset(da.Array):
         if len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
-            self.view = CurveVisualizer(self)
-            plt.show()
+            self.view = CurveVisualizer(self, figure=figure, **kwargs)
+            # plt.show()
         elif len(self.shape) == 2:
             # this can be an image or a set of line_plots
             if verbose:
                 print('2D dataset')
             if self.data_type == DataType.IMAGE:
-                self.view = ImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type.value <= DataType['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
-                self.view = CurveVisualizer(self, **kwargs)
-                plt.show()
+                self.view = CurveVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
             if verbose:
                 print('3D dataset')
             if self.data_type == DataType.IMAGE:
-                self.view = ImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
-                self.view = ImageStackVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
-                self.view = SpectralImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 4:
@@ -533,13 +538,13 @@ class Dataset(da.Array):
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
-                self.view = ImageStackVisualizer(self, **kwargs)
+                self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
                 plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
-                self.view = SpectralImageVisualizer(self, **kwargs)
+                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 plt.show()
             elif self.data_type == DataType.IMAGE_4D:
-                self.view = FourDimImageVisualizer(self, **kwargs)
+                self.view = FourDimImageVisualizer(self, figure=figure, **kwargs)
                 plt.show()
                 if verbose:
                     print('4D dataset')
@@ -547,6 +552,45 @@ class Dataset(da.Array):
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         else:
             raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
+        return self.view.fig
+
+    def set_thumbnail(self, figure=None, thumbnail_size=128):
+        """
+        Creates a thumbnail which is stored in thumbnail attribute of sidpy Dataset
+        Thumbnail data is saved to Thumbnail group of associated h5_file if it exists
+
+        Parameters
+        ----------
+        thumbnail_size: int
+            size of icon in pixels (length of square)
+
+        Returns
+        -------
+        thumbnail: numpy.ndarray
+        """
+
+        import imageio
+        # Thumbnail configurations for matplotlib
+        kwargs = {'figsize': (1,1), 'colorbar': False, 'set_title': False}
+        view = self.plot(figure=figure, **kwargs)
+        for axis in view.axes:
+            axis.set_axis_off()
+
+        # Creating Thumbnail as png image
+        view.savefig('thumb.png', dpi=thumbnail_size)
+        self.thumbnail = imageio.imread('thumb.png')
+
+        # Writing thumbnail to h5_file if it exists
+        if self.h5_dataset is not None:
+            if 'Thumbnail' not in self.h5_dataset.file:
+                thumb_group = self.h5_dataset.file.create_group("Thumbnail")
+            else:
+                thumb_group = self.h5_dataset.file["Thumbnail"]
+            if "Thumbnail" in thumb_group:
+                del thumb_group["Thumbnail"]
+            thumb_dset = thumb_group.create_dataset("Thumbnail", data=self.thumbnail)
+
+        return self.thumbnail
 
     def get_extent(self, dimensions):
         """
@@ -565,10 +609,10 @@ class Dataset(da.Array):
         extent = []
         for ind, dim in enumerate(dimensions):
             temp = self._axes[dim].values
-            start = temp[0] - (temp[1] - temp[0]) / 2
-            end = temp[-1] + (temp[-1] - temp[-2]) / 2
+            start = temp[0] - (temp[1] - temp[0])/2
+            end = temp[-1] + (temp[-1] - temp[-2])/2
             if ind == 1:
-                extent.append(end)  # y axis starts on top
+                extent.append(end)  # y-axis starts on top
                 extent.append(start)
             else:
                 extent.append(start)
@@ -709,7 +753,7 @@ class Dataset(da.Array):
         elif value is None:
             self.hdf_close()
         else:
-            raise ValueError('h5_dataset needs to be a hdf5 Dataset')
+            raise TypeError('h5_dataset needs to be a hdf5 Dataset')
 
     @property
     def metadata(self):
@@ -869,7 +913,7 @@ class Dataset(da.Array):
         def wrapper_method(self, *args, **kwargs):
             result, arguments = original_method(self, *args, **kwargs)
             axis, keepdims = arguments.get('axis'), arguments.get('keepdims', False)
-            if axis is None and not (keepdims):
+            if axis is None and not keepdims:
                 return result
             if axis is None:
                 axes = list(np.arange(self.ndim))
@@ -882,7 +926,6 @@ class Dataset(da.Array):
 
         return wrapper_method
 
-    # tests written by mani
     @reduce_dims
     def all(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
@@ -894,7 +937,6 @@ class Dataset(da.Array):
                                     checkdims=False)
         return result, locals().copy()
 
-    # tests written by mani
     @reduce_dims
     def any(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
@@ -906,36 +948,34 @@ class Dataset(da.Array):
                                     checkdims=False)
         return result, locals().copy()
 
-    # tests written by mani
     @reduce_dims
     def min(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
             result = float(super().min())
-
+        
         else:
             result = self.like_data(super().min(axis=axis, keepdims=keepdims,
                                                 split_every=split_every, out=out), title_prefix='min_aggregate_',
                                     checkdims=False)
         return result, locals().copy()
 
-    # tests written by mani
+
     @reduce_dims
     def max(self, axis=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
             result = float(super().max())
-
+        
         else:
             result = self.like_data(super().max(axis=axis, keepdims=keepdims,
                                                 split_every=split_every, out=out), title_prefix='max_aggregate_',
                                     checkdims=False)
         return result, locals().copy()
 
-
     @reduce_dims
     def sum(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
             result = float(super().sum())
-
+        
         else:
             result = self.like_data(super().sum(axis=axis, dtype=dtype, keepdims=keepdims,
                                                 split_every=split_every, out=out), title_prefix='sum_aggregate_',
@@ -946,16 +986,16 @@ class Dataset(da.Array):
     def mean(self, axis=None, dtype=None, keepdims=False, split_every=None, out=None):
         if axis is None and not keepdims:
             result = float(super().mean())
-
+        
         else:
             result = self.like_data(super().mean(axis=axis, dtype=dtype, keepdims=keepdims,
                                                  split_every=split_every, out=out), title_prefix='mean_aggregate_',
                                     checkdims=False)
         return result, locals().copy()
-
+    
     @reduce_dims
-    def std(self, axis=None, dtype=None, keepdims=False, ddof=0, split_every=None, out=None):
-        if axis is None and not keepdims:
+    def std(self, axis=None, dtype=None, keepdims=False, ddof = 0, split_every=None, out=None):
+        if axis is None and not(keepdims):
             result = float(super().std())
 
         else:
@@ -975,7 +1015,7 @@ class Dataset(da.Array):
                                                 ddof=ddof, split_every=split_every, out=out),
                                     title_prefix='var_aggregate', checkdims=False)
         return result, locals().copy()
-
+    
     @reduce_dims
     def argmin(self, axis=None, split_every=None, out=None):
         if axis is None:
@@ -1067,7 +1107,7 @@ class Dataset(da.Array):
         new_order = np.arange(self.ndim)
         new_order[axis1] = axis2
         new_order[axis2] = axis1
-        print(new_order)
+        # print(new_order)
         return self.__rearrange_axes(result, new_order)
 
     def transpose(self, *axes):
@@ -1102,7 +1142,6 @@ class Dataset(da.Array):
              split_every=None, out=None):
         if axis is None and not (keepdims):
             result = float(super().prod())
-
         else:
             result = self.like_data(super().prod(axis=axis, dtype=dtype, keepdims=keepdims,
                                                  split_every=split_every, out=out), checkdims=False)

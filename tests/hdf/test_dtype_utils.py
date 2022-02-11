@@ -56,10 +56,9 @@ class TestDtypeUtils(unittest.TestCase):
                                                         1j * np.random.random(size=num_elems), dtype=np.complex64)
                 h5_f.flush()
         return
-    
+
     def tearDown(self):
         os.remove(file_path)
-
 
 
 class TestStackRealToComplex(unittest.TestCase):
@@ -592,7 +591,7 @@ class TestValidateDtype(unittest.TestCase):
 
     def test_valid(self):
         struct_dtype = np.dtype({'names': ['r', 'g', 'b'],
-                                'formats': [np.float32, np.uint16, np.float64]})
+                                 'formats': [np.float32, np.uint16, np.float64]})
         for dtype in [np.float32, np.float16, np.complex, np.complex64, np.uint8, np.int16, struct_dtype]:
             self.assertTrue(dtype_utils.validate_dtype(dtype))
 

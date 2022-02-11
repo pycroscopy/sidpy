@@ -19,7 +19,7 @@ from dask import array as da
 from sidpy.__version__ import version as sidpy_version
 from sidpy.base.string_utils import validate_single_string_arg, \
     validate_list_of_strings, clean_string_att, get_time_stamp
-from sidpy.base.dict_utils import flatten_dict
+# from sidpy.base.dict_utils import flatten_dict
 
 if sys.version_info.major == 3:
     unicode = str
@@ -27,7 +27,7 @@ if sys.version_info.major == 3:
 
 def print_tree(parent, rel_paths=False):
     """
-    Simple function to recursively print the contents of an hdf5 group
+    Simple function to recursively print the contents of a hdf5 group
 
     Parameters
     ----------
@@ -178,12 +178,11 @@ def get_attributes(h5_object, attr_names=None, strict=False):
         try:
             att_dict[attr] = get_attr(h5_object, attr)
         except KeyError:
-            mesg = '"{}" is not an attribute of {}'.format(attr,
-                                                           h5_object.name)
+            message = '"{}" is not an attribute of {}'.format(attr, h5_object.name)
             if strict:
-                raise KeyError(mesg)
+                raise KeyError(message)
             else:
-                warn(mesg)
+                warn(message)
 
     return att_dict
 
@@ -292,7 +291,7 @@ def link_h5_obj_as_alias(h5_main, h5_ancillary, alias_name):
     Parameters
     ------------
     h5_main : h5py.Dataset
-        Reference to the the object to which attributes will be added
+        Reference to the object to which attributes will be added
     h5_ancillary : h5py.Dataset
         object whose reference that can be accessed from src.attrs
     alias_name : String
@@ -339,13 +338,13 @@ def is_editable_h5(h5_obj):
 
 def write_book_keeping_attrs(h5_obj):
     """
-    Writes basic book-keeping and posterity related attributes to groups
+    Writes basic bookkeeping and posterity related attributes to groups
     created using sidpy such as machine id, version, timestamp.
 
     Parameters
     ----------
     h5_obj : :class:`h5py.Dataset`, :class:`h5py.Group`, or :class:`h5py.File`
-        Object to which basic book-keeping attributes need to be written
+        Object to which basic bookkeeping attributes need to be written
 
     """
     if not isinstance(h5_obj, (h5py.Group, h5py.File, h5py.Dataset)):
@@ -402,26 +401,49 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
             if verbose:
                 print('taking the name: {} of Enum: {}'.format(val.name, val))
             val = val.name
+
+        if isinstance(val, list):
+            dictionaries = False
+            for item in val:
+                if isinstance(item, dict):
+                    dictionaries = True
+                    break
+            if dictionaries:
+                new_val = {}
+                for key2, item in enumerate(val):
+                    new_val[str(key2)] = item
+                val = new_val
+
         if isinstance(val, dict):
-            raise ValueError('provided dictionary was nested, not flat. '
-                             'Flatten dictionary using sidpy.base.dict_utils.'
-                             'flatten_dict before calling sidpy.hdf.hdf_utils.'
-                             'write_simple_attrs')
+            if isinstance(h5_obj, h5py.Dataset):
+                raise ValueError('provided dictionary was nested, not flat. '
+                                 'Flatten dictionary using sidpy.base.dict_utils.'
+                                 'flatten_dict before calling sidpy.hdf.hdf_utils.'
+                                 'write_simple_attrs')
+            else:
+                new_object = h5_obj.create_group(str(key))
+                write_simple_attrs(new_object, val, force_to_str=True, verbose=False)
+            
         if verbose:
             print('Writing attribute: {} with value: {}'.format(key, val))
-        clean_val = clean_string_att(val)
-        if verbose:
-            print('Attribute cleaned into: {}'.format(clean_val))
-        try:
-            h5_obj.attrs[key] = clean_val
-        except Exception as excp:
-            if force_to_str:
-                warn('Casting attribute value: {} of type: {} to str'
-                     ''.format(val, type(val)))
-                h5_obj.attrs[key] = str(val)
-            else:
-                raise excp('Could not write attribute value: {} of type: {}'
-                           ''.format(val, type(val)))
+        
+        if not (isinstance(val, dict)):  # not sure how this can happen
+            if verbose:
+                print(key, val)
+            clean_val = clean_string_att(val)
+            
+            if verbose:
+                print('Attribute cleaned into: {}'.format(clean_val))
+            try:
+                h5_obj.attrs[key] = clean_val
+            except Exception as excp:
+                if verbose:
+                    if force_to_str:
+                        warn('Casting attribute value: {} of type: {} to str'.format(val, type(val)))
+                        h5_obj.attrs[key] = str(val)
+                    else:
+                        raise excp('Could not write attribute value: {} of type: {}'.format(val, type(val)))
+
     if verbose:
         print('Wrote all (simple) attributes to {}: {}\n'
               ''.format(type(h5_obj), h5_obj.name.split('/')[-1]))
@@ -429,12 +451,12 @@ def write_simple_attrs(h5_obj, attrs, force_to_str=True, verbose=False):
 
 def lazy_load_array(dataset):
     """
-    Loads the provided object as a dask array (h5py.Dataset or numpy.ndarray
+    Loads the provided object as a dask array (h5py.Dataset or numpy.ndarray)
 
     Parameters
     ----------
     dataset : :class:`numpy.ndarray`, or :class:`h5py.Dataset`, or
-        :class:`dask.array.core.Array` to laod as dask array
+        :class:`dask.array.core.Array` to load as dask array
 
     Returns
     -------
@@ -468,11 +490,11 @@ def copy_attributes(source, dest, skip_refs=True, verbose=False):
     verbose : bool, optional. Default = False
         Whether or not to print logs for debugging
     """
-    mesg = 'should be a h5py.Dataset, h5py.Group,or h5py.File object'
+    message = 'should be a h5py.Dataset, h5py.Group,or h5py.File object'
     if not isinstance(source, (h5py.Dataset, h5py.Group, h5py.File)):
-        raise TypeError('source ' + mesg)
+        raise TypeError('source ' + message)
     if not isinstance(dest, (h5py.Dataset, h5py.Group, h5py.File)):
-        raise TypeError('dest ' + mesg)
+        raise TypeError('dest ' + message)
 
     skip_dset_refs = skip_refs
     try:
@@ -610,7 +632,7 @@ def copy_dataset(h5_orig_dset, h5_dest_grp, alias=None, verbose=False):
 def copy_linked_objects(h5_source, h5_dest, verbose=False):
     """
     Recursively copies datasets linked to the source h5 object to the
-    destination h5 object that are be in different HDF5 files.
+    destination h5 object that are in different HDF5 files.
 
     This is for copying ancillary datasets to a target dataset that is
     missing ancillary datasets. It is not meant for copying to a Group,
@@ -750,8 +772,8 @@ def write_dict_to_h5_group(h5_group, metadata, group_name):
 
     Notes
     -----
-    Nested dictionaries will be flattened until sidpy implements functions
-    to write and read nested dictionaries to and from HDF5 files
+    Writes now (sidpy version 0.0.6) nested dictionaries to HDF5 files.
+    Use h5_group_to_dict to read from HDF5 file.
     """
     if not isinstance(metadata, dict):
         raise TypeError('metadata is not a dict but of type: {}'
@@ -765,6 +787,32 @@ def write_dict_to_h5_group(h5_group, metadata, group_name):
     validate_single_string_arg(group_name, 'group_name')
     group_name = group_name.replace(' ', '_')
     h5_md_group = h5_group.create_group(group_name)
-    flat_dict = flatten_dict(metadata)
-    write_simple_attrs(h5_md_group, flat_dict)
+    # flat_dict = flatten_dict(metadata)
+    write_simple_attrs(h5_md_group, metadata)
     return h5_md_group
+
+
+def h5_group_to_dict(group, group_dict={}):
+    """ 
+    Reads a hdf5 group into a nested dictionary
+    
+    Parameters
+    ----------
+    group: hdf5.Group
+        starting group to read from
+    group_dict: dict
+        group dictionary; mostly needed for recursive reading of nested groups but can be used for initialization
+    Returns
+    -------
+    group_dict: dict
+    """
+
+    if not isinstance(group, h5py.Group):
+        raise TypeError('we need a hypy group to read from')
+    if not isinstance(group_dict, dict):
+        raise TypeError('group_dict needs to be a pytho dictionary')
+        
+    group_dict[group.name.split('/')[-1]] = dict(group.attrs)
+    for key in group.keys():
+        h5_group_to_dict(group[key], group_dict[group.name.split('/')[-1]])
+    return group_dict
