@@ -914,7 +914,7 @@ class Dataset(da.Array):
             result, arguments = original_method(self, *args, **kwargs)
             axis, keepdims = arguments.get('axis'), arguments.get('keepdims', False)
             if axis is None and not keepdims:
-                return result
+                return result.compute()
             if axis is None:
                 axes = list(np.arange(self.ndim))
             elif isinstance(axis, int):
