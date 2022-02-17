@@ -989,34 +989,30 @@ class Dataset(da.Array):
 
         result = self.like_data(super().var(axis=axis, dtype=dtype, keepdims=keepdims,
                                             ddof=ddof, split_every=split_every, out=out),
-                                title_prefix='var_aggregate', checkdims=False)
+                                title_prefix='var_aggregate_', checkdims=False)
         return result, locals().copy()
     
     @reduce_dims
     def argmin(self, axis=None, split_every=None, out=None):
-        if axis is None:
-            result = int(super().argmin(axis=axis, split_every=split_every, out=out))
-        else:
-            result = self.like_data(super().argmin(axis=axis, split_every=split_every, out=out),
-                                    title_suffix='_argmin_indices', reset_units=True, reset_quantity=True,
-                                    check_dims=False)
+
+        result = self.like_data(super().argmin(axis=axis, split_every=split_every, out=out),
+                                title_prefix='argmin_aggregate_', reset_units=True, reset_quantity=True,
+                                check_dims=False)
 
         return result, locals().copy()
 
     @reduce_dims
     def argmax(self, axis=None, split_every=None, out=None):
-        if axis is None:
-            result = int(super().argmax(axis=axis, split_every=split_every, out=out))
-        else:
-            result = self.like_data(super().argmax(axis=axis, split_every=split_every, out=out),
-                                    title_suffix='_argmin_indices', reset_units=True, reset_quantity=True,
-                                    check_dims=False)
+
+        result = self.like_data(super().argmax(axis=axis, split_every=split_every, out=out),
+                                title_prefix='argmax_aggregate_', reset_units=True, reset_quantity=True,
+                                check_dims=False)
 
         return result, locals().copy()
 
     def angle(self, deg=False):
         result = self.like_data(da.angle(self, deg=deg), reset_units=True,
-                                reset_quantity=True, title_suffix='_angle', checkdims=True)
+                                reset_quantity=True, title_prefix='angle_', checkdims=True)
         if deg:
             result.units = 'degrees'
         else:
@@ -1025,13 +1021,13 @@ class Dataset(da.Array):
 
     def conj(self):
         return self.like_data(super().conj(), reset_units=True,
-                              reset_quantity=True, title_suffix='_conj', checkdims=True)
+                              reset_quantity=True, title_prefix='conj_', checkdims=True)
 
     def astype(self, dtype, **kwargs):
         return self.like_data(super().astype(dtype=dtype, **kwargs))
 
     def flatten(self):
-        return self.like_data(super().flatten(), title_suffix='_raveled',
+        return self.like_data(super().flatten(), title_prefix='flattened_',
                               check_dims=False)
 
     def ravel(self):
@@ -1039,7 +1035,7 @@ class Dataset(da.Array):
 
     def clip(self, min=None, max=None):
         return self.like_data(super().clip(min=min, max=max),
-                              reset_quantity=True, title_suffix='_clipped')
+                              reset_quantity=True, title_prefix='clipped_')
 
     def compute_chunk_sizes(self):
         return self.like_data(super().compute_chunk_sizes())
@@ -1050,7 +1046,7 @@ class Dataset(da.Array):
             axis = 0
 
         return self.like_data(super().cumprod(axis=axis, dtype=dtype, out=out,
-                                              method=method), title_suffix='_cumprod', reset_quantity=True)
+                                              method=method), title_prefix='cumprod_', reset_quantity=True)
 
     def cumsum(self, axis, dtype=None, out=None, method='sequential'):
         if axis is None:
@@ -1058,7 +1054,7 @@ class Dataset(da.Array):
             axis = 0
 
         return self.like_data(super().cumsum(axis=axis, dtype=dtype, out=out,
-                                             method=method), title_suffix='_cumprod', reset_quantity=True)
+                                             method=method), title_prefix='cumsum_', reset_quantity=True)
 
     # What happens to the dimensions??
     def dot(self, other):
@@ -1083,7 +1079,7 @@ class Dataset(da.Array):
         new_order = np.arange(self.ndim)
         new_order[axis1] = axis2
         new_order[axis2] = axis1
-        # print(new_order)
+
         return self.__rearrange_axes(result, new_order)
 
     def transpose(self, *axes):
@@ -1105,7 +1101,7 @@ class Dataset(da.Array):
         # This somehow adds an extra dimension at the end
         # Will come back to this
         warnings.warn('Dimensional information will be lost.\
-                Please use fold unfold to combine dimensions')
+                Please use fold, unfold to combine dimensions')
         if len(shape) == 1 and isinstance(shape[0], Iterable):
             new_shape = shape[0]
         else:
@@ -1116,11 +1112,11 @@ class Dataset(da.Array):
     @reduce_dims
     def prod(self, axis=None, dtype=None, keepdims=False,
              split_every=None, out=None):
-        if axis is None and not (keepdims):
-            result = float(super().prod())
-        else:
-            result = self.like_data(super().prod(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                 split_every=split_every, out=out), checkdims=False)
+
+        result = self.like_data(super().prod(axis=axis, dtype=dtype, keepdims=keepdims,
+                                             split_every=split_every, out=out),
+                                title_prefix='prod_aggregate', reset_units=True, reset_quantity=True,
+                                checkdims=False)
         return result, locals().copy()
 
     @reduce_dims
@@ -1128,7 +1124,7 @@ class Dataset(da.Array):
 
         if self.ndim == 2:
             axes = None
-            result = float(super().trace(offset=offset))
+            result = (super().trace(offset=offset))
 
         else:
             axes = [axis1, axis2]
@@ -1159,15 +1155,12 @@ class Dataset(da.Array):
                keepdims=False, ddof=0, split_every=None,
                out=None):
 
-        if axis is None and not (keepdims):
-            result = float(super().moment(order=order))
-
-        else:
-            result = self.like_data(super().moment(order=order,
-                                                   axis=axis,
-                                                   dtype=dtype, keepdims=keepdims,
-                                                   ddof=0, split_every=split_every,
-                                                   out=out), checkdims=False)
+        result = self.like_data(super().moment(order=order,
+                                               axis=axis,
+                                               dtype=dtype, keepdims=keepdims,
+                                               ddof=0, split_every=split_every,
+                                               out=out),
+                                title_prefix='moment_aggregate_', checkdims=False)
         return result, locals().copy()
 
     def persist(self, **kwargs):
@@ -1277,7 +1270,7 @@ class Dataset(da.Array):
             dim_order_flattened = self.metadata['fold_attr']['dim_order_flattened']
             old_axes = self.metadata['fold_attr']['_axes']
         except:
-            raise NotImplementedError('unfold only works on the dataset that was collapsed by'
+            raise NotImplementedError('unfold only works on the dataset that was collapsed/folded by'
                                       ' the fold method')
 
         reshaped_dset = da.reshape(self, shape_transposed)
