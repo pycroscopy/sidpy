@@ -13,6 +13,7 @@ import numpy as np
 import dask.array as da
 import string
 import sys
+
 sys.path.insert(0, "../../sidpy/")
 
 from sidpy.sid.dimension import Dimension, DimensionType
@@ -20,7 +21,6 @@ from sidpy.sid.dataset import DataType, Dataset
 
 if sys.version_info.major == 3:
     unicode = str
-
 
 generic_attributes = ['title', 'quantity', 'units', 'modality', 'source']
 
@@ -65,7 +65,88 @@ def validate_dataset_properties(self, dataset, values, name='generic',
 
     # Make sure we do not have too many dimensions
     self.assertFalse(hasattr(dataset, 'dim_{}'.format(len(values.shape))))
-    self.assertFalse(hasattr(dataset, string.ascii_lowercase[len(values.shape)]))
+    # self.assertFalse(hasattr(dataset, string.ascii_lowercase[len(values.shape)]))
+
+
+# Following 4 methods are used in testing the methods that reduce dimensions of the dataset
+def single_axis_test(self, func, **kwargs):
+    dset_np = np.random.rand(4, 1, 5)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
+    dset_1 = sid_func(axis=0, keepdims=False)
+    dim_dict = {0: dset._axes[1].copy(), 1: dset._axes[2].copy()}
+
+    title_prefix = kwargs.get('title_prefix')
+    validate_dataset_properties(self, dset_1, np_func(axis=0, keepdims=False),
+                                title=title_prefix + dset.title,
+                                modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                data_type=DataType.UNKNOWN,
+                                metadata={}, original_metadata={}
+                                )
+
+
+def multiple_axes_test(self, func, **kwargs):
+    dset_np = np.random.rand(1, 6, 4)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
+    dset_1 = sid_func(axis=(0, 1), keepdims=False)
+    dim_dict = {0: dset._axes[2].copy()}
+
+    title_prefix = kwargs.get('title_prefix')
+    validate_dataset_properties(self, dset_1, np_func(axis=(0, 1), keepdims=False),
+                                title=title_prefix + dset.title,
+                                modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                data_type=DataType.UNKNOWN,
+                                metadata={}, original_metadata={}
+                                )
+
+
+# The following two tests are for when keep_dims is set to True
+def keepdims_test(self, func, **kwargs):
+    dset_np = np.random.rand(2, 1, 4)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
+
+    dset_1 = sid_func(axis=0, keepdims=True)
+
+    dim_dict = dset._axes.copy()
+    dim_dict[0] = Dimension(np.arange(1), name=dset._axes[0].name,
+                            quantity=dset._axes[0].quantity, units=dset._axes[0].units,
+                            dimension_type=dset._axes[0].dimension_type)
+
+    title_prefix = kwargs.get('title_prefix')
+    validate_dataset_properties(self, dset_1, np_func(axis=0, keepdims=True),
+                                title=title_prefix + dset.title,
+                                modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                data_type=DataType.UNKNOWN,
+                                metadata={}, original_metadata={}
+                                )
+
+
+def keepdims_multiple_axes_test(self, func, **kwargs):
+    dset_np = np.random.rand(1, 5, 4)
+    dset = Dataset.from_array(dset_np, title='test')
+    sid_func = getattr(dset, func)
+    np_func = getattr(dset_np, func)
+    title_prefix = kwargs.get('title_prefix')
+
+    dset_1 = sid_func(axis=(0, 1), keepdims=True)
+    dim_dict = dset._axes.copy()
+    dim_dict[0] = Dimension(np.arange(1), name=dset._axes[0].name,
+                            quantity=dset._axes[0].quantity, units=dset._axes[0].units,
+                            dimension_type=dset._axes[0].dimension_type)
+    dim_dict[1] = Dimension(np.arange(1), name=dset._axes[1].name,
+                            quantity=dset._axes[1].quantity, units=dset._axes[1].units,
+                            dimension_type=dset._axes[1].dimension_type)
+    validate_dataset_properties(self, dset_1, np_func(axis=(0, 1), keepdims=True),
+                                title=title_prefix + dset.title,
+                                modality=dset.modality, source=dset.modality, dimension_dict=dim_dict,
+                                data_type=DataType.UNKNOWN,
+                                metadata={}, original_metadata={}
+                                )
 
 
 class TestDatasetFromArray(unittest.TestCase):
@@ -324,7 +405,7 @@ class TestLikeData(unittest.TestCase):
 
         # self.assertEqual(descriptor.a.values), np.arange(3)*.5)
         expected = descriptor.a.values
-        actual = np.arange(3)*.5
+        actual = np.arange(3) * .5
         self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
 
@@ -482,7 +563,7 @@ class TestHelperFunctions(unittest.TestCase):
         descriptor.dim_1.dimension_type = 'spatial'
         descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', dimension_type='spatial'))
 
-        extent = descriptor.get_extent([0,1])
+        extent = descriptor.get_extent([0, 1])
         self.assertEqual(extent[0], -0.5)
         self.assertEqual(extent[1], 3.5)
 
@@ -546,6 +627,98 @@ class TestViewOriginalMetadata(unittest.TestCase):
         pass
 
     def test_entered_metadata(self):
+        pass
+
+
+class Testallmethod(unittest.TestCase):
+    def test_all_single_axis(self):
+        single_axis_test(self, 'all', title_prefix='all_aggregate_')
+
+    def test_all_multiple_axes(self):
+        multiple_axes_test(self, 'all', title_prefix='all_aggregate_')
+
+    def test_all_keepdims(self):
+        keepdims_test(self, 'all', title_prefix='all_aggregate_')
+
+    def test_all_keepdims_multiple_axes(self):
+        keepdims_multiple_axes_test(self, 'all', title_prefix='all_aggregate_')
+
+
+class Testanymethod(unittest.TestCase):
+    def test_any_single_axis(self):
+        single_axis_test(self, 'any', title_prefix='any_aggregate_')
+
+    def test_any_multiple_axes(self):
+        multiple_axes_test(self, 'any', title_prefix='any_aggregate_')
+
+    def test_any_keepdims(self):
+        keepdims_test(self, 'any', title_prefix='any_aggregate_')
+
+    def test_any_keepdims_multiple_axes(self):
+        keepdims_multiple_axes_test(self, 'any', title_prefix='any_aggregate_')
+
+
+class Testminmethod(unittest.TestCase):
+    def test_min_single_axis(self):
+        single_axis_test(self, 'min', title_prefix='min_aggregate_')
+
+    def test_min_multiple_axes(self):
+        multiple_axes_test(self, 'min', title_prefix='min_aggregate_')
+
+    def test_min_keepdims(self):
+        keepdims_test(self, 'min', title_prefix='min_aggregate_')
+
+    def test_min_keepdims_multiple_axes(self):
+        keepdims_multiple_axes_test(self, 'min', title_prefix='min_aggregate_')
+
+
+class Testmaxmethod(unittest.TestCase):
+    def test_max_single_axis(self):
+        single_axis_test(self, 'max', title_prefix='max_aggregate_')
+
+    def test_max_multiple_axes(self):
+        multiple_axes_test(self, 'max', title_prefix='max_aggregate_')
+
+    def test_max_keepdims(self):
+        keepdims_test(self, 'max', title_prefix='max_aggregate_')
+
+    def test_min_keepdims_multiple_axes(self):
+        keepdims_multiple_axes_test(self, 'max', title_prefix='max_aggregate_')
+
+
+class Testsummethod(unittest.TestCase):
+    def test_sum_single_axis(self):
+        single_axis_test(self, 'sum', title_prefix='sum_aggregate_')
+
+    def test_sum_multiple_axis(self):
+        multiple_axes_test(self, 'sum', title_prefix='sum_aggregate_')
+
+    def test_sum_keepdims(self):
+        keepdims_test(self, 'sum', title_prefix='sum_aggregate_')
+
+    def test_sum_keepdims_multiple_axis(self):
+        keepdims_multiple_axes_test(self, 'sum', title_prefix='sum_aggregate_')
+
+    def test_sum_dtype(self):
+        # Have to take care of complex datasets when asked about the sum of the entire dataset
+        pass
+
+
+class Testmeanmethod(unittest.TestCase):
+    def test_mean_single_axis(self):
+        single_axis_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_multiple_axis(self):
+        multiple_axes_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_keepdims(self):
+        keepdims_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_keepdims_multiple_axis(self):
+        keepdims_multiple_axes_test(self, 'mean', title_prefix='mean_aggregate_')
+
+    def test_mean_dtype(self):
+        # Have to take care of complex datasets when asked about the sum of the entire dataset
         pass
 
 
