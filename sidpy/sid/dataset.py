@@ -1187,9 +1187,13 @@ class Dataset(da.Array):
             new axis after the collapse
             -Default: None
         method: str
-            -'spaspec' collapses the original dataset to a 2D dataset, where 
+            -'spaspec': collapses the original dataset to a 2D dataset, where 
             spatail dimensions form the zeroth axis and spectral dimensions 
             form the first axis
+            -'spa': combines all the spatial dimensions into a single dimension and 
+            the combined dimension will be first
+            -'spec': combines all the spectral dimensions into a single dimension and 
+            the combined dimension will be last
             -Uses the user defined dim_order when set to None
             -Default: None
 
@@ -1222,6 +1226,21 @@ class Dataset(da.Array):
                                               nor Spectral Type and is considered to be a \
                                               part of the last collapsed dimension')
                     dim_order_list[1].extend(dim)
+
+        if method == 'spa':
+            dim_order_list = [[]]
+            for dim, axis in self._axes.items():
+                if axis.dimension_type == DimensionType.SPATIAL:
+                    dim_order_list[0].extend(dim)
+                else:
+                    dim_order_list.append([dim])
+
+            if len(dim_order_list[0]) == 0:
+                raise NotImplementedError('No spatial dimensions found')
+            if len(dim_order_list[0]) == 1:
+                warnings.warn('Only one spatial dimension found\
+                                Folding returns the original dataset')
+
 
         # We need the flattened list to transpose the original array
         dim_order_flattened = [item for sublist in dim_order_list for item in sublist]
