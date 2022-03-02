@@ -1182,7 +1182,7 @@ class Dataset(da.Array):
         ----------
         
         dim_order: List of lists or tuple of tuples 
-            -Each element correponds to the order of axes in the corresponding 
+            -Each element corresponds to the order of axes in the corresponding 
             new axis after the collapse
             -Default: None
         method: str
@@ -1210,7 +1210,7 @@ class Dataset(da.Array):
 
             dim_order_list = [list(x) for x in dim_order]
 
-        # Book-keeping for uncollapsing
+        # Book-keeping for unfolding
         fold_attr = {'shape': self.shape, '_axes': self._axes.copy()}
 
         if method == 'spaspec':
