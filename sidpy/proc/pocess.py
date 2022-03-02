@@ -64,6 +64,11 @@ class SidFitter():
     def _setup_calc(self):
         fold_order = [[]]  # All the independent dimensions go into the first element and will be collapsed
         self.num_computations = 1
+
+        # Here we have to come up with a way that treats the spatial dimensions as the independent dimensions
+        # In other words make the argument 'ind_dims' optional
+        # if self.ind_dims is not None:
+
         for i in np.arange(self.dataset.ndim):
             if i not in self.ind_dims:
                 fold_order[0].extend([i])
@@ -87,15 +92,9 @@ class SidFitter():
             self.guess_results.append(lazy_result)
 
         self.guess_results = dask.compute(*self.guess_results)
-        self.guess_results_arr = np.array(self.guess_results)
-
-        self.guess_results_reshaped_shape = self.pos_dim_shapes + tuple([-1])
-        self.guess_results_reshaped = np.array(self.guess_results_arr).reshape(self.guess_results_reshaped_shape)
-        num_model_parms = self.guess_results_reshaped.shape[-1]
-        self.prior = self.guess_results_reshaped.reshape(-1, num_model_parms)
+        self.prior = np.squeeze(np.array(self.guess_results))
+        self.num_model_parms = self.prior.shape[-1]
         self.guess_completed = True
-        return self.guess_results, self.guess_results_reshaped
-
 
 
 
