@@ -1311,8 +1311,8 @@ class Dataset(da.Array):
                                        title=self.title.replace('folded_', ''), checkdims=False)
 
         unfolded_dset._axes = {}
-        for i, dim in enumerate(old_axes):
-            unfolded_dset._axes[dim] = old_axes[dim].copy()
+        for i, dim in old_axes.items():
+            unfolded_dset.set_dimension(i, dim.copy())
         return unfolded_dset
 
     # Following methods are to be edited

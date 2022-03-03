@@ -70,13 +70,23 @@ class SidFitter():
         # if self.ind_dims is not None:
 
         for i in np.arange(self.dataset.ndim):
-            if i not in self.ind_dims:
+            if i in self.ind_dims:
                 fold_order[0].extend([i])
                 self.num_computations *= self.dataset.shape[i]
             else:
                 fold_order.append([i])
 
         self.folded_dataset = self.dataset.fold(dim_order=fold_order)
+        # Here is the tricky part, dataset.unfold is designed to get back the original dataset with minimal loss of
+        # information. To do this, unfold utilizes the saved information of the original dataset. Now we are going to
+        # tweak that information and use the unfold function operate after the fitting.
+
+        self._unfold_attr = {'dim_order_flattened': fold_order[0] + [len(fold_order)],
+                             'shape_transposed': [self.dataset.shape[i] for i in fold_order[0]] + [-1]}
+        axes = self.dataset._axes.copy()
+        axes.popitem()
+        self._unfold_attr['_axes'] = axes
+
         self.fit_results = []
 
     def do_guess(self):
@@ -223,4 +233,3 @@ class SidFitter():
         self.dataset.fit_fns.append(self.fit_fn)
 
         return fit_results_final, self.dataset
-
