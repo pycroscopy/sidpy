@@ -131,50 +131,23 @@ class SidFitter():
         if len(self.fit_results[0]) == 1:
             # in this case we can just dump it to an array because we only got the parameters back
             mean_fit_results = np.squeeze(np.array(self.fit_results))
-            self.cov_results = []
+            cov_results = None
 
         elif len(self.fit_results[0]) == 2:
             # here we get back both: the parameter means and the covariance matrix!
-            mean_fit_results = np.array([self.fit_results[ind][0] for ind in range(len(self.fit_results))])
-            cov_results = np.array([self.fit_results[ind][1] for ind in range(len(self.fit_results))])
-            cov_results_reshaped_shape = self.pos_dim_shapes + cov_results[0].shape
-            self.cov_results = np.array(cov_results).reshape(cov_results_reshaped_shape)
+            mean_fit_results = np.squeeze(np.array([self.fit_results[ind][0] for ind in range(len(self.fit_results))]))
+            cov_results = np.squeeze(np.array([self.fit_results[ind][1] for ind in range(len(self.fit_results))]))
+            # cov_results_reshaped_shape = self.pos_dim_shapes + cov_results[0].shape
+            # self.cov_results = np.array(cov_results).reshape(cov_results_reshaped_shape)
         else:
             raise ValueError('Your fit function returned more than two arrays. This is not supported. Only return \
                   optimized parameters and covariance matrix')
 
-        self.fit_opt_results_shape = self.pos_dim_shapes + tuple([-1])
-        self.fit_opt_results = mean_fit_results.reshape(self.fit_opt_results_shape)
-
-        self.num_fit_parms = self.fit_opt_results.shape[-1]
-
-        # get it into a sidpy dataset
-        dims_new_pos = [self.dataset._axes[self.pos_dims[tup_val]] for tup_val in self.pos_dims]
-
-        # that gives a list of the dimensions we can copy into the fit dataset
-        # we need the last dimension which is just the fit parameters
-
-        fit_dims = [sid.Dimension(np.arange(self.num_fit_parms),
-                                  name='fit_parms', units='a.u.',
-                                  quantity='fit_parameters',
-                                  dimension_type='spectral')]
-
-        cov_dims = [sid.Dimension(np.arange(self.num_fit_parms),
-                                  name='fit_cov_parms_x', units='a.u.',
-                                  quantity='fit_cov_parameters',
-                                  dimension_type='spectral'),
-                    sid.Dimension(np.arange(self.num_fit_parms),
-                                  name='fit_cov_parms_y', units='a.u.',
-                                  quantity='fit_cov_parameters',
-                                  dimension_type='spectral')]
-
-        fit_dataset_dims = dims_new_pos + fit_dims
-        fit_cov_dims = dims_new_pos + cov_dims
-
-        # Specify dimensions
-
+        # Here we have either the mean fit results or both mean and cov arrays. We make 2 sidpy dataset out of them
         # Make a sidpy dataset
-        mean_sid_dset = sid.Dataset.from_array(self.fit_opt_results, name='Fitting_Map')
+        mean_sid_dset = Dataset.from_array(mean_fit_results, title='Fitting_Map')
+        mean_sid_dset.metadata['fold_attr'] = self._unfold_attr.copy()
+        mean_sid_dset = mean_sid_dset.unfold()
 
         # Set the data type
         mean_sid_dset.data_type = self.dataset.data_type  # We may want to pass a new type - fit map
@@ -183,25 +156,25 @@ class SidFitter():
         mean_sid_dset.units = self.dataset.units
         mean_sid_dset.quantity = self.dataset.quantity
 
-        # Add dimension info
-        for ind, val in enumerate(fit_dataset_dims):
-            mean_sid_dset.set_dimension(ind, val)
+        # We set the last dimension, i.e., the dimension with the fit parameters
+        fit_dim = [Dimension(np.arange(self.num_fit_parms),
+                             name='fit_parms', units='a.u.',
+                             quantity='fit_parameters',
+                             dimension_type='spectral')]
+        mean_fit_results.set_dimension(len(mean_sid_dset), fit_dim)
 
-        # append metadata
-        original_parms_dict = self.dataset.metadata
-        fit_func_str = str(self.fit_fn)
-        guess_func_str = str(self.guess_fn)
-
-        fit_parms_dict = {'original_metadata': original_parms_dict,
-                          'fitting method': fit_func_str,
-                          'guess_method': guess_func_str, 'fitting_dimensions': self.pos_dims,
-                          'fit_parameter_labels': self.fit_labels}
-
-        mean_sid_dset.metadata = fit_parms_dict
-
-        if len(self.cov_results) > 0:
+        # Here we deal with the covariance dataset
+        if cov_results is not None:
             # Make a sidpy dataset
-            cov_sid_dset = sid.Dataset.from_array(self.cov_results, name='Fitting_Map_Covariance')
+            cov_sid_dset = Dataset.from_array(self.cov_results, title='Fitting_Map_Covariance')
+            num_fit_parms = mean_fit_results.shape[-1]
+            fold_attr = self._unfold_attr.copy()
+            fold_attr['dim_order_flattened'] = fold_attr['dim_order_flattened'] + [
+                len(fold_attr['dim_order_flattened'])]
+            fold_attr['shape_transposed'] = fold_attr['shape_transposed'] + [num_fit_parms] + [num_fit_parms]
+
+            cov_sid_dset.metadata['fold_attr'] = fold_attr
+            cov_sid_dset = cov_sid_dset.unfold()
 
             # Set the data type
             cov_sid_dset.data_type = self.dataset.data_type  # We may want to pass a new type - fit map
@@ -210,26 +183,16 @@ class SidFitter():
             cov_sid_dset.units = self.dataset.units
             cov_sid_dset.quantity = self.dataset.quantity
 
-            # Add dimension info
-            for ind, val in enumerate(fit_cov_dims):
-                cov_sid_dset.set_dimension(ind, val)
+            cov_dims = [Dimension(np.arange(self.num_fit_parms),
+                                  name='fit_cov_parms_x', units='a.u.',
+                                  quantity='fit_cov_parameters',
+                                  dimension_type='spectral'),
+                        Dimension(np.arange(self.num_fit_parms),
+                                  name='fit_cov_parms_y', units='a.u.',
+                                  quantity='fit_cov_parameters',
+                                  dimension_type='spectral')]
 
-            fit_results_final = [mean_sid_dset, cov_sid_dset]
-        else:
-            fit_results_final = [mean_sid_dset]
+            for i, dim in enumerate(cov_dims):
+                cov_sid_dset.set_dimension(i + len(cov_sid_dset.shape), dim)
 
-        # We have a list of sidpy dataset objects
-        # But what we also want is the original sidpy dataset object, amended with these results as attributes
-        if not hasattr(self.dataset, 'fit_results'):
-            self.dataset.fit_results = []
-            self.dataset.fit_vectors = []  # list of svectors
-            self.dataset.guess_fns = []
-            self.dataset.fit_fns = []
-
-        self.dataset.metadata = fit_parms_dict
-        self.dataset.fit_results.append(fit_results_final)
-        self.dataset.fit_vectors.append(self.xvec)
-        self.dataset.guess_fns.append(self.guess_fn)
-        self.dataset.fit_fns.append(self.fit_fn)
-
-        return fit_results_final, self.dataset
+        return mean_sid_dset
