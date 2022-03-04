@@ -10,23 +10,23 @@ import inspect
 
 class SidFitter():
     # An extension of the Process Class for Functional Fitting
-    def __init__(self, xvec, sidpy_dataset, ind_dims, fit_fn, guess_fn=None, num_fit_parms=None,
+    def __init__(self, sidpy_dataset, fit_fn, xvec, ind_dims=None, guess_fn=None, num_fit_parms=None,
                  fit_parameter_labels=None, num_workers=2, threads=2):
         """
         Parameters
         ----------
-        xvec: (numpy ndarray) Independent variable for fitting. Should be an array
-
         sidpy_dataset: (sidpy.Dataset) Sidpy dataset object to be fit
-
-        ind_dims: (tuple) Tuple with integer entries of the dimensions
-            over which to parallelize. These should be the independent variable for the fitting.
 
         fit_fn: (function) Function used for fitting.
 
+        xvec: (numpy ndarray) Independent variable for fitting. Should be an array
+
+        ind_dims: (tuple) (Optional) Tuple with integer entries of the dimensions
+            over which to parallelize. These should be the independent variable for the fitting.
+            If NOT provided, it is assumed that all the non-spectral dimensions are independent dimensions.
+
         guess_fn: (function) (optional) This optional function should be utilized to generate priors for the full fit
         It takes the same arguments as the fitting function and should return the same type of results array.
-
         If the guess_fn is NOT provided, then the user MUST input the num_fit_parms.
 
         num_fit_parms: (int) Number of fitting parameters. This is needed IF the guess function is not provided.
@@ -40,15 +40,26 @@ class SidFitter():
         """
         if guess_fn is None:
             if num_fit_parms is None:
-                raise ValueError("You did not supply a guess function, you must atleast provide number of fit "
+                raise ValueError("You did not supply a guess function, you must at least provide number of fit "
                                  "parameters")
-
-        self.guess_completed = False
-        self.num_fit_parms = num_fit_parms
-        self.xvec = xvec
         self.dataset = sidpy_dataset
         self.fit_fn = fit_fn
-        self.ind_dims = ind_dims
+        self.xvec = xvec
+        self.num_fit_parms = num_fit_parms
+
+        if ind_dims is not None:
+            self.ind_dims = ind_dims
+        else:
+            ind_dims = []
+            for i, dim in self.dataset._axes.items():
+                if dim.dimension_type != DimensionType.SPECTRAL:
+                    ind_dims.extend([i])
+            self.ind_dims = tuple(ind_dims)
+
+        # Make sure there is at least one spectral dimension
+        if len(self.ind_dims) == len(self.dataset.shape):
+            raise NotImplementedError('No Spectral (dependent) dimensions found to fit')
+
         self._setup_calc()
         self.guess_fn = guess_fn
         self.prior = None
@@ -57,6 +68,7 @@ class SidFitter():
         self.fit_results = []
         self.num_workers = num_workers
         self.threads = threads
+        self.guess_completed = False
 
         # set up dask client
         self.client = Client(threads_per_worker=self.threads, n_workers=self.num_workers)
@@ -123,7 +135,8 @@ class SidFitter():
             else:
                 p0 = self.prior[ind, :]
 
-            lazy_result = dask.delayed(self.fit_fn)(self.xvec, self.folded_dataset[ind, :], p0=p0, **kwargs)
+            lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.xvec, self.folded_dataset[ind, :],
+                                                                    p0=p0, **kwargs)
             self.fit_results.append(lazy_result)
 
         self.fit_results_comp = dask.compute(*self.fit_results)
@@ -135,8 +148,10 @@ class SidFitter():
 
         elif len(self.fit_results_comp[0]) == 2:
             # here we get back both: the parameter means and the covariance matrix!
-            mean_fit_results = np.squeeze(np.array([self.fit_results_comp[ind][0] for ind in range(len(self.fit_results_comp))]))
-            cov_results = np.squeeze(np.array([self.fit_results_comp[ind][1] for ind in range(len(self.fit_results_comp))]))
+            mean_fit_results = np.squeeze(
+                np.array([self.fit_results_comp[ind][0] for ind in range(len(self.fit_results_comp))]))
+            cov_results = np.squeeze(
+                np.array([self.fit_results_comp[ind][1] for ind in range(len(self.fit_results_comp))]))
             # cov_results_reshaped_shape = self.pos_dim_shapes + cov_results[0].shape
             # self.cov_results = np.array(cov_results).reshape(cov_results_reshaped_shape)
         else:
@@ -161,7 +176,7 @@ class SidFitter():
                             name='fit_parms', units='a.u.',
                             quantity='fit_parameters',
                             dimension_type='temporal')
-        mean_sid_dset.set_dimension(len(mean_sid_dset.shape)-1, fit_dim)
+        mean_sid_dset.set_dimension(len(mean_sid_dset.shape) - 1, fit_dim)
 
         # Here we deal with the covariance dataset
         if cov_results is not None:
@@ -204,5 +219,15 @@ class SidFitter():
     # Might be a good idea to add a default fit function like np.polyfit or scipy.curve_fit
 
     @staticmethod
-    def default_curve_fit(num_fit_parms):
-        pass
+    def default_curve_fit(fit_fn, xvec, yvec, return_cov=True, **kwargs):
+        print(kwargs)
+        xvec = np.array(xvec)
+        yvec = np.array(yvec)
+        yvec = yvec.ravel()
+        xvec = xvec.ravel()
+        popt, pcov = curve_fit(fit_fn, xvec, yvec, **kwargs)
+
+        if return_cov:
+            return popt, pcov
+        else:
+            return popt
