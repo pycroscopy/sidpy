@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import inspect
 
 
-class SidFitter():
+class SidFitter:
     # An extension of the Process Class for Functional Fitting
-    def __init__(self, sidpy_dataset, fit_fn, xvec, ind_dims=None, guess_fn=None, num_fit_parms=None,
+    def __init__(self, sidpy_dataset, fit_fn, xvec=None, ind_dims=None, guess_fn=None, num_fit_parms=None,
                  return_cov=False, fit_parameter_labels=None, num_workers=2, threads=2):
         """
         Parameters
@@ -19,7 +19,9 @@ class SidFitter():
 
         fit_fn: (function) Function used for fitting.
 
-        xvec: (numpy ndarray) Independent variable for fitting. Should be an array
+        xvec: (numpy ndarray or list of numpy ndarrays) (Optional)
+        Independent variable for fitting. Should be an array
+        If NOT provided, the dimension arrays are assumed to be xvecs
 
         ind_dims: (tuple) (Optional) Tuple with integer entries of the dimensions
             over which to parallelize. These should be the independent variable for the fitting.
@@ -47,7 +49,6 @@ class SidFitter():
                                  "parameters")
         self.dataset = sidpy_dataset
         self.fit_fn = fit_fn
-        self.xvec = xvec
         self.num_fit_parms = num_fit_parms
 
         if ind_dims is not None:
@@ -62,6 +63,48 @@ class SidFitter():
         # Make sure there is at least one spectral dimension
         if len(self.ind_dims) == len(self.dataset.shape):
             raise NotImplementedError('No Spectral (dependent) dimensions found to fit')
+
+        # Let's get the dependent dims here
+        dep_dims = []
+        for d in np.arange(len(self.dataset.shape)):
+            if d not in self.ind_dims:
+                dep_dims.extend([d])
+        self.dep_dims = tuple(dep_dims)
+
+        if xvec is None:
+            # 1D fit
+            if len(self.dep_dims) == 1:
+                dep_vec = np.array(self.dataset._axes[self.dep_dims[0]])
+            # Multidimensional fit
+            else:
+                dep_vec = []
+                for d in self.dep_dims:
+                    dep_vec.append(np.array(self.dataset._axes[d]))
+
+        if xvec is not None:
+            # 1D fit
+            if len(self.dep_dims) == 1:
+                if isinstance(xvec, np.ndarray):
+                    dep_vec = xvec
+                elif isinstance(xvec, list):
+                    dep_vec = np.array(xvec)
+                else:
+                    raise TypeError('Please provide a np.ndarray or a list of independent vector values')
+            # Multidimensional fit
+            else:
+                if isinstance(xvec, list) and len(xvec) == len(self.dep_dims):
+                    dep_vec = xvec
+                elif isinstance(xvec, list) and len(xvec) != len(self.dep_dims):
+                    raise ValueError('The number of independent dimensions provided in the xvec do not match '
+                                     'with the number of dependent dimensions of the dataset')
+                else:
+                    raise TypeError('Please provide a list of value-arrays corresponding to each dependent dimension')
+
+        # Dealing with the meshgrid part of multidimensional fitting
+        if len(self.dep_dims) > 1:
+            self.dep_vec = [ar.ravel() for ar in np.meshgrid(*dep_dims)]
+        else:
+            self.dep_vec = dep_vec
 
         self._setup_calc()
         self.guess_fn = guess_fn
@@ -97,7 +140,7 @@ class SidFitter():
         # information. To do this, unfold utilizes the saved information of the original dataset. Now we are going to
         # tweak that information and use the unfold function operate after the fitting.
 
-        self._unfold_attr = {'dim_order_flattened': fold_order[0] + [len(fold_order)],
+        self._unfold_attr = {'dim_order_flattened': fold_order[0] + [len(fold_order[0])],
                              'shape_transposed': [self.dataset.shape[i] for i in fold_order[0]] + [-1]}
         axes = self.dataset._axes.copy()
         axes.popitem()
@@ -114,7 +157,7 @@ class SidFitter():
         """
         self.guess_results = []
         for ind in range(self.num_computations):
-            lazy_result = dask.delayed(self.guess_fn)(self.xvec, self.folded_dataset[ind, :])
+            lazy_result = dask.delayed(self.guess_fn)(self.dep_vec, self.folded_dataset[ind, :])
             self.guess_results.append(lazy_result)
 
         self.guess_results = dask.compute(*self.guess_results)
@@ -139,7 +182,7 @@ class SidFitter():
             else:
                 p0 = self.prior[ind, :]
 
-            lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.xvec, self.folded_dataset[ind, :],
+            lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec, self.folded_dataset[ind, :],
                                                                     return_cov=self.return_cov, p0=p0, **kwargs)
             self.fit_results.append(lazy_result)
 
