@@ -3,7 +3,12 @@ import numpy as np
 import dask
 from ..sid import Dimension, Dataset
 from ..sid.dimension import DimensionType
-from scipy.optimize import curve_fit
+
+try:
+    from scipy.optimize import curve_fit
+except ModuleNotFoundError:
+    curve_fit = None
+
 import matplotlib.pyplot as plt
 import inspect
 
@@ -272,7 +277,10 @@ class SidFitter:
         yvec = np.array(yvec)
         yvec = yvec.ravel()
         xvec = xvec.ravel()
-        popt, pcov = curve_fit(fit_fn, xvec, yvec, **kwargs)
+        if curve_fit is None:
+            raise ModuleNotFoundError("scipy is not installed")
+        else:
+            popt, pcov = curve_fit(fit_fn, xvec, yvec, **kwargs)
 
         if return_cov:
             return popt, pcov
