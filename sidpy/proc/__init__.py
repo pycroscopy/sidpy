@@ -3,6 +3,6 @@ Basic computational utilities
 """
 
 from . import comp_utils
-from . import process
+from . import fitter
 
-__all__ = ['comp_utils', 'process']
+__all__ = ['comp_utils', 'fitter']

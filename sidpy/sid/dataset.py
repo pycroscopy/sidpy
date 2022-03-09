@@ -1313,6 +1313,8 @@ class Dataset(da.Array):
         unfolded_dset._axes = {}
         for i, dim in old_axes.items():
             unfolded_dset.set_dimension(i, dim.copy())
+
+        del unfolded_dset.metadata['fold_attr']
         return unfolded_dset
 
     # Following methods are to be edited
