@@ -1,3 +1,11 @@
+"""
+:class:`~Sidpy.proc.fitter.SidFitter` class that fits the specified dimension of a sidpy.dataset using the
+user-specified fit function. An extension of scipy.optimise.curve_fit that works on sidpy.dataset
+
+Created on Mar 9, 2022
+@author: Rama Vasudevan, Mani Valleti
+"""
+
 from dask.distributed import Client
 import numpy as np
 import dask
@@ -50,7 +58,6 @@ class SidFitter:
 
         threads: (int) (default =2) Number of threads to use when setting up Dask client
 
-
         Returns:
         -------
         sidpy.dataset: if return_cov and return_fit are both set to False
@@ -69,7 +76,7 @@ class SidFitter:
                 raise ValueError("You did not supply a guess function, you must at least provide number of fit "
                                  "parameters to set the priors for scipy.optimize.curve_fit")
         self.dataset = sidpy_dataset  # Sidpy dataset
-        self.fit_fn = fit_fn           # function that takes xvec, *parameters and returns yvec at each value of xvec
+        self.fit_fn = fit_fn  # function that takes xvec, *parameters and returns yvec at each value of xvec
         self.num_fit_parms = num_fit_parms  # int: number of fitting parameters
 
         if ind_dims is not None:
@@ -130,7 +137,7 @@ class SidFitter:
 
         self._setup_calc()
         self.guess_fn = guess_fn
-        self.prior = None   # shape = [num_computations, num_fitting_parms]
+        self.prior = None  # shape = [num_computations, num_fitting_parms]
         self.fit_labels = fit_parameter_labels
         self.num_workers = num_workers
         self.threads = threads
@@ -195,9 +202,10 @@ class SidFitter:
     def do_fit(self, **kwargs):
         """
         Perform the fit.
-        **kwargs: extra parameters passed to the fitting function, e.g. bounds, type of lsq algorithm, etc.
+        **kwargs: extra parameters passed to scipy.optimize.curve_fit, e.g. bounds, type of lsq algorithm, etc.
         """
-        if self.guess_completed is False and self.guess_fn is not None:
+
+        if not self.guess_completed and self.guess_fn is not None:
             # Calling the guess function
             self.do_guess()
 
@@ -208,7 +216,8 @@ class SidFitter:
             else:
                 p0 = self.prior[ind, :]
 
-            lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec, self.folded_dataset[ind, :],
+            lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
+                                                                    self.folded_dataset[ind, :],
                                                                     return_cov=self.return_cov, p0=p0, **kwargs)
             fit_results.append(lazy_result)
 
