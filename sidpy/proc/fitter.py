@@ -210,7 +210,6 @@ class SidFitter:
 
         if not self.guess_completed and self.guess_fn is not None:
             # Calling the guess function
-            print('We are now calling the guess function')
             guess_function_str = inspect.getsource(self.guess_fn)
             self.do_guess()
 
