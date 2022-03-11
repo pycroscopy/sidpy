@@ -22,7 +22,8 @@ except ModuleNotFoundError:
 class SidFitter:
     # An extension of the Process Class for Functional Fitting
     def __init__(self, sidpy_dataset, fit_fn, xvec=None, ind_dims=None, guess_fn=None, num_fit_parms=None,
-                 return_cov=False, return_fit=False, fit_parameter_labels=None, num_workers=2, threads=2):
+                 return_std=False, return_cov=False, return_fit=False,
+                 fit_parameter_labels=None, num_workers=2, threads=2):
         """
         Parameters
         ----------
@@ -46,6 +47,9 @@ class SidFitter:
 
         num_fit_parms: (int) Number of fitting parameters. This is needed IF the guess function is not provided to set
         the priors for the parameters for the curve_fit function.
+
+        return_std: (bool) (default False) Returns the dataset with estimated standard deviation of the parameter
+        values. Square roots of the diagonal of the covariance matrix.
 
         return_cov: (bool) (default False) Returns the estimated covariance of fitting parameters. Confer
         scipy.optimize.curve_fit for further details
@@ -145,12 +149,15 @@ class SidFitter:
         self.num_workers = num_workers
         self.threads = threads
         self.guess_completed = False
-        self.return_fit = return_fit
+        self.return_std = return_std
         self.return_cov = return_cov
+        self.return_fit = return_fit
 
         self.mean_fit_results = []
         if self.return_cov:
             self.cov_fit_results = None
+        if self.return_std:
+            self.std_fit_results = None
         # set up dask client
         self.client = Client(threads_per_worker=self.threads, n_workers=self.num_workers)
 
@@ -223,22 +230,22 @@ class SidFitter:
 
             lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
                                                                     self.folded_dataset[ind, :],
-                                                                    return_cov=self.return_cov, p0=p0, **kwargs)
+                                                                    return_cov=(self.return_cov or self.return_std),
+                                                                    p0=p0, **kwargs)
             fit_results.append(lazy_result)
 
         fit_results_comp = dask.compute(*fit_results)
-        self.client.close()
-        
-        if not self.return_cov:
-            # in this case we can just dump it to an array because we only got the parameters back
-            self.mean_fit_results = np.squeeze(np.array(fit_results_comp))
 
-        else:
+        if self.return_cov or self.return_std:
             # here we get back both: the parameter means and the covariance matrix!
             self.mean_fit_results = np.squeeze(
                 np.array([fit_results_comp[ind][0] for ind in range(len(fit_results_comp))]))
             self.cov_fit_results = np.squeeze(
                 np.array([fit_results_comp[ind][1] for ind in range(len(fit_results_comp))]))
+
+        else:
+            # in this case we can just dump it to an array because we only got the parameters back
+            self.mean_fit_results = np.squeeze(np.array(fit_results_comp))
 
         # Here we have either the mean fit results or both mean and cov arrays. We make 2 sidpy dataset out of them
         # Make a sidpy dataset
@@ -249,10 +256,6 @@ class SidFitter:
 
         # Set the data type
         mean_sid_dset.data_type = 'image_stack'  # We may want to pass a new type - fit map
-
-        # Add quantity and units
-        mean_sid_dset.units = self.dataset.units
-        mean_sid_dset.quantity = self.dataset.quantity
 
         # We set the last dimension, i.e., the dimension with the fit parameters
         fit_dim = Dimension(np.arange(self.num_fit_parms),
@@ -271,6 +274,8 @@ class SidFitter:
         mean_sid_dset.original_metadata = self.dataset.original_metadata.copy()
         mean_sid_dset.fit_dataset = True #We are going to make this attribute for fit datasets
 
+        cov_sid_dset, std_fit_dset, fit_dset = None, None, None
+
         # Here we deal with the covariance dataset
         if self.return_cov:
             # Make a sidpy dataset
@@ -285,11 +290,7 @@ class SidFitter:
             cov_sid_dset = cov_sid_dset.unfold()
 
             # Set the data type
-            cov_sid_dset.data_type = self.dataset.data_type  # We may want to pass a new type - fit map
-
-            # Add quantity and units
-            cov_sid_dset.units = self.dataset.units
-            cov_sid_dset.quantity = self.dataset.quantity
+            cov_sid_dset.data_type = 'IMAGE_4D'  # We may want to pass a new type - fit map
 
             cov_dims = [Dimension(np.arange(self.num_fit_parms),
                                   name='fit_cov_parms_x', units='a.u.',
@@ -307,18 +308,40 @@ class SidFitter:
             cov_sid_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
             cov_sid_dset.original_metadata = self.dataset.original_metadata.copy()
 
+        # Here is the std_dev dataset
+        if self.return_std:
+            self.std_fit_results = np.diagonal(self.cov_fit_results, axis1=-2, axis2=-1)
+            std_fit_dset = Dataset.from_array(self.std_fit_results, title='std_dev')
+            std_fit_dset.metadata['fold_attr'] = self._unfold_attr.copy()
+            std_fit_dset = std_fit_dset.unfold()
+
+            # Set the data type
+            std_fit_dset.data_type = 'image_stack'  # We may want to pass a new type - fit map
+
+            # We set the last dimension, i.e., the dimension with the fit parameters
+            fit_dim = Dimension(np.arange(self.num_fit_parms),
+                                name='std_dev', units='a.u.',
+                                quantity='std_dev_fit_parms',
+                                dimension_type='temporal')
+            std_fit_dset.set_dimension(len(std_fit_dset.shape) - 1, fit_dim)
+
+            std_fit_dset.metadata = self.dataset.metadata.copy()
+            std_fit_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
+            std_fit_dset.original_metadata = self.dataset.original_metadata.copy()
+
+        # Fitted dset
         if self.return_fit:
             fit_dset = self.get_fitted_dataset()
             fit_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
 
-        if self.return_cov and self.return_fit:
-            return [mean_sid_dset, cov_sid_dset, fit_dset]
-        elif self.return_cov and not self.return_fit:
-            return [mean_sid_dset, cov_sid_dset]
-        elif not self.return_cov and self.return_fit:
-            return [mean_sid_dset, fit_dset]
+        results = [mean_sid_dset, cov_sid_dset, std_fit_dset, fit_dset]
+        inds = [True, self.return_cov, self.return_std, self.return_fit]
+        results = [results[i] for i in range(len(inds)) if inds[i]]
+
+        if len(results) == 0:
+            return results[0]
         else:
-            return mean_sid_dset
+            return results
 
     def get_fitted_dataset(self):
         """This method returns the fitted dataset using the parameters generated by the fit function"""
