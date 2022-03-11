@@ -235,6 +235,7 @@ class SidFitter:
             fit_results.append(lazy_result)
 
         fit_results_comp = dask.compute(*fit_results)
+        self.client.close()
 
         if self.return_cov or self.return_std:
             # here we get back both: the parameter means and the covariance matrix!
