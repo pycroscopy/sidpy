@@ -227,7 +227,8 @@ class SidFitter:
             fit_results.append(lazy_result)
 
         fit_results_comp = dask.compute(*fit_results)
-
+        self.client.close()
+        
         if not self.return_cov:
             # in this case we can just dump it to an array because we only got the parameters back
             self.mean_fit_results = np.squeeze(np.array(fit_results_comp))
@@ -268,6 +269,7 @@ class SidFitter:
         mean_sid_dset.metadata = self.dataset.metadata.copy()
         mean_sid_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
         mean_sid_dset.original_metadata = self.dataset.original_metadata.copy()
+        mean_sid_dset.fit_dataset = True #We are going to make this attribute for fit datasets
 
         # Here we deal with the covariance dataset
         if self.return_cov:
