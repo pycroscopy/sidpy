@@ -254,7 +254,7 @@ class TestImageStackPlot(unittest.TestCase):
         data = view.axes[0].images[0].get_array().data
 
         self.assertTrue(np.allclose(data.shape, x.shape[1:]))
-        self.assertEqual(view.axes[0].get_title(), 'image stack: generic\n use scroll wheel to navigate images')
+        self.assertEqual(view.axes[0].get_title(), 'Image stack: generic\n use scroll wheel to navigate images')
 
         self.assertEqual(f"{dset.x.quantity} ({dset.x.units})", view.axes[0].get_xlabel())
 
