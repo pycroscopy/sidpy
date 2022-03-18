@@ -316,15 +316,26 @@ class ImageStackVisualizer(object):
 
         # self.axis = self.fig.add_axes([0.0, 0.2, .9, .7])
         self.ind = 0
+        self.plot_fit_labels = False
 
         self.number_of_slices = self.dset.shape[self.stack_dim]
         self.axis = None
         self.plot_image(**kwargs)
         self.axis = plt.gca()
         if self.set_title:
-            self.axis.set_title('image stack: ' + dset.title + '\n use scroll wheel to navigate images')
-            self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
+            if 'fit_dataset'  in dir(dset):
+                if dset.fit_dataset:
+                    if dset.metadata['fit_parms_dict']['fit_parameters_labels'] is not None: 
+                        self.plot_fit_labels = True
+                        img_titles = dset.metadata['fit_parms_dict']['fit_parameters_labels']
+                        self.image_titles = ['Fitting Parm: ' + img_titles[k] for k in range(len(img_titles))]
+                else:
+                    self.image_titles = 'Fitting Maps: ' + dset.title + '\n use scroll wheel to navigate images'
+            else:
+                self.image_titles = 'Image stack: ' + dset.title + '\n use scroll wheel to navigate images'
 
+            #self.axis.set_title(image_titles)
+            self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
         
             import ipywidgets as iwgt
             self.play = iwgt.Play(
@@ -436,7 +447,10 @@ class ImageStackVisualizer(object):
         self.selection[self.stack_dim] = slice(frame, frame + 1)
         self.img.set_data((self.dset[tuple(self.selection)].squeeze()).T)
         self.img.axes.figure.canvas.draw_idle()
-
+        if self.plot_fit_labels:
+            self.axis.set_title(self.image_titles[frame])
+        else:
+            self.axis.set_title(self.image_titles)
 
 class SpectralImageVisualizer(object):
     """

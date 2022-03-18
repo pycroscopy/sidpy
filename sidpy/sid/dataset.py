@@ -178,7 +178,7 @@ class Dataset(da.Array):
             print(self.h5_dataset)
 
     @classmethod
-    def from_array(cls, x, title='generic', chunks='auto',  lock=False,
+    def from_array(cls, x, title='generic', chunks='auto', lock=False,
                    datatype='UNKNOWN', units='generic', quantity='generic',
                    modality='generic', source='generic', **kwargs):
         """
@@ -262,7 +262,7 @@ class Dataset(da.Array):
         checkdims = kwargs.get('checkdims', True)
 
         new_data = self.from_array(data, chunks=chunks, lock=lock)
-        
+
         new_data.data_type = self.data_type
 
         # units
@@ -278,9 +278,9 @@ class Dataset(da.Array):
                 new_data.title = self.title
             else:
                 new_data.title = self.title + '_new'
-        
-        new_data.title = title_prefix+new_data.title+title_suffix
-        
+
+        new_data.title = title_prefix + new_data.title + title_suffix
+
         # quantity
         if reset_quantity:
             new_data.quantity = 'generic'
@@ -300,7 +300,7 @@ class Dataset(da.Array):
                     try:
                         scale = get_slope(self._axes[dim])
                         # axis = self._axes[dim].copy()
-                        axis = Dimension(np.arange(new_data.shape[dim])*scale, self._axes[dim].name)
+                        axis = Dimension(np.arange(new_data.shape[dim]) * scale, self._axes[dim].name)
                         axis.quantity = self._axes[dim].quantity
                         axis.units = self._axes[dim].units
                         axis.dimension_type = self._axes[dim].dimension_type
@@ -393,7 +393,7 @@ class Dataset(da.Array):
             raise TypeError('Dimension must be an integer')
         if (0 > ind) or (ind >= self.ndim):
             raise IndexError('Dimension must be an integer between 0 and {}'
-                             ''.format(self.ndim-1))
+                             ''.format(self.ndim - 1))
         for key, dim in self._axes.items():
             if key != ind:
                 if name == dim.name:
@@ -571,7 +571,7 @@ class Dataset(da.Array):
 
         import imageio
         # Thumbnail configurations for matplotlib
-        kwargs = {'figsize': (1,1), 'colorbar': False, 'set_title': False}
+        kwargs = {'figsize': (1, 1), 'colorbar': False, 'set_title': False}
         view = self.plot(figure=figure, **kwargs)
         for axis in view.axes:
             axis.set_axis_off()
@@ -609,8 +609,8 @@ class Dataset(da.Array):
         extent = []
         for ind, dim in enumerate(dimensions):
             temp = self._axes[dim].values
-            start = temp[0] - (temp[1] - temp[0])/2
-            end = temp[-1] + (temp[-1] - temp[-2])/2
+            start = temp[0] - (temp[1] - temp[0]) / 2
+            end = temp[-1] + (temp[-1] - temp[-2]) / 2
             if ind == 1:
                 extent.append(end)  # y-axis starts on top
                 extent.append(start)
@@ -950,7 +950,6 @@ class Dataset(da.Array):
                                 checkdims=False)
         return result, locals().copy()
 
-
     @reduce_dims
     def max(self, axis=None, keepdims=False, split_every=None, out=None):
 
@@ -974,9 +973,9 @@ class Dataset(da.Array):
                                              split_every=split_every, out=out), title_prefix='mean_aggregate_',
                                 checkdims=False)
         return result, locals().copy()
-    
+
     @reduce_dims
-    def std(self, axis=None, dtype=None, keepdims=False, ddof = 0, split_every=None, out=None):
+    def std(self, axis=None, dtype=None, keepdims=False, ddof=0, split_every=None, out=None):
 
         result = self.like_data(super().std(axis=axis, dtype=dtype, keepdims=keepdims,
                                             ddof=0, split_every=split_every, out=out),
@@ -991,7 +990,7 @@ class Dataset(da.Array):
                                             ddof=ddof, split_every=split_every, out=out),
                                 title_prefix='var_aggregate_', checkdims=False)
         return result, locals().copy()
-    
+
     @reduce_dims
     def argmin(self, axis=None, split_every=None, out=None):
 
@@ -1183,13 +1182,17 @@ class Dataset(da.Array):
         ----------
         
         dim_order: List of lists or tuple of tuples 
-            -Each element correponds to the order of axes in the corresponding 
+            -Each element corresponds to the order of axes in the corresponding 
             new axis after the collapse
             -Default: None
         method: str
-            -'spaspec' collapses the original dataset to a 2D dataset, where 
+            -'spaspec': collapses the original dataset to a 2D dataset, where 
             spatail dimensions form the zeroth axis and spectral dimensions 
             form the first axis
+            -'spa': combines all the spatial dimensions into a single dimension and 
+            the combined dimension will be first
+            -'spec': combines all the spectral dimensions into a single dimension and 
+            the combined dimension will be last
             -Uses the user defined dim_order when set to None
             -Default: None
 
@@ -1207,7 +1210,7 @@ class Dataset(da.Array):
 
             dim_order_list = [list(x) for x in dim_order]
 
-        # Book-keeping for uncollapsing
+        # Book-keeping for unfolding
         fold_attr = {'shape': self.shape, '_axes': self._axes.copy()}
 
         if method == 'spaspec':
@@ -1222,6 +1225,34 @@ class Dataset(da.Array):
                                               nor Spectral Type and is considered to be a \
                                               part of the last collapsed dimension')
                     dim_order_list[1].extend(dim)
+
+        if method == 'spa':
+            dim_order_list = [[]]
+            for dim, axis in self._axes.items():
+                if axis.dimension_type == DimensionType.SPATIAL:
+                    dim_order_list[0].extend(dim)
+                else:
+                    dim_order_list.append([dim])
+
+            if len(dim_order_list[0]) == 0:
+                raise NotImplementedError("No spatial dimensions found and the method is set to 'spa' ")
+            if len(dim_order_list[0]) == 1:
+                warnings.warn('Only one spatial dimension found\
+                                Folding returns the original dataset')
+
+        if method == 'spec':
+            dim_order_list = [[]]
+            for dim, axis in self._axes.items():
+                if axis.dimension_type == DimensionType.Spectral:
+                    dim_order_list[-1].extend(dim)
+                else:
+                    dim_order_list.insert(-1, [dim])
+
+            if len(dim_order_list[-1]) == 0:
+                raise NotImplementedError("No spectral dimensions found and the method is set to 'spec'")
+            if len(dim_order_list[-1]) == 1:
+                warnings.warn('Only one spatial dimension found\
+                                Folding returns the original dataset')
 
         # We need the flattened list to transpose the original array
         dim_order_flattened = [item for sublist in dim_order_list for item in sublist]
@@ -1280,8 +1311,10 @@ class Dataset(da.Array):
                                        title=self.title.replace('folded_', ''), checkdims=False)
 
         unfolded_dset._axes = {}
-        for i, dim in enumerate(old_axes):
-            unfolded_dset._axes[dim] = old_axes[dim].copy()
+        for i, dim in old_axes.items():
+            unfolded_dset.set_dimension(i, dim.copy())
+
+        del unfolded_dset.metadata['fold_attr']
         return unfolded_dset
 
     # Following methods are to be edited
