@@ -12,18 +12,23 @@ import dask
 import inspect
 from ..sid import Dimension, Dataset
 from ..sid.dimension import DimensionType
-from sklearn.cluster import KMeans
+
 
 try:
     from scipy.optimize import curve_fit
 except ModuleNotFoundError:
     curve_fit = None
 
+try:
+    from sklearn.cluster import KMeans
+except:
+    kMeans = None
+
 
 class SidFitter:
     # An extension of the Process Class for Functional Fitting
     def __init__(self, sidpy_dataset, fit_fn, xvec=None, ind_dims=None, guess_fn=None, num_fit_parms=None,
-                 km_guess=False, return_std=False, return_cov=False, return_fit=False,
+                 km_guess=False, n_clus=None, return_std=False, return_cov=False, return_fit=False,
                  fit_parameter_labels=None, num_workers=2, threads=2):
         """
         Parameters
@@ -52,6 +57,9 @@ class SidFitter:
         km_guess: (bool) (default False) When set to True: Divides the spectra into clusters using
         sklearn.optimize.kMeans, applies the fitting function on the cluster centers,
         uses the results as priors to each spectrum of the cluster.
+
+        n_clus: (int) (default None) Used only when km_guess is set to True. Determines the number of clusters to be
+        formed for sklearn.optimize.kmeans. If not provided then n_clus = self.num_computations/100
 
         return_std: (bool) (default False) Returns the dataset with estimated standard deviation of the parameter
         values. Square roots of the diagonal of the covariance matrix.
@@ -150,6 +158,7 @@ class SidFitter:
         self.km_guess = km_guess
         if self.km_guess:
             self.km_prior = None
+            self.km_labels = None
         self._setup_calc()
         self.guess_fn = guess_fn
         self.prior = None  # shape = [num_computations, num_fitting_parms]
@@ -231,21 +240,34 @@ class SidFitter:
             self.do_guess()
 
         fit_results = []
-        for ind in range(self.num_computations):
-            if self.prior is None:
-                p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
-                guess_function_str = 'Not Provided'
-            else:
-                p0 = self.prior[ind, :]
+        if not self.km_prior:
+            for ind in range(self.num_computations):
+                if self.prior is None:
+                    p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
+                    guess_function_str = 'Not Provided'
+                else:
+                    p0 = self.prior[ind, :]
 
-            lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
-                                                                    self.folded_dataset[ind, :],
-                                                                    return_cov=(self.return_cov or self.return_std),
-                                                                    p0=p0, **kwargs)
-            fit_results.append(lazy_result)
+                lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
+                                                                        self.folded_dataset[ind, :],
+                                                                        return_cov=(self.return_cov or self.return_std),
+                                                                        p0=p0, **kwargs)
+                fit_results.append(lazy_result)
 
-        fit_results_comp = dask.compute(*fit_results)
-        self.client.close()
+            fit_results_comp = dask.compute(*fit_results)
+            self.client.close()
+
+        else:
+            self.get_km_priors()
+            for ind in range(self.num_computations):
+                lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
+                                                                        self.folded_dataset[ind, :],
+                                                                        return_cov=(self.return_cov or self.return_std),
+                                                                        p0=self.km_prior[self.km_labels[ind]], **kwargs)
+                fit_results.append(lazy_result)
+
+            fit_results_comp = dask.compute(*fit_results)
+            self.client.close()
 
         if self.return_cov or self.return_std:
             # here we get back both: the parameter means and the covariance matrix!
@@ -283,7 +305,7 @@ class SidFitter:
         mean_sid_dset.metadata = self.dataset.metadata.copy()
         mean_sid_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
         mean_sid_dset.original_metadata = self.dataset.original_metadata.copy()
-        mean_sid_dset.fit_dataset = True #We are going to make this attribute for fit datasets
+        mean_sid_dset.fit_dataset = True  # We are going to make this attribute for fit datasets
 
         cov_sid_dset, std_fit_dset, fit_dset = None, None, None
 
@@ -383,26 +405,24 @@ class SidFitter:
         # In case of a 1D fit the next line essentially does nothing.
         km_dset = self.folded_dataset.fold(dim_order)
 
-        n_clus = self.num_computations / 100
-        km = KMeans(n_clusters=n_clus, random_state=0).fit(km_dset.compute())
-        labels, centers = km.labels_, km.cluster_centers_
+        n_clus = self.num_computations / 100  # Take care of number of cluster centers
 
+        if kMeans is None:
+            raise ModuleNotFoundError("sklearn is not installed")
+        else:
+            km = KMeans(n_clusters=n_clus, random_state=0).fit(km_dset.compute())
+
+        self.km_labels, centers = km.labels_, km.cluster_centers_
+        self.km_prior = np.zeros([n_clus, self.num_fit_parms])
         for i, cen in enumerate(centers):
             if self.guess_fn is not None:
-                p0 = self.guess_fn(self.dep_vec, centers)
+                p0 = self.guess_fn(self.dep_vec, cen)
             else:
                 p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
 
-            self.km_prior = np.zeros([n_clus, self.num_fit_parms])
-            for i, cen in enumerate(centers):
-                if self.guess_fn is not None:
-                    p0 = self.guess_fn(self.dep_vec, cen)
-                else:
-                    p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
-
-                self.km_prior[i] = SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen,
-                                                               return_cov=False,
-                                                               p0=p0, maxfev=10000)
+            self.km_prior[i] = SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen,
+                                                           return_cov=False,
+                                                           p0=p0, maxfev=10000)
 
     @staticmethod
     def default_curve_fit(fit_fn, xvec, yvec, return_cov=True, **kwargs):
