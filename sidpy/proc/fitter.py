@@ -12,6 +12,7 @@ import dask
 import inspect
 from ..sid import Dimension, Dataset
 from ..sid.dimension import DimensionType
+from sklearn.cluster import KMeans
 
 try:
     from scipy.optimize import curve_fit
@@ -22,7 +23,7 @@ except ModuleNotFoundError:
 class SidFitter:
     # An extension of the Process Class for Functional Fitting
     def __init__(self, sidpy_dataset, fit_fn, xvec=None, ind_dims=None, guess_fn=None, num_fit_parms=None,
-                 return_std=False, return_cov=False, return_fit=False,
+                 km_guess=False, return_std=False, return_cov=False, return_fit=False,
                  fit_parameter_labels=None, num_workers=2, threads=2):
         """
         Parameters
@@ -47,6 +48,10 @@ class SidFitter:
 
         num_fit_parms: (int) Number of fitting parameters. This is needed IF the guess function is not provided to set
         the priors for the parameters for the curve_fit function.
+
+        km_guess: (bool) (default False) When set to True: Divides the spectra into clusters using
+        sklearn.optimize.kMeans, applies the fitting function on the cluster centers,
+        uses the results as priors to each spectrum of the cluster.
 
         return_std: (bool) (default False) Returns the dataset with estimated standard deviation of the parameter
         values. Square roots of the diagonal of the covariance matrix.
@@ -142,6 +147,9 @@ class SidFitter:
         else:
             self.dep_vec = dep_vec
 
+        self.km_guess = km_guess
+        if self.km_guess:
+            self.km_prior = None
         self._setup_calc()
         self.guess_fn = guess_fn
         self.prior = None  # shape = [num_computations, num_fitting_parms]
@@ -361,7 +369,36 @@ class SidFitter:
 
         return fitted_sid_dset
 
-    # Might be a good idea to add a default fit function like np.polyfit or scipy.curve_fit
+    def get_km_priors(self):
+        shape = self.folded_dataset.shape  # We get the shape of the folded dataset
+        # Our prior_dset will have the same shape except for the last dimension whose size will be equal to number of
+        # fitting parameters
+        dim_order = [[0], [i + 1 for i in range(len(shape) - 1)]]
+        # We are using the fold function in case we have a multidimensional fit.
+        # In that case we need all the spectral dimensions collapsed into a single dimension for kMeans
+        # In case of a 1D fit the next line essentially does nothing.
+        km_dset = self.folded_dataset.fold(dim_order)
+
+        n_clus = self.num_computations / 100
+        km = KMeans(n_clusters=n_clus, random_state=0).fit(km_dset.compute())
+        labels, centers = km.labels_, km.cluster_centers_
+
+        for i, cen in enumerate(centers):
+            if self.guess_fn is not None:
+                p0 = self.guess_fn(self.dep_vec, centers)
+            else:
+                p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
+
+            self.km_prior = np.zeros([n_clus, self.num_fit_parms])
+            for i, cen in enumerate(centers):
+                if self.guess_fn is not None:
+                    p0 = self.guess_fn(self.dep_vec, cen)
+                else:
+                    p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
+
+                self.km_prior[i] = SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen,
+                                                               return_cov=False,
+                                                               p0=p0, maxfev=10000)
 
     @staticmethod
     def default_curve_fit(fit_fn, xvec, yvec, return_cov=True, **kwargs):

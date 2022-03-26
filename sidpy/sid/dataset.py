@@ -1105,7 +1105,6 @@ class Dataset(da.Array):
             new_shape = shape[0]
         else:
             new_shape = shape
-        print(new_shape)
         return super().reshape(*new_shape, merge_chunks)
 
     @reduce_dims
