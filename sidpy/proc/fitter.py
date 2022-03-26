@@ -13,7 +13,6 @@ import inspect
 from ..sid import Dimension, Dataset
 from ..sid.dimension import DimensionType
 
-
 try:
     from scipy.optimize import curve_fit
 except ModuleNotFoundError:
@@ -21,8 +20,8 @@ except ModuleNotFoundError:
 
 try:
     from sklearn.cluster import KMeans
-except:
-    kMeans = None
+except ModuleNotFoundError:
+    KMeans = None
 
 
 class SidFitter:
@@ -157,7 +156,7 @@ class SidFitter:
 
         self.km_guess = km_guess
         if self.km_guess:
-            self.km_prior = None
+            self.km_priors = None
             self.km_labels = None
         self._setup_calc()
         self.guess_fn = guess_fn
@@ -233,18 +232,19 @@ class SidFitter:
         Perform the fit.
         **kwargs: extra parameters passed to scipy.optimize.curve_fit, e.g. bounds, type of lsq algorithm, etc.
         """
-
-        if not self.guess_completed and self.guess_fn is not None:
-            # Calling the guess function
+        if self.guess_fn is not None:
             guess_function_str = inspect.getsource(self.guess_fn)
-            self.do_guess()
+        else:
+            guess_function_str = 'Not Provided'
 
         fit_results = []
-        if not self.km_prior:
+        if not self.km_guess:
+            if not self.guess_completed and self.guess_fn is not None:
+                self.do_guess()
+
             for ind in range(self.num_computations):
                 if self.prior is None:
                     p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
-                    guess_function_str = 'Not Provided'
                 else:
                     p0 = self.prior[ind, :]
 
@@ -263,7 +263,8 @@ class SidFitter:
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
                                                                         self.folded_dataset[ind, :],
                                                                         return_cov=(self.return_cov or self.return_std),
-                                                                        p0=self.km_prior[self.km_labels[ind]], **kwargs)
+                                                                        p0=self.km_priors[self.km_labels[ind]],
+                                                                        **kwargs)
                 fit_results.append(lazy_result)
 
             fit_results_comp = dask.compute(*fit_results)
@@ -405,24 +406,26 @@ class SidFitter:
         # In case of a 1D fit the next line essentially does nothing.
         km_dset = self.folded_dataset.fold(dim_order)
 
-        n_clus = self.num_computations / 100  # Take care of number of cluster centers
+        n_clus = int(self.num_computations / 100)  # Take care of number of cluster centers
 
-        if kMeans is None:
+        if KMeans is None:
             raise ModuleNotFoundError("sklearn is not installed")
         else:
             km = KMeans(n_clusters=n_clus, random_state=0).fit(km_dset.compute())
 
         self.km_labels, centers = km.labels_, km.cluster_centers_
-        self.km_prior = np.zeros([n_clus, self.num_fit_parms])
+        km_priors = []
         for i, cen in enumerate(centers):
             if self.guess_fn is not None:
                 p0 = self.guess_fn(self.dep_vec, cen)
             else:
                 p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
 
-            self.km_prior[i] = SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen,
-                                                           return_cov=False,
-                                                           p0=p0, maxfev=10000)
+            km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen,
+                                                         return_cov=False,
+                                                         p0=p0, maxfev=10000))
+        self.km_priors = np.array(km_priors)
+        self.num_fit_parms = self.km_priors.shape[-1]
 
     @staticmethod
     def default_curve_fit(fit_fn, xvec, yvec, return_cov=True, **kwargs):
