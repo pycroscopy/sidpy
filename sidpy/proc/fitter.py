@@ -158,6 +158,8 @@ class SidFitter:
         if self.km_guess:
             self.km_priors = None
             self.km_labels = None
+            self.n_clus = n_clus
+
         self._setup_calc()
         self.guess_fn = guess_fn
         self.prior = None  # shape = [num_computations, num_fitting_parms]
@@ -406,12 +408,12 @@ class SidFitter:
         # In case of a 1D fit the next line essentially does nothing.
         km_dset = self.folded_dataset.fold(dim_order)
 
-        n_clus = int(self.num_computations / 100)  # Take care of number of cluster centers
-
         if KMeans is None:
             raise ModuleNotFoundError("sklearn is not installed")
         else:
-            km = KMeans(n_clusters=n_clus, random_state=0).fit(km_dset.compute())
+            if self.n_clus is None:
+                self.n_clus = int(self.num_computations / 100)
+            km = KMeans(n_clusters=self.n_clus, random_state=0).fit(km_dset.compute())
 
         self.km_labels, centers = km.labels_, km.cluster_centers_
         km_priors = []
