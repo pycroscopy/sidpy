@@ -245,6 +245,7 @@ class SidFitter:
             fit_results.append(lazy_result)
 
         fit_results_comp = dask.compute(*fit_results)
+        self.client.close()
 
         if self.return_cov or self.return_std:
             # here we get back both: the parameter means and the covariance matrix!
@@ -282,6 +283,7 @@ class SidFitter:
         mean_sid_dset.metadata = self.dataset.metadata.copy()
         mean_sid_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
         mean_sid_dset.original_metadata = self.dataset.original_metadata.copy()
+        mean_sid_dset.fit_dataset = True #We are going to make this attribute for fit datasets
 
         cov_sid_dset, std_fit_dset, fit_dset = None, None, None
 
