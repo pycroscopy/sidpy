@@ -190,11 +190,13 @@ class SidFitter:
         # information. To do this, unfold utilizes the saved information while folding the original dataset.
         # Here, we are going to tweak that information and use the unfold method on the dataset with fitted parameters.
 
-        self._unfold_attr = {'dim_order_flattened': self.fold_order[0] + [len(self.fold_order[0])],
+        self._unfold_attr = {'dim_order_flattened': list(np.arange(len(self.dataset.shape))),
                              'shape_transposed': [self.dataset.shape[i] for i in self.fold_order[0]] + [-1]}
-        axes = self.dataset._axes.copy()
-        for i in self.dep_dims:
-            del axes[i]
+        axes, j = {}, 0
+        for i, dim in self.dataset._axes.items():
+            if not i in self.dep_dims:
+                axes[j] = dim
+                j += 1
         self._unfold_attr['_axes'] = axes
 
     def do_guess(self):
