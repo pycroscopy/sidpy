@@ -319,9 +319,7 @@ class ImageStackVisualizer(object):
         self.plot_fit_labels = False
 
         self.number_of_slices = self.dset.shape[self.stack_dim]
-        self.axis = None
-        self.plot_image(**kwargs)
-        self.axis = plt.gca()
+        
         if self.set_title:
             if 'fit_dataset'  in dir(dset):
                 if dset.fit_dataset:
@@ -329,51 +327,56 @@ class ImageStackVisualizer(object):
                         self.plot_fit_labels = True
                         img_titles = dset.metadata['fit_parms_dict']['fit_parameters_labels']
                         self.image_titles = ['Fitting Parm: ' + img_titles[k] for k in range(len(img_titles))]
+                    else:
+                        self.image_titles = 'Fitting Maps: ' + dset.title + '\n use scroll wheel to navigate images'    
                 else:
                     self.image_titles = 'Fitting Maps: ' + dset.title + '\n use scroll wheel to navigate images'
             else:
                 self.image_titles = 'Image stack: ' + dset.title + '\n use scroll wheel to navigate images'
-
-            #self.axis.set_title(image_titles)
-            self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
         
-            import ipywidgets as iwgt
-            self.play = iwgt.Play(
-                value=0,
-                min=0,
-                max=self.number_of_slices,
-                step=1,
-                interval=500,
-                description="Press play",
-                disabled=False
-            )
-            self.slider = iwgt.IntSlider(
-                value=0,
-                min=0,
-                max=self.number_of_slices,
-                continuous_update=False,
-                description="Frame:")
-            # set the slider function
-            iwgt.interactive(self._update, frame=self.slider)
-            # link slider and play function
-            iwgt.jslink((self.play, 'value'), (self.slider, 'value'))
+        self.axis = None
+        self.plot_image(**kwargs)
+        self.axis = plt.gca()
+        #self.axis.set_title(image_titles)
+        self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
+    
+        import ipywidgets as iwgt
+        self.play = iwgt.Play(
+            value=0,
+            min=0,
+            max=self.number_of_slices,
+            step=1,
+            interval=500,
+            description="Press play",
+            disabled=False
+        )
+        self.slider = iwgt.IntSlider(
+            value=0,
+            min=0,
+            max=self.number_of_slices,
+            continuous_update=False,
+            description="Frame:")
+        # set the slider function
+        iwgt.interactive(self._update, frame=self.slider)
+        # link slider and play function
+        iwgt.jslink((self.play, 'value'), (self.slider, 'value'))
 
-            # We add a button to average the images
-            self.button = iwgt.widgets.ToggleButton(
-                value=False,
-                description='Average',
-                disabled=False,
-                button_style='',  # 'success', 'info', 'warning', 'danger' or ''
-                tooltip='Average Images of Stack')
+        # We add a button to average the images
+        self.button = iwgt.widgets.ToggleButton(
+            value=False,
+            description='Average',
+            disabled=False,
+            button_style='',  # 'success', 'info', 'warning', 'danger' or ''
+            tooltip='Average Images of Stack')
 
-            self.button.observe(self._average_slices, 'value')
+        self.button.observe(self._average_slices, 'value')
 
-            # set play and slider widgets next to each other
-            widg = iwgt.HBox([self.play, self.slider, self.button])
-            display(widg)
+        # set play and slider widgets next to each other
+        widg = iwgt.HBox([self.play, self.slider, self.button])
+        display(widg)
 
-            # self.anim = animation.FuncAnimation(self.fig, self._updatefig, interval=200, blit=False, repeat=True)
-            self._update()
+        # self.anim = animation.FuncAnimation(self.fig, self._updatefig, interval=200, blit=False, repeat=True)
+        self._update()
 
     def plot_image(self, **kwargs):
 
