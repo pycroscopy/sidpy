@@ -253,6 +253,7 @@ class SidFitter:
 
         mean_sid_dset = Dataset.from_array(self.mean_fit_results, title='Fitting_Map')
         mean_sid_dset.metadata['fold_attr'] = self._unfold_attr.copy()
+        print('mean_sid_dset is of shape {}'.format(mean_sid_dset.shape))
         mean_sid_dset = mean_sid_dset.unfold()
 
         # Set the data type
