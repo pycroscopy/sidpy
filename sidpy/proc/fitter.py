@@ -303,12 +303,11 @@ class SidFitter:
         fit_parms_dict = {'fit_parameters_labels': self.fit_labels,
                           'fitting_function': inspect.getsource(self.fit_fn),
                           'guess_function': guess_function_str,
-                          'ind_dims': self.ind_dims,
+                          'ind_dims': self.ind_dims
                           }
         mean_sid_dset.metadata = self.dataset.metadata.copy()
         mean_sid_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
         mean_sid_dset.original_metadata = self.dataset.original_metadata.copy()
-        mean_sid_dset.fit_dataset = True  # We are going to make this attribute for fit datasets
 
         cov_sid_dset, std_fit_dset, fit_dset = None, None, None
 
@@ -347,7 +346,7 @@ class SidFitter:
         # Here is the std_dev dataset
         if self.return_std:
             self.std_fit_results = np.diagonal(self.cov_fit_results, axis1=-2, axis2=-1)
-            std_fit_dset = Dataset.from_array(self.std_fit_results, title='std_dev')
+            std_fit_dset = Dataset.from_array(self.std_fit_results, title='Fitting_Map_std_dev')
             std_fit_dset.metadata['fold_attr'] = self._unfold_attr.copy()
             std_fit_dset = std_fit_dset.unfold()
 
@@ -431,7 +430,6 @@ class SidFitter:
 
     @staticmethod
     def default_curve_fit(fit_fn, xvec, yvec, return_cov=True, **kwargs):
-        print(kwargs)
         xvec = np.array(xvec)
         yvec = np.array(yvec)
         yvec = yvec.ravel()
