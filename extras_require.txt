@@ -1,0 +1,4 @@
+mpi4py
+pyqt5
+scipy
+sklearn
