@@ -99,22 +99,52 @@ class Test_3D_dset_1Dfit(unittest.TestCase):
 
 class Test_4D_dset_2Dfit(unittest.TestCase):
     def setUp(self):
-        self.data_set_4D, self.xvec = make_3D_dataset(shape=(10, 10, 32))
-        fitter = SidFitter(self.data_set_3D, xvec=self.xvec,
-                           fit_fn=return_quad, guess_fn=guess_quad, num_workers=8,
-                           threads=2, return_cov=True, return_fit=True, return_std=True,
-                           km_guess=True, n_clus=10)
+        self.data_set_4D, self.xyvec = make_4D_dataset()
+        # Here we don't provide the xyvec as the input, we let the class figure it
+        fitter = SidFitter(self.data_set_4D, fit_fn=gauss_2D, num_workers=8, num_fit_parms=5,
+                           threads=2, return_fit=True,
+                           km_guess=True, n_clus=10,
+                           fit_parameter_labels=['amplitude', 'x', 'y', 'sigma', 'offset'])
 
-        lb, ub = [-50, -50, -50], [50, 50, 50]
-        self.fit_results = fitter.do_fit(bounds=(lb, ub), maxfev=100)
+        self.fit_results = fitter.do_fit(maxfev=1000)
 
-        self.metadata = self.data_set_3D.metadata.copy()
-        fit_parms_dict = {'fit_parameters_labels': None,
-                          'fitting_function': inspect.getsource(return_quad),
-                          'guess_function': inspect.getsource(guess_quad),
+        self.metadata = self.data_set_4D.metadata.copy()
+        fit_parms_dict = {'fit_parameters_labels': ['amplitude', 'x', 'y', 'sigma', 'offset'],
+                          'fitting_function': inspect.getsource(gauss_2D),
+                          'guess_function': 'Not Provided',
                           'ind_dims': (0, 1)
                           }
         self.metadata['fit_parms_dict'] = fit_parms_dict
+
+    def test_num_fitter_outputs(self):
+        self.assertEqual(len(self.fit_results), 2)  # add assertion here
+
+    def test_fit_parms_dset(self):
+        # First dataset would be the fitting parameters dataset
+        self.assertEqual(self.fit_results[0].shape, (32, 16, 5))
+        ## Getting the dimension dict
+        dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
+                    2: Dimension(np.arange(5),
+                                 name='fit_parms', units='a.u.',
+                                 quantity='fit_parameters',
+                                 dimension_type='temporal')}
+
+        validate_dataset_properties(self, self.fit_results[0], np.array(self.fit_results[0]),
+                                    title='Fitting_Map', data_type=DataType.IMAGE_STACK,
+                                    dimension_dict=dim_dict,
+                                    original_metadata=self.data_set_4D.original_metadata.copy(),
+                                    metadata=self.metadata)
+
+    def test_fitted_dset(self):
+        # Fourth dataset is the fitted dataset
+        self.assertEqual(self.fit_results[1].shape, self.data_set_4D.shape)
+        validate_dataset_properties(self, self.fit_results[1], np.array(self.fit_results[1]),
+                                    title='fitted_' + self.data_set_4D.title, data_type=self.data_set_4D.data_type,
+                                    quantity=self.data_set_4D.quantity, modality=self.data_set_4D.modality,
+                                    units=self.data_set_4D.units, source=self.data_set_4D.source,
+                                    dimension_dict=self.data_set_4D._axes,
+                                    original_metadata=self.data_set_4D.original_metadata,
+                                    metadata=self.metadata)
 
 
 def return_quad(x, *parms):

@@ -27,7 +27,7 @@ except ModuleNotFoundError:
 class SidFitter:
     # An extension of the Process Class for Functional Fitting
     def __init__(self, sidpy_dataset, fit_fn, xvec=None, ind_dims=None, guess_fn=None, num_fit_parms=None,
-                 km_guess=False, n_clus=None, return_std=False, return_cov=False, return_fit=False,
+                 km_guess=False, n_clus=None, return_cov=False, return_std=False, return_fit=False,
                  fit_parameter_labels=None, num_workers=2, threads=2):
         """
         Parameters
