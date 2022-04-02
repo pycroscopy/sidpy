@@ -97,6 +97,24 @@ class Test_3D_dset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
 
+class Test_4D_dset_2Dfit(unittest.TestCase):
+    def setUp(self):
+        self.data_set_4D, self.xvec = make_3D_dataset(shape=(10, 10, 32))
+        fitter = SidFitter(self.data_set_3D, xvec=self.xvec,
+                           fit_fn=return_quad, guess_fn=guess_quad, num_workers=8,
+                           threads=2, return_cov=True, return_fit=True, return_std=True,
+                           km_guess=True, n_clus=10)
+
+        lb, ub = [-50, -50, -50], [50, 50, 50]
+        self.fit_results = fitter.do_fit(bounds=(lb, ub), maxfev=100)
+
+        self.metadata = self.data_set_3D.metadata.copy()
+        fit_parms_dict = {'fit_parameters_labels': None,
+                          'fitting_function': inspect.getsource(return_quad),
+                          'guess_function': inspect.getsource(guess_quad),
+                          'ind_dims': (0, 1)
+                          }
+        self.metadata['fit_parms_dict'] = fit_parms_dict
 
 
 def return_quad(x, *parms):
@@ -174,6 +192,82 @@ def make_3D_dataset(shape=(60, 60, 32), cycles=1):
     data_set.metadata = parms_dict
 
     return data_set, xvec
+
+
+def gauss_2D(fitting_space, *parms):
+    x = fitting_space[0]
+    y = fitting_space[1]
+    amplitude, xo, yo, sigma, offset = parms
+    xo = float(xo)
+    yo = float(yo)
+    r = ((x - xo) ** 2 + (y - yo) ** 2) ** .5
+    g = amplitude * np.exp(-(r / sigma) ** 2) + offset
+    return g.ravel()
+
+
+def make_4D_dataset(shape=(32, 16, 64, 48)):
+    dataset = np.zeros(shape=shape, dtype=np.float64)
+    xlen, ylen, kxlen, kylen = shape
+    kx, ky = np.meshgrid(np.linspace(0, 5, kxlen), np.linspace(0, 6, kylen))
+
+    for row in range(xlen):
+        for col in range(ylen):
+            amp = np.sqrt(row * col // xlen * ylen) + 3.5
+            sigma = np.random.normal(loc=2.5, scale=0.34)
+            offset = 0.1  # col
+            xo = np.random.uniform(low=0, high=5)
+            yo = np.random.uniform(low=0, high=6)
+
+            # amplitude, xo, yo, sigma, offset
+            gauss_mat = gauss_2D([kx.ravel(), ky.ravel()], *[amp, xo, yo, sigma, offset])
+            gauss_mat += np.mean(gauss_mat) / 4 * np.random.normal(size=len(gauss_mat))
+            gauss_mat = gauss_mat.reshape(kx.shape[0], kx.shape[1])
+            dataset[row, col, :, :] = gauss_mat.T
+
+    # Now make it a sidpy dataset
+    parms_dict = {'info_1': np.linspace(0, 5.6, 30), 'instrument': 'opportunity rover AFM'}
+
+    # Let's convert it to a sidpy dataset
+    # Specify dimensions
+    x_dim = np.linspace(0, 1E-6,
+                        dataset.shape[0])
+    y_dim = np.linspace(0, 1E-6,
+                        dataset.shape[1])
+    kx_dim = np.linspace(0, 5, kxlen)
+    ky_dim = np.linspace(0, 6, kylen)
+
+    # Make a sidpy dataset
+    data_set = sid.Dataset.from_array(dataset, name='4D_STEM')
+
+    # Set the data type
+    data_set.data_type = sid.DataType.IMAGE_4D
+
+    # Add quantity and units
+    data_set.units = 'nA'
+    data_set.quantity = 'Current'
+
+    # Add dimension info
+    data_set.set_dimension(0, sid.Dimension(x_dim,
+                                            name='x',
+                                            units='m', quantity='x',
+                                            dimension_type='spatial'))
+    data_set.set_dimension(1, sid.Dimension(y_dim,
+                                            name='y',
+                                            units='m', quantity='y',
+                                            dimension_type='spatial'))
+    data_set.set_dimension(2, sid.Dimension(kx_dim,
+                                            name='Intensity KX',
+                                            units='counts', quantity='Intensity',
+                                            dimension_type='spectral'))
+    data_set.set_dimension(3, sid.Dimension(ky_dim,
+                                            name='Intensity KY',
+                                            units='counts', quantity='Intensity',
+                                            dimension_type='spectral'))
+
+    # append metadata
+    data_set.metadata = parms_dict
+
+    return data_set, [kx.ravel(), ky.ravel()]
 
 
 if __name__ == '__main__':
