@@ -97,7 +97,7 @@ class SidFitter:
         self.num_fit_parms = num_fit_parms  # int: number of fitting parameters
 
         if ind_dims is not None:
-            self.ind_dims = ind_dims  # Tuple: containing indices of independent dimensions
+            self.ind_dims = tuple(ind_dims)  # Tuple: containing indices of independent dimensions
         else:
             # All the dimensions that are not spectral will be considered as independent dimensions
             ind_dims = []

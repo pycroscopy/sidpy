@@ -11,7 +11,7 @@ from ..sid.test_dataset import validate_dataset_properties
 import inspect
 
 
-class Test_3D_dset_1Dfit(unittest.TestCase):
+class Test_3Ddset_1Dfit(unittest.TestCase):
     def setUp(self):
         self.data_set_3D, self.xvec = make_3D_dataset(shape=(10, 10, 32))
         fitter = SidFitter(self.data_set_3D, xvec=self.xvec,
@@ -97,12 +97,12 @@ class Test_3D_dset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
 
-class Test_4D_dset_2Dfit(unittest.TestCase):
+class Test_4Ddset_2Dfit(unittest.TestCase):
     def setUp(self):
         self.data_set_4D, self.xyvec = make_4D_dataset()
         # Here we don't provide the xyvec as the input, we let the class figure it
         fitter = SidFitter(self.data_set_4D, fit_fn=gauss_2D, num_workers=8, num_fit_parms=5,
-                           threads=2, return_fit=True,
+                           threads=2, return_std=True, return_fit=True,
                            km_guess=True, n_clus=10,
                            fit_parameter_labels=['amplitude', 'x', 'y', 'sigma', 'offset'])
 
@@ -117,7 +117,7 @@ class Test_4D_dset_2Dfit(unittest.TestCase):
         self.metadata['fit_parms_dict'] = fit_parms_dict
 
     def test_num_fitter_outputs(self):
-        self.assertEqual(len(self.fit_results), 2)  # add assertion here
+        self.assertEqual(len(self.fit_results), 3)  # add assertion here
 
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
@@ -135,10 +135,25 @@ class Test_4D_dset_2Dfit(unittest.TestCase):
                                     original_metadata=self.data_set_4D.original_metadata.copy(),
                                     metadata=self.metadata)
 
+    def test_std_dev_dset(self):
+        # Third dataset is the std_dev dataset
+        self.assertEqual(self.fit_results[1].shape, (32, 16, 5))
+        ## Getting the dim_dict
+        dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
+                    2: Dimension(np.arange(5),
+                                 name='std_dev', units='a.u.',
+                                 quantity='std_dev_fit_parms',
+                                 dimension_type='temporal')}
+        validate_dataset_properties(self, self.fit_results[1], np.array(self.fit_results[1]),
+                                    title='Fitting_Map_std_dev', data_type=DataType.IMAGE_STACK,
+                                    dimension_dict=dim_dict,
+                                    original_metadata=self.data_set_4D.original_metadata.copy(),
+                                    metadata=self.metadata)
+
     def test_fitted_dset(self):
         # Fourth dataset is the fitted dataset
-        self.assertEqual(self.fit_results[1].shape, self.data_set_4D.shape)
-        validate_dataset_properties(self, self.fit_results[1], np.array(self.fit_results[1]),
+        self.assertEqual(self.fit_results[2].shape, self.data_set_4D.shape)
+        validate_dataset_properties(self, self.fit_results[2], np.array(self.fit_results[2]),
                                     title='fitted_' + self.data_set_4D.title, data_type=self.data_set_4D.data_type,
                                     quantity=self.data_set_4D.quantity, modality=self.data_set_4D.modality,
                                     units=self.data_set_4D.units, source=self.data_set_4D.source,
@@ -146,6 +161,99 @@ class Test_4D_dset_2Dfit(unittest.TestCase):
                                     original_metadata=self.data_set_4D.original_metadata,
                                     metadata=self.metadata)
 
+
+class Test_4Ddset_1Dfit(unittest.TestCase):
+    def setUp(self):
+        self.data_set_cycles, self.xvec = make_3D_dataset(shape=(10, 10, 32), cycles=3)
+        fitter = SidFitter(self.data_set_cycles, xvec=self.xvec,
+                           fit_fn=return_quad, guess_fn=guess_quad, num_workers=8,
+                           threads=2, return_cov=True, return_fit=True, return_std=True,
+                           km_guess=True, n_clus=10, ind_dims=[0, 1, 3])
+
+        lb, ub = [-50, -50, -50], [50, 50, 50]
+        self.fit_results = fitter.do_fit(bounds=(lb, ub), maxfev=100)
+
+        self.metadata = self.data_set_cycles.metadata.copy()
+        fit_parms_dict = {'fit_parameters_labels': None,
+                          'fitting_function': inspect.getsource(return_quad),
+                          'guess_function': inspect.getsource(guess_quad),
+                          'ind_dims': (0, 1, 3)
+                          }
+        self.metadata['fit_parms_dict'] = fit_parms_dict
+
+    def test_num_fitter_outputs(self):
+        self.assertEqual(len(self.fit_results), 4)  # add assertion here
+
+    def test_fit_parms_dset(self):
+        # First dataset would be the fitting parameters dataset
+        self.assertEqual(self.fit_results[0].shape, (10, 10, 3, 3))
+        ## Getting the dimension dict
+        dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
+                    2: self.data_set_cycles._axes[3].copy(),
+                    3: Dimension(np.arange(3),
+                                 name='fit_parms', units='a.u.',
+                                 quantity='fit_parameters',
+                                 dimension_type='temporal')}
+
+        validate_dataset_properties(self, self.fit_results[0], np.array(self.fit_results[0]),
+                                    title='Fitting_Map', data_type=DataType.IMAGE_STACK,
+                                    dimension_dict=dim_dict,
+                                    original_metadata=self.data_set_cycles.original_metadata.copy(),
+                                    metadata=self.metadata)
+
+    def test_cov_dset(self):
+        # Second dataset is the covariance dataset
+        self.assertEqual(self.fit_results[1].shape, (10, 10, 3, 3, 3))
+        ## Getting the dim_dict
+        dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
+                    2: self.data_set_cycles._axes[3].copy(),
+                    3: Dimension(np.arange(3),
+                                 name='fit_cov_parms_x', units='a.u.',
+                                 quantity='fit_cov_parameters',
+                                 dimension_type='spectral'),
+                    4: Dimension(np.arange(3),
+                                 name='fit_cov_parms_y', units='a.u.',
+                                 quantity='fit_cov_parameters',
+                                 dimension_type='spectral')
+                    }
+
+        validate_dataset_properties(self, self.fit_results[1], np.array(self.fit_results[1]),
+                                    title='Fitting_Map_Covariance', data_type=DataType.IMAGE_4D,
+                                    dimension_dict=dim_dict,
+                                    original_metadata=self.data_set_cycles.original_metadata.copy(),
+                                    metadata=self.metadata)
+
+    def test_std_dev_dset(self):
+        # Third dataset is the std_dev dataset
+        self.assertEqual(self.fit_results[2].shape, (10, 10, 3, 3))
+        ## Getting the dim_dict
+        dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
+                    2: self.data_set_cycles._axes[3].copy(),
+                    3: Dimension(np.arange(3),
+                                 name='std_dev', units='a.u.',
+                                 quantity='std_dev_fit_parms',
+                                 dimension_type='temporal')}
+        validate_dataset_properties(self, self.fit_results[2], np.array(self.fit_results[2]),
+                                    title='Fitting_Map_std_dev', data_type=DataType.IMAGE_STACK,
+                                    dimension_dict=dim_dict,
+                                    original_metadata=self.data_set_cycles.original_metadata.copy(),
+                                    metadata=self.metadata)
+
+    def test_fitted_dset(self):
+        # Fourth dataset is the fitted dataset
+        shape = [self.data_set_cycles.shape[i] for i in [0, 1, 3, 2]]
+        self.assertEqual(self.fit_results[3].shape, self.data_set_cycles.shape)
+        validate_dataset_properties(self, self.fit_results[3], np.array(self.fit_results[3]),
+                                    title='fitted_' + self.data_set_cycles.title,
+                                    data_type=self.data_set_cycles.data_type,
+                                    quantity=self.data_set_cycles.quantity, modality=self.data_set_cycles.modality,
+                                    units=self.data_set_cycles.units, source=self.data_set_cycles.source,
+                                    dimension_dict=self.data_set_cycles._axes,
+                                    original_metadata=self.data_set_cycles.original_metadata,
+                                    metadata=self.metadata)
+
+
+# The following functions are used to generate datasets
 
 def return_quad(x, *parms):
     a, b, c, = parms
