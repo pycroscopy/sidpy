@@ -560,7 +560,7 @@ class Dataset(da.Array):
             raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         return self.view.fig
 
-    def get_thumbnail(self, thumbnail_size=, figure=None):
+    def get_thumbnail(self, figure=None, thumbnail_size=128):
         """
         Creates a thumbnail which is stored in the thumbnail attibute of sidpy Datset
 
