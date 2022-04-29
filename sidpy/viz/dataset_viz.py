@@ -21,6 +21,12 @@ if sys.version_info.major == 3:
 
 default_cmap = plt.cm.viridis
 
+def is_complex_dtype(dtype):
+    if dtype in [np.complex, np.complex64, np.complex128]:
+        return True
+    else:
+        return False
+
 
 class CurveVisualizer(object):
     def __init__(self, dset, spectrum_number=0, figure=None, **kwargs):
