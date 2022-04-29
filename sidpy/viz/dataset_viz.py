@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 # import matplotlib.animation as animation
 
-from ..hdf.dtype_utils import is_complex_dtype
 if sys.version_info.major == 3:
     unicode = str
 
@@ -67,7 +66,7 @@ class CurveVisualizer(object):
 
         self.dim = self.dset._axes[self.spectral_dims[0]]
 
-        if is_complex_dtype(dset.dtype):
+        if dset.dtype in [np.complex, np.complex64, np.complex128]:
             # Plot real and image
             self.fig, self.axes = plt.subplots(nrows=2, **fig_args)
 

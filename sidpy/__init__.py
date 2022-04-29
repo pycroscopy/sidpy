@@ -14,7 +14,6 @@ from .viz import jupyter_utils
 __all__ = ['__version__']
 # Traditional hierarchical approach - importing submodules
 __all__ += base.__all__
-__all__ += hdf.__all__
 __all__ += io.__all__
 __all__ += proc.__all__
 __all__ += sid.__all__
