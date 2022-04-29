@@ -27,7 +27,7 @@ import numpy as np
 import matplotlib.pylab as plt
 import string
 import dask.array as da
-import h5py
+
 from enum import Enum
 
 from .dimension import Dimension, DimensionType
@@ -560,8 +560,10 @@ class Dataset(da.Array):
             raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         return self.view.fig
 
-    def get_thumbnail(self, thumbnail_size, figure=None):
+    def get_thumbnail(self, thumbnail_size=, figure=None):
         """
+        Creates a thumbnail which is stored in the thumbnail attibute of sidpy Datset
+
 
         Parameters
         ----------
@@ -583,17 +585,7 @@ class Dataset(da.Array):
         # Creating Thumbnail as png image
         view.savefig('thumb.png', dpi=thumbnail_size)
         self.thumbnail = imageio.imread('thumb.png')
-        
-        # Writing thumbnail to h5_file if it exists 
-        if self.h5_dataset is not None:
-            if 'Thumbnail' not in self.h5_dataset.file:
-                thumb_group = self.h5_dataset.file.create_group("Thumbnail")
-            else:
-                thumb_group = self.h5_dataset.file["Thumbnail"]
-            if "Thumbnail" in thumb_group:
-                del thumb_group["Thumbnail"]
-            thumb_dset = thumb_group.create_dataset("Thumbnail", data=self.thumbnail)
-            
+
         return self.thumbnail
 
     def get_extent(self, dimensions):
@@ -752,12 +744,7 @@ class Dataset(da.Array):
 
     @h5_dataset.setter
     def h5_dataset(self, value):
-        if isinstance(value, h5py.Dataset):
-            self._h5_dataset = value
-        elif value is None:
-            self.hdf_close()
-        else:
-            raise TypeError('h5_dataset needs to be a hdf5 Dataset')
+        self._h5_dataset = value
 
     @property
     def metadata(self):
