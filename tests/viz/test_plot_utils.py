@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 sys.path.append("../../sidpy/")
 from sidpy.viz import plot_utils
-import h5py
+
 
 """
 class TestGridDecoration(unittest.TestCase):
@@ -92,14 +92,14 @@ class TestUseScientificTicks(unittest.TestCase):
 class TestMakeScalarMappable(unittest.TestCase):
 
     def test_vmin_not_num(self):
-        notNum =  'hello'
+        not_num = 'hello'
         with self.assertRaises(AssertionError):
-            plot_utils.make_scalar_mappable(notNum, 5)
+            plot_utils.make_scalar_mappable(not_num, 5)
 
     def test_vmax_not_num(self):
-        notNum =  'hello'
+        not_num = 'hello'
         with self.assertRaises(AssertionError):
-            plot_utils.make_scalar_mappable(5, notNum)
+            plot_utils.make_scalar_mappable(5, not_num)
 
     def test_vmin_more_vmax(self):
         with self.assertRaises(AssertionError):
@@ -238,13 +238,13 @@ class TestGetCMapObject(unittest.TestCase):
 class TestRainbowPlot(unittest.TestCase):
 
     def test_axis_not_axis(self):
-        notAxis = 5
+        not_axis = 5
         num_pts = 1024
         t_vec = np.linspace(0, 10 * np.pi, num_pts)
         with self.assertRaises(TypeError):
-            plot_utils.rainbow_plot(notAxis, np.cos(t_vec) * np.linspace(0, 1, num_pts),
-                                     np.sin(t_vec) * np.linspace(0, 1, num_pts),
-                                     num_steps=32)
+            plot_utils.rainbow_plot(not_axis, np.cos(t_vec) * np.linspace(0, 1, num_pts),
+                                    np.sin(t_vec) * np.linspace(0, 1, num_pts),
+                                    num_steps=32)
 
     """
     def test_xvec_not_array(self):
@@ -328,8 +328,8 @@ class TestPlotLineFamily(unittest.TestCase):
         notAxis = 'hello'
         with self.assertRaises(TypeError):
             plot_utils.plot_line_family(notAxis, x_vec, y_mat,
-                               line_names=freq_strs, label_prefix='Freq = ', label_suffix='Hz',
-                                 y_offset=2.5, show_cbar=True)
+                                        line_names=freq_strs, label_prefix='Freq = ', label_suffix='Hz',
+                                        y_offset=2.5, show_cbar=True)
 
     """
     def test_plot_line_family_not_xvec(self):
@@ -380,6 +380,7 @@ class TestPlotLineFamily(unittest.TestCase):
                                  y_offset=2.5, show_cbar=True)
     """
 
+
 class TestPlotMap(unittest.TestCase):
 
     def test_plot_map(self):
@@ -400,7 +401,7 @@ class TestPlotMap(unittest.TestCase):
         y_vec = np.sin(x_vec) ** 2
     
         atom_intensities = y_vec * np.atleast_2d(y_vec).T
-        rand_nan = np.where(np.random.rand(256,256) < 0.2)
+        rand_nan = np.where(np.random.rand(256, 256) < 0.2)
         atom_intensities[rand_nan] = np.nan
     
         fig, axis = plt.subplots()
@@ -513,11 +514,6 @@ class TestPlotScree(unittest.TestCase):
         scree = 'string'
         with self.assertRaises(TypeError):
             plot_utils.plot_scree(scree)
-
-    def test_scree_h5py_dataset(self):
-        h5_f = h5py.File('test.h5', 'a')
-        scree = h5_f.create_dataset("test", data=np.arange(1,25))
-        plot_utils.plot_scree(scree)
 
     """
     def test_scree_list(self):

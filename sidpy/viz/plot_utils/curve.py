@@ -172,7 +172,7 @@ def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='',
     for line_ind in range(num_lines):
         axis.plot(x_vec, line_family[line_ind] + line_ind * y_offset,
                   label=line_names[line_ind],
-                  color=cmap(int(255 * line_ind / (num_lines))), **kwargs)
+                  color=cmap(int(255 * line_ind / num_lines)), **kwargs)
 
     if show_cbar:
         # put back the cmap parameter:
@@ -278,7 +278,7 @@ def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_s
 
         for dataset in datasets:
             if not isinstance(dataset, (np.ndarray, da.core.Array)):
-                raise TypeError('datasets can be a list of 2D h5py.Dataset or numpy array objects')
+                raise TypeError('datasets can be a list of 2D numpy array objects')
             if len(dataset.shape) != 2:
                 raise ValueError('Each datset should be a 2D array')
             num_pos_es.append(dataset.shape[0])
