@@ -25,7 +25,7 @@ if sys.version_info.major == 3:
 generic_attributes = ['title', 'quantity', 'units', 'modality', 'source']
 
 
-def validate_dataset_properties(self, dataset, values, name='generic',
+def validate_dataset_properties(self, dataset, values,
                                 title='generic', quantity='generic', units='generic',
                                 modality='generic', source='generic', dimension_dict=None,
                                 data_type=DataType.UNKNOWN,
@@ -183,7 +183,7 @@ class TestDatasetConstructor(unittest.TestCase):
         descriptor.metadata = test_dict.copy()
         descriptor.original_metadata = test_dict.copy()
 
-        validate_dataset_properties(self, descriptor, np.arange(3), name='test',
+        validate_dataset_properties(self, descriptor, np.arange(3),
                                     title='test', quantity='test', units='test',
                                     modality='test', source='test', dimension_dict=None,
                                     data_type=DataType.UNKNOWN,
@@ -211,19 +211,19 @@ class TestDatasetConstructor(unittest.TestCase):
 
     def test_numpy_array_input(self):
         x = np.ones([3, 4, 5])
-        descriptor = Dataset.from_array(x, name='test')
+        descriptor = Dataset.from_array(x, title='test')
         self.assertEqual(descriptor.shape, x.shape)
         # TODO: call validate_dataset_properties instead
 
     def test_dask_array_input(self):
         x = da.zeros([3, 4], chunks='auto')
-        descriptor = Dataset.from_array(x, chunks='auto', name='test')
+        descriptor = Dataset.from_array(x, chunks='auto', title='test')
         self.assertEqual(descriptor.shape, x.shape)
         # TODO: call validate_dataset_properties instead
 
     def test_list_input(self):
         x = [[3, 4, 6], [5, 6, 7]]
-        descriptor = Dataset.from_array(x, name='test')
+        descriptor = Dataset.from_array(x, title='test')
         self.assertEqual(descriptor.shape, np.array(x).shape)
         # TODO: call validate_dataset_properties instead
 

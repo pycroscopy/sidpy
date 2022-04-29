@@ -7,6 +7,7 @@ Created on Tue Nov  3 15:07:16 2017
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
 import unittest
+import tempfile
 import os
 import sys
 import tempfile
@@ -18,6 +19,7 @@ from enum import Enum
 sys.path.append("../../sidpy/")
 from sidpy.base.dict_utils import flatten_dict
 from sidpy.hdf import hdf_utils
+
 
 from . import data_utils
 
@@ -638,8 +640,9 @@ class TestLinkH5ObjectAsAttribute(unittest.TestCase):
 class TestValidateH5ObjsInSameFile(unittest.TestCase):
 
     def test_diff_file(self):
-        file_path_1 = 'source.h5'
-        file_path_2 = 'sink.h5'
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path_1 = tmp_dir + 'source.h5'
+            file_path_2 = tmp_dir + 'sink.h5'
         data_utils.delete_existing_file(file_path_1)
         h5_f1 = h5py.File(file_path_1, mode='w')
         h5_main = h5_f1.create_dataset('main', data=np.arange(5))
@@ -649,8 +652,8 @@ class TestValidateH5ObjsInSameFile(unittest.TestCase):
         with self.assertRaises(ValueError):
             hdf_utils.validate_h5_objs_in_same_h5_file(h5_main, h5_other)
 
-        os.remove(file_path_1)
-        os.remove(file_path_2)
+        #os.remove(file_path_1)
+        #os.remove(file_path_2)
 
     def test_same_file(self):
         file_path = 'test_same_file.h5'
