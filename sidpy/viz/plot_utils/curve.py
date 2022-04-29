@@ -11,7 +11,6 @@ from __future__ import division, print_function, absolute_import, \
     unicode_literals
 from numbers import Number
 import sys
-import h5py
 import matplotlib as mpl
 import numpy as np
 from dask import array as da
@@ -36,7 +35,7 @@ def cbar_for_line_plot(axis, num_steps, discrete_ticks=True, **kwargs):
     num_steps : uint
         Number of steps in the colorbar
     discrete_ticks : (optional) bool
-        Whether or not to have the ticks match the number of number of steps. Default = True
+        Whether or not to have the ticks match the number of steps. Default = True
     """
     if not isinstance(axis, mpl.axes.Axes):
         raise TypeError('axis must be a matplotlib.axes.Axes object')
@@ -145,7 +144,8 @@ def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='',
         raise TypeError('line_family must be a 2d array of numbers')
     assert line_family.ndim == 2, 'line_family must be a 2D array'
     #    assert x_vec.shape[1] == line_family.shape[1], \
-    #        'The size of the 2nd dimension of line_family must match with of x_vec, but line fam has shape {} whereas xvec has shape {}'.format(line_family.shape, x_vec.shape)
+    #        'The size of the 2nd dimension of line_family must match with of x_vec, but line fam has shape {}
+    #        whereas xvec has shape {}'.format(line_family.shape, x_vec.shape)
     num_lines = line_family.shape[0]
     for var, var_name in zip([label_suffix, label_prefix], ['label_suffix', 'label_prefix']):
         if not isinstance(var, (str, unicode)):
@@ -172,7 +172,7 @@ def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='',
     for line_ind in range(num_lines):
         axis.plot(x_vec, line_family[line_ind] + line_ind * y_offset,
                   label=line_names[line_ind],
-                  color=cmap(int(255 * line_ind / (num_lines ))), **kwargs)
+                  color=cmap(int(255 * line_ind / (num_lines))), **kwargs)
 
     if show_cbar:
         # put back the cmap parameter:
@@ -182,7 +182,7 @@ def plot_line_family(axis, x_vec, line_family, line_names=None, label_prefix='',
 
 def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_spaced=True,
                 num_plots=25, x_label='', y_label='', subtitle_prefix='Position', title='',
-                use_rainbow_plots=False, fig_title_yoffset=1.05, h5_pos=None, **kwargs):
+                use_rainbow_plots=False, fig_title_yoffset=1.05, **kwargs):
     """
     Plots curves / spectras from multiple datasets from up to 25 evenly spaced positions
     Parameters
@@ -211,8 +211,7 @@ def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_s
         Plot the lines as a function of spectral index (eg. time)
     fig_title_yoffset : (optional) float
         Y offset for the figure title. Value should be around 1
-    h5_pos : HDF5 dataset reference or 2D numpy array
-        Dataset containing position indices
+
     Returns
     ---------
     fig, axes
@@ -235,20 +234,17 @@ def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_s
     else:
         fig_title_yoffset = 1.0
 
-    if h5_pos is not None:
-        if not isinstance(h5_pos, h5py.Dataset):
-            raise TypeError('h5_pos should be a h5py.Dataset object')
     if not isinstance(num_plots, int) or num_plots < 1:
         raise TypeError('num_plots should be a number')
 
     for var, var_name, dim_size in zip([datasets, excit_wfms], ['datasets', 'excit_wfms'], [2, 1]):
         mesg = '{} should be {}D arrays or iterables (list or tuples) of {}D arrays' \
                '.'.format(var_name, dim_size, dim_size)
-        if isinstance(var, (h5py.Dataset, np.ndarray, da.core.Array)):
+        if isinstance(var, (np.ndarray, da.core.Array)):
             if not len(var.shape) == dim_size:
                 raise ValueError(mesg)
         elif isinstance(var, (list, tuple)):
-            if not np.all([isinstance(dset, (h5py.Dataset, np.ndarray, da.core.Array)) for dset in datasets]):
+            if not np.all([isinstance(dset, (np.ndarray, da.core.Array)) for dset in datasets]):
                 raise TypeError(mesg)
         else:
             raise TypeError(mesg)
@@ -257,12 +253,12 @@ def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_s
     # 0 = one excitation waveform and one dataset
     # 1 = one excitation waveform but many datasets
     # 2 = one excitation waveform for each of many dataset
-    if isinstance(datasets, (h5py.Dataset, np.ndarray, da.core.Array)):
+    if isinstance(datasets, (np.ndarray, da.core.Array)):
         # can be numpy array or h5py.dataset
         num_pos = datasets.shape[0]
         num_points = datasets.shape[1]
         datasets = [datasets]
-        if isinstance(excit_wfms, (np.ndarray, h5py.Dataset, da.core.Array)):
+        if isinstance(excit_wfms, (np.ndarray, da.core.Array)):
             excit_wfms = [excit_wfms]
         elif isinstance(excit_wfms, list):
             if len(excit_wfms) == num_points:
@@ -281,7 +277,7 @@ def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_s
         num_points_es = list()
 
         for dataset in datasets:
-            if not isinstance(dataset, (h5py.Dataset, np.ndarray, da.core.Array)):
+            if not isinstance(dataset, (np.ndarray, da.core.Array)):
                 raise TypeError('datasets can be a list of 2D h5py.Dataset or numpy array objects')
             if len(dataset.shape) != 2:
                 raise ValueError('Each datset should be a 2D array')
@@ -357,12 +353,7 @@ def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_s
         else:
             for dataset, ex_wfm, col_val in zip(datasets, excit_wfms, line_colors):
                 axes_lin[count].plot(ex_wfm, dataset[posn], color=col_val, **kwargs)
-        if h5_pos is not None:
-            # print('Row ' + str(h5_pos[posn,1]) + ' Col ' + str(h5_pos[posn,0]))
-            # TODO: Do NOT assume 2 pos dims. Also format with low precision, use correct dim name, units as well
-            axes_lin[count].set_title('Row ' + str(h5_pos[posn, 1]) + ' Col ' + str(h5_pos[posn, 0]), fontsize=12)
-        else:
-            axes_lin[count].set_title(subtitle_prefix + ' ' + str(posn), fontsize=12)
+        axes_lin[count].set_title(subtitle_prefix + ' ' + str(posn), fontsize=12)
 
         if count % ncols == 0:
             axes_lin[count].set_ylabel(y_label, fontsize=12)
@@ -414,7 +405,7 @@ def plot_complex_spectra(map_stack, x_vec=None, num_comps=4, title=None, x_label
     ---------
     fig, axes
     """
-    if not isinstance(map_stack, (np.ndarray, da.core.Array)) or not map_stack.ndim in [2, 3]:
+    if not isinstance(map_stack, (np.ndarray, da.core.Array)) or map_stack.ndim not in [2, 3]:
         raise TypeError('map_stack should be a 2/3 dimensional array arranged as [component, row, col] or '
                         '[component, spectra')
     if x_vec is not None:
@@ -511,12 +502,10 @@ def plot_scree(scree, title='Scree', **kwargs):
     if isinstance(scree, (list, tuple)):
         scree = np.array(scree)
 
-    if not (isinstance(scree, (np.ndarray, da.core.Array)) or isinstance(scree, h5py.Dataset)):
+    if not isinstance(scree, (np.ndarray, da.core.Array)):
         raise TypeError('scree must be a 1D array or Dataset')
     if not isinstance(title, (str, unicode)):
         raise TypeError('title must be a string')
-    if h5py.__version__ >= '3' and isinstance(scree, h5py.Dataset):
-        scree = scree[()]
 
     fig = plt.figure(figsize=kwargs.pop('figsize', (6.5, 6)))
     axis = fig.add_axes([0.1, 0.1, .8, .8])  # left, bottom, width, height (range 0 to 1)

@@ -27,7 +27,7 @@ if sys.version_info.major == 3:
 
 def print_tree(parent, rel_paths=False):
     """
-    Simple function to recursively print the contents of a hdf5 group
+    Simple function to recursively print the contents of an hdf5 group
 
     Parameters
     ----------
@@ -814,5 +814,7 @@ def h5_group_to_dict(group, group_dict={}):
         
     group_dict[group.name.split('/')[-1]] = dict(group.attrs)
     for key in group.keys():
-        h5_group_to_dict(group[key], group_dict[group.name.split('/')[-1]])
+        if isinstance(group[key], h5py.Group):
+            h5_group_to_dict(group[key], group_dict[group.name.split('/')[-1]])
+
     return group_dict

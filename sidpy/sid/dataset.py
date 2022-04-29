@@ -199,7 +199,12 @@ class Dataset(da.Array):
             units of dataset i.e. counts, A
         quantity: str
             quantity of dataset like intensity
-
+        modality: str
+            describes what kind of data
+        source: str
+            provenance of data
+        kwargs: dict
+            dictionary of additional information
         Returns
         -------
         sidpy dataset
@@ -461,7 +466,7 @@ class Dataset(da.Array):
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
 
-    def plot(self, verbose=False, **kwargs):
+    def plot(self, verbose=False, figure=None, **kwargs):
         """
         Plots the dataset according to the
          - shape of the sidpy Dataset,
@@ -481,6 +486,8 @@ class Dataset(da.Array):
         kwargs: dictionary for additional plotting parameters
             additional keywords (besides the matplotlib ones) for plotting are:
             - scale_bar: for images to replace axis with a scale bar inside the image
+        figure: matplotlib figure object
+            figure reference to plo on
 
         Returns
         -------
@@ -493,39 +500,39 @@ class Dataset(da.Array):
 
         if self.data_type.value < 0:
             raise NameError('Datasets with UNKNOWN data_types cannot be plotted')
-
+        
         if len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
-            self.view = CurveVisualizer(self)
-            plt.show()
+            self.view = CurveVisualizer(self, figure=figure, **kwargs)
+            # plt.show()
         elif len(self.shape) == 2:
             # this can be an image or a set of line_plots
             if verbose:
                 print('2D dataset')
             if self.data_type == DataType.IMAGE:
-                self.view = ImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type.value <= DataType['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
-                self.view = CurveVisualizer(self, **kwargs)
-                plt.show()
+                self.view = CurveVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
             if verbose:
                 print('3D dataset')
             if self.data_type == DataType.IMAGE:
-                self.view = ImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
-                self.view = ImageStackVisualizer(self, **kwargs)
-                plt.show()
+                self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
-                self.view = SpectralImageVisualizer(self, **kwargs)
-                plt.show()
+                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
+                # plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 4:
@@ -537,13 +544,13 @@ class Dataset(da.Array):
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
-                self.view = ImageStackVisualizer(self, **kwargs)
+                self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
                 plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
-                self.view = SpectralImageVisualizer(self, **kwargs)
+                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 plt.show()
             elif self.data_type == DataType.IMAGE_4D:
-                self.view = FourDimImageVisualizer(self, **kwargs)
+                self.view = FourDimImageVisualizer(self, figure=figure, **kwargs)
                 plt.show()
                 if verbose:
                     print('4D dataset')
@@ -552,6 +559,42 @@ class Dataset(da.Array):
         else:
             raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         return self.view.fig
+
+    def get_thumbnail(self, thumbnail_size, figure=None):
+        """
+
+        Parameters
+        ----------
+        thumbnail_size: int
+            size of icon in pixels (length of square)
+            
+        Returns
+        -------
+        thumbnail: numpy.ndarray
+        """
+        
+        import imageio
+        # Thumbnail configurations for matplotlib
+        kwargs = {'figsize': (1, 1), 'colorbar': False, 'set_title': False}
+        view = self.plot(figure=figure, **kwargs)
+        for axis in view.axes:
+            axis.set_axis_off()
+        
+        # Creating Thumbnail as png image
+        view.savefig('thumb.png', dpi=thumbnail_size)
+        self.thumbnail = imageio.imread('thumb.png')
+        
+        # Writing thumbnail to h5_file if it exists 
+        if self.h5_dataset is not None:
+            if 'Thumbnail' not in self.h5_dataset.file:
+                thumb_group = self.h5_dataset.file.create_group("Thumbnail")
+            else:
+                thumb_group = self.h5_dataset.file["Thumbnail"]
+            if "Thumbnail" in thumb_group:
+                del thumb_group["Thumbnail"]
+            thumb_dset = thumb_group.create_dataset("Thumbnail", data=self.thumbnail)
+            
+        return self.thumbnail
 
     def get_extent(self, dimensions):
         """
