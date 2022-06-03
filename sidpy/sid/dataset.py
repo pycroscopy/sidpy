@@ -1210,26 +1210,26 @@ class Dataset(da.Array):
             dim_order_list = [list(x) for x in dim_order]
 
         # Book-keeping for unfolding
-        fold_attr = {'shape': self.shape, '_axes': self._axes.copy()}
+        fold_attr = {'_axes': self._axes.copy()}
 
         if method == 'spaspec':
             dim_order_list = [[], []]
             for dim, axis in self._axes.items():
                 if axis.dimension_type == DimensionType.SPATIAL:
-                    dim_order_list[0].extend(dim)
+                    dim_order_list[0].extend([dim])
                 elif axis.dimension_type == DimensionType.SPECTRAL:
-                    dim_order_list[1].extend(dim)
+                    dim_order_list[1].extend([dim])
                 else:
                     warnings.warn('One of the dimensions is neither Spatial\
                                               nor Spectral Type and is considered to be a \
                                               part of the last collapsed dimension')
-                    dim_order_list[1].extend(dim)
+                    dim_order_list[1].extend([dim])
 
         if method == 'spa':
             dim_order_list = [[]]
             for dim, axis in self._axes.items():
                 if axis.dimension_type == DimensionType.SPATIAL:
-                    dim_order_list[0].extend(dim)
+                    dim_order_list[0].extend([dim])
                 else:
                     dim_order_list.append([dim])
 
@@ -1243,7 +1243,7 @@ class Dataset(da.Array):
             dim_order_list = [[]]
             for dim, axis in self._axes.items():
                 if axis.dimension_type == DimensionType.Spectral:
-                    dim_order_list[-1].extend(dim)
+                    dim_order_list[-1].extend([dim])
                 else:
                     dim_order_list.insert(-1, [dim])
 
@@ -1266,6 +1266,7 @@ class Dataset(da.Array):
             dim_order_flattened.extend(list(left_dims))
 
         fold_attr['dim_order_flattened'] = dim_order_flattened
+        fold_attr['dim_order'] = dim_order_list
         # Get the shape of the collapsed array
         new_shape = np.ones(len(dim_order_list)).astype(int)
         for i, dim in enumerate(dim_order_list):
