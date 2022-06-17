@@ -7,10 +7,10 @@ Created on Sun Aug 22 11:07:16 2020
 @author: Suhas Somnath
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
 import abc
 import sys
 import os
+from warnings import warn
 from sidpy.base.string_utils import validate_single_string_arg, \
     validate_list_of_strings
 
@@ -111,29 +111,36 @@ class Reader(object):
         the translator can indeed read the given file such as by validating the
         headers or similar metadata.
         """
-        targ_ext = kwargs.get('extension', None)
-        if not targ_ext:
-            raise NotImplementedError('Either can_read() has not been '
-                                      'implemented by this Reader or the '
-                                      '"extension" keyword argument was '
-                                      'missing')
+        warn(FutureWarning, "This function will be removed in a future version of sidpy. "
+                            "Please use _validate_file_ext() instead for similar functionality. "
+                            "The ability for a Reader to read a file will be handled in the constructor")
+        pass
+
+    @staticmethod
+    def _validate_file_ext(input_file_path, targ_ext):
+        """
+
+        Parameters
+        ----------
+        input_file_path
+        targ_ext
+
+        Returns
+        -------
+
+        """
         if isinstance(targ_ext, (str, unicode)):
             targ_ext = [targ_ext]
-        targ_ext = validate_list_of_strings(targ_ext,
-                                            parm_name='(keyword argument) '
-                                                      '"extension"')
+        targ_ext = validate_list_of_strings(targ_ext, parm_name='"targ_ext"')
 
         # Get rid of any '.' separators that may be in the list of extensions
-        # Also turn to lower case for case insensitive comparisons
+        # Also turn to lower case for case-insensitive comparisons
         targ_ext = [item.replace('.', '').lower() for item in targ_ext]
 
-        file_path = os.path.abspath(self._input_file_path)
+        file_path = os.path.abspath(input_file_path)
         extension = os.path.splitext(file_path)[1][1:]
 
         # Ensure extension is lower case just like targets above
         extension = extension.lower()
 
-        if extension in targ_ext:
-            return file_path
-        else:
-            return None
+        return extension in targ_ext
