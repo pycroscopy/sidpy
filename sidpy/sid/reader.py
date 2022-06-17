@@ -82,6 +82,8 @@ class Reader(object):
 
     def can_read(self, *args, **kwargs):
         """
+        Warning - this function is deprecated,
+
         Checks whether the provided file can be read by this reader.
 
         This basic function compares the file extension against the
@@ -112,22 +114,27 @@ class Reader(object):
         headers or similar metadata.
         """
         warn(FutureWarning, "This function will be removed in a future version of sidpy. "
-                            "Please use _validate_file_ext() instead for similar functionality. "
+                            "Please use _can_read_ext() instead for similar functionality. "
                             "The ability for a Reader to read a file will be handled in the constructor")
         pass
 
     @staticmethod
-    def _validate_file_ext(input_file_path, targ_ext):
+    def _can_read_ext(input_file_path, targ_ext):
         """
+        Checks whether the provided file can be read by this reader by comparing the file extension
+        against the``targ_ext`` keyword argument. If the extension matches, this function returns True
 
         Parameters
         ----------
-        input_file_path
-        targ_ext
+        input_file_path :str
+            Path to the file that needs to be read
+        targ_ext : str or iterable of str
+            Acceptable file extensions for the input file for this Reader.
 
         Returns
         -------
-
+        bool
+            True if this Reader can read this file based on its file extension. False otherwise
         """
         if isinstance(targ_ext, (str, unicode)):
             targ_ext = [targ_ext]
