@@ -116,7 +116,19 @@ class Reader(object):
         warn(FutureWarning, "This function will be removed in a future version of sidpy. "
                             "Please use _can_read_ext() instead for similar functionality. "
                             "The ability for a Reader to read a file will be handled in the constructor")
-        pass
+        targ_ext = kwargs.get('extension', None)
+
+        if not targ_ext:
+            raise NotImplementedError('Either can_read() has not been '
+                                      'implemented by this Reader or the '
+                                      '"extension" keyword argument was '
+                                      'missing')
+        file_path = os.path.abspath(self._input_file_path)
+
+        if Reader._can_read_ext(file_path, targ_ext):
+            return file_path
+        else:
+            return None
 
     @staticmethod
     def _can_read_ext(input_file_path, targ_ext):
