@@ -212,7 +212,6 @@ class Dataset(da.Array):
             dask_array = x
         else:
             dask_array = da.from_array(np.array(x), chunks=chunks, lock=lock)
-
         # view as subclass
         sid_dataset = view_subclass(dask_array, cls)
         sid_dataset.data_type = datatype
@@ -1165,7 +1164,7 @@ class Dataset(da.Array):
         return self.like_data(super().persist(**kwargs),
                               title_prefix='persisted_')
 
-    def rechunk(self, chunks, threshold, block_size_limit, balance):
+    def rechunk(self, chunks='auto', threshold=None, block_size_limit=None, balance=False):
         return self.like_data(super().rechunk(chunks=chunks,
                                               threshold=threshold,
                                               block_size_limit=block_size_limit,
@@ -1275,7 +1274,8 @@ class Dataset(da.Array):
 
         # Collapsed dask array
         transposed_dset = self.transpose(dim_order_flattened)
-        folded_dset = self.like_data(da.reshape(transposed_dset, tuple(new_shape)),
+
+        folded_dset = self.like_data(da.reshape(transposed_dset, tuple(new_shape), merge_chunks=True),
                                      title_prefix='folded_', checkdims=False)
 
         fold_attr['shape_transposed'] = [self.shape[i] for i in dim_order_flattened]
@@ -1304,7 +1304,7 @@ class Dataset(da.Array):
             raise NotImplementedError('unfold only works on the dataset that was collapsed/folded by'
                                       ' the fold method')
 
-        reshaped_dset = da.reshape(self, shape_transposed)
+        reshaped_dset = da.reshape(self, shape_transposed, merge_chunks=True)
         old_order = [dim_order_flattened.index(d) for d in range(len(dim_order_flattened))]
 
         unfolded_dset = self.like_data(da.transpose(reshaped_dset, old_order),
