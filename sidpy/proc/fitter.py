@@ -47,7 +47,7 @@ class SidFitter:
             If NOT provided, it is assumed that all the non-spectral dimensions are independent dimensions.
 
         guess_fn: (function) (optional) This optional function should be utilized to generate priors for the full fit
-        It takes the same arguments as the fitting function and should return the same type of results array.
+        It takes (xvec,yvec) as inputs and should return the fit parameters.
         If the guess_fn is NOT provided, then the user MUST input the num_fit_parms.
 
         num_fit_parms: (int) Number of fitting parameters. This is needed IF the guess function is not provided to set
@@ -251,7 +251,7 @@ class SidFitter:
                     p0 = self.prior[ind, :]
 
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
-                                                                        self.folded_dataset[ind, :],
+                                                                        self.folded_dataset[ind, :],self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),
                                                                         p0=p0, **kwargs)
                 fit_results.append(lazy_result)
@@ -263,7 +263,7 @@ class SidFitter:
             self.get_km_priors()
             for ind in range(self.num_computations):
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
-                                                                        self.folded_dataset[ind, :],
+                                                                        self.folded_dataset[ind, :], self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),
                                                                         p0=self.km_priors[self.km_labels[ind]],
                                                                         **kwargs)
@@ -422,14 +422,14 @@ class SidFitter:
             else:
                 p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
 
-            km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen,
+            km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
                                                          return_cov=False,
                                                          p0=p0, maxfev=10000))
         self.km_priors = np.array(km_priors)
         self.num_fit_parms = self.km_priors.shape[-1]
 
     @staticmethod
-    def default_curve_fit(fit_fn, xvec, yvec, return_cov=True, **kwargs):
+    def default_curve_fit(fit_fn, xvec, yvec, num_fit_parms, return_cov=True, **kwargs):
         xvec = np.array(xvec)
         yvec = np.array(yvec)
         yvec = yvec.ravel()
@@ -437,8 +437,11 @@ class SidFitter:
         if curve_fit is None:
             raise ModuleNotFoundError("scipy is not installed")
         else:
-            popt, pcov = curve_fit(fit_fn, xvec, yvec, **kwargs)
-
+            try:
+                popt, pcov = curve_fit(fit_fn, xvec, yvec, **kwargs)
+            except:
+                popt = np.zeros(num_fit_parms)
+                pcov = np.zeros((num_fit_parms, num_fit_parms))
         if return_cov:
             return popt, pcov
         else:
