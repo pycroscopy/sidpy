@@ -6,12 +6,15 @@ Created on Mar 9, 2022
 @author: Rama Vasudevan, Mani Valleti
 """
 
+from xml.dom import NotFoundErr
 from dask.distributed import Client
 import numpy as np
 import dask
 import inspect
 from ..sid import Dimension, Dataset
 from ..sid.dimension import DimensionType
+from ..viz.dataset_viz import SpectralImageFitVisualizer
+from ..sid.dataset import DataType
 
 try:
     from scipy.optimize import curve_fit
@@ -47,7 +50,7 @@ class SidFitter:
             If NOT provided, it is assumed that all the non-spectral dimensions are independent dimensions.
 
         guess_fn: (function) (optional) This optional function should be utilized to generate priors for the full fit
-        It takes the same arguments as the fitting function and should return the same type of results array.
+        It takes (xvec,yvec) as inputs and should return the fit parameters.
         If the guess_fn is NOT provided, then the user MUST input the num_fit_parms.
 
         num_fit_parms: (int) Number of fitting parameters. This is needed IF the guess function is not provided to set
@@ -170,6 +173,7 @@ class SidFitter:
         self.return_std = return_std
         self.return_cov = return_cov
         self.return_fit = return_fit
+        self.fitted_dset = None
 
         self.mean_fit_results = []
         if self.return_cov:
@@ -251,7 +255,7 @@ class SidFitter:
                     p0 = self.prior[ind, :]
 
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
-                                                                        self.folded_dataset[ind, :],
+                                                                        self.folded_dataset[ind, :],self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),
                                                                         p0=p0, **kwargs)
                 fit_results.append(lazy_result)
@@ -263,7 +267,7 @@ class SidFitter:
             self.get_km_priors()
             for ind in range(self.num_computations):
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
-                                                                        self.folded_dataset[ind, :],
+                                                                        self.folded_dataset[ind, :], self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),
                                                                         p0=self.km_priors[self.km_labels[ind]],
                                                                         **kwargs)
@@ -394,7 +398,7 @@ class SidFitter:
         fitted_sid_dset_folded = fitted_dset_fold.like_data(np_folded_arr, title=fitted_dset_fold.title)
         fitted_sid_dset = fitted_sid_dset_folded.unfold()
         fitted_sid_dset.original_metadata = self.dataset.original_metadata.copy()
-
+        self.fitted_dset = fitted_sid_dset
         return fitted_sid_dset
 
     def get_km_priors(self):
@@ -422,14 +426,36 @@ class SidFitter:
             else:
                 p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
 
-            km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen,
+            km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
                                                          return_cov=False,
                                                          p0=p0, maxfev=10000))
         self.km_priors = np.array(km_priors)
         self.num_fit_parms = self.km_priors.shape[-1]
 
+    def visualize_fit_results(self, figure = None, horizontal = True):
+        '''
+        Calls the interactive visualizer for comparing raw and fit datasets.
+
+        Inputs:
+            - figure: (Optional, default None) - handle to existing figure
+            - horiziontal: (Optional, default True) - whether spectrum should be plotted horizontally
+
+        '''
+        dset_type = self.dataset.data_type 
+        supported_types = ['SPECTRAL_IMAGE']
+        if self.fitted_dset == None:
+            raise NotFoundErr("No fitted dataset found. Re-run with return_fit=True to use this feature")
+        if dset_type == DataType.SPECTRAL_IMAGE:
+            visualizer = SpectralImageFitVisualizer(self.dataset, self.fitted_dset,
+                    figure=figure, horizontal=horizontal)
+        else:
+            raise NotImplementedError("Data type is {} but currently we only support types {}".format(dset_type, supported_types))
+        
+        return visualizer
+
+
     @staticmethod
-    def default_curve_fit(fit_fn, xvec, yvec, return_cov=True, **kwargs):
+    def default_curve_fit(fit_fn, xvec, yvec, num_fit_parms, return_cov=True, **kwargs):
         xvec = np.array(xvec)
         yvec = np.array(yvec)
         yvec = yvec.ravel()
@@ -437,8 +463,11 @@ class SidFitter:
         if curve_fit is None:
             raise ModuleNotFoundError("scipy is not installed")
         else:
-            popt, pcov = curve_fit(fit_fn, xvec, yvec, **kwargs)
-
+            try:
+                popt, pcov = curve_fit(fit_fn, xvec, yvec, **kwargs)
+            except:
+                popt = np.zeros(num_fit_parms)
+                pcov = np.zeros((num_fit_parms, num_fit_parms))
         if return_cov:
             return popt, pcov
         else:
