@@ -6,12 +6,15 @@ Created on Mar 9, 2022
 @author: Rama Vasudevan, Mani Valleti
 """
 
+from xml.dom import NotFoundErr
 from dask.distributed import Client
 import numpy as np
 import dask
 import inspect
 from ..sid import Dimension, Dataset
 from ..sid.dimension import DimensionType
+from ..viz.dataset_viz import SpectralImageFitVisualizer
+from ..sid.dataset import DataType
 
 try:
     from scipy.optimize import curve_fit
@@ -170,6 +173,7 @@ class SidFitter:
         self.return_std = return_std
         self.return_cov = return_cov
         self.return_fit = return_fit
+        self.fitted_dset = None
 
         self.mean_fit_results = []
         if self.return_cov:
@@ -394,7 +398,7 @@ class SidFitter:
         fitted_sid_dset_folded = fitted_dset_fold.like_data(np_folded_arr, title=fitted_dset_fold.title)
         fitted_sid_dset = fitted_sid_dset_folded.unfold()
         fitted_sid_dset.original_metadata = self.dataset.original_metadata.copy()
-
+        self.fitted_dset = fitted_sid_dset
         return fitted_sid_dset
 
     def get_km_priors(self):
@@ -427,6 +431,28 @@ class SidFitter:
                                                          p0=p0, maxfev=10000))
         self.km_priors = np.array(km_priors)
         self.num_fit_parms = self.km_priors.shape[-1]
+
+    def visualize_fit_results(self, figure = None, horizontal = True):
+        '''
+        Calls the interactive visualizer for comparing raw and fit datasets.
+
+        Inputs:
+            - figure: (Optional, default None) - handle to existing figure
+            - horiziontal: (Optional, default True) - whether spectrum should be plotted horizontally
+
+        '''
+        dset_type = self.dataset.data_type 
+        supported_types = ['SPECTRAL_IMAGE']
+        if self.fitted_dset == None:
+            raise NotFoundErr("No fitted dataset found. Re-run with return_fit=True to use this feature")
+        if dset_type == DataType.SPECTRAL_IMAGE:
+            visualizer = SpectralImageFitVisualizer(self.dataset, self.fitted_dset,
+                    figure=figure, horizontal=horizontal)
+        else:
+            raise NotImplementedError("Data type is {} but currently we only support types {}".format(dset_type, supported_types))
+        
+        return visualizer
+
 
     @staticmethod
     def default_curve_fit(fit_fn, xvec, yvec, num_fit_parms, return_cov=True, **kwargs):

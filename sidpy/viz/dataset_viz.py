@@ -72,7 +72,7 @@ class CurveVisualizer(object):
         self.dim = self.dset._axes[self.spectral_dims[0]]
 
         if is_complex_dtype(dset.dtype):
-            # Plot real and image
+            # Plot real and imaginary
             self.fig, self.axes = plt.subplots(nrows=2, **fig_args)
 
             self.axes[0].plot(self.dim.values, self.dset.squeeze().abs(), **kwargs)
@@ -681,7 +681,7 @@ class SpectralImageVisualizer(object):
             self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
         self.axes[1].set_xlim(xlim)
-        self.axes[1].set_ylim(ylim)
+        #self.axes[1].set_ylim(ylim)
         self.axes[1].set_xlabel(self.xlabel)
         self.axes[1].set_ylabel(self.ylabel)
 
@@ -961,3 +961,79 @@ class FourDimImageVisualizer(object):
 
     def get_xy(self):
         return [self.x, self.y]
+
+
+#Let's make a curve fit visualizer
+
+class SpectralImageFitVisualizer(SpectralImageVisualizer):
+    
+    def __init__(self, original_dataset, fit_dataset, figure=None, horizontal=True):
+        '''
+        Visualizer for spectral image datasets, fit by the Sidpy Fitter
+        This class is called by Sidpy Fitter for visualizing the raw/fit dataset interactively.
+
+        Inputs:
+            - original_dataset: sidpy.Dataset containing the raw data
+            - fit_dataset: sidpy.Dataset with the fitted data. This is returned by the 
+            Sidpy Fitter after functional fitting.
+            - figure: (Optional, default None) - handle to existing figure
+            - horiziontal: (Optional, default True) - whether spectrum should be plotted horizontally
+        '''
+
+        super().__init__(original_dataset, figure, horizontal)
+       
+        self.fit_dset = fit_dataset
+        self.axes[1].clear()
+        self.get_fit_spectrum()
+        self.axes[1].plot(self.energy_scale, self.spectrum, 'bo')
+        self.axes[1].plot(self.energy_scale, self.fit_spectrum, 'r-')
+        
+    def get_fit_spectrum(self):
+    
+        from ..sid.dimension import DimensionType
+        if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
+            self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
+        if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:
+            self.y = self.dset.shape[self.image_dims[1]] - self.bin_y
+        selection = []
+
+        for dim, axis in self.dset._axes.items():
+            if axis.dimension_type == DimensionType.SPATIAL:
+                if dim == self.image_dims[0]:
+                    selection.append(slice(self.x, self.x + self.bin_x))
+                else:
+                    selection.append(slice(self.y, self.y + self.bin_y))
+
+            elif axis.dimension_type == DimensionType.SPECTRAL:
+                selection.append(slice(None))
+            else:
+                selection.append(slice(0, 1))
+
+        self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
+        self.fit_spectrum = self.fit_dset[tuple(selection)].mean(axis=tuple(self.image_dims))
+        # * self.intensity_scale[self.x,self.y]
+        
+        return self.fit_spectrum.squeeze(), self.spectrum.squeeze()
+        
+        
+    def _update(self, ev=None):
+
+        xlim = self.axes[1].get_xlim()
+        ylim = self.axes[1].get_ylim()
+        self.axes[1].clear()
+        self.get_fit_spectrum()
+        
+        self.axes[1].plot(self.energy_scale, self.spectrum, 'bo', label='experiment')
+        self.axes[1].plot(self.energy_scale, self.fit_spectrum, 'r-', label='fit')
+        
+        if self.set_title:
+            self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+
+        self.axes[1].set_xlim(xlim)
+        #self.axes[1].set_ylim(ylim)
+        self.axes[1].set_xlabel(self.xlabel)
+        self.axes[1].set_ylabel(self.ylabel)
+
+        self.fig.canvas.draw_idle()
+        
+        
