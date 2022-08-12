@@ -339,7 +339,7 @@ class Test4DImageStackPlot(unittest.TestCase):
     def test_plot(self):
         dataset, data = get_4d_image()
         view = dataset.plot()
-        self.assertEqual(len(view.axes), 3)
+        self.assertEqual(len(view.axes), 2)
 
     def test_bin(self):
         dset, x = get_4d_image()
@@ -347,15 +347,15 @@ class Test4DImageStackPlot(unittest.TestCase):
 
         dset.view.set_bin([20, 20])
 
-        self.assertEqual(len(view.axes), 3)
+        self.assertEqual(len(view.axes), 2)
 
         dset.view.set_bin(10)
-        self.assertEqual(len(view.axes), 3)
+        self.assertEqual(len(view.axes), 2)
 
     def test_scan_directions(self):
         dataset, data = get_4d_image()
         view = dataset.plot(scan_x=3,scan_y=2, image_4d_x=1, image_4d_y=0)
-        self.assertEqual(len(view.axes), 3)
+        self.assertEqual(len(view.axes), 2)
 
     def test_false_type(self):
         x = np.zeros(5)
