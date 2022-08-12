@@ -795,7 +795,8 @@ class FourDimImageVisualizer(object):
         if is_complex_dtype(dset.dtype):
             number_of_plots = 3
         else:
-            number_of_plots = 3
+            number_of_plots = 2
+        self.number_of_plots = number_of_plots
 
         if horizontal:
             self.axes = self.fig.subplots(ncols=number_of_plots)
