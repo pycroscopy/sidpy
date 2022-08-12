@@ -121,7 +121,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
 
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
-        self.assertEqual(self.fit_results[0].shape, (7, 6, 5))
+        self.assertEqual(self.fit_results[0].shape, (7, 5, 5))
         ## Getting the dimension dict
         dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
                     2: Dimension(np.arange(5),
@@ -137,7 +137,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
 
     def test_std_dev_dset(self):
         # Third dataset is the std_dev dataset
-        self.assertEqual(self.fit_results[1].shape, (7, 6, 5))
+        self.assertEqual(self.fit_results[1].shape, (7, 5, 5))
         ## Getting the dim_dict
         dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
                     2: Dimension(np.arange(5),
