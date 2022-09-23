@@ -459,6 +459,9 @@ class SpectralImageVisualizer(object):
     """
     ### Interactive spectrum imaging plot
 
+    If there is a 4D dataset, and one of them is named 'channel', 
+    then you can plot the channel spectra too
+
     """
 
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
@@ -485,6 +488,8 @@ class SpectralImageVisualizer(object):
 
         if len(dset.shape) < 3:
             raise TypeError('dataset must have at least three dimensions')
+        if len(dset.shape)>4:
+            raise TypeError('dataset must have at most four dimensions')
 
         # We need one stack dim and two image dimes as lists in dictionary
 
@@ -501,10 +506,19 @@ class SpectralImageVisualizer(object):
             else:
                 selection.append(slice(0, 1))
         if len(image_dims) != 2:
-            raise TypeError('We need two dimensions with dimension_type SPATIA: to plot an image')
+            raise TypeError('We need two dimensions with dimension_type SPATIAL: to plot an image')
 
-        if len(spectral_dims) != 1:
-            raise TypeError('We need one dimension with dimension_type SPECTRAL for a spectral image plot')
+        if len(dset.shape)==4:
+            names = []
+            for dim, axis in spectral_dims: 
+                self.channel_names.append(axis.name)
+            if 'Channel' or 'channel' not in names:
+                raise TypeError("We need one dimension with name 'Channel' \
+                    for a spectral image plot for a 4D dataset")
+        else:
+            if len(spectral_dims) != 1:
+                raise TypeError("We need one dimension with dimension_type SPECTRAL \
+                 to plot a spectra for a 3D dataset")
 
         self.horizontal = horizontal
         self.x = 0
@@ -516,7 +530,11 @@ class SpectralImageVisualizer(object):
         size_y = dset.shape[image_dims[1]]
 
         self.dset = dset
-        self.energy_scale = dset._axes[spectral_dims[0]].values
+        
+        self.channel_axis = [spectral_dim for spectral_dim in spectral_dims if spectral_dim.name.casefold() == 'channel']
+        self.energy_axis =  [spectral_dim for spectral_dim in spectral_dims if spectral_dim.name.casefold() != 'channel']
+        
+        self.energy_scale = dset._axes[self.energy_axis].values
 
         self.extent = [0, size_x, size_y, 0]
         self.rectangle = [0, size_x, 0, size_y]
@@ -963,6 +981,8 @@ class FourDimImageVisualizer(object):
     def get_xy(self):
         return [self.x, self.y]
 
+
+#Let's make a 
 
 #Let's make a curve fit visualizer
 
