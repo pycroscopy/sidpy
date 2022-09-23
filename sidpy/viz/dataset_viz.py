@@ -509,10 +509,11 @@ class SpectralImageVisualizer(object):
             raise TypeError('We need two dimensions with dimension_type SPATIAL: to plot an image')
 
         if len(dset.shape)==4:
-            names = []
-            for dim, axis in spectral_dims: 
+            self.channel_names = []
+            
+            for dim, axis in dset._axes.items(): 
                 self.channel_names.append(axis.name)
-            if 'Channel' or 'channel' not in names:
+            if 'Channel' or 'channel' not in self.channel_names:
                 raise TypeError("We need one dimension with name 'Channel' \
                     for a spectral image plot for a 4D dataset")
         else:
@@ -531,8 +532,8 @@ class SpectralImageVisualizer(object):
 
         self.dset = dset
         
-        self.channel_axis = [spectral_dim for spectral_dim in spectral_dims if spectral_dim.name.casefold() == 'channel']
-        self.energy_axis =  [spectral_dim for spectral_dim in spectral_dims if spectral_dim.name.casefold() != 'channel']
+        self.channel_axis = [spectral_dim for spectral_dim in dset._axes.items() if spectral_dim.name.casefold() == 'channel']
+        self.energy_axis =  [spectral_dim for spectral_dim in dset._axes.items() if spectral_dim.name.casefold() != 'channel']
         
         self.energy_scale = dset._axes[self.energy_axis].values
 
