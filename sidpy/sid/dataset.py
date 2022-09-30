@@ -438,6 +438,11 @@ class Dataset(da.Array):
         if not isinstance(dimension, Dimension):
             raise TypeError('dimension needs to be a sidpy.Dimension object')
         self.__validate_dim(ind, dimension.name)
+        if len(dimension.values) != self.shape[ind]:
+            raise ValueError('The length of the dimension array does not match the shape of the '
+                             'dataset at {}th dimension. {} != {}'.format(ind, len(dimension.values), self.shape[ind])
+                             )
+
         dim = dimension.copy()
 
         try:
