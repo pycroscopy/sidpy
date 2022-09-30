@@ -412,9 +412,13 @@ class Dataset(da.Array):
         self.__validate_dim(ind, name)
         if not isinstance(name, str):
             raise TypeError('New Dimension name must be a string')
-        delattr(self, self._axes[ind].name)
+        if hasattr(self, self._axes[ind].name):
+            delattr(self, self._axes[ind].name)
+        if hasattr(self, 'dim_{}'.format(ind)):
+            delattr(self, 'dim_{}'.format(ind))
         self._axes[ind].name = name
         setattr(self, name, self._axes[ind])
+        setattr(self, 'dim_{}'.format(ind), self._axes[ind])
 
     def set_dimension(self, ind, dimension):
         """
@@ -434,10 +438,21 @@ class Dataset(da.Array):
         if not isinstance(dimension, Dimension):
             raise TypeError('dimension needs to be a sidpy.Dimension object')
         self.__validate_dim(ind, dimension.name)
-        # delattr(self, self._axes[ind].name)
-        setattr(self, dimension.name, dimension)
-        setattr(self, 'dim_{}'.format(ind), dimension)
-        self._axes[ind] = dimension
+        dim = dimension.copy()
+
+        try:
+            if hasattr(self, self._axes[ind].name):
+                delattr(self, self._axes[ind].name)
+        except KeyError:
+            pass
+
+        setattr(self, dimension.name, dim)
+
+        if hasattr(self, 'dim_{}'.format(ind)):
+            delattr(self, 'dim_{}'.format(ind))
+
+        setattr(self, 'dim_{}'.format(ind), dim)
+        self._axes[ind] = dim
 
     def view_metadata(self):
         """
@@ -1461,40 +1476,40 @@ class Dataset(da.Array):
     def __rmatmul__(self, other):
         return self.like_data(super().__rmatmul__(other))
 
-    def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
-        out = kwargs.get("out", ())
-
-        if method == "__call__":
-            if numpy_ufunc is np.matmul:
-                from dask.array.routines import matmul
-
-                # special case until apply_gufunc handles optional dimensions
-                return self.like_data(matmul(*inputs, **kwargs))
-            if numpy_ufunc.signature is not None:
-                from dask.array.gufunc import apply_gufunc
-
-                return self.like_data(apply_gufunc(
-                    numpy_ufunc, numpy_ufunc.signature, *inputs, **kwargs))
-            if numpy_ufunc.nout > 1:
-                from dask.array import ufunc
-
-                try:
-                    da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
-                except AttributeError:
-                    return NotImplemented
-                return self.like_data(da_ufunc(*inputs, **kwargs))
-            else:
-                return self.like_data(dask.array.core.elemwise(numpy_ufunc, *inputs, **kwargs))
-        elif method == "outer":
-            from dask.array import ufunc
-
-            try:
-                da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
-            except AttributeError:
-                return NotImplemented
-            return self.like_data(da_ufunc.outer(*inputs, **kwargs))
-        else:
-            return NotImplemented
+    # def __array_ufunc__(self, numpy_ufunc, method, *inputs, **kwargs):
+    #     out = kwargs.get("out", ())
+    #
+    #     if method == "__call__":
+    #         # if numpy_ufunc is np.matmul:
+    #         #     from dask.array.routines import matmul
+    #         #
+    #         #     # special case until apply_gufunc handles optional dimensions
+    #         #     return self.like_data(matmul(*inputs, **kwargs))
+    #         if numpy_ufunc.signature is not None:
+    #             from dask.array.gufunc import apply_gufunc
+    #
+    #             return self.like_data(apply_gufunc(
+    #                 numpy_ufunc, numpy_ufunc.signature, *inputs, **kwargs))
+    #         if numpy_ufunc.nout > 1:
+    #             from dask.array import ufunc
+    #
+    #             try:
+    #                 da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
+    #             except AttributeError:
+    #                 return NotImplemented
+    #             return self.like_data(da_ufunc(*inputs, **kwargs))
+    #         else:
+    #             return self.like_data(dask.array.core.elemwise(numpy_ufunc, *inputs, **kwargs))
+    #     elif method == "outer":
+    #         from dask.array import ufunc
+    #
+    #         try:
+    #             da_ufunc = getattr(ufunc, numpy_ufunc.__name__)
+    #         except AttributeError:
+    #             return NotImplemented
+    #         return self.like_data(da_ufunc.outer(*inputs, **kwargs))
+    #     else:
+    #         return NotImplemented
 
 
 def convert_hyperspy(s):
