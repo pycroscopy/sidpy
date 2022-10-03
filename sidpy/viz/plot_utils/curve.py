@@ -461,7 +461,7 @@ def plot_complex_spectra(map_stack, x_vec=None, num_comps=4, title=None, x_label
     fig, axes = plt.subplots(nrows * 2, ncols, figsize=figsize)
     fig.subplots_adjust(hspace=0.1, wspace=0.4)
     if title is not None:
-        fig.canvas.set_window_title(title)
+        fig.canvas.manager.set_window_title(title)
         fig.suptitle(title, y=1.025)
 
     title_prefix = ''
