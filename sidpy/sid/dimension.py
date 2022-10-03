@@ -31,6 +31,7 @@ class DimensionType(Enum):
     RECIPROCAL = 2
     SPECTRAL = 3
     TEMPORAL = 4
+    CHANNEL = 5
 
 
 class Dimension(np.ndarray):
@@ -53,7 +54,7 @@ class Dimension(np.ndarray):
             set of values will be generated if an integer is provided instead
             of an array.
         dimension_type : str or sidpy.sid.dimension.DimensionType
-            For example: 'spectral', 'spatial', 'reciprocal', or 'UNKNOWN'
+            For example: 'spectral', 'spatial', 'reciprocal', 'channel', or 'UNKNOWN',
             'time', 'frame', 'reciprocal'
             This will determine how the data are visualized. 'spatial' are
             image dimensions. 'spectral' indicate spectroscopy data dimensions.

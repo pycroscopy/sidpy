@@ -516,7 +516,7 @@ class TestPlotScree(unittest.TestCase):
 
     def test_scree_h5py_dataset(self):
         h5_f = h5py.File('test12.h5', 'a')
-        scree = h5_f.create_dataset("test", data=np.arange(1,25))
+        scree = h5_f.create_dataset("test12", data=np.arange(1,25))
         plot_utils.plot_scree(scree)
        
     """
