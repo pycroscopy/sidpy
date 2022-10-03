@@ -641,7 +641,7 @@ class SpectralImageVisualizer(object):
         selection = []
 
         for dim, axis in self.dset._axes.items():
-            # print(dim, axis.dimension_type)
+            print(dim, axis.dimension_type)
             if axis.dimension_type == DimensionType.SPATIAL:
                 if dim == self.image_dims[0]:
                     selection.append(slice(self.x, self.x + self.bin_x))
@@ -650,10 +650,13 @@ class SpectralImageVisualizer(object):
 
             elif axis.dimension_type == DimensionType.SPECTRAL:
                 selection.append(slice(None))
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                selection.append(slice(None))
             else:
                 selection.append(slice(0, 1))
-
+        
         self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
+        
         # * self.intensity_scale[self.x,self.y]
         return self.spectrum.squeeze()
 
