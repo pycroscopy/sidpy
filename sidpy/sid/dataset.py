@@ -412,9 +412,13 @@ class Dataset(da.Array):
         self.__validate_dim(ind, name)
         if not isinstance(name, str):
             raise TypeError('New Dimension name must be a string')
-        delattr(self, self._axes[ind].name)
+        if hasattr(self, self._axes[ind].name):
+            delattr(self, self._axes[ind].name)
+        if hasattr(self, 'dim_{}'.format(ind)):
+            delattr(self, 'dim_{}'.format(ind))
         self._axes[ind].name = name
         setattr(self, name, self._axes[ind])
+        setattr(self, 'dim_{}'.format(ind), self._axes[ind])
 
     def set_dimension(self, ind, dimension):
         """
@@ -434,10 +438,26 @@ class Dataset(da.Array):
         if not isinstance(dimension, Dimension):
             raise TypeError('dimension needs to be a sidpy.Dimension object')
         self.__validate_dim(ind, dimension.name)
-        # delattr(self, self._axes[ind].name)
-        setattr(self, dimension.name, dimension)
-        setattr(self, 'dim_{}'.format(ind), dimension)
-        self._axes[ind] = dimension
+        if len(dimension.values) != self.shape[ind]:
+            raise ValueError('The length of the dimension array does not match the shape of the '
+                             'dataset at {}th dimension. {} != {}'.format(ind, len(dimension.values), self.shape[ind])
+                             )
+
+        dim = dimension.copy()
+
+        try:
+            if hasattr(self, self._axes[ind].name):
+                delattr(self, self._axes[ind].name)
+        except KeyError:
+            pass
+
+        setattr(self, dimension.name, dim)
+
+        if hasattr(self, 'dim_{}'.format(ind)):
+            delattr(self, 'dim_{}'.format(ind))
+
+        setattr(self, 'dim_{}'.format(ind), dim)
+        self._axes[ind] = dim
 
     def view_metadata(self):
         """
@@ -1465,11 +1485,11 @@ class Dataset(da.Array):
         out = kwargs.get("out", ())
 
         if method == "__call__":
-            if numpy_ufunc is np.matmul:
-                from dask.array.routines import matmul
-
-                # special case until apply_gufunc handles optional dimensions
-                return self.like_data(matmul(*inputs, **kwargs))
+            # if numpy_ufunc is np.matmul:
+            #     from dask.array.routines import matmul
+            #
+            #     # special case until apply_gufunc handles optional dimensions
+            #     return self.like_data(matmul(*inputs, **kwargs))
             if numpy_ufunc.signature is not None:
                 from dask.array.gufunc import apply_gufunc
 
