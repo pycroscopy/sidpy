@@ -528,6 +528,6 @@ def plot_scree(scree, title='Scree', **kwargs):
     axis.set_title(title)
     axis.set_xlim(left=1, right=len(scree))
     axis.set_ylim(bottom=np.min(scree), top=np.max(scree))
-    fig.canvas.set_window_title(title)
+    fig.canvas.manager.set_window_title(title)
 
     return fig, axis
