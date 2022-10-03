@@ -495,29 +495,33 @@ class SpectralImageVisualizer(object):
 
         selection = []
         image_dims = []
-        spectral_dims = []
+        spectral_dim = []
+        channel_dim = []
         for dim, axis in dset._axes.items():
             if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
                 selection.append(slice(None))
                 image_dims.append(dim)
             elif axis.dimension_type == DimensionType.SPECTRAL:
                 selection.append(slice(0, 1))
-                spectral_dims.append(dim)
+                spectral_dim.append(dim)
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                channel_dim.append(dim)
             else:
                 selection.append(slice(0, 1))
+        
         if len(image_dims) != 2:
             raise TypeError('We need two dimensions with dimension_type SPATIAL: to plot an image')
+        if len(channel_dim) >1:
+            raise ValueError("We have more than one Channel Dimension, this won't work for the visualizer")
+        if len(spectral_dim)>1:
+            raise ValueError("We have more than one Spectral Dimension, this won't work for the visualizer...")
 
         if len(dset.shape)==4:
-            self.channel_names = []
-            
-            for dim, axis in dset._axes.items(): 
-                self.channel_names.append(axis.name)
-            if 'Channel' or 'channel' not in self.channel_names:
-                raise TypeError("We need one dimension with name 'Channel' \
+            if len(channel_dim)!=1:
+                raise TypeError("We need one dimension with type CHANNEL \
                     for a spectral image plot for a 4D dataset")
-        else:
-            if len(spectral_dims) != 1:
+        elif len(dset.shape)==3:
+            if len(spectral_dim) != 1:
                 raise TypeError("We need one dimension with dimension_type SPECTRAL \
                  to plot a spectra for a 3D dataset")
 
@@ -531,12 +535,9 @@ class SpectralImageVisualizer(object):
         size_y = dset.shape[image_dims[1]]
 
         self.dset = dset
-        
-        self.channel_axis = [spectral_dim for spectral_dim in dset._axes.items() if spectral_dim.name.casefold() == 'channel']
-        self.energy_axis =  [spectral_dim for spectral_dim in dset._axes.items() if spectral_dim.name.casefold() != 'channel']
-        
+        self.energy_axis = spectral_dim[0]
+        if len(channel_dim)>0: self.channel_axis = channel_dim
         self.energy_scale = dset._axes[self.energy_axis].values
-
         self.extent = [0, size_x, size_y, 0]
         self.rectangle = [0, size_x, 0, size_y]
         self.scaleX = 1.0
@@ -545,7 +546,7 @@ class SpectralImageVisualizer(object):
         self.plot_legend = False
 
         self.image_dims = image_dims
-        self.spec_dim = spectral_dims[0]
+        self.spec_dim = spectral_dim[0]
 
         if horizontal:
             self.axes = self.fig.subplots(ncols=2)
@@ -554,7 +555,12 @@ class SpectralImageVisualizer(object):
 
         if self.set_title:
             self.fig.canvas.manager.set_window_title(self.dset.title)
-        self.image = dset.mean(axis=spectral_dims[0])
+
+        if len(channel_dim)>0:
+            self.image = dset.mean(axis=(spectral_dim[0],channel_dim[0]))
+        else:
+            self.image = dset.mean(axis=(spectral_dim[0]))
+
         if 1 in self.dset.shape:
             self.image = dset.squeeze()
             # self.extent[2]=self.image.shape[1]
@@ -582,7 +588,8 @@ class SpectralImageVisualizer(object):
         self.axes[0].add_patch(self.rect)
         self.intensity_scale = 1.
         self.spectrum = self.get_spectrum()
-
+        if len(self.energy_scale)!=self.spectrum.shape[0]:
+            self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum)
         self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
         self.xlabel = self.dset.labels[self.spec_dim]
@@ -693,7 +700,8 @@ class SpectralImageVisualizer(object):
         ylim = self.axes[1].get_ylim()
         self.axes[1].clear()
         self.get_spectrum()
-
+        if len(self.energy_scale)!=self.spectrum.shape[0]:
+            self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum, label='experiment')
 
         if self.set_title:
