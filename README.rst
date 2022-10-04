@@ -1,7 +1,7 @@
 sidpy
 =====
 
-.. image:: https://github.com/pycroscopy/sidpy/workflows/build/badge.svg?branch=master
+.. image:: https://github.com/pycroscopy/sidpy/workflows/build/badge.svg?branch=main
     :target: https://github.com/pycroscopy/sidpy/actions?query=workflow%3Abuild
     :alt: GiHub Actions
 
