@@ -625,7 +625,7 @@ class Dataset(da.Array):
             if not isinstance(dims_in[i], int):
                 raise ValueError('Input dimensions must be integers')
         out_dim = []
-        for dim in dim_in:
+        for dim in dims_in:
             out_dim.append(self._axes[dim])
         return out_dim
 
