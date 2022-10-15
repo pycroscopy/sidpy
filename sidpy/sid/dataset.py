@@ -618,6 +618,17 @@ class Dataset(da.Array):
                 extent.append(end)
         return extent
 
+    def get_dimension_by_number(self, dims_in):
+        if isinstance(dims_in, int):
+            dims_in = [dims_in]
+        for i in range(len(dims_in)):
+            if not isinstance(dims_in[i], int):
+                raise ValueError('Input dimensions must be integers')
+        out_dim = []
+        for dim in dim_in:
+            out_dim.append(self._axes[dim])
+        return out_dim
+
     def get_dimensions_by_type(self, dims_in):
         """ get dimension by dimension_type name
 
@@ -655,11 +666,11 @@ class Dataset(da.Array):
     def get_spectrum_dims(self):
         """Get all spectral dimensions"""
 
-        image_dims = []
+        spec_dims = []
         for dim, axis in self._axes.items():
             if axis.dimension_type == DimensionType.SPECTRAL:
-                image_dims.append(dim)
-        return image_dims
+                spec_dims.append(dim)
+        return spec_dims
 
     @property
     def labels(self):
