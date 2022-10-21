@@ -17,5 +17,4 @@ class TestInterface(unittest.TestCase):
 
     def test_open_file_dialog(self):
         file_widget = interface_utils.open_file_dialog()
-        print(file_widget._use_dir_icons)
-        self.assertTrue(file_widget.selected is None)
+        self.assertTrue(file_widget.file_name == '')

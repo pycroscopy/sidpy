@@ -52,7 +52,7 @@ class open_file_dialog(object):
 
     """
 
-    def __init__(self, dir_name=None, extension=['*']):
+    def __init__(self, dir_name='.', extension=['*']):
         self.save_path = False
         self.dir_dictionary = {}
         self.dir_list = ['.', '..']
