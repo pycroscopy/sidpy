@@ -22,6 +22,7 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping
 import warnings
 
+import ase
 import dask.array.core
 import numpy as np
 import matplotlib.pylab as plt
@@ -121,6 +122,8 @@ class Dataset(da.Array):
             Type of data such as Image, Spectrum, Spectral Image etc.
         self.title : str
             Title for Dataset
+        self._structures : dict
+            dictionary of ase.Atoms objects to represent structures, can be given a name
         self.view : Visualizer
             Instance of class appropriate for visualizing this object
         self.data_descriptor : str
@@ -150,6 +153,7 @@ class Dataset(da.Array):
         self._data_type = DataType.UNKNOWN
         self._modality = ''
         self._source = ''
+        self._structures = {}
 
         self._h5_dataset = None
         self._metadata = {}
@@ -689,6 +693,18 @@ class Dataset(da.Array):
             self._title = value
         else:
             raise ValueError('title needs to be a string')
+
+    @property
+    def structures(self):
+        return self._structures
+
+    def add_structure(self, atoms, title=None):
+        if isinstance(atoms, ase.Atoms):
+            if title is None:
+                title = atoms.get_chemical_formula()
+            self._structures.update({title: atoms})
+        else:
+            raise ValueError('structure not an ase.Atoms object')
 
     @property
     def units(self):

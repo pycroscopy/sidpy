@@ -12,6 +12,7 @@ import unittest
 import numpy as np
 import dask.array as da
 import string
+import ase.build
 import sys
 
 sys.path.insert(0, "../../sidpy/")
@@ -572,6 +573,23 @@ class TestHelperFunctions(unittest.TestCase):
         descriptor = Dataset.from_array(values)
         labels = descriptor.labels
         self.assertEqual(labels[0], 'generic (generic)')
+
+    def test_empty_structure(self):
+        values = np.zeros([4, 5])
+        descriptor = Dataset.from_array(values)
+        structures = descriptor.structures
+        self.assertEqual(len(structures), 0)
+
+    def test_add_structure(self):
+        values = np.zeros([4, 5])
+        a = 5.14  # A
+        atoms = ase.build.bulk('Si', 'diamond', a=a, cubic=True)
+        descriptor = Dataset.from_array(values)
+        descriptor.add_structure(atoms)
+        descriptor.add_structure(atoms, 'reference')
+
+        self.assertEqual(len(descriptor.structures), 2)
+        self.assertTrue('reference' in descriptor.structures.keys())
 
     def test__equ__(self):
         values = np.zeros([4, 5])
