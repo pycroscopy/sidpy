@@ -471,7 +471,7 @@ class TestFftFunctions(unittest.TestCase):
         dataset.y.units = 'nm'
         dataset.y.quantity = 'distance'
 
-        dataset.set_dimension(2, sidpy.Dimension(np.arange(dataset.shape[0]) * .02, 'spec'))
+        dataset.set_dimension(2, sidpy.Dimension(np.arange(dataset.shape[2]) * .02, 'spec'))
         dataset.spec.dimension_type = 'spectral'
         dataset.spec.units = 'i'
         dataset.spec.quantity = 'energy'
