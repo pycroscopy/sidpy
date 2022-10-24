@@ -11,169 +11,148 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import os
 import sys
 import warnings
-import ipyfilechooser
+import numpy as np
+
+import ipywidgets as widgets
+from IPython.display import display
 
 if sys.version_info.major == 3:
     unicode = str
     if sys.version_info.minor < 6:
         ModuleNotFoundError = ValueError
 
-class open_file_dialog(ipyfilechooser.FileChooser):
-    def __init__(self, directory='.'):
-        self._use_dir_icons = True
-        super().__init__(directory) 
 
-        
-        
-    def _apply_selection(self):
-        super()._apply_selection()
-        selected = os.path.join(
-            self._selected_path,
-            self._selected_filename
-        )
+class open_file_dialog(object):
+    """Widget to select directories or widgets from a list
 
-        if os.path.isfile(selected):
-            self._label.value = self._LBL_TEMPLATE.format(
-                self._selected_filename,
-                'blue'
-            )
+    Works in google colab.
+    The widget converts the name of the nion file to the one in Nion's swift software,
+    because it is otherwise incomprehensible
+
+    Attributes
+    ----------
+    dir_name: str
+        name of starting directory
+    extension: list of str
+        extensions of files to be listed  in widget
+
+    Methods
+    -------
+    get_directory
+    set_options
+    get_file_name
+
+    Example
+    -------
+    >>from google.colab import drive
+    >>drive.mount("/content/drive")
+    >>file_list = pyTEMlib.file_tools.FileWidget()
+    next code cell:
+    >>dataset = pyTEMlib.file_tools.open_file(file_list.file_name)
+
+    """
+
+    def __init__(self, dir_name='.', extension=['*']):
+        self.save_path = False
+        self.dir_dictionary = {}
+        self.dir_list = ['.', '..']
+        self.display_list = ['.', '..']
+
+        if os.path.isdir(dir_name):
+            self.dir_name = dir_name
         else:
-            self._label.value = self._LBL_TEMPLATE.format(
-                self._selected_filename,
-                'green'
-            )
+            self.dir_name = '.'
+        self.get_directory(self.dir_name)
+        self.dir_list = ['.']
+        self.extensions = extension
+        self.file_name = ''
 
-        
-    def _set_form_values(self, path: str, filename: str) -> None:
-        """Set the form values."""
-        # Disable triggers to prevent selecting an entry in the Select
-        # box from automatically triggering a new event.
-        self._pathlist.unobserve(
-            self._on_pathlist_select,
-            names='value'
+        self.select_files = widgets.Select(
+            options=self.dir_list,
+            value=self.dir_list[0],
+            description='Select file:',
+            disabled=False,
+            rows=10,
+            layout=widgets.Layout(width='70%')
         )
-        self._dircontent.unobserve(
-            self._on_dircontent_select,
-            names='value'
-        )
-        self._filename.unobserve(
-            self._on_filename_change,
-            names='value'
-        )
+        display(self.select_files)
+        self.set_options()
+        self.select_files.observe(self.get_file_name, names='value')
 
-        # In folder only mode zero out the filename
-        if self._show_only_dirs:
-            filename = ''
+    def get_directory(self, directory=None):
+        self.dir_name = directory
+        self.dir_dictionary = {}
+        self.dir_list = []
+        self.dir_list = ['.', '..'] + os.listdir(directory)
 
-        # Set form values
-        self._pathlist.options = ipyfilechooser.utils.get_subpaths(path)
-        self._pathlist.value = path
-        self._filename.value = filename
+    def set_options(self):
+        self.dir_name = os.path.abspath(os.path.join(self.dir_name, self.dir_list[self.select_files.index]))
+        dir_list = os.listdir(self.dir_name)
+        file_dict = update_directory_list(self.dir_name)
 
-        # file/folder real names
-        dircontent_real_names = ipyfilechooser.utils.get_dir_contents(
-            path,
-            show_hidden=self._show_hidden,
-            dir_icon_append=False,
-            show_only_dirs=self._show_only_dirs,
-            filter_pattern=self._filter_pattern
-        )
+        sort = np.argsort(file_dict['directory_list'])
+        self.dir_list = ['.', '..']
+        self.display_list = ['.', '..']
+        for j in sort:
+            self.display_list.append(f" * {file_dict['directory_list'][j]}")
+            self.dir_list.append(file_dict['directory_list'][j])
 
-        # file/folder display names
-        dircontent_display_names = ipyfilechooser.utils.get_dir_contents(
-            path,
-            show_hidden=self._show_hidden,
-            dir_icon_append=self._use_dir_icons,
-            show_only_dirs=self._show_only_dirs,
-            filter_pattern=self._filter_pattern
-        )
-        dircontent_display_names = self.set_display_names(dircontent_real_names, dircontent_display_names)
+        sort = np.argsort(file_dict['display_file_list'])
 
-        # Dict to map real names to display names
-        self._map_name_to_disp = {
-            real_name: disp_name
-            for real_name, disp_name in zip(
-                dircontent_real_names,
-                dircontent_display_names
-            )
-        }
-
-        # Dict to map display names to real names
-        self._map_disp_to_name = {
-            disp_name: real_name
-            for real_name, disp_name in
-            self._map_name_to_disp.items()
-        }
-
-        # Set _dircontent form value to display names
-        self._dircontent.options = dircontent_display_names
-
-        # If the value in the filename Text box equals a value in the
-        # Select box and the entry is a file then select the entry.
-        if ((filename in dircontent_real_names) and
-                os.path.isfile(os.path.join(path, filename))):
-            self._dircontent.value = self._map_name_to_disp[filename]
-        else:
-            self._dircontent.value = None
-
-        # Reenable triggers again
-        self._pathlist.observe(
-            self._on_pathlist_select,
-            names='value'
-        )
-        self._dircontent.observe(
-            self._on_dircontent_select,
-            names='value'
-        )
-        self._filename.observe(
-            self._on_filename_change,
-            names='value'
-        )
-
-        # Update the state of the select button
-        if self._gb.layout.display is None:
-            # Disable the select button if path and filename
-            # - equal an existing folder in the current view
-            # - equal the already selected values
-            # - don't match the provided filter pattern(s)
-            check1 = filename in dircontent_real_names
-            check2 = os.path.isdir(os.path.join(path, filename))
-            check3 = False
-            check4 = False
-
-            # Only check selected if selected is set
-            if ((self._selected_path is not None) and
-                    (self._selected_filename is not None)):
-                selected = os.path.join(
-                    self._selected_path,
-                    self._selected_filename
-                )
-                check3 = os.path.join(path, filename) == selected
-
-            # Ensure only allowed extensions are used
-            if self._filter_pattern:
-                check4 = not ipyfilechooser.utils.match_item(filename, self._filter_pattern)
-
-            if (check1 and check2) or check3 or check4:
-                self._select.disabled = True
+        for i, j in enumerate(sort):
+            if '--' in dir_list[j]:
+                self.display_list.append(f" {i:3} {file_dict['display_file_list'][j]}")
             else:
-                self._select.disabled = False
-        
-    
-    def set_display_names(self, dircontent_real_names, dircontent_display_names):
-        
-        for i in range(len(dircontent_display_names)):
-            name = dircontent_display_names[i]
-            full_name = os.path.join(self._pathlist.value, dircontent_real_names[i])
-            if os.path.isfile(full_name):
-                size = os.path.getsize(full_name) * 2 ** -20
-                basename, extension = os.path.splitext(name)
-                if extension in ['.hf5']:
-                    dircontent_display_names[i] = f" {dircontent_display_names[i]:50}  -- {size:.1f} MB"
-                else:
-                    dircontent_display_names[i] = dircontent_display_names[i]
-            
-        return dircontent_display_names
+                self.display_list.append(f" {i:3}   {file_dict['display_file_list'][j]}")
+            self.dir_list.append(file_dict['file_list'][j])
+
+        self.dir_label = os.path.split(self.dir_name)[-1] + ':'
+        self.select_files.options = self.display_list
+
+    def get_file_name(self, b):
+        if os.path.isdir(os.path.join(self.dir_name, self.dir_list[self.select_files.index])):
+            self.set_options()
+
+        elif os.path.isfile(os.path.join(self.dir_name, self.dir_list[self.select_files.index])):
+            self.file_name = os.path.join(self.dir_name, self.dir_list[self.select_files.index])
+
+
+def add_to_dict(file_dict, name):
+    full_name = os.path.join(file_dict['directory'], name)
+    basename, extension = os.path.splitext(name)
+    size = os.path.getsize(full_name) * 2 ** -20
+    display_name = name
+    if len(extension) == 0:
+        display_file_list = f' {name}  - {size:.1f} MB'
+    elif extension[0] == 'hf5':
+        if extension in ['.hf5']:
+            display_file_list = f" {name}  - {size:.1f} MB"
+    else:
+        display_file_list = f' {name}  - {size:.1f} MB'
+    file_dict[name] = {'display_string': display_file_list, 'basename': basename, 'extension': extension,
+                       'size': size, 'display_name': display_name}
+
+
+def update_directory_list(directory_name):
+    dir_list = os.listdir(directory_name)
+
+    file_dict = {'directory': directory_name}
+
+    # add new files
+    file_dict['file_list'] = []
+    file_dict['display_file_list'] = []
+    file_dict['directory_list'] = []
+
+    for name in dir_list:
+        if os.path.isfile(os.path.join(file_dict['directory'], name)):
+            if name not in file_dict:
+                add_to_dict(file_dict, name)
+            file_dict['file_list'].append(name)
+            file_dict['display_file_list'].append(file_dict[name]['display_string'])
+        else:
+            file_dict['directory_list'].append(name)
+    return file_dict
+
 
 def check_ssh():
     """
@@ -222,7 +201,7 @@ def get_QT_app():
 
 
 def openfile_dialog_QT(file_types="All files (*)", multiple_files=False,
-                    file_path='.', caption="Select a file..."):
+                       file_path='.', caption="Select a file..."):
     """
     Opens a File dialog which is used in open_file() function
     This function uses pyQt5.
