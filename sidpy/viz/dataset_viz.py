@@ -860,8 +860,11 @@ class FourDimImageVisualizer(object):
         if self.gamma:
             self.image_4d = np.log(1+self.image_4d)
         
-        self.axes[1].imshow(self.image_4d, 
-            extent = self.dset.get_extent(self.dset.get_spectrum_dims()))
+        self.reciprocal_extent = None
+        if len(self.dset.get_extent(self.dset.get_spectrum_dims()))==4:
+            self.reciprocal_extent = self.dset.get_extent(self.dset.get_spectrum_dims())
+
+        self.axes[1].imshow(self.image_4d, extent = self.reciprocal_extent)
 
         if self.set_title:
             self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
@@ -984,7 +987,7 @@ class FourDimImageVisualizer(object):
         if self.gamma:
             self.image_4d = np.log(1+self.image_4d)
         self.axes[1].imshow(self.image_4d,
-            extent = self.dset.get_extent(self.dset.get_spectrum_dims()) )
+            extent = self.reciprocal_extent)
 
         self.axes[1].set_xlim(xlim)
         self.axes[1].set_ylim(ylim)
