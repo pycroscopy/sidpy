@@ -839,11 +839,13 @@ class FourDimImageVisualizer(object):
         if is_complex_dtype(dset.dtype):
             self.image = np.abs(np.array(dset)).mean(axis=tuple(dims_4d))
 
-        self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
-        if horizontal:
-            self.axes[0].set_xlabel('{} [pixels]'.format(self.dset._axes[image_dims[0]].quantity))
-        else:
-            self.axes[0].set_ylabel('{} [pixels]'.format(self.dset._axes[image_dims[1]].quantity))
+        self.axes[0].imshow(self.image.T, extent=self.dset.get_extent(self.image_dims), **kwargs)
+        #if horizontal:
+        self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[image_dims[0]].quantity,
+        self.dset._axes[image_dims[0]].units))
+        #else:
+        self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[image_dims[1]].quantity,
+        self.dset._axes[image_dims[1]].units))
         self.axes[0].set_aspect('equal')
 
         # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
@@ -857,7 +859,10 @@ class FourDimImageVisualizer(object):
             self.image_4d = np.abs(self.image_4d)
         if self.gamma:
             self.image_4d = np.log(1+self.image_4d)
-        self.axes[1].imshow(self.image_4d)
+        
+        self.axes[1].imshow(self.image_4d, 
+            extent = self.dset.get_extent(self.dset.get_spectrum_dims()))
+
         if self.set_title:
             self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
         self.xlabel = self.dset.labels[self.dims_4d[0]]
@@ -978,7 +983,8 @@ class FourDimImageVisualizer(object):
                 self.axes[1].set_title('set {}, {}'.format(self.x, self.y))
         if self.gamma:
             self.image_4d = np.log(1+self.image_4d)
-        self.axes[1].imshow(self.image_4d)
+        self.axes[1].imshow(self.image_4d,
+            extent = self.dset.get_extent(self.dset.get_spectrum_dims()) )
 
         self.axes[1].set_xlim(xlim)
         self.axes[1].set_ylim(ylim)
