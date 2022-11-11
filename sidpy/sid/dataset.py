@@ -22,6 +22,7 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping
 import warnings
 
+import ase
 import dask.array.core
 import numpy as np
 import matplotlib.pylab as plt
@@ -121,6 +122,8 @@ class Dataset(da.Array):
             Type of data such as Image, Spectrum, Spectral Image etc.
         self.title : str
             Title for Dataset
+        self._structures : dict
+            dictionary of ase.Atoms objects to represent structures, can be given a name
         self.view : Visualizer
             Instance of class appropriate for visualizing this object
         self.data_descriptor : str
@@ -150,6 +153,7 @@ class Dataset(da.Array):
         self._data_type = DataType.UNKNOWN
         self._modality = ''
         self._source = ''
+        self._structures = {}
 
         self._h5_dataset = None
         self._metadata = {}
@@ -638,6 +642,17 @@ class Dataset(da.Array):
                 extent.append(end)
         return extent
 
+    def get_dimension_by_number(self, dims_in):
+        if isinstance(dims_in, int):
+            dims_in = [dims_in]
+        for i in range(len(dims_in)):
+            if not isinstance(dims_in[i], int):
+                raise ValueError('Input dimensions must be integers')
+        out_dim = []
+        for dim in dims_in:
+            out_dim.append(self._axes[dim])
+        return out_dim
+
     def get_dimensions_by_type(self, dims_in):
         """ get dimension by dimension_type name
 
@@ -675,11 +690,11 @@ class Dataset(da.Array):
     def get_spectrum_dims(self):
         """Get all spectral dimensions"""
 
-        image_dims = []
+        spec_dims = []
         for dim, axis in self._axes.items():
             if axis.dimension_type == DimensionType.SPECTRAL:
-                image_dims.append(dim)
-        return image_dims
+                spec_dims.append(dim)
+        return spec_dims
 
     @property
     def labels(self):
@@ -698,6 +713,18 @@ class Dataset(da.Array):
             self._title = value
         else:
             raise ValueError('title needs to be a string')
+
+    @property
+    def structures(self):
+        return self._structures
+
+    def add_structure(self, atoms, title=None):
+        if isinstance(atoms, ase.Atoms):
+            if title is None:
+                title = atoms.get_chemical_formula()
+            self._structures.update({title: atoms})
+        else:
+            raise ValueError('structure not an ase.Atoms object')
 
     @property
     def units(self):
