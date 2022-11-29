@@ -26,6 +26,7 @@ The following tutorials go over the basics of python programming:
 * `O'Riley <https://greenteapress.com/wp/think-python/>`_ has a nice book on Python too.
 * A nice guide on `intermediate Python <http://book.pythontips.com/en/latest/index.html>`_
 * Our own `crash course on the basics of python <https://github.com/pycroscopy/CNMS_UM_2018_SPIMA>`_
+* `Learn python programming in detail <https://www.scaler.com/topics/python/functions-in-python/>`_
 
 HDF5 and h5py
 ~~~~~~~~~~~~~
