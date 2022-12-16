@@ -262,7 +262,7 @@ def link_h5_objects_as_attrs(src, h5_objects):
     Parameters
     -----------
     src : Reference to h5.object
-        Reference to the the object to which attributes will be added
+        Reference to the object to which attributes will be added
     h5_objects : list of references to h5.objects
         objects whose references that can be accessed from src.attrs
 
@@ -792,13 +792,13 @@ def write_dict_to_h5_group(h5_group, metadata, group_name):
     return h5_md_group
 
 
-def h5_group_to_dict(group, group_dict={}):
+def h5_group_to_dict(group_iter, group_dict={}):
     """ 
     Reads a hdf5 group into a nested dictionary
     
     Parameters
     ----------
-    group: hdf5.Group
+    group_iter: hdf5.Group
         starting group to read from
     group_dict: dict
         group dictionary; mostly needed for recursive reading of nested groups but can be used for initialization
@@ -807,12 +807,12 @@ def h5_group_to_dict(group, group_dict={}):
     group_dict: dict
     """
 
-    if not isinstance(group, h5py.Group):
-        raise TypeError('we need a hypy group to read from')
+    if not isinstance(group_iter, h5py.Group):
+        raise TypeError('we need a h5py group to read from')
     if not isinstance(group_dict, dict):
-        raise TypeError('group_dict needs to be a pytho dictionary')
+        raise TypeError('group_dict needs to be a python dictionary')
         
-    group_dict[group.name.split('/')[-1]] = dict(group.attrs)
-    for key in group.keys():
-        h5_group_to_dict(group[key], group_dict[group.name.split('/')[-1]])
+    group_dict[group_iter.name.split('/')[-1]] = dict(group_iter.attrs)
+    for key in group_iter.keys():
+        h5_group_to_dict(group_iter[key], group_dict[group_iter.name.split('/')[-1]])
     return group_dict
