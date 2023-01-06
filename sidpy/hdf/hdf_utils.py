@@ -811,8 +811,10 @@ def h5_group_to_dict(group_iter, group_dict={}):
         raise TypeError('we need a h5py group to read from')
     if not isinstance(group_dict, dict):
         raise TypeError('group_dict needs to be a python dictionary')
-        
+   
     group_dict[group_iter.name.split('/')[-1]] = dict(group_iter.attrs)
+    
     for key in group_iter.keys():
+        print(key)
         h5_group_to_dict(group_iter[key], group_dict[group_iter.name.split('/')[-1]])
     return group_dict
