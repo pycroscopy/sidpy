@@ -36,7 +36,6 @@ designed to be file-centric, we highly recommend learning more about HDF5 and h5
 * `Basics of HDF5 <https://portal.hdfgroup.org/display/HDF5/Learning+HDF5>`_ (especially the last three tutorials)
 * `Quick start <http://docs.h5py.org/en/latest/quick.html>`_ to h5py
 * Another `tutorial on HDF5 and h5py <https://www.nersc.gov/assets/Uploads/H5py-2017-Feb23.pdf>`_
-* The `O-Reilly book <http://shop.oreilly.com/product/0636920030249.do>`_ where we learnt h5py
 
 Installing software
 -------------------
