@@ -815,6 +815,5 @@ def h5_group_to_dict(group_iter, group_dict={}):
     group_dict[group_iter.name.split('/')[-1]] = dict(group_iter.attrs)
     
     for key in group_iter.keys():
-        print(key)
         h5_group_to_dict(group_iter[key], group_dict[group_iter.name.split('/')[-1]])
     return group_dict
