@@ -53,7 +53,7 @@ class TestDtypeUtils(unittest.TestCase):
                 _ = h5_f.create_dataset('real', data=450 * np.random.random(size=num_elems))
                 _ = h5_f.create_dataset('real2', data=450 * np.random.random(size=(5, 7, 6)))
                 _ = h5_f.create_dataset('complex', data=np.random.random(size=num_elems) +
-                                                        1j * np.random.random(size=num_elems), dtype=complex64)
+                                                        1j * np.random.random(size=num_elems), dtype=np.complex64)
                 h5_f.flush()
         return
 
@@ -592,7 +592,7 @@ class TestValidateDtype(unittest.TestCase):
     def test_valid(self):
         struct_dtype = np.dtype({'names': ['r', 'g', 'b'],
                                  'formats': [np.float32, np.uint16, np.float64]})
-        for dtype in [np.float32, np.float16, complex, complex64, np.uint8, np.int16, struct_dtype]:
+        for dtype in [np.float32, np.float16, complex, np.complex64, np.uint8, np.int16, struct_dtype]:
             self.assertTrue(dtype_utils.validate_dtype(dtype))
 
     def test_invalid(self):
@@ -609,7 +609,7 @@ class TestIsComplexDtype(unittest.TestCase):
         for dtype in [np.float32, np.float16, np.uint8, np.int16, struct_dtype, bool]:
             self.assertFalse(dtype_utils.is_complex_dtype(dtype))
 
-        for dtype in [complex, complex64, complex128]:
+        for dtype in [complex, np.complex64, np.complex128]:
             self.assertTrue(dtype_utils.is_complex_dtype(dtype))
 
 
