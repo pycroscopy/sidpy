@@ -53,7 +53,7 @@ class TestDtypeUtils(unittest.TestCase):
                 _ = h5_f.create_dataset('real', data=450 * np.random.random(size=num_elems))
                 _ = h5_f.create_dataset('real2', data=450 * np.random.random(size=(5, 7, 6)))
                 _ = h5_f.create_dataset('complex', data=np.random.random(size=num_elems) +
-                                                        1j * np.random.random(size=num_elems), dtype=np.complex64)
+                                                        1j * np.random.random(size=num_elems), dtype=complex64)
                 h5_f.flush()
         return
 
@@ -469,13 +469,13 @@ class TestStackRealToTargetDtypeNumpy(unittest.TestCase):
     def test_complex_single(self):
         expected = 4.32 + 5.67j
         real_val = [np.real(expected), np.imag(expected)]
-        actual = dtype_utils.stack_real_to_target_dtype(real_val, np.complex)
+        actual = dtype_utils.stack_real_to_target_dtype(real_val, complex)
         self.assertTrue(np.allclose(actual, expected))
 
     def test_complex_nd(self):
         expected = 5 * np.random.rand(2, 3, 5, 8) + 7j * np.random.rand(2, 3, 5, 8)
         real_val = np.concatenate([np.real(expected), np.imag(expected)], axis=3)
-        actual = dtype_utils.stack_real_to_target_dtype(real_val, np.complex)
+        actual = dtype_utils.stack_real_to_target_dtype(real_val, complex)
         self.assertTrue(np.allclose(actual, expected))
 
     def test_compound_single(self):
@@ -530,7 +530,7 @@ class TestStackRealToTargetDtypeHDF5(TestDtypeUtils):
             h5_real = h5_f['real2']
             expected = h5_real[:, :, :3] + 1j * h5_real[:, :, 3:]
             actual = dtype_utils.stack_real_to_target_dtype(h5_real,
-                                                            np.complex)
+                                                            complex)
             self.assertTrue(np.allclose(actual, expected))
 
 
@@ -582,7 +582,7 @@ class TestGetCompoundSubTypes(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_invalid(self):
-        for item in [np.float16, np.complex, 4, 2.343, True, 'ssdsds', np.arange(5)]:
+        for item in [np.float16, complex, 4, 2.343, True, 'ssdsds', np.arange(5)]:
             with self.assertRaises(TypeError):
                 _ = dtype_utils.get_compound_sub_dtypes(item)
 
@@ -592,7 +592,7 @@ class TestValidateDtype(unittest.TestCase):
     def test_valid(self):
         struct_dtype = np.dtype({'names': ['r', 'g', 'b'],
                                  'formats': [np.float32, np.uint16, np.float64]})
-        for dtype in [np.float32, np.float16, np.complex, np.complex64, np.uint8, np.int16, struct_dtype]:
+        for dtype in [np.float32, np.float16, complex, complex64, np.uint8, np.int16, struct_dtype]:
             self.assertTrue(dtype_utils.validate_dtype(dtype))
 
     def test_invalid(self):
@@ -609,7 +609,7 @@ class TestIsComplexDtype(unittest.TestCase):
         for dtype in [np.float32, np.float16, np.uint8, np.int16, struct_dtype, bool]:
             self.assertFalse(dtype_utils.is_complex_dtype(dtype))
 
-        for dtype in [np.complex, np.complex64, np.complex128]:
+        for dtype in [complex, complex64, complex128]:
             self.assertTrue(dtype_utils.is_complex_dtype(dtype))
 
 
