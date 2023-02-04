@@ -655,6 +655,6 @@ def is_complex_dtype(dtype):
     Is <class 'numpy.complex256'> a complex dtype?: False
     """
     validate_dtype(dtype)
-    if dtype in [np.complex, np.complex64, np.complex128]:
+    if dtype in [complex, np.complex64, np.complex128]:
         return True
     return False
