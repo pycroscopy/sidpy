@@ -647,7 +647,7 @@ def is_complex_dtype(dtype):
     >>>                         'formats': [np.float32, np.uint16, np.float64]})
     Is [('r', '<f4'), ('g', '<u2'), ('b', '<f8')] a complex dtype?: False
 
-    >>> for dtype in [np.complex, np.complex64, np.complex128, np.complex256]:
+    >>> for dtype in [complex, np.complex64, np.complex128, np.complex256]:
     >>>     print('Is {} a complex dtype?: {}'.format(dtype, (sidpy.dtype_utils.is_complex_dtype(dtype))))
     Is <class 'complex'> a complex dtype?: True
     Is <class 'numpy.complex64'> a complex dtype?: True

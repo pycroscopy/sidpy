@@ -23,10 +23,6 @@ The following tutorials go over the basics of python programming:
 * The `Hitchhiker guide to Python <http://docs.python-guide.org/en/latest/>`_
 * Introduction to programming in `Python 3 <https://pythonprogramming.net/beginner-python-programming-tutorials/>`_
 * Tutorials on a broad spectrum of `real-world use topics <https://automatetheboringstuff.com>`_
-* `O'Riley <https://greenteapress.com/wp/think-python/>`_ has a nice book on Python too.
-* A nice guide on `intermediate Python <http://book.pythontips.com/en/latest/index.html>`_
-* Our own `crash course on the basics of python <https://github.com/pycroscopy/CNMS_UM_2018_SPIMA>`_
-* `Learn python programming in detail <https://www.scaler.com/topics/python/>`_
 
 HDF5 and h5py
 ~~~~~~~~~~~~~
@@ -36,7 +32,6 @@ designed to be file-centric, we highly recommend learning more about HDF5 and h5
 * `Basics of HDF5 <https://portal.hdfgroup.org/display/HDF5/Learning+HDF5>`_ (especially the last three tutorials)
 * `Quick start <http://docs.h5py.org/en/latest/quick.html>`_ to h5py
 * Another `tutorial on HDF5 and h5py <https://www.nersc.gov/assets/Uploads/H5py-2017-Feb23.pdf>`_
-* The `O-Reilly book <http://shop.oreilly.com/product/0636920030249.do>`_ where we learnt h5py
 
 Installing software
 -------------------

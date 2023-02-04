@@ -1288,7 +1288,7 @@ class Dataset(da.Array):
         if method == 'spec':
             dim_order_list = [[]]
             for dim, axis in self._axes.items():
-                if axis.dimension_type == DimensionType.Spectral:
+                if axis.dimension_type == DimensionType.SPECTRAL:
                     dim_order_list[-1].extend([dim])
                 else:
                     dim_order_list.insert(-1, [dim])
