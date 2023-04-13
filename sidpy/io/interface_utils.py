@@ -253,8 +253,8 @@ def openfile_dialog_qt(file_types="All files (*)", multiple_files=False,
     if multiple_files:
         func = QtWidgets.QFileDialog.getOpenFileNames
         fnames, file_filter = func(parent, caption, file_path,
-                                   filter=file_types,
-                                   options=[QtCore.Qt.WindowStaysOnTopHint])
+                                   filter=file_types)
+                                   
         if len(fnames) > 0:
             fname = fnames[0]
         else:
