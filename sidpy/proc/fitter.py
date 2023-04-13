@@ -18,7 +18,7 @@ from ..sid.dataset import DataType
 
 try:
     from scipy.optimize import curve_fit
-except ModuleNotFoundError:
+except ImportError:
     curve_fit = None
 
 try:
