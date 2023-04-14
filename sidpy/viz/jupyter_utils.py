@@ -136,7 +136,7 @@ def simple_ndim_visualizer(data_mat, pos_dims, spec_dims, spec_xdim=None, pos_xd
     def check_data_type(data_mat):
         if data_mat.dtype.names is not None:
             return 2, list(data_mat.dtype.names), None
-        if data_mat.dtype in [np.complex64, np.complex128, np.complex]:
+        if data_mat.dtype in [np.complex64, np.complex128, complex]:
             return 1, ['Real', 'Imaginary', 'Amplitude', 'Phase'], [np.real, np.imag, np.abs, np.angle]
         else:
             return 0, None, None

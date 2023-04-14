@@ -22,6 +22,7 @@ requirements = ['numpy>=1.10',
                 'six',
                 'joblib>=0.11.0',
                 'ipywidgets>=5.2.2',
+                'ipykernel',
                 'ipython>=5.1.0,<6;python_version<"3.3"',  # IPython 6.0+ does not support Python < 3.5
                 'ipython>=6.0;python_version>="3.3"',  # Beginning with IPython 6.0, Python 3.3 and above is required.
                 'scikit-learn',

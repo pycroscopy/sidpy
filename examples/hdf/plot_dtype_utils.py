@@ -130,7 +130,7 @@ for key, val in sub_dtypes.items():
 for dtype in [np.float32, np.float16, np.uint8, np.int16, struct_dtype, bool]:
     print('Is {} a complex dtype?: {}'.format(dtype, (usid.dtype_utils.is_complex_dtype(dtype))))
 
-for dtype in [np.complex, np.complex64, np.complex128, np.complex256]:
+for dtype in [complex, np.complex64, np.complex128, np.complex256]:
     print('Is {} a complex dtype?: {}'.format(dtype, (usid.dtype_utils.is_complex_dtype(dtype))))
 
 ################################################################################
