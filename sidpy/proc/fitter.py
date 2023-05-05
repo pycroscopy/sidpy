@@ -410,7 +410,10 @@ class SidFitter:
         # In that case we need all the spectral dimensions collapsed into a single dimension for kMeans
         # In case of a 1D fit the next line essentially does nothing.
         km_dset = self.folded_dataset.fold(dim_order)
-
+        if km_dset.dtype == np.complex128:
+            print('Warning: complex dataset detected. Will treat real part only')
+            km_dset = np.abs(km_dset)
+        
         if KMeans is None:
             raise ModuleNotFoundError("sklearn is not installed")
         else:

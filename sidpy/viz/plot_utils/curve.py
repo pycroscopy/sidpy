@@ -349,8 +349,10 @@ def plot_curves(excit_wfms, datasets, line_colors=[], dataset_names=[], evenly_s
         chosen_pos = np.arange(nrows * ncols, dtype=int)
 
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, figsize=(12, 12))
-    axes_lin = axes.flatten()
-
+    if type(axes)==np.ndarray:
+        axes_lin = axes.flatten()
+    else: axes_lin = [axes]
+    
     for count, posn in enumerate(chosen_pos):
         if use_rainbow_plots:
             rainbow_plot(axes_lin[count], excit_wfms[0], datasets[0][posn], **kwargs)
