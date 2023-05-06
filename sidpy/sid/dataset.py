@@ -1423,7 +1423,10 @@ class Dataset(da.Array):
 
     def __ge__(self, other):
         return self.like_data(super().__ge__(other))
-
+    
+    def __getitem__(self,other)
+        return self.like_data(super().__getitem__(other))
+        
     def __invert__(self):
         return self.like_data(super().__invert__())
 
