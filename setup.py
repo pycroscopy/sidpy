@@ -58,7 +58,7 @@ setup(
     author='Pycroscopy contributors',
     author_email='pycroscopy@gmail.com',
     install_requires=requirements,
-    setup_requires=['pytest-runner'],
+    
     tests_require=['unittest2;python_version<"3.0"', 'pytest'],
     platforms=['Linux', 'Mac OSX', 'Windows 10/8.1/8/7'],
     # package_data={'sample':['dataset_1.dat']}
