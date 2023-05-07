@@ -74,9 +74,9 @@ def set_tick_font_size(axes, font_size):
             axis to set font sizes
         """
         for tick in axis.xaxis.get_major_ticks():
-            tick.label.set_fontsize(font_size)
+            tick.label1.set_fontsize(font_size)
         for tick in axis.yaxis.get_major_ticks():
-            tick.label.set_fontsize(font_size)
+            tick.label1.set_fontsize(font_size)
 
     mesg = 'axes must either be a matplotlib.axes.Axes object or an iterable containing such objects'
 
