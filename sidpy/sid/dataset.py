@@ -301,6 +301,7 @@ class Dataset(da.Array):
                 else:
                     # assuming the axis scale is equidistant
                     try:
+                        print("we are here {}".format(self._axes[dim]))
                         scale = get_slope(self._axes[dim])
                         # axis = self._axes[dim].copy()
                         axis = Dimension(np.arange(new_data.shape[dim]) * scale, self._axes[dim].name)
