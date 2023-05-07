@@ -75,7 +75,7 @@ class CurveVisualizer(object):
             # Plot real and imaginary
             self.fig, self.axes = plt.subplots(nrows=2, **fig_args)
 
-            self.axes[0].plot(self.dim.values, self.dset.squeeze().abs(), **kwargs)
+            self.axes[0].plot(self.dim.values, self.dset.squeeze().abs().compute(), **kwargs)
             if set_title:
                 self.axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
             self.axes[0].set_xlabel(self.dset.labels[0])
@@ -93,7 +93,7 @@ class CurveVisualizer(object):
 
         else:
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
-            self.axis.plot(self.dim.values, self.dset, **kwargs)
+            self.axis.plot(self.dim.values, self.dset.compute(), **kwargs)
             if set_title:
                 self.axis.set_title(self.dset.title, pad=15)
             self.axis.set_xlabel(self.dset.labels[self.spectral_dims[0]])
@@ -590,7 +590,7 @@ class SpectralImageVisualizer(object):
         self.spectrum = self.get_spectrum()
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
-        self.axes[1].plot(self.energy_scale, self.spectrum)
+        self.axes[1].plot(self.energy_scale, self.spectrum.compute())
         self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
         self.xlabel = self.dset.labels[self.spec_dim]
         self.ylabel = self.dset.data_descriptor
@@ -705,7 +705,7 @@ class SpectralImageVisualizer(object):
         self.get_spectrum()
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
-        self.axes[1].plot(self.energy_scale, self.spectrum, label='experiment')
+        self.axes[1].plot(self.energy_scale, self.spectrum.compute(), label='experiment')
 
         if self.set_title:
             self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
@@ -874,7 +874,7 @@ class FourDimImageVisualizer(object):
         self.axes[1].set_ylabel(self.ylabel)
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
         if is_complex_dtype(dset.dtype):
-            self.axes[2].imshow(np.angle(self.image_4d))
+            self.axes[2].imshow(np.angle(np.array(self.image_4d)))
             if self.set_title:
                 self.axes[1].set_title('power {}, {}'.format(self.x, self.y))
                 self.axes[2].set_title('phase {}, {}'.format(self.x, self.y))
