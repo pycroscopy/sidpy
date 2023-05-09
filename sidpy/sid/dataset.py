@@ -301,7 +301,7 @@ class Dataset(da.Array):
                 else:
                     # assuming the axis scale is equidistant
                     try:
-                        print("we are here {}".format(self._axes[dim]))
+                        #print("we are here {}".format(self._axes[dim]))
                         scale = get_slope(self._axes[dim])
                         # axis = self._axes[dim].copy()
                         axis = Dimension(np.arange(new_data.shape[dim]) * scale, self._axes[dim].name)
@@ -911,7 +911,28 @@ class Dataset(da.Array):
                                              name='v', units=units_y, dimension_type=new_dimension_type,
                                              quantity='reciprocal_length'))
         return fft_dset
-
+    
+    def flatten_complex(self):
+        '''
+        This function returns a dataset with real and imaginary components that have been flattened
+        This is necessary for scenarios such as fitting of complex functions
+        Must be a 2D or 1D dataset to begin with
+        Output:
+        - ouput_arr: sidpy.Dataset object
+        '''
+        assert self.ndim<3,"flatten_complex() only works on 1D or 2D datasets, current dataset has {}".format(self.ndim)
+        #Only the second dimension needs to be changed
+        #Because we are stacking real and imaginary, this means we just tile the existing axis values
+        if len(self._axes)==1: index_ax = 0
+        elif len(self._axes)==2: index_ax = 1
+        new_ax_values = np.tile(self._axes[index_ax].values,2)
+        output_arr = self.like_data(dask.array.hstack([self.real, self.imag]))
+        output_arr.set_dimension(index_ax,Dimension(new_ax_values,name=output_arr._axes[index_ax].name, 
+                        units=output_arr._axes[index_ax].units, dimension_type=output_arr._axes[index_ax].dimension_type,
+                            quantity=output_arr._axes[index_ax].quantity))
+        
+        return output_arr
+    
     # #####################################################
     # Original dask.array functions replaced
     # ##################################################
