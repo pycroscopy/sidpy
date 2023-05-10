@@ -131,7 +131,7 @@ class SidFitter:
                 dep_vec = []
                 for d in self.dep_dims:
                     dep_vec.append(np.array(self.dataset._axes[d]))
-
+        
         # xvec is provided
         if xvec is not None:
             # 1D fit
@@ -154,7 +154,7 @@ class SidFitter:
 
         # Dealing with the meshgrid part of multidimensional fitting
         if len(self.dep_dims) > 1:
-            self.dep_vec = [ar.ravel() for ar in np.meshgrid(*dep_dims)]
+            self.dep_vec = [ar.ravel() for ar in np.meshgrid(*dep_vec)]
         else:
             self.dep_vec = dep_vec
 
@@ -399,13 +399,17 @@ class SidFitter:
         print('fitted dataset is of shape {}'.format(fitted_dset.shape))
         fitted_dset_fold = fitted_dset.fold(dim_order=self.fold_order)
         print('folded dataset is of shape {}'.format(fitted_dset_fold.shape))
+        output_shape=np.prod(fitted_dset_fold.shape[1:])
 
         user_folding = False
+        print("Dep vec is {} and mean fit parms are {}".format(self.dep_vec, self.mean_fit_results[0]))
         ydata_fit = self.fit_fn(self.dep_vec, *self.mean_fit_results[0])
-        if ydata_fit.shape!=fitted_dset_fold.shape[-1]:
+        
+        print(r"ydata shape is {} and squeezed is {}".format(ydata_fit.shape, ydata_fit.squeeze().shape))
+        if ydata_fit.squeeze().shape[0]!=output_shape:
             print('Shapes of output of fitting function is {} and original data is {} \
-                  Reshaping output dataset. You are responsible for reshaping'.format(
-                  fitted_dset_fold.shape[0], ydata_fit.shape[0]
+                  Reshaping output dataset. You are responsible for reshaping'.format(ydata_fit.shape[0],
+                  output_shape, 
                   ))
             
             fitted_dset_fold = self.dataset.like_data(np.zeros((fitted_dset_fold.shape[0], ydata_fit.shape[0])),
@@ -417,8 +421,12 @@ class SidFitter:
         np_folded_arr = fitted_dset_fold.compute()
         for i in range(np_folded_arr.shape[0]):
             ydata_fit = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
-            np_folded_arr[i] = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
-        
+            fit_output = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
+            if fit_output.shape!= np_folded_arr[i].shape:
+                try:
+                    np_folded_arr[i] = fit_output.reshape(np_folded_arr[i].shape)
+                except:
+                    print("Cannot reshape function output to retrieve fitted dataset")
         if not user_folding:
             fitted_sid_dset_folded = fitted_dset_fold.like_data(np_folded_arr, title=fitted_dset_fold.title)
             fitted_sid_dset = fitted_sid_dset_folded.unfold()
@@ -430,6 +438,8 @@ class SidFitter:
         return fitted_sid_dset
 
     def get_km_priors(self,**kwargs):
+        kwargs['maxfev']=1000
+
         shape = self.folded_dataset.shape  # We get the shape of the folded dataset
         # Our prior_dset will have the same shape except for the last dimension whose size will be equal to number of
         # fitting parameters
@@ -469,7 +479,7 @@ class SidFitter:
                 cen = np.hstack([np.real(cen), np.imag(cen)])
             km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
                                                          return_cov=False,
-                                                         p0=p0, maxfev=10000, **kwargs))
+                                                         p0=p0, **kwargs))
         self.km_priors = np.array(km_priors)
         self.num_fit_parms = self.km_priors.shape[-1]
 
