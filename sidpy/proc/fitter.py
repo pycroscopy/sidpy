@@ -435,7 +435,7 @@ class SidFitter:
         return fitted_sid_dset
 
     def get_km_priors(self,**kwargs):
-        kwargs['maxfev']=1000
+        kwargs['maxfev']=1000 #give a large number of tries for fitting the kmeans cluster centers
 
         shape = self.folded_dataset.shape  # We get the shape of the folded dataset
         # Our prior_dset will have the same shape except for the last dimension whose size will be equal to number of

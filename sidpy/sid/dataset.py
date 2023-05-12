@@ -235,7 +235,7 @@ class Dataset(da.Array):
         sid_dataset.original_metadata = {}
         return sid_dataset
 
-    def like_data(self, data, title=None, chunks='auto', lock=False, **kwargs):
+    def like_data(self, data, title=None, chunks='auto', lock=False, other=None, **kwargs):
         """
         Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
@@ -252,6 +252,8 @@ class Dataset(da.Array):
             size of chunks for dask array
         lock: optional boolean
             for dask array
+        other: paramters passed during slicing of the sidpy dataset
+            used internally for slicing
 
 
         Returns
@@ -263,7 +265,7 @@ class Dataset(da.Array):
         reset_quantity = kwargs.get('reset_quantity', False)
         reset_units = kwargs.get('reset_units', False)
         checkdims = kwargs.get('checkdims', True)
-
+        print('found other as {}'.format(other))
         new_data = self.from_array(data, chunks=chunks, lock=lock)
 
         new_data.data_type = self.data_type
@@ -300,11 +302,25 @@ class Dataset(da.Array):
                     new_data.set_dimension(dim, self._axes[dim])
                 else:
                     # assuming the axis scale is equidistant
+                    
                     try:
                         #print("we are here {}".format(self._axes[dim]))
-                        scale = get_slope(self._axes[dim])
+                        if other is not None:
+                            #slice it to get the axis values
+                            axis_values = np.array([self._axes[dim].values[other[dim]]]).squeeze()
+                            #print('found axis values of {}'.format(axis_values))
+                            if axis_values.size==1: 
+                                scale = 0
+                                axis_values = np.arange(new_data.shape[dim]) * scale
+
+                            #print('old axis values is {}, slice is {}, new axis is {}'.format(
+                            #    self._axes[dim], other, axis_values
+                            #))
+                        else:
+                            scale = get_slope(self._axes[dim])
+                            axis_values = np.arange(new_data.shape[dim]) * scale
                         # axis = self._axes[dim].copy()
-                        axis = Dimension(np.arange(new_data.shape[dim]) * scale, self._axes[dim].name)
+                        axis = Dimension(axis_values, self._axes[dim].name)
                         axis.quantity = self._axes[dim].quantity
                         axis.units = self._axes[dim].units
                         axis.dimension_type = self._axes[dim].dimension_type
@@ -1447,7 +1463,7 @@ class Dataset(da.Array):
         return self.like_data(super().__ge__(other))
     
     def __getitem__(self,other):
-        return self.like_data(super().__getitem__(other))
+        return self.like_data(super().__getitem__(other), other=other)
         
     def __invert__(self):
         return self.like_data(super().__invert__())
