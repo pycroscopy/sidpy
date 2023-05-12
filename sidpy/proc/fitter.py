@@ -418,6 +418,7 @@ class SidFitter:
         np_folded_arr = fitted_dset_fold.compute()
         for i in range(np_folded_arr.shape[0]):
             ydata_fit = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
+            print('dep vec is {} and mean fit results are {}'.format(self.dep_vec,self.mean_fit_results[i]))
             fit_output = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
             if fit_output.shape!= np_folded_arr[i].shape:
                 try:

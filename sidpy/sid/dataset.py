@@ -328,7 +328,8 @@ class Dataset(da.Array):
                         new_data.set_dimension(dim, axis)
 
                     except ValueError:
-                        print('using generic parameters for dimension ', dim)
+                        pass
+                        #print('using generic parameters for dimension ', dim)
 
         new_data.metadata = dict(self.metadata).copy()
         new_data.original_metadata = {}
