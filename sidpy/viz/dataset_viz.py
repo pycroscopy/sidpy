@@ -1051,8 +1051,8 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
             else:
                 selection.append(slice(0, 1))
 
-        self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
-        self.fit_spectrum = self.fit_dset[tuple(selection)].mean(axis=tuple(self.image_dims))
+        self.spectrum = np.array(self.dset[tuple(selection)].mean(axis=tuple(self.image_dims)))
+        self.fit_spectrum = np.array(self.fit_dset[tuple(selection)].mean(axis=tuple(self.image_dims)))
         # * self.intensity_scale[self.x,self.y]
         
         return self.fit_spectrum.squeeze(), self.spectrum.squeeze()
