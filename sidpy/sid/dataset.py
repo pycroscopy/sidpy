@@ -265,7 +265,7 @@ class Dataset(da.Array):
         reset_quantity = kwargs.get('reset_quantity', False)
         reset_units = kwargs.get('reset_units', False)
         checkdims = kwargs.get('checkdims', True)
-        print('found other as {}'.format(other))
+        #print('found other as {}'.format(other))
         new_data = self.from_array(data, chunks=chunks, lock=lock)
 
         new_data.data_type = self.data_type
