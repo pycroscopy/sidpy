@@ -401,7 +401,7 @@ class Dataset(da.Array):
                              ''.format(self.ndim - 1))
         for key, dim in self._axes.items():
             if key != ind:
-                if name == 'none' and name == dim.name:
+                if name != 'none' and name == dim.name:
                     raise ValueError('name: {} already used, but must be unique'.format(name))
 
     def rename_dimension(self, ind, name):
@@ -1457,21 +1457,25 @@ class Dataset(da.Array):
         # all the other attributes copied from 'self' aka parent dataset.
         sliced = self.like_data(super().__getitem__(idx), checkdims=False)
 
+        # Delete the dimensions created by like_data
+        sliced._axes.clear()
+
         # Here we need to modify the dimensions of the sliced dataset using the argument index
         if not isinstance(idx, tuple):
             # This comes into play when slicing is done using 'None' or just integers.
             # For example: dset[4] or dset[None]
-            index = tuple([idx])
+            idx = tuple([idx])
 
-        print(idx)
         old_dims = deepcopy(self._axes)
         j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
 
         for ind in idx:
             if ind is None:  # Add a new dimension
                 sliced.set_dimension(k, Dimension(1))
+                # print(j, k, sliced._axes)
                 k += 1
             elif isinstance(ind, (int, np.integer)):
+                # print(j, k, sliced._axes)
                 j += 1
             elif isinstance(ind, (slice, np.ndarray, list)):
                 old_dim = old_dims[j]
@@ -1479,6 +1483,7 @@ class Dataset(da.Array):
                                                   name=old_dim.name, quantity=old_dim.quantity,
                                                   units=old_dim.units,
                                                   dimension_type=old_dim.dimension_type))
+                # print(j, k, sliced._axes)
                 j += 1
                 k += 1
             elif ind is Ellipsis:
@@ -1498,6 +1503,7 @@ class Dataset(da.Array):
                                               name=old_dim.name, quantity=old_dim.quantity,
                                               units=old_dim.units,
                                               dimension_type=old_dim.dimension_type))
+            # print(j, k, sliced._axes)
             j += 1
             k += 1
 
