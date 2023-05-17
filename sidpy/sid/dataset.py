@@ -1463,13 +1463,61 @@ class Dataset(da.Array):
             # For example: dset[4] or dset[None]
             index = tuple([index])
 
-        old_dims = deepcopy(self._axes)
-        k = 0  # We initialize this outside to use it when new dimensions are added using None
-        # for ind in index:
-        #     if ind is None:
-        #         sliced.
-
         print(index)
+        old_dims = deepcopy(self._axes)
+        j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
+
+        for ind in index:
+            if ind is None:  # Add a new dimension
+                sliced.set_dimension(k, Dimension(1))
+                k += 1
+            elif isinstance(ind, (int, np.integer)):
+                j += 1
+            elif isinstance(ind, (slice, np.ndarray, list)):
+                old_dim = old_dims[j]
+                sliced.set_dimension(k, Dimension(old_dim[ind],
+                                                  name=old_dim.name, quantity=old_dim.quantity,
+                                                  units=old_dim.units,
+                                                  dimension_type=old_dim.dimension_type))
+                j += 1
+                k += 1
+
+        # Adding the rest of the dimensions
+        for k in range(k, sliced.ndim):
+            try:
+                old_dim = old_dims[j]
+                sliced.set_dimension(k, Dimension(old_dim,
+                                                  name=old_dim.name, quantity=old_dim.quantity,
+                                                  units=old_dim.units,
+                                                  dimension_type=old_dim.dimension_type))
+                j += 1
+                k += 1
+            except:
+                return index
+                break
+
+        # for dim in range(sliced.ndim):
+        #     if j < len(index):
+        #         ind = index[j]
+        #     if k < self.ndim:
+        #         old_dim = old_dims[k]
+        #
+        #     if ind is None:  # Add a new dimension
+        #         sliced.set_dimension(dim, Dimension(1))
+        #     elif isinstance(ind, int):
+        #         sliced.set_dimension(dim, Dimension(np.array([old_dim[ind]]),
+        #                                             name=old_dim.name, quantity=old_dim.quantity,
+        #                                             units=old_dim.units,
+        #                                             dimension_type=old_dim.dimension_type))
+        #         k += 1
+        #     elif isinstance(ind, slice):
+        #         sliced.set_dimension(dim, Dimension(old_dim[ind],
+        #                                             name=old_dim.name, quantity=old_dim.quantity,
+        #                                             units=old_dim.units,
+        #                                             dimension_type=old_dim.dimension_type))
+        #         k += 1
+        #     j += 1
+
         return sliced
 
     def __invert__(self):
