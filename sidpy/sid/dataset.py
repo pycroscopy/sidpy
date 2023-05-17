@@ -1451,23 +1451,23 @@ class Dataset(da.Array):
     def __ge__(self, other):
         return self.like_data(super().__ge__(other))
 
-    def __getitem__(self, index):
+    def __getitem__(self, idx):
 
         # The following line creates a new sidpy dataset with generic dimensions and ..
         # all the other attributes copied from 'self' aka parent dataset.
-        sliced = self.like_data(super().__getitem__(index), checkdims=False)
+        sliced = self.like_data(super().__getitem__(idx), checkdims=False)
 
         # Here we need to modify the dimensions of the sliced dataset using the argument index
-        if not isinstance(index, tuple):
+        if not isinstance(idx, tuple):
             # This comes into play when slicing is done using 'None' or just integers.
             # For example: dset[4] or dset[None]
-            index = tuple([index])
+            index = tuple([idx])
 
-        print(index)
+        print(idx)
         old_dims = deepcopy(self._axes)
         j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
 
-        for ind in index:
+        for ind in idx:
             if ind is None:  # Add a new dimension
                 sliced.set_dimension(k, Dimension(1))
                 k += 1
@@ -1481,42 +1481,25 @@ class Dataset(da.Array):
                                                   dimension_type=old_dim.dimension_type))
                 j += 1
                 k += 1
+            elif ind is Ellipsis:
+                start_dim = idx.index(Ellipsis)
+                ellipsis_dims = self.ndim - (len(idx) - 1)
+                stop_dim = start_dim + ellipsis_dims
+                for l in range(start_dim, stop_dim):
+                    old_dim = old_dims[j]
+                    sliced.set_dimension(k, old_dim)
+                    j += 1
+                    k += 1
 
         # Adding the rest of the dimensions
         for k in range(k, sliced.ndim):
-            try:
-                old_dim = old_dims[j]
-                sliced.set_dimension(k, Dimension(old_dim,
-                                                  name=old_dim.name, quantity=old_dim.quantity,
-                                                  units=old_dim.units,
-                                                  dimension_type=old_dim.dimension_type))
-                j += 1
-                k += 1
-            except:
-                return index
-                break
-
-        # for dim in range(sliced.ndim):
-        #     if j < len(index):
-        #         ind = index[j]
-        #     if k < self.ndim:
-        #         old_dim = old_dims[k]
-        #
-        #     if ind is None:  # Add a new dimension
-        #         sliced.set_dimension(dim, Dimension(1))
-        #     elif isinstance(ind, int):
-        #         sliced.set_dimension(dim, Dimension(np.array([old_dim[ind]]),
-        #                                             name=old_dim.name, quantity=old_dim.quantity,
-        #                                             units=old_dim.units,
-        #                                             dimension_type=old_dim.dimension_type))
-        #         k += 1
-        #     elif isinstance(ind, slice):
-        #         sliced.set_dimension(dim, Dimension(old_dim[ind],
-        #                                             name=old_dim.name, quantity=old_dim.quantity,
-        #                                             units=old_dim.units,
-        #                                             dimension_type=old_dim.dimension_type))
-        #         k += 1
-        #     j += 1
+            old_dim = old_dims[j]
+            sliced.set_dimension(k, Dimension(old_dim,
+                                              name=old_dim.name, quantity=old_dim.quantity,
+                                              units=old_dim.units,
+                                              dimension_type=old_dim.dimension_type))
+            j += 1
+            k += 1
 
         return sliced
 
