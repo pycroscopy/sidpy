@@ -340,6 +340,7 @@ def gauss_2D(fitting_space, *parms):
     yo = float(yo)
     r = ((x - xo) ** 2 + (y - yo) ** 2) ** .5
     g = amplitude * np.exp(-(r / sigma) ** 2) + offset
+
     return g.ravel()
 
 
@@ -360,7 +361,7 @@ def make_4D_dataset(shape=(32, 16, 64, 48)):
             true_parms[row, col, :] = cur_parms
             # amplitude, xo, yo, sigma, offset
             gauss_mat = gauss_2D([kx.ravel(), ky.ravel()], *cur_parms)
-            gauss_mat += np.mean(gauss_mat) / 0.5 * np.random.normal(size=len(gauss_mat))
+            gauss_mat += np.mean(gauss_mat) / 2 * np.random.normal(size=len(gauss_mat))
             gauss_mat = gauss_mat.reshape([kxlen, kylen])
             dataset[row, col, :, :] = gauss_mat
 

@@ -1424,7 +1424,6 @@ class Dataset(da.Array):
         return self.like_data(super().choose(choices))
 
     def __abs__(self):
-        print(super().__abs__.__name__)
         return self.like_data(super().__abs__(), title_suffix='_absolute_value')
 
     def __add__(self, other):
@@ -1472,10 +1471,8 @@ class Dataset(da.Array):
         for ind in idx:
             if ind is None:  # Add a new dimension
                 sliced.set_dimension(k, Dimension(1))
-                # print(j, k, sliced._axes)
                 k += 1
             elif isinstance(ind, (int, np.integer)):
-                # print(j, k, sliced._axes)
                 j += 1
             elif isinstance(ind, (slice, np.ndarray, list)):
                 old_dim = old_dims[j]
@@ -1483,7 +1480,6 @@ class Dataset(da.Array):
                                                   name=old_dim.name, quantity=old_dim.quantity,
                                                   units=old_dim.units,
                                                   dimension_type=old_dim.dimension_type))
-                # print(j, k, sliced._axes)
                 j += 1
                 k += 1
             elif ind is Ellipsis:
@@ -1503,7 +1499,6 @@ class Dataset(da.Array):
                                               name=old_dim.name, quantity=old_dim.quantity,
                                               units=old_dim.units,
                                               dimension_type=old_dim.dimension_type))
-            # print(j, k, sliced._axes)
             j += 1
             k += 1
 
