@@ -38,6 +38,7 @@ from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisual
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
+from copy import deepcopy
 
 
 class DataType(Enum):
@@ -391,6 +392,7 @@ class Dataset(da.Array):
         TypeError : if ind is not an integer
         IndexError : if ind is less than 0 or greater than maximum allowed
             index for Dimension
+        ValueError: if name is not 'none' and is already used.
         """
         if not isinstance(ind, int):
             raise TypeError('Dimension must be an integer')
@@ -399,7 +401,7 @@ class Dataset(da.Array):
                              ''.format(self.ndim - 1))
         for key, dim in self._axes.items():
             if key != ind:
-                if name == dim.name:
+                if name == 'none' and name == dim.name:
                     raise ValueError('name: {} already used, but must be unique'.format(name))
 
     def rename_dimension(self, ind, name):
@@ -910,7 +912,7 @@ class Dataset(da.Array):
                                              name='v', units=units_y, dimension_type=new_dimension_type,
                                              quantity='reciprocal_length'))
         return fft_dset
-    
+
     def flatten_complex(self):
         '''
         This function returns a dataset with real and imaginary components that have been flattened
@@ -919,19 +921,23 @@ class Dataset(da.Array):
         Output:
         - ouput_arr: sidpy.Dataset object
         '''
-        assert self.ndim<3,"flatten_complex() only works on 1D or 2D datasets, current dataset has {}".format(self.ndim)
-        #Only the second dimension needs to be changed
-        #Because we are stacking real and imaginary, this means we just tile the existing axis values
-        if len(self._axes)==1: index_ax = 0
-        elif len(self._axes)==2: index_ax = 1
-        new_ax_values = np.tile(self._axes[index_ax].values,2)
+        assert self.ndim < 3, "flatten_complex() only works on 1D or 2D datasets, current dataset has {}".format(
+            self.ndim)
+        # Only the second dimension needs to be changed
+        # Because we are stacking real and imaginary, this means we just tile the existing axis values
+        if len(self._axes) == 1:
+            index_ax = 0
+        elif len(self._axes) == 2:
+            index_ax = 1
+        new_ax_values = np.tile(self._axes[index_ax].values, 2)
         output_arr = self.like_data(dask.array.hstack([self.real, self.imag]))
-        output_arr.set_dimension(index_ax,Dimension(new_ax_values,name=output_arr._axes[index_ax].name, 
-                        units=output_arr._axes[index_ax].units, dimension_type=output_arr._axes[index_ax].dimension_type,
-                            quantity=output_arr._axes[index_ax].quantity))
-        
+        output_arr.set_dimension(index_ax, Dimension(new_ax_values, name=output_arr._axes[index_ax].name,
+                                                     units=output_arr._axes[index_ax].units,
+                                                     dimension_type=output_arr._axes[index_ax].dimension_type,
+                                                     quantity=output_arr._axes[index_ax].quantity))
+
         return output_arr
-    
+
     # #####################################################
     # Original dask.array functions replaced
     # ##################################################
@@ -1444,11 +1450,27 @@ class Dataset(da.Array):
 
     def __ge__(self, other):
         return self.like_data(super().__ge__(other))
-    
+
     def __getitem__(self, index):
+
+        # The following line creates a new sidpy dataset with generic dimensions and ..
+        # all the other attributes copied from 'self' aka parent dataset.
+        sliced = self.like_data(super().__getitem__(index), checkdims=False)
+
+        # Here we need to modify the dimensions of the sliced dataset using the argument index
+        if not isinstance(index, tuple):
+            # This comes into play when slicing is done using 'None' or just integers.
+            # For example: dset[4] or dset[None]
+            index = tuple([index])
+
+        old_dims = deepcopy(self._axes)
+        k = 0  # We initialize this outside to use it when new dimensions are added using None
+        # for ind in index:
+        #     if ind is None:
+        #         sliced.
+
         print(index)
-        # return self.like_data(super().__getitem__(other), other=other)
-        return super().__getitem__(index)
+        return sliced
 
     def __invert__(self):
         return self.like_data(super().__invert__())
