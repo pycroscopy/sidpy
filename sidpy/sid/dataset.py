@@ -1452,16 +1452,18 @@ class Dataset(da.Array):
 
     def __getitem__(self, idx):
 
-        # The following line creates a new sidpy dataset with generic dimensions and ..
-        # all the other attributes copied from 'self' aka parent dataset.
-        da_arr = super().__getitem__(idx)
+        try:
+            # The following line creates a new sidpy dataset with generic dimensions and ..
+            # all the other attributes copied from 'self' aka parent dataset.
+            sliced = self.like_data(super().__getitem__(idx), checkdims=False)
 
-        # Check for unknown shapes
-        if np.sum(np.isnan(da_arr.shape)):
-            # We found a dataset with unknown shapes, Here we return the dask array
-            return da_arr
+        except:
+            # We return the dask array if we cannot create a sidpy dataset
+            # This is used when the returned dask array has an unknown shape
+            warnings.warn('The dask array returned from the __getitem__ method cannot be '
+                          'converted into a sidpy dataset. Hence returning dask array')
+            return super().__getitem__(idx)
 
-        sliced = self.like_data(da_arr, checkdims=False)
         # Delete the dimensions created by like_data
         sliced._axes.clear()
 
