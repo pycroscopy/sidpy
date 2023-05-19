@@ -1454,8 +1454,14 @@ class Dataset(da.Array):
 
         # The following line creates a new sidpy dataset with generic dimensions and ..
         # all the other attributes copied from 'self' aka parent dataset.
-        sliced = self.like_data(super().__getitem__(idx), checkdims=False)
+        da_arr = super().__getitem__(idx)
 
+        # Check for unknown shapes
+        if np.sum(np.isnan(da_arr.shape)):
+            # We found a dataset with unknown shapes, Here we return the dask array
+            return da_arr
+
+        sliced = self.like_data(da_arr, checkdims=False)
         # Delete the dimensions created by like_data
         sliced._axes.clear()
 
