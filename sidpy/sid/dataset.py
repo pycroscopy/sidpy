@@ -38,6 +38,7 @@ from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisual
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, ComplexSpectralImageVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
+from copy import deepcopy
 
 
 class DataType(Enum):
@@ -235,7 +236,7 @@ class Dataset(da.Array):
         sid_dataset.original_metadata = {}
         return sid_dataset
 
-    def like_data(self, data, title=None, chunks='auto', lock=False, other=None, **kwargs):
+    def like_data(self, data, title=None, chunks='auto', lock=False, **kwargs):
         """
         Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
@@ -252,8 +253,6 @@ class Dataset(da.Array):
             size of chunks for dask array
         lock: optional boolean
             for dask array
-        other: paramters passed during slicing of the sidpy dataset
-            used internally for slicing
 
 
         Returns
@@ -265,7 +264,7 @@ class Dataset(da.Array):
         reset_quantity = kwargs.get('reset_quantity', False)
         reset_units = kwargs.get('reset_units', False)
         checkdims = kwargs.get('checkdims', True)
-        #print('found other as {}'.format(other))
+
         new_data = self.from_array(data, chunks=chunks, lock=lock)
 
         new_data.data_type = self.data_type
@@ -302,25 +301,10 @@ class Dataset(da.Array):
                     new_data.set_dimension(dim, self._axes[dim])
                 else:
                     # assuming the axis scale is equidistant
-                    
                     try:
-                        #print("we are here {}".format(self._axes[dim]))
-                        if other is not None:
-                            #slice it to get the axis values
-                            axis_values = np.array([self._axes[dim].values[other[dim]]]).squeeze()
-                            #print('found axis values of {}'.format(axis_values))
-                            if axis_values.size==1: 
-                                scale = 0
-                                axis_values = np.arange(new_data.shape[dim]) * scale
-
-                            #print('old axis values is {}, slice is {}, new axis is {}'.format(
-                            #    self._axes[dim], other, axis_values
-                            #))
-                        else:
-                            scale = get_slope(self._axes[dim])
-                            axis_values = np.arange(new_data.shape[dim]) * scale
+                        scale = get_slope(self._axes[dim])
                         # axis = self._axes[dim].copy()
-                        axis = Dimension(axis_values, self._axes[dim].name)
+                        axis = Dimension(np.arange(new_data.shape[dim]) * scale, self._axes[dim].name)
                         axis.quantity = self._axes[dim].quantity
                         axis.units = self._axes[dim].units
                         axis.dimension_type = self._axes[dim].dimension_type
@@ -328,8 +312,7 @@ class Dataset(da.Array):
                         new_data.set_dimension(dim, axis)
 
                     except ValueError:
-                        pass
-                        #print('using generic parameters for dimension ', dim)
+                        print('using generic parameters for dimension ', dim)
 
         new_data.metadata = dict(self.metadata).copy()
         new_data.original_metadata = {}
@@ -409,6 +392,7 @@ class Dataset(da.Array):
         TypeError : if ind is not an integer
         IndexError : if ind is less than 0 or greater than maximum allowed
             index for Dimension
+        ValueError: if name is not 'none' and is already used.
         """
         if not isinstance(ind, int):
             raise TypeError('Dimension must be an integer')
@@ -417,7 +401,7 @@ class Dataset(da.Array):
                              ''.format(self.ndim - 1))
         for key, dim in self._axes.items():
             if key != ind:
-                if name == dim.name:
+                if name != 'none' and name == dim.name:
                     raise ValueError('name: {} already used, but must be unique'.format(name))
 
     def rename_dimension(self, ind, name):
@@ -931,7 +915,7 @@ class Dataset(da.Array):
                                              name='v', units=units_y, dimension_type=new_dimension_type,
                                              quantity='reciprocal_length'))
         return fft_dset
-    
+
     def flatten_complex(self):
         '''
         This function returns a dataset with real and imaginary components that have been flattened
@@ -940,19 +924,23 @@ class Dataset(da.Array):
         Output:
         - ouput_arr: sidpy.Dataset object
         '''
-        assert self.ndim<3,"flatten_complex() only works on 1D or 2D datasets, current dataset has {}".format(self.ndim)
-        #Only the second dimension needs to be changed
-        #Because we are stacking real and imaginary, this means we just tile the existing axis values
-        if len(self._axes)==1: index_ax = 0
-        elif len(self._axes)==2: index_ax = 1
-        new_ax_values = np.tile(self._axes[index_ax].values,2)
+        assert self.ndim < 3, "flatten_complex() only works on 1D or 2D datasets, current dataset has {}".format(
+            self.ndim)
+        # Only the second dimension needs to be changed
+        # Because we are stacking real and imaginary, this means we just tile the existing axis values
+        if len(self._axes) == 1:
+            index_ax = 0
+        elif len(self._axes) == 2:
+            index_ax = 1
+        new_ax_values = np.tile(self._axes[index_ax].values, 2)
         output_arr = self.like_data(dask.array.hstack([self.real, self.imag]))
-        output_arr.set_dimension(index_ax,Dimension(new_ax_values,name=output_arr._axes[index_ax].name, 
-                        units=output_arr._axes[index_ax].units, dimension_type=output_arr._axes[index_ax].dimension_type,
-                            quantity=output_arr._axes[index_ax].quantity))
-        
+        output_arr.set_dimension(index_ax, Dimension(new_ax_values, name=output_arr._axes[index_ax].name,
+                                                     units=output_arr._axes[index_ax].units,
+                                                     dimension_type=output_arr._axes[index_ax].dimension_type,
+                                                     quantity=output_arr._axes[index_ax].quantity))
+
         return output_arr
-    
+
     # #####################################################
     # Original dask.array functions replaced
     # ##################################################
@@ -1439,7 +1427,6 @@ class Dataset(da.Array):
         return self.like_data(super().choose(choices))
 
     def __abs__(self):
-        print(super().__abs__.__name__)
         return self.like_data(super().__abs__(), title_suffix='_absolute_value')
 
     def __add__(self, other):
@@ -1465,10 +1452,61 @@ class Dataset(da.Array):
 
     def __ge__(self, other):
         return self.like_data(super().__ge__(other))
-    
-    def __getitem__(self,other):
-        return self.like_data(super().__getitem__(other), other=other)
-        
+
+    def __getitem__(self, idx):
+
+        # The following line creates a new sidpy dataset with generic dimensions and ..
+        # all the other attributes copied from 'self' aka parent dataset.
+        sliced = self.like_data(super().__getitem__(idx), checkdims=False)
+
+        # Delete the dimensions created by like_data
+        sliced._axes.clear()
+
+        # Here we need to modify the dimensions of the sliced dataset using the argument index
+        if not isinstance(idx, tuple):
+            # This comes into play when slicing is done using 'None' or just integers.
+            # For example: dset[4] or dset[None]
+            idx = tuple([idx])
+
+        old_dims = deepcopy(self._axes)
+        j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
+
+        for ind in idx:
+            if ind is None:  # Add a new dimension
+                sliced.set_dimension(k, Dimension(1))
+                k += 1
+            elif isinstance(ind, (int, np.integer)):
+                j += 1
+            elif isinstance(ind, (slice, np.ndarray, list)):
+                old_dim = old_dims[j]
+                sliced.set_dimension(k, Dimension(old_dim[ind],
+                                                  name=old_dim.name, quantity=old_dim.quantity,
+                                                  units=old_dim.units,
+                                                  dimension_type=old_dim.dimension_type))
+                j += 1
+                k += 1
+            elif ind is Ellipsis:
+                start_dim = idx.index(Ellipsis)
+                ellipsis_dims = self.ndim - (len(idx) - 1)
+                stop_dim = start_dim + ellipsis_dims
+                for l in range(start_dim, stop_dim):
+                    old_dim = old_dims[j]
+                    sliced.set_dimension(k, old_dim)
+                    j += 1
+                    k += 1
+
+        # Adding the rest of the dimensions
+        for k in range(k, sliced.ndim):
+            old_dim = old_dims[j]
+            sliced.set_dimension(k, Dimension(old_dim,
+                                              name=old_dim.name, quantity=old_dim.quantity,
+                                              units=old_dim.units,
+                                              dimension_type=old_dim.dimension_type))
+            j += 1
+            k += 1
+
+        return sliced
+
     def __invert__(self):
         return self.like_data(super().__invert__())
 
