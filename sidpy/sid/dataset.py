@@ -1455,18 +1455,18 @@ class Dataset(da.Array):
 
     def __getitem__(self, idx):
 
+        # Here we need to modify the dimensions of the sliced dataset using the argument index
+        if not isinstance(idx, tuple):
+            # This comes into play when slicing is done using 'None' or just integers.
+            # For example: dset[4] or dset[None]
+            idx = tuple([idx])
+
         # The following line creates a new sidpy dataset with generic dimensions and ..
         # all the other attributes copied from 'self' aka parent dataset.
         sliced = self.like_data(super().__getitem__(idx), checkdims=False)
 
         # Delete the dimensions created by like_data
         sliced._axes.clear()
-
-        # Here we need to modify the dimensions of the sliced dataset using the argument index
-        if not isinstance(idx, tuple):
-            # This comes into play when slicing is done using 'None' or just integers.
-            # For example: dset[4] or dset[None]
-            idx = tuple([idx])
 
         old_dims = deepcopy(self._axes)
         j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
@@ -1487,8 +1487,9 @@ class Dataset(da.Array):
                 k += 1
             elif ind is Ellipsis:
                 start_dim = idx.index(Ellipsis)
-                ellipsis_dims = self.ndim - (len(idx) - 1)
+                ellipsis_dims = sliced.ndim - (len(idx) - 1)
                 stop_dim = start_dim + ellipsis_dims
+
                 for l in range(start_dim, stop_dim):
                     old_dim = old_dims[j]
                     sliced.set_dimension(k, old_dim)
