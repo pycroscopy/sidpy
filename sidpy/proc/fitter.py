@@ -18,7 +18,7 @@ from ..sid.dataset import DataType
 
 try:
     from scipy.optimize import curve_fit
-except ModuleNotFoundError:
+except ImportError:
     curve_fit = None
 
 try:
@@ -410,7 +410,11 @@ class SidFitter:
         # In that case we need all the spectral dimensions collapsed into a single dimension for kMeans
         # In case of a 1D fit the next line essentially does nothing.
         km_dset = self.folded_dataset.fold(dim_order)
-
+        print(km_dset, km_dset.dtype)
+        if 'complex' in km_dset.dtype.name:
+            print('Warning: complex dataset detected. For Kmeans priors, we will treat real part only')
+            km_dset = np.abs(km_dset)
+        
         if KMeans is None:
             raise ModuleNotFoundError("sklearn is not installed")
         else:

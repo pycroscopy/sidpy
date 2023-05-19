@@ -199,8 +199,7 @@ def get_QT_app():
 
     return _instance
 
-
-def openfile_dialog_QT(file_types="All files (*)", multiple_files=False,
+def openfile_dialog_qt(file_types="All files (*)", multiple_files=False,
                        file_path='.', caption="Select a file..."):
     """
     Opens a File dialog which is used in open_file() function
@@ -270,8 +269,7 @@ def openfile_dialog_QT(file_types="All files (*)", multiple_files=False,
     else:
         return str(fname)
 
-
-def savefile_dialog(initial_file='*.hf5', file_path='.',
+def savefile_dialog_qt(initial_file='*.hf5', file_path='.',
                     file_types=None, caption="Save file as ..."):
     """
     Produces a window / dialog to allow users to specify the location and name
@@ -329,6 +327,10 @@ def savefile_dialog(initial_file='*.hf5', file_path='.',
         else:
             return None
 
+
+# Compatibility, should be depreciated
+openfile_dialog_QT = openfile_dialog_qt
+savefile_dialog = savefile_dialog_qt
 
 try:
     from PyQt5 import QtWidgets
