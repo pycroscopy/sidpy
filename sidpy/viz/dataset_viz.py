@@ -725,6 +725,7 @@ class SpectralImageVisualizer(object):
 
 
 class FourDimImageVisualizer(object):
+    
     """
     ### Interactive 4D imaging plot
 
@@ -1006,6 +1007,303 @@ class FourDimImageVisualizer(object):
 #Let's make a 
 
 #Let's make a curve fit visualizer
+
+class ComplexSpectralImageVisualizer(object):
+    """
+    ### Interactive spectrum imaging plot for Complex Data
+
+    """
+
+    def __init__(self, dset, figure=None, horizontal=True, **kwargs):
+        from ..sid.dataset import Dataset
+        from ..sid.dimension import DimensionType
+        import matplotlib.widgets
+
+        if not isinstance(dset, Dataset):
+            raise TypeError('dset should be a sidpy.Dataset object')
+        
+        scale_bar = kwargs.pop('scale_bar', False)
+        colorbar = kwargs.pop('colorbar', True)
+        self.set_title = kwargs.pop('set_title', True)
+        
+        fig_args = dict()
+        temp = kwargs.pop('figsize', None)
+        if temp is not None:
+            fig_args['figsize'] = temp
+
+        if figure is None:
+            self.fig = plt.figure(**fig_args)
+        else:
+            self.fig = figure
+
+        if len(dset.shape) !=3:
+            raise TypeError('dataset must have three dimensions')
+        if 'complex' not in dset.dtype.name:
+            raise TypeError('This visualizer is only for Complex Data, data type is {}'.format(dset.dtype))
+        
+        # We need one stack dim and two image dimes as lists in dictionary
+        selection = []
+        image_dims = []
+        spectral_dim = []
+        channel_dim = []
+        for dim, axis in dset._axes.items():
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
+                selection.append(slice(None))
+                image_dims.append(dim)
+            elif axis.dimension_type == DimensionType.SPECTRAL:
+                selection.append(slice(0, 1))
+                spectral_dim.append(dim)
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                channel_dim.append(dim)
+            else:
+                selection.append(slice(0, 1))
+        
+        if len(image_dims) != 2:
+            raise TypeError('We need two dimensions with dimension_type SPATIAL: to plot an image')
+        if len(channel_dim) >1:
+            raise ValueError("We have more than one Channel Dimension, this won't work for the visualizer")
+        if len(spectral_dim)>1:
+            raise ValueError("We have more than one Spectral Dimension, this won't work for the visualizer...")
+
+        if len(dset.shape)==4:
+            if len(channel_dim)!=1:
+                raise TypeError("We need one dimension with type CHANNEL \
+                    for a spectral image plot for a 4D dataset")
+        elif len(dset.shape)==3:
+            if len(spectral_dim) != 1:
+                raise TypeError("We need one dimension with dimension_type SPECTRAL \
+                 to plot a spectra for a 3D dataset")
+
+        self.horizontal = horizontal
+        self.x = 0
+        self.y = 0
+        self.bin_x = 1
+        self.bin_y = 1
+
+        size_x = dset.shape[image_dims[0]]
+        size_y = dset.shape[image_dims[1]]
+
+        self.dset = dset
+        self.energy_axis = spectral_dim[0]
+        if len(channel_dim)>0: self.channel_axis = channel_dim
+        self.energy_scale = dset._axes[self.energy_axis].values
+        self.extent = [0, size_x, size_y, 0]
+        self.rectangle = [0, size_x, 0, size_y]
+        self.scaleX = 1.0
+        self.scaleY = 1.0
+        self.analysis = []
+        self.plot_legend = False
+        self.ri_ap = 'Real and Imaginary' #real/imaginary of amplitude/phase plotting
+
+        self.image_dims = image_dims
+        self.spec_dim = spectral_dim[0]
+
+        if horizontal:
+            self.axes = self.fig.subplots(ncols=3)
+        else:
+            self.axes = self.fig.subplots(nrows=3, **fig_args)
+
+        if self.set_title:
+            self.fig.canvas.manager.set_window_title(self.dset.title)
+
+        if len(channel_dim)>0:
+            self.image = dset.mean(axis=(spectral_dim[0],channel_dim[0]))
+        else:
+            self.image = dset.mean(axis=(spectral_dim[0]))
+
+        if 1 in self.dset.shape:
+            self.image = dset.squeeze()
+            self.axes[0].set_aspect('auto')
+        else:
+            self.axes[0].set_aspect('equal')
+
+        self.axes[0].imshow(np.abs(self.image.T), extent=self.extent, **kwargs)
+        if horizontal:
+            self.axes[0].set_xlabel('{} [pixels]'.format(self.dset._axes[image_dims[0]].quantity))
+        else:
+            self.axes[0].set_ylabel('{} [pixels]'.format(self.dset._axes[image_dims[1]].quantity))
+
+        if 1 in self.dset.shape:
+            self.axes[0].set_aspect('auto')
+            self.axes[0].get_yaxis().set_visible(False)
+        else:
+            self.axes[0].set_aspect('equal')
+
+        self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
+                                      facecolor='red', alpha=0.2)
+
+        self.axes[0].add_patch(self.rect)
+        self.intensity_scale = 1.
+        self.spectrum = self.get_spectrum()
+        if len(self.energy_scale)!=self.spectrum.shape[0]:
+            self.spectrum = self.spectrum.T
+        self.axes[1].plot(self.energy_scale, np.real(self.spectrum.compute()), label = 'Real')
+        self.axes[2].plot(self.energy_scale, np.imag(self.spectrum.compute()), label = 'Imaginary')
+        for ax_ind in [1,2]:
+            self.axes[ax_ind].set_title('spectrum {}, {}'.format(self.x, self.y))
+            self.xlabel = self.dset.labels[self.spec_dim]
+            self.ylabel = self.dset.data_descriptor
+            self.axes[ax_ind].set_xlabel(self.dset.labels[self.spec_dim])  # + x_suffix)
+            self.axes[ax_ind].set_ylabel(self.dset.data_descriptor)
+            self.axes[ax_ind].ticklabel_format(style='sci', scilimits=(-2, 3))
+            leg = self.axes[ax_ind].legend(loc = 'best')
+            leg.get_frame().set_linewidth(0.0)
+        self.fig.tight_layout()
+        self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+        import ipywidgets as iwgt
+        self.button = iwgt.widgets.Dropdown(options=['Real and Imaginary', 'Amplitude and Phase'],
+                                description='Plot',
+                                disabled=False,
+                                tooltip='How to plot complex data')
+
+        self.button.observe(self._ri_ap, 'value') #real/imag or amp/phase
+
+        widg = iwgt.HBox([self.button])
+        from IPython.display import display
+        display(widg)
+
+        self.fig.canvas.draw_idle()
+
+    def _ri_ap(self, event):
+        self.ri_ap = event.new
+        self._update()
+
+    def set_bin(self, bin_xy):
+
+        old_bin_x = self.bin_x
+        old_bin_y = self.bin_y
+        if isinstance(bin_xy, list):
+
+            self.bin_x = int(bin_xy[0])
+            self.bin_y = int(bin_xy[1])
+
+        else:
+            self.bin_x = int(bin_xy)
+            self.bin_y = int(bin_xy)
+
+        if self.bin_x > self.dset.shape[self.image_dims[0]]:
+            self.bin_x = self.dset.shape[self.image_dims[0]]
+        if self.bin_y > self.dset.shape[self.image_dims[1]]:
+            self.bin_y = self.dset.shape[self.image_dims[1]]
+
+        self.rect.set_width(self.rect.get_width() * self.bin_x / old_bin_x)
+        self.rect.set_height((self.rect.get_height() * self.bin_y / old_bin_y))
+        if self.x + self.bin_x > self.dset.shape[self.image_dims[0]]:
+            self.x = self.dset.shape[0] - self.bin_x
+        if self.y + self.bin_y > self.dset.shape[self.image_dims[1]]:
+            self.y = self.dset.shape[1] - self.bin_y
+
+        self.rect.set_xy([self.x * self.rect.get_width() / self.bin_x + self.rectangle[0],
+                          self.y * self.rect.get_height() / self.bin_y + self.rectangle[2]])
+        self._update()
+
+    def get_spectrum(self):
+        from ..sid.dimension import DimensionType
+
+        if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
+            self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
+        if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:
+            self.y = self.dset.shape[self.image_dims[1]] - self.bin_y
+        selection = []
+
+        for dim, axis in self.dset._axes.items():
+            # print(dim, axis.dimension_type)
+            if axis.dimension_type == DimensionType.SPATIAL:
+                if dim == self.image_dims[0]:
+                    selection.append(slice(self.x, self.x + self.bin_x))
+                else:
+                    selection.append(slice(self.y, self.y + self.bin_y))
+
+            elif axis.dimension_type == DimensionType.SPECTRAL:
+                selection.append(slice(None))
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                selection.append(slice(None))
+            else:
+                selection.append(slice(0, 1))
+        
+        self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
+        
+        # * self.intensity_scale[self.x,self.y]
+        return self.spectrum.squeeze()
+
+    def _onclick(self, event):
+        self.event = event
+        if event.inaxes in [self.axes[0]]:
+            x = int(event.xdata)
+            y = int(event.ydata)
+
+            x = int(x - self.rectangle[0])
+            y = int(y - self.rectangle[2])
+
+            if x >= 0 and y >= 0:
+                if x <= self.rectangle[1] and y <= self.rectangle[3]:
+                    self.x = int(x / (self.rect.get_width() / self.bin_x))
+                    self.y = int(y / (self.rect.get_height() / self.bin_y))
+
+                    if self.x + self.bin_x > self.dset.shape[self.image_dims[0]]:
+                        self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
+                    if self.y + self.bin_y > self.dset.shape[self.image_dims[1]]:
+                        self.y = self.dset.shape[self.image_dims[1]] - self.bin_y
+
+                    self.rect.set_xy([self.x * self.rect.get_width() / self.bin_x + self.rectangle[0],
+                                      self.y * self.rect.get_height() / self.bin_y + self.rectangle[2]])
+            self._update()
+        else:
+            if event.dblclick:
+                bottom = float(self.spectrum.min())
+                if bottom < 0:
+                    bottom *= 1.02
+                else:
+                    bottom *= 0.98
+                top = float(self.spectrum.max())
+                if top > 0:
+                    top *= 1.02
+                else:
+                    top *= 0.98
+
+                self.axes[1].set_ylim(bottom=bottom, top=top)
+
+    def _update(self, ev=None):
+
+        xlim_ax1 = self.axes[1].get_xlim()
+        ylim_ax1 = self.axes[1].get_ylim()
+        xlim_ax2 = self.axes[2].get_xlim()
+        ylim_ax2 = self.axes[2].get_ylim()
+        
+        xlims = [xlim_ax1,xlim_ax2]
+        ylims = [ylim_ax1, ylim_ax2]
+
+        self.axes[1].clear()
+        self.axes[2].clear()
+        self.get_spectrum()
+        if len(self.energy_scale)!=self.spectrum.shape[0]:
+            self.spectrum = self.spectrum
+        
+        if self.ri_ap == 'Real and Imaginary':
+            self.axes[1].plot(self.energy_scale, np.real(self.spectrum.compute()), label='Real')
+            self.axes[2].plot(self.energy_scale, np.imag(self.spectrum.compute()), label='Imaginary')
+        else:
+            self.axes[1].plot(self.energy_scale, np.abs(self.spectrum.compute()), label='Amplitude')
+            self.axes[2].plot(self.energy_scale, np.angle(self.spectrum.compute()), label='Phase')
+
+        for ind,ax_ind in enumerate([1,2]):
+            if self.set_title:
+                self.axes[ax_ind].set_title('spectrum {}, {}'.format(self.x, self.y))
+            
+            self.axes[ax_ind].set_xlim(xlims[ind])
+            self.axes[ax_ind].set_xlabel(self.xlabel)
+            self.axes[ax_ind].set_ylabel(self.ylabel)
+            leg = self.axes[ax_ind].legend(loc = 'best')
+            leg.get_frame().set_linewidth(0.0)
+        self.fig.canvas.draw_idle()
+        self.fig.tight_layout()
+
+    def set_legend(self, set_legend):
+        self.plot_legend = set_legend
+
+    def get_xy(self):
+        return [self.x, self.y]
+
 
 class SpectralImageFitVisualizer(SpectralImageVisualizer):
     

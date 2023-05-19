@@ -175,6 +175,7 @@ class SidFitter:
         self.return_cov = return_cov
         self.return_fit = return_fit
         self.fitted_dset = None
+        self._numpy = True
 
         self.mean_fit_results = []
         if self.return_cov:
@@ -229,7 +230,13 @@ class SidFitter:
         """
         guess_results = []
         for ind in range(self.num_computations):
-            lazy_result = dask.delayed(self.guess_fn)(self.dep_vec, self.folded_dataset[ind, :])
+            if self._numpy:
+                self.dep_vec=np.array(self.dep_vec)
+                ydata = np.array(self.folded_dataset)
+            else:
+                ydata = self.folded_dataset
+
+            lazy_result = dask.delayed(self.guess_fn)(self.dep_vec, ydata[ind, :])
             guess_results.append(lazy_result)
 
         guess_results = dask.compute(*guess_results)
@@ -260,6 +267,11 @@ class SidFitter:
                 ydata = self.folded_dataset[ind, :]
                 if self._complex_data: 
                     ydata = ydata.flatten_complex()
+
+                #Convert to numpy - see if this makes it faster??
+                if self._numpy:
+                    ydata = np.array(ydata)
+                    self.dep_vec = np.array(self.dep_vec)
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
                                                                         ydata,self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),

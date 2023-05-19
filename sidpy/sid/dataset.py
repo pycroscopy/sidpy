@@ -35,7 +35,7 @@ from .dimension import Dimension, DimensionType
 from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer
-from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer
+from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, ComplexSpectralImageVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
 
@@ -566,7 +566,10 @@ class Dataset(da.Array):
                 self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
-                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
+                if 'complex' in self.dtype.name:
+                    self.view = ComplexSpectralImageVisualizer(self, figure=figure, **kwargs)
+                else:
+                    self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
