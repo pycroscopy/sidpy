@@ -42,17 +42,20 @@ def get_slope(values, tol=1E-3):
     """
     if not isinstance(tol, float):
         raise TypeError('tol should be a float << 1')
-    step_size = np.unique(np.diff(values))
-    if len(step_size) > 1:
-        # often we end up here. In most cases,
-        step_avg = step_size.max()
-        step_size -= step_avg
-        var = np.mean(np.abs(step_size))
-        if var / step_avg < tol:
-            step_size = [step_avg]
-        else:
-            # Non-linear dimension! - see notes above
-            raise ValueError('Provided values cannot be expressed as a linear trend')
+    if len(values)==1:
+        step_size=[0]
+    else:
+        step_size = np.unique(np.diff(values))
+        if len(step_size) > 1:
+            # often we end up here. In most cases,
+            step_avg = step_size.max()
+            step_size -= step_avg
+            var = np.mean(np.abs(step_size))
+            if var / step_avg < tol:
+                step_size = [step_avg]
+            else:
+                # Non-linear dimension! - see notes above
+                raise ValueError('Provided values cannot be expressed as a linear trend')
     return step_size[0]
 
 

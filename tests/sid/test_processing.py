@@ -69,7 +69,7 @@ class TestUFunctions(unittest.TestCase):
         dataset = sidpy.Dataset.from_array(input_spectrum)
         abs_dataset = dataset.abs()
         self.assertIsInstance(abs_dataset, sidpy.Dataset)
-        self.assertEqual(abs_dataset[0, 0, 0], 1)
+        self.assertEqual(abs_dataset[0, 0, 0].compute(), 1)
         new_dataset = dataset.__abs__()
         self.assertIsInstance(new_dataset, sidpy.Dataset)
 
