@@ -38,7 +38,7 @@ from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisual
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, ComplexSpectralImageVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
-from copy import deepcopy
+from copy import deepcopy, copy
 
 
 class DataType(Enum):
@@ -213,7 +213,7 @@ class Dataset(da.Array):
         """
 
         # create vanilla dask array
-        if isinstance(x, da.Array):
+        if isinstance(x, da.Array) and not np.any(np.isnan(x.shape)):
             dask_array = x
         else:
             dask_array = da.from_array(np.array(x), chunks=chunks, lock=lock)
@@ -1461,6 +1461,7 @@ class Dataset(da.Array):
             # For example: dset[4] or dset[None]
             idx = tuple([idx])
 
+        print(idx)
         # The following line creates a new sidpy dataset with generic dimensions and ..
         # all the other attributes copied from 'self' aka parent dataset.
         sliced = self.like_data(super().__getitem__(idx), checkdims=False)
@@ -1468,7 +1469,7 @@ class Dataset(da.Array):
         # Delete the dimensions created by like_data
         sliced._axes.clear()
 
-        old_dims = deepcopy(self._axes)
+        old_dims = copy(self._axes)
         j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
 
         for ind in idx:
@@ -1477,7 +1478,7 @@ class Dataset(da.Array):
                 k += 1
             elif isinstance(ind, (int, np.integer)):
                 j += 1
-            elif isinstance(ind, (slice, np.ndarray, list)):
+            elif isinstance(ind, (slice, np.ndarray, list, da.Array)):
                 old_dim = old_dims[j]
                 sliced.set_dimension(k, Dimension(old_dim[ind],
                                                   name=old_dim.name, quantity=old_dim.quantity,

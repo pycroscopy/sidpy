@@ -741,5 +741,72 @@ class Testmeanmethod(unittest.TestCase):
         pass
 
 
+class TestSlicing(unittest.TestCase):
+    values = np.random.rand(3, 4, 6, 5)
+    dset = Dataset.from_array(values, title='4D_STEM', units='nA',
+                              quantity='Current',
+                              modality='modality', source='source')
+    dset.data_type = DataType.IMAGE_4D
+    dset.metadata = {'info_1': np.linspace(0, 5.6, 30), 'instrument': 'opportunity rover AFM'}
+
+    x_dim = np.linspace(0, 1E-6,
+                        dset.shape[0])
+    y_dim = np.linspace(0, 2E-6,
+                        dset.shape[1])
+    kx_dim = np.linspace(0, 12, dset.shape[2])
+    ky_dim = np.linspace(0, 10, dset.shape[3])
+
+    dset.set_dimension(0, Dimension(x_dim,
+                                    name='x',
+                                    units='m', quantity='x',
+                                    dimension_type='spatial'))
+    dset.set_dimension(1, Dimension(y_dim,
+                                    name='y',
+                                    units='m', quantity='y',
+                                    dimension_type='spatial'))
+    dset.set_dimension(2, Dimension(kx_dim,
+                                    name='Intensity KX',
+                                    units='counts', quantity='Intensity',
+                                    dimension_type='spectral'))
+    dset.set_dimension(3, Dimension(ky_dim,
+                                    name='Intensity KY',
+                                    units='counts', quantity='Intensity',
+                                    dimension_type='spectral'))
+
+    def test_getitem_integer(self):
+        # Create a sample Dask array
+        old_dset = self.dset
+        sliced = self.dset[:, 2]
+        dim_dict = {0: old_dset._axes[0].copy(),
+                    1: old_dset._axes[2].copy(),
+                    2: old_dset._axes[3].copy()}
+
+        validate_dataset_properties(self, sliced, self.dset.compute()[:, 2],
+                                    title=self.dset.title, quantity=self.dset.quantity,
+                                    units=self.dset.units,
+                                    modality=self.dset.modality, source=self.dset.source,
+                                    dimension_dict=dim_dict,
+                                    data_type=self.dset.data_type,
+                                    metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
+
+        # # Set axis information
+        # dset._axes[0] = np.linspace(0, 1, 10)
+        #
+        # # Perform slicing operation
+        # sliced = dset[3]
+        #
+        # # Assert sliced data is correct
+        # self.assertEqual(sliced.data, 3)
+        #
+        # # Assert sliced axis information is correct
+        # expected_axes = {
+        #     0: np.array([0.3])
+        # }
+        # self.assertEqual(sliced._axes, expected_axes)
+
+    def test_getitem_slice(self):
+        pass
+
+
 if __name__ == '__main__':
     unittest.main()

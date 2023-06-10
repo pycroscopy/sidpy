@@ -14,6 +14,7 @@ import sys
 import numpy as np
 from enum import Enum
 from sidpy.base.string_utils import validate_single_string_arg
+import copy
 
 __all__ = ['Dimension', 'DimensionType']
 
@@ -111,10 +112,35 @@ class Dimension(np.ndarray):
     def __str__(self):
         return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units, self.shape)
 
+    # def __copy__(self):
+    #     new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
+    #     new_dim.dimension_type = self.dimension_type
+    #     return new_dim
+
     def __copy__(self):
-        new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
-        new_dim.dimension_type = self.dimension_type
-        return new_dim
+        # Create a new instance of Dimension
+        new_instance = Dimension(
+            copy.copy(np.array(self)),
+            copy.copy(self.name),
+            copy.copy(self.quantity),
+            copy.copy(self.units),
+            copy.copy(self.dimension_type)
+        )
+
+        return new_instance
+
+    def __deepcopy__(self, memo):
+        # Create a new instance of Dimension
+        new_instance = Dimension(
+            copy.deepcopy(np.array(self), memo),
+            copy.deepcopy(self.name, memo),
+            copy.deepcopy(self.quantity, memo),
+            copy.deepcopy(self.units, memo),
+            copy.deepcopy(self.dimension_type, memo)
+        )
+
+        return new_instance
+
 
     # TODO: Implement equality
 
