@@ -96,7 +96,7 @@ class Dimension(np.ndarray):
             return
         self.name = getattr(obj, 'name', 'generic')
         self.quantity = getattr(obj, 'quantity', 'generic')
-        self.units = getattr(obj, 'name', 'units')
+        self.units = getattr(obj, 'units', 'generic')
         self.dimension_type = getattr(obj, 'dimension_type', 'UNKNOWN')
 
 
@@ -130,6 +130,9 @@ class Dimension(np.ndarray):
         return new_instance
 
     def __deepcopy__(self, memo):
+        # TODO: Check how the memo keyword should be handled inside deepcopy
+        # For now this is what chatGPT came up with and it does not break any tests
+
         # Create a new instance of Dimension
         new_instance = Dimension(
             copy.deepcopy(np.array(self), memo),

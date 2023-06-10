@@ -41,6 +41,12 @@ from .dimension import DimensionType
 from copy import deepcopy, copy
 
 
+def is_simple_list(lst):
+    if isinstance(lst, list):
+        return any(hasattr(item, '__getitem__') for item in lst)
+    return False
+
+
 class DataType(Enum):
     UNKNOWN = -1
     SPECTRUM = 1
@@ -1461,7 +1467,6 @@ class Dataset(da.Array):
             # For example: dset[4] or dset[None]
             idx = tuple([idx])
 
-        print(idx)
         # The following line creates a new sidpy dataset with generic dimensions and ..
         # all the other attributes copied from 'self' aka parent dataset.
         sliced = self.like_data(super().__getitem__(idx), checkdims=False)
@@ -1478,14 +1483,28 @@ class Dataset(da.Array):
                 k += 1
             elif isinstance(ind, (int, np.integer)):
                 j += 1
-            elif isinstance(ind, (slice, np.ndarray, list, da.Array)):
+            elif isinstance(ind, (slice, list)):
                 old_dim = old_dims[j]
-                sliced.set_dimension(k, Dimension(old_dim[ind],
+                sliced.set_dimension(k, Dimension(old_dim[ind].values,
                                                   name=old_dim.name, quantity=old_dim.quantity,
                                                   units=old_dim.units,
                                                   dimension_type=old_dim.dimension_type))
                 j += 1
                 k += 1
+
+            elif isinstance(ind, (np.ndarray, da.Array)):
+                if not ind.ndim == 1:
+                    raise NotImplementedError('Multi Dimensional Slicing of sidpy Dataset'
+                                              'is not available at this moment, please'
+                                              'raise an issue on out GitHub page')
+                old_dim = old_dims[j]
+                sliced.set_dimension(k, Dimension(old_dim[np.array(ind)].values,
+                                                  name=old_dim.name, quantity=old_dim.quantity,
+                                                  units=old_dim.units,
+                                                  dimension_type=old_dim.dimension_type))
+                j += 1
+                k += 1
+
             elif ind is Ellipsis:
                 start_dim = idx.index(Ellipsis)
                 ellipsis_dims = sliced.ndim - (len(idx) - 1)
@@ -1500,7 +1519,7 @@ class Dataset(da.Array):
         # Adding the rest of the dimensions
         for k in range(k, sliced.ndim):
             old_dim = old_dims[j]
-            sliced.set_dimension(k, Dimension(old_dim,
+            sliced.set_dimension(k, Dimension(old_dim.values,
                                               name=old_dim.name, quantity=old_dim.quantity,
                                               units=old_dim.units,
                                               dimension_type=old_dim.dimension_type))

@@ -14,6 +14,7 @@ import dask.array as da
 import string
 import ase.build
 import sys
+from copy import copy, deepcopy
 
 sys.path.insert(0, "../../sidpy/")
 
@@ -789,23 +790,112 @@ class TestSlicing(unittest.TestCase):
                                     data_type=self.dset.data_type,
                                     metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
 
-        # # Set axis information
-        # dset._axes[0] = np.linspace(0, 1, 10)
-        #
-        # # Perform slicing operation
-        # sliced = dset[3]
-        #
-        # # Assert sliced data is correct
-        # self.assertEqual(sliced.data, 3)
-        #
-        # # Assert sliced axis information is correct
-        # expected_axes = {
-        #     0: np.array([0.3])
-        # }
-        # self.assertEqual(sliced._axes, expected_axes)
+    def test_getitem_NoneandEllipsis1(self):
+        old_dset = self.dset
+        sliced = self.dset[..., None, :]
 
-    def test_getitem_slice(self):
-        pass
+        dim_dict = {0: old_dset._axes[0].copy(),
+                    1: old_dset._axes[1].copy(),
+                    2: old_dset._axes[2].copy(),
+                    3: Dimension(1),
+                    4: old_dset._axes[3].copy()}
+
+        validate_dataset_properties(self, sliced, self.dset.compute()[..., None, :],
+                                    title=self.dset.title, quantity=self.dset.quantity,
+                                    units=self.dset.units,
+                                    modality=self.dset.modality, source=self.dset.source,
+                                    dimension_dict=dim_dict,
+                                    data_type=self.dset.data_type,
+                                    metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
+
+    def test_getitem_NoneandEllipsis2(self):
+        old_dset = self.dset
+
+        sliced = self.dset[None, ..., None]
+        dim_dict = {0: Dimension(1),
+                    1: old_dset._axes[0].copy(),
+                    2: old_dset._axes[1].copy(),
+                    3: old_dset._axes[2].copy(),
+                    4: old_dset._axes[3].copy(),
+                    5: Dimension(1)}
+
+        validate_dataset_properties(self, sliced, self.dset.compute()[None, ..., None],
+                                    title=self.dset.title, quantity=self.dset.quantity,
+                                    units=self.dset.units,
+                                    modality=self.dset.modality, source=self.dset.source,
+                                    dimension_dict=dim_dict,
+                                    data_type=self.dset.data_type,
+                                    metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
+
+    def test_getitem_slice1(self):
+        old_dset = self.dset
+        sliced = self.dset[0:1]
+
+        dim_dict = {0: deepcopy(old_dset._axes[0][0:1]),
+                    1: deepcopy(old_dset._axes[1]),
+                    2: deepcopy(old_dset._axes[2]),
+                    3: deepcopy(old_dset._axes[3])}
+
+        validate_dataset_properties(self, sliced, self.dset.compute()[0:1],
+                                    title=self.dset.title, quantity=self.dset.quantity,
+                                    units=self.dset.units,
+                                    modality=self.dset.modality, source=self.dset.source,
+                                    dimension_dict=dim_dict,
+                                    data_type=self.dset.data_type,
+                                    metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
+
+    def test_getitem_slice2(self):
+        old_dset = self.dset
+        sliced = self.dset[0:3]
+
+        dim_dict = {0: deepcopy(old_dset._axes[0][0:3]),
+                    1: deepcopy(old_dset._axes[1]),
+                    2: deepcopy(old_dset._axes[2]),
+                    3: deepcopy(old_dset._axes[3])}
+
+        validate_dataset_properties(self, sliced, self.dset.compute()[0:3],
+                                    title=self.dset.title, quantity=self.dset.quantity,
+                                    units=self.dset.units,
+                                    modality=self.dset.modality, source=self.dset.source,
+                                    dimension_dict=dim_dict,
+                                    data_type=self.dset.data_type,
+                                    metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
+
+    def test_getitem_nparray(self):
+        old_dset = self.dset
+        inds = np.random.choice([True, False], size=old_dset.shape[2])
+        sliced = old_dset[:, :, inds, :]
+
+        dim_dict = {0: deepcopy(old_dset._axes[0]),
+                    1: deepcopy(old_dset._axes[1]),
+                    2: deepcopy(old_dset._axes[2])[inds],
+                    3: deepcopy(old_dset._axes[3])}
+
+        validate_dataset_properties(self, sliced, self.dset.compute()[:, :, inds, :],
+                                    title=self.dset.title, quantity=self.dset.quantity,
+                                    units=self.dset.units,
+                                    modality=self.dset.modality, source=self.dset.source,
+                                    dimension_dict=dim_dict,
+                                    data_type=self.dset.data_type,
+                                    metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
+
+    def test_getitem_daarray(self):
+        old_dset = self.dset
+        inds = da.array(np.random.choice([True, False], size=old_dset.shape[3]))
+        sliced = old_dset[..., inds]
+
+        dim_dict = {0: deepcopy(old_dset._axes[0]),
+                    1: deepcopy(old_dset._axes[1]),
+                    2: deepcopy(old_dset._axes[2]),
+                    3: deepcopy(old_dset._axes[3])[np.array(inds)]}
+
+        validate_dataset_properties(self, sliced, self.dset.compute()[..., inds],
+                                    title=self.dset.title, quantity=self.dset.quantity,
+                                    units=self.dset.units,
+                                    modality=self.dset.modality, source=self.dset.source,
+                                    dimension_dict=dim_dict,
+                                    data_type=self.dset.data_type,
+                                    metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
 
 
 if __name__ == '__main__':
