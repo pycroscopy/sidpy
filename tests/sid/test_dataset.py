@@ -743,6 +743,7 @@ class Testmeanmethod(unittest.TestCase):
 
 
 class TestSlicing(unittest.TestCase):
+    np.random.seed(0)
     values = np.random.rand(3, 4, 6, 5)
     dset = Dataset.from_array(values, title='4D_STEM', units='nA',
                               quantity='Current',
