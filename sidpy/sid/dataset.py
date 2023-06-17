@@ -450,6 +450,7 @@ class Dataset(da.Array):
                              )
 
         dim = dimension.copy()
+        dim._dataset = self
 
         try:
             if hasattr(self, self._axes[ind].name):
