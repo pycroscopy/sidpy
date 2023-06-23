@@ -84,20 +84,20 @@ class Dimension(np.ndarray):
         if np.array(values).ndim != 1:
             raise ValueError('Dimension can only be 1 dimensional')
         new_dim = np.asarray(values, dtype=float).view(cls)
-        new_dim.name = name
-        new_dim.quantity = quantity
-        new_dim.units = units
-        new_dim.dimension_type = dimension_type
+        new_dim._name = name
+        new_dim._quantity = quantity
+        new_dim._units = units
+        new_dim._dimension_type = dimension_type
         return new_dim
 
     def __array_finalize__(self, obj):
         # see InfoArray.__array_finalize__ for comments
         if obj is None:
             return
-        self.name = getattr(obj, 'name', 'generic')
-        self.quantity = getattr(obj, 'quantity', 'generic')
-        self.units = getattr(obj, 'units', 'generic')
-        self.dimension_type = getattr(obj, 'dimension_type', 'UNKNOWN')
+        self._name = getattr(obj, '_name', 'generic')
+        self._quantity = getattr(obj, '_quantity', 'generic')
+        self._units = getattr(obj, '_units', 'generic')
+        self._dimension_type = getattr(obj, '_dimension_type', 'UNKNOWN')
 
 
     def __array_wrap__(self, out_arr, context=None):
@@ -120,7 +120,7 @@ class Dimension(np.ndarray):
     def __copy__(self):
         # Create a new instance of Dimension
         new_instance = Dimension(
-            copy.copy(np.array(self)),
+            copy.copy(self.values),
             copy.copy(self.name),
             copy.copy(self.quantity),
             copy.copy(self.units),
@@ -130,12 +130,11 @@ class Dimension(np.ndarray):
         return new_instance
 
     def __deepcopy__(self, memo):
-        # TODO: Check how the memo keyword should be handled inside deepcopy
         # For now this is what chatGPT came up with and it does not break any tests
 
         # Create a new instance of Dimension
         new_instance = Dimension(
-            copy.deepcopy(np.array(self), memo),
+            copy.deepcopy(self.values, memo),
             copy.deepcopy(self.name, memo),
             copy.deepcopy(self.quantity, memo),
             copy.deepcopy(self.units, memo),
@@ -162,9 +161,12 @@ class Dimension(np.ndarray):
     def name(self):
         return self._name
 
-    @name.setter
-    def name(self, value):
-        self._name = validate_single_string_arg(value, 'name')
+    # @name.setter
+    # def name(self, value):
+    #     raise NotImplementedError("Cannot change the name of the dimension. "
+    #                               "If the dimension is associated with the dataset, please try"
+    #                               "dataset.rename_dimension")
+    #     # self._name = validate_single_string_arg(value, 'name')
 
     @property
     def quantity(self):
@@ -206,6 +208,10 @@ class Dimension(np.ndarray):
     @property
     def values(self):
         return np.array(self)
+
+    # @values.setter
+    # def values(self, value):
+    #     isinstance(np.ndarray)
 
     def __eq__(self, other):
         if not isinstance(other, Dimension):
