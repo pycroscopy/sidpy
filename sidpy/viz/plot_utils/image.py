@@ -275,7 +275,7 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
     ---------
     fig, axes
     """
-    plt.rcParams["mpl_toolkits.legacy_colorbar"] = False
+#    plt.rcParams["mpl_toolkits.legacy_colorbar"] = False
 
     if not isinstance(map_stack, (np.ndarray, da.core.Array)) or not map_stack.ndim == 3:
         raise TypeError('map_stack should be a 3 dimensional array arranged as [component, row, col]')
@@ -385,14 +385,17 @@ def plot_map_stack(map_stack, num_comps=9, stdevs=2, color_bar_mode=None, evenly
                      axes_pad=(pad_w * fig_w, pad_h * fig_h),
                      **igkwargs)
 
-    fig.canvas.set_window_title(title)
+    try:
+        fig.canvas.set_window_title(title)
+    except:
+        fig.canvas.manager.set_window_title(title)
     # These parameters have not been easy to fix:
     if title_yoffset is None:
         title_yoffset = 0.9
     if title_size is None:
         title_size = 16 + (p_rows + p_cols)
     fig.suptitle(title, fontsize=title_size, y=title_yoffset)
-    plt.rcParams["mpl_toolkits.legacy_colorbar"] = False
+#    plt.rcParams["mpl_toolkits.legacy_colorbar"] = False
 
     for count, index, curr_subtitle in zip(range(chosen_pos.size), chosen_pos, subtitle):
         im, im_cbar = plot_map(axes[count],
