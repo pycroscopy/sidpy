@@ -51,6 +51,7 @@ class DataType(Enum):
     IMAGE_STACK = 6
     SPECTRAL_IMAGE = 7
     IMAGE_4D = 8
+    POINT_CLOUD = 9
 
 
 def view_subclass(dask_array, cls):
