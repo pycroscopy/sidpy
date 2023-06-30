@@ -38,7 +38,13 @@ from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisual
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, ComplexSpectralImageVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
-from copy import deepcopy
+from copy import deepcopy, copy
+
+
+def is_simple_list(lst):
+    if isinstance(lst, list):
+        return any(hasattr(item, '__getitem__') for item in lst)
+    return False
 
 
 class DataType(Enum):
@@ -214,7 +220,7 @@ class Dataset(da.Array):
         """
 
         # create vanilla dask array
-        if isinstance(x, da.Array):
+        if isinstance(x, da.Array) and not np.any(np.isnan(x.shape)):
             dask_array = x
         else:
             dask_array = da.from_array(np.array(x), chunks=chunks, lock=lock)
@@ -1456,6 +1462,12 @@ class Dataset(da.Array):
 
     def __getitem__(self, idx):
 
+        # Here we need to modify the dimensions of the sliced dataset using the argument index
+        if not isinstance(idx, tuple):
+            # This comes into play when slicing is done using 'None' or just integers.
+            # For example: dset[4] or dset[None]
+            idx = tuple([idx])
+
         # The following line creates a new sidpy dataset with generic dimensions and ..
         # all the other attributes copied from 'self' aka parent dataset.
         sliced = self.like_data(super().__getitem__(idx), checkdims=False)
@@ -1463,13 +1475,7 @@ class Dataset(da.Array):
         # Delete the dimensions created by like_data
         sliced._axes.clear()
 
-        # Here we need to modify the dimensions of the sliced dataset using the argument index
-        if not isinstance(idx, tuple):
-            # This comes into play when slicing is done using 'None' or just integers.
-            # For example: dset[4] or dset[None]
-            idx = tuple([idx])
-
-        old_dims = deepcopy(self._axes)
+        old_dims = copy(self._axes)
         j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
 
         for ind in idx:
@@ -1478,18 +1484,33 @@ class Dataset(da.Array):
                 k += 1
             elif isinstance(ind, (int, np.integer)):
                 j += 1
-            elif isinstance(ind, (slice, np.ndarray, list)):
+            elif isinstance(ind, (slice, list)):
                 old_dim = old_dims[j]
-                sliced.set_dimension(k, Dimension(old_dim[ind],
+                sliced.set_dimension(k, Dimension(old_dim[ind].values,
                                                   name=old_dim.name, quantity=old_dim.quantity,
                                                   units=old_dim.units,
                                                   dimension_type=old_dim.dimension_type))
                 j += 1
                 k += 1
+
+            elif isinstance(ind, (np.ndarray, da.Array)):
+                if not ind.ndim == 1:
+                    raise NotImplementedError('Multi Dimensional Slicing of sidpy Dataset'
+                                              'is not available at this moment, please'
+                                              'raise an issue on out GitHub page')
+                old_dim = old_dims[j]
+                sliced.set_dimension(k, Dimension(old_dim[np.array(ind)].values,
+                                                  name=old_dim.name, quantity=old_dim.quantity,
+                                                  units=old_dim.units,
+                                                  dimension_type=old_dim.dimension_type))
+                j += 1
+                k += 1
+
             elif ind is Ellipsis:
                 start_dim = idx.index(Ellipsis)
-                ellipsis_dims = self.ndim - (len(idx) - 1)
+                ellipsis_dims = sliced.ndim - (len(idx) - 1)
                 stop_dim = start_dim + ellipsis_dims
+
                 for l in range(start_dim, stop_dim):
                     old_dim = old_dims[j]
                     sliced.set_dimension(k, old_dim)
@@ -1499,7 +1520,7 @@ class Dataset(da.Array):
         # Adding the rest of the dimensions
         for k in range(k, sliced.ndim):
             old_dim = old_dims[j]
-            sliced.set_dimension(k, Dimension(old_dim,
+            sliced.set_dimension(k, Dimension(old_dim.values,
                                               name=old_dim.name, quantity=old_dim.quantity,
                                               units=old_dim.units,
                                               dimension_type=old_dim.dimension_type))
