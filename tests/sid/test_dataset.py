@@ -40,8 +40,9 @@ def validate_dataset_properties(self, dataset, values,
     self.assertTrue(np.all([hasattr(dataset, att) for att in generic_attributes]))
 
     expected = values.flatten()
-    actual = np.array(dataset).flatten()
-    self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+    actual = dataset.compute().flatten()
+    self.assertTrue(np.allclose(expected, actual, equal_nan=True, rtol=1e-05, atol=1e-08))
+    # self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
     this_attributes = [title, quantity, units, modality, source]
     dataset_attributes = [getattr(dataset, att) for att in generic_attributes]

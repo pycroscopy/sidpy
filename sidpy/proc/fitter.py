@@ -98,6 +98,7 @@ class SidFitter:
         self.dataset = sidpy_dataset  # Sidpy dataset
         self.fit_fn = fit_fn  # function that takes xvec, *parameters and returns yvec at each value of xvec
         self.num_fit_parms = num_fit_parms  # int: number of fitting parameters
+        self._complex_data = False  # if data is complex. Will be checked during guess/fit as needed.
 
         if ind_dims is not None:
             self.ind_dims = tuple(ind_dims)  # Tuple: containing indices of independent dimensions
@@ -153,7 +154,7 @@ class SidFitter:
 
         # Dealing with the meshgrid part of multidimensional fitting
         if len(self.dep_dims) > 1:
-            self.dep_vec = [ar.ravel() for ar in np.meshgrid(*dep_dims)]
+            self.dep_vec = [ar.ravel() for ar in np.meshgrid(*dep_vec, indexing='ij')]
         else:
             self.dep_vec = dep_vec
 
@@ -174,12 +175,16 @@ class SidFitter:
         self.return_cov = return_cov
         self.return_fit = return_fit
         self.fitted_dset = None
+        self._numpy = True
 
         self.mean_fit_results = []
         if self.return_cov:
             self.cov_fit_results = None
         if self.return_std:
             self.std_fit_results = None
+
+        if 'complex' in self.dataset.dtype.name:
+            self._complex_data = True
         # set up dask client
         self.client = Client(threads_per_worker=self.threads, n_workers=self.num_workers)
 
@@ -204,8 +209,9 @@ class SidFitter:
         # information. To do this, unfold utilizes the saved information while folding the original dataset.
         # Here, we are going to tweak that information and use the unfold method on the dataset with fitted parameters.
 
-        self._unfold_attr = {'dim_order_flattened': list(np.arange(len(self.fold_order[0])))+[len(self.fold_order[0])],
-                             'shape_transposed': [self.dataset.shape[i] for i in self.fold_order[0]] + [-1]}
+        self._unfold_attr = {
+            'dim_order_flattened': list(np.arange(len(self.fold_order[0]))) + [len(self.fold_order[0])],
+            'shape_transposed': [self.dataset.shape[i] for i in self.fold_order[0]] + [-1]}
         axes, j = {}, 0
         for i, dim in self.dataset._axes.items():
             if not i in self.dep_dims:
@@ -225,7 +231,13 @@ class SidFitter:
         """
         guess_results = []
         for ind in range(self.num_computations):
-            lazy_result = dask.delayed(self.guess_fn)(self.dep_vec, self.folded_dataset[ind, :])
+            if self._numpy:
+                self.dep_vec=np.array(self.dep_vec)
+                ydata = np.array(self.folded_dataset)
+            else:
+                ydata = self.folded_dataset
+
+            lazy_result = dask.delayed(self.guess_fn)(self.dep_vec, ydata[ind, :])
             guess_results.append(lazy_result)
 
         guess_results = dask.compute(*guess_results)
@@ -253,9 +265,16 @@ class SidFitter:
                     p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
                 else:
                     p0 = self.prior[ind, :]
+                ydata = self.folded_dataset[ind, :]
+                if self._complex_data:
+                    ydata = ydata.flatten_complex()
 
+                #Convert to numpy - see if this makes it faster??
+                if self._numpy:
+                    ydata = np.array(ydata)
+                    self.dep_vec = np.array(self.dep_vec)
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
-                                                                        self.folded_dataset[ind, :],self.num_fit_parms,
+                                                                        ydata, self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),
                                                                         p0=p0, **kwargs)
                 fit_results.append(lazy_result)
@@ -264,10 +283,14 @@ class SidFitter:
             self.client.close()
 
         else:
-            self.get_km_priors()
+            self.get_km_priors(**kwargs)
             for ind in range(self.num_computations):
+                ydata = self.folded_dataset[ind, :]
+                if self._complex_data:
+                    ydata = ydata.flatten_complex()
+
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
-                                                                        self.folded_dataset[ind, :], self.num_fit_parms,
+                                                                        ydata, self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),
                                                                         p0=self.km_priors[self.km_labels[ind]],
                                                                         **kwargs)
@@ -386,22 +409,52 @@ class SidFitter:
         """This method returns the fitted dataset using the parameters generated by the fit function"""
         fitted_dset = self.dataset.like_data(np.zeros_like(self.dataset.compute()),
                                              title_prefix='fitted_')
-        fitted_dset_fold = fitted_dset.fold(dim_order=self.fold_order)
 
+        fitted_dset_fold = fitted_dset.fold(dim_order=self.fold_order)
+        output_shape = np.prod(fitted_dset_fold.shape[1:])
+        user_folding = False
+        ydata_fit = self.fit_fn(self.dep_vec, *self.mean_fit_results[0])
+
+        # print(r"ydata shape is {} and squeezed is {}".format(ydata_fit.shape, ydata_fit.squeeze().shape))
+        if ydata_fit.squeeze().shape[0] != output_shape:
+            print('Shapes of output of fitting function is {} and original data is {} \
+                  Reshaping output dataset. You are responsible for reshaping'.format(ydata_fit.shape[0],
+                                                                                      output_shape,
+                                                                                      ))
+
+            fitted_dset_fold = self.dataset.like_data(np.zeros((fitted_dset_fold.shape[0], ydata_fit.shape[0])),
+                                                      title_prefix='fitted_')
+            user_folding = True
         # Here we make a roundtrip to numpy as earlier versions of dask did not support the assignments
         # of the form dask_array[2] = 1
 
         np_folded_arr = fitted_dset_fold.compute()
         for i in range(np_folded_arr.shape[0]):
-            np_folded_arr[i] = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
+            # ydata_fit = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
+            # print('dep vec is {} and mean fit results are {}'.format(self.dep_vec,self.mean_fit_results[i]))
+            fit_output = self.fit_fn(self.dep_vec, *self.mean_fit_results[i])
+            # print('ydata output from fitting fn is {}'.format(fit_output))
+            if fit_output.shape != np_folded_arr[i].shape:
+                try:
+                    np_folded_arr[i] = fit_output.reshape(np_folded_arr[i].shape)
+                except:
+                    print("Cannot reshape function output to retrieve fitted dataset")
+            else:
+                np_folded_arr[i] = fit_output
 
-        fitted_sid_dset_folded = fitted_dset_fold.like_data(np_folded_arr, title=fitted_dset_fold.title)
-        fitted_sid_dset = fitted_sid_dset_folded.unfold()
-        fitted_sid_dset.original_metadata = self.dataset.original_metadata.copy()
+        if not user_folding:
+            fitted_sid_dset_folded = fitted_dset_fold.like_data(np_folded_arr, title=fitted_dset_fold.title)
+            fitted_sid_dset = fitted_sid_dset_folded.unfold()
+            fitted_sid_dset.original_metadata = self.dataset.original_metadata.copy()
+        else:
+            fitted_sid_dset = fitted_dset_fold.like_data(np_folded_arr, title=fitted_dset_fold.title)
+            fitted_sid_dset.original_metadata = self.dataset.original_metadata.copy()
         self.fitted_dset = fitted_sid_dset
         return fitted_sid_dset
 
-    def get_km_priors(self):
+    def get_km_priors(self, **kwargs):
+        kwargs['maxfev'] = 1000  # give a large number of tries for fitting the kmeans cluster centers
+
         shape = self.folded_dataset.shape  # We get the shape of the folded dataset
         # Our prior_dset will have the same shape except for the last dimension whose size will be equal to number of
         # fitting parameters
@@ -410,11 +463,11 @@ class SidFitter:
         # In that case we need all the spectral dimensions collapsed into a single dimension for kMeans
         # In case of a 1D fit the next line essentially does nothing.
         km_dset = self.folded_dataset.fold(dim_order)
-        print(km_dset, km_dset.dtype)
-        if 'complex' in km_dset.dtype.name:
+
+        if self._complex_data:
             print('Warning: complex dataset detected. For Kmeans priors, we will treat real part only')
-            km_dset = np.abs(km_dset)
-        
+            km_dset = km_dset.real
+
         if KMeans is None:
             raise ModuleNotFoundError("sklearn is not installed")
         else:
@@ -422,21 +475,30 @@ class SidFitter:
                 self.n_clus = int(self.num_computations / 100)
             km = KMeans(n_clusters=self.n_clus, random_state=0).fit(km_dset.compute())
 
-        self.km_labels, centers = km.labels_, km.cluster_centers_
+        self.km_labels, self.km_centers = km.labels_, km.cluster_centers_
+        if self._complex_data:
+            km_dset = np.array(self.folded_dataset.fold(dim_order))
+            self.km_centers = []
+            # in the case of complex data, the centers have to be recomputed based on the labels
+            for ind_l in range(self.n_clus):
+                self.km_centers.append(np.mean(km_dset[self.km_labels == ind_l, :], axis=0))
+            self.km_centers = np.array(self.km_centers)
+
         km_priors = []
-        for i, cen in enumerate(centers):
+        for i, cen in enumerate(self.km_centers):
             if self.guess_fn is not None:
                 p0 = self.guess_fn(self.dep_vec, cen)
             else:
                 p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
-
+            if self._complex_data:
+                cen = np.hstack([np.real(cen), np.imag(cen)])
             km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
                                                          return_cov=False,
-                                                         p0=p0, maxfev=10000))
+                                                         p0=p0, **kwargs))
         self.km_priors = np.array(km_priors)
         self.num_fit_parms = self.km_priors.shape[-1]
 
-    def visualize_fit_results(self, figure = None, horizontal = True):
+    def visualize_fit_results(self, figure=None, horizontal=True):
         '''
         Calls the interactive visualizer for comparing raw and fit datasets.
 
@@ -445,25 +507,23 @@ class SidFitter:
             - horiziontal: (Optional, default True) - whether spectrum should be plotted horizontally
 
         '''
-        dset_type = self.dataset.data_type 
+        dset_type = self.dataset.data_type
         supported_types = ['SPECTRAL_IMAGE']
         if self.fitted_dset == None:
             raise NotFoundErr("No fitted dataset found. Re-run with return_fit=True to use this feature")
         if dset_type == DataType.SPECTRAL_IMAGE:
             visualizer = SpectralImageFitVisualizer(self.dataset, self.fitted_dset,
-                    figure=figure, horizontal=horizontal)
+                                                    figure=figure, horizontal=horizontal)
         else:
-            raise NotImplementedError("Data type is {} but currently we only support types {}".format(dset_type, supported_types))
-        
-        return visualizer
+            raise NotImplementedError(
+                "Data type is {} but currently we only support types {}".format(dset_type, supported_types))
 
+        return visualizer
 
     @staticmethod
     def default_curve_fit(fit_fn, xvec, yvec, num_fit_parms, return_cov=True, **kwargs):
-        xvec = np.array(xvec)
-        yvec = np.array(yvec)
-        yvec = yvec.ravel()
-        xvec = xvec.ravel()
+
+        yvec = np.array(yvec).ravel()
         if curve_fit is None:
             raise ModuleNotFoundError("scipy is not installed")
         else:

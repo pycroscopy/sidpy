@@ -340,27 +340,30 @@ def gauss_2D(fitting_space, *parms):
     yo = float(yo)
     r = ((x - xo) ** 2 + (y - yo) ** 2) ** .5
     g = amplitude * np.exp(-(r / sigma) ** 2) + offset
+
     return g.ravel()
 
 
 def make_4D_dataset(shape=(32, 16, 64, 48)):
     dataset = np.zeros(shape=shape, dtype=np.float64)
     xlen, ylen, kxlen, kylen = shape
-    kx, ky = np.meshgrid(np.linspace(0, 5, kxlen), np.linspace(0, 6, kylen))
+    kx, ky = np.meshgrid(np.linspace(0, 11, kxlen), np.linspace(0, 5, kylen), indexing='ij')
+    true_parms = np.zeros((dataset.shape[0], dataset.shape[1], 5))
 
     for row in range(xlen):
         for col in range(ylen):
             amp = np.sqrt(row * col // xlen * ylen) + 3.5
             sigma = np.random.normal(loc=2.5, scale=0.34)
             offset = 0.1  # col
-            xo = np.random.uniform(low=0, high=5)
-            yo = np.random.uniform(low=0, high=6)
-
+            xo = np.random.uniform(low=0, high=6)
+            yo = np.random.uniform(low=0, high=5)
+            cur_parms = [amp, xo, yo, sigma, offset]
+            true_parms[row, col, :] = cur_parms
             # amplitude, xo, yo, sigma, offset
-            gauss_mat = gauss_2D([kx.ravel(), ky.ravel()], *[amp, xo, yo, sigma, offset])
-            gauss_mat += np.mean(gauss_mat) / 4 * np.random.normal(size=len(gauss_mat))
-            gauss_mat = gauss_mat.reshape(kx.shape[0], kx.shape[1])
-            dataset[row, col, :, :] = gauss_mat.T
+            gauss_mat = gauss_2D([kx.ravel(), ky.ravel()], *cur_parms)
+            gauss_mat += np.mean(gauss_mat) / 2 * np.random.normal(size=len(gauss_mat))
+            gauss_mat = gauss_mat.reshape([kxlen, kylen])
+            dataset[row, col, :, :] = gauss_mat
 
     # Now make it a sidpy dataset
     parms_dict = {'info_1': np.linspace(0, 5.6, 30), 'instrument': 'opportunity rover AFM'}
@@ -369,10 +372,10 @@ def make_4D_dataset(shape=(32, 16, 64, 48)):
     # Specify dimensions
     x_dim = np.linspace(0, 1E-6,
                         dataset.shape[0])
-    y_dim = np.linspace(0, 1E-6,
+    y_dim = np.linspace(0, 2E-6,
                         dataset.shape[1])
-    kx_dim = np.linspace(0, 5, kxlen)
-    ky_dim = np.linspace(0, 6, kylen)
+    kx_dim = np.linspace(0, 11, kxlen)
+    ky_dim = np.linspace(0, 5, kylen)
 
     # Make a sidpy dataset
     data_set = sid.Dataset.from_array(dataset, name='4D_STEM')
