@@ -81,9 +81,7 @@ class TestIsValidFile(unittest.TestCase):
 
     def test_folder(self):
         self.assertEqual(self.translator.is_valid_file(os.path.abspath(
-            './sidpy'),
-                                                       extension='.txt'),
-                         None)
+            './sidpy'),extension='.txt'), None)
 
 
 class TestTranslateNotImplemented(unittest.TestCase):
