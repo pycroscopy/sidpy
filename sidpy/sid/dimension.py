@@ -14,6 +14,7 @@ import sys
 import numpy as np
 from enum import Enum
 from sidpy.base.string_utils import validate_single_string_arg
+import copy
 
 __all__ = ['Dimension', 'DimensionType']
 
@@ -83,20 +84,20 @@ class Dimension(np.ndarray):
         if np.array(values).ndim != 1:
             raise ValueError('Dimension can only be 1 dimensional')
         new_dim = np.asarray(values, dtype=float).view(cls)
-        new_dim.name = name
-        new_dim.quantity = quantity
-        new_dim.units = units
-        new_dim.dimension_type = dimension_type
+        new_dim._name = name
+        new_dim._quantity = quantity
+        new_dim._units = units
+        new_dim._dimension_type = dimension_type
         return new_dim
 
     def __array_finalize__(self, obj):
         # see InfoArray.__array_finalize__ for comments
         if obj is None:
             return
-        self.name = getattr(obj, 'name', 'generic')
-        self.quantity = getattr(obj, 'quantity', 'generic')
-        self.units = getattr(obj, 'name', 'units')
-        self.dimension_type = getattr(obj, 'dimension_type', 'UNKNOWN')
+        self._name = getattr(obj, '_name', 'generic')
+        self._quantity = getattr(obj, '_quantity', 'generic')
+        self._units = getattr(obj, '_units', 'generic')
+        self._dimension_type = getattr(obj, '_dimension_type', 'UNKNOWN')
 
 
     def __array_wrap__(self, out_arr, context=None):
@@ -111,10 +112,37 @@ class Dimension(np.ndarray):
     def __str__(self):
         return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units, self.shape)
 
+    # def __copy__(self):
+    #     new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
+    #     new_dim.dimension_type = self.dimension_type
+    #     return new_dim
+
     def __copy__(self):
-        new_dim = Dimension(np.array(self), name=self.name, quantity=self.quantity, units=self.units)
-        new_dim.dimension_type = self.dimension_type
-        return new_dim
+        # Create a new instance of Dimension
+        new_instance = Dimension(
+            copy.copy(self.values),
+            copy.copy(self.name),
+            copy.copy(self.quantity),
+            copy.copy(self.units),
+            copy.copy(self.dimension_type)
+        )
+
+        return new_instance
+
+    def __deepcopy__(self, memo):
+        # For now this is what chatGPT came up with and it does not break any tests
+
+        # Create a new instance of Dimension
+        new_instance = Dimension(
+            copy.deepcopy(self.values, memo),
+            copy.deepcopy(self.name, memo),
+            copy.deepcopy(self.quantity, memo),
+            copy.deepcopy(self.units, memo),
+            copy.deepcopy(self.dimension_type, memo)
+        )
+
+        return new_instance
+
 
     # TODO: Implement equality
 
@@ -133,9 +161,12 @@ class Dimension(np.ndarray):
     def name(self):
         return self._name
 
-    @name.setter
-    def name(self, value):
-        self._name = validate_single_string_arg(value, 'name')
+    # @name.setter
+    # def name(self, value):
+    #     raise NotImplementedError("Cannot change the name of the dimension. "
+    #                               "If the dimension is associated with the dataset, please try"
+    #                               "dataset.rename_dimension")
+    #     # self._name = validate_single_string_arg(value, 'name')
 
     @property
     def quantity(self):
@@ -177,6 +208,10 @@ class Dimension(np.ndarray):
     @property
     def values(self):
         return np.array(self)
+
+    # @values.setter
+    # def values(self, value):
+    #     isinstance(np.ndarray)
 
     def __eq__(self, other):
         if not isinstance(other, Dimension):
