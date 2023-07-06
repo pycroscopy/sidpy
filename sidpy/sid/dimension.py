@@ -99,7 +99,6 @@ class Dimension(np.ndarray):
         self.units = getattr(obj, '_units', 'generic')
         self.dimension_type = getattr(obj, '_dimension_type', 'UNKNOWN')
 
-
     def __array_wrap__(self, out_arr, context=None):
         # just call the parent
         super(Dimension, self).__array_wrap__(self, out_arr, context)
@@ -143,7 +142,6 @@ class Dimension(np.ndarray):
 
         return new_instance
 
-
     # TODO: Implement equality
 
     # TODO: Find out how to get rid of this
@@ -163,9 +161,10 @@ class Dimension(np.ndarray):
 
     @name.setter
     def name(self, value):
-        raise NotImplementedError("Cannot change the name of the dimension. "
-                                  "If the dimension is associated with the dataset, please try"
-                                  "dataset.rename_dimension")
+        raise AttributeError("Cannot change the name of the dimension. "
+                             "If the dimension is associated with the dataset, please try "
+                             "dataset.rename_dimension")
+
     #     # self._name = validate_single_string_arg(value, 'name')
 
     @property
@@ -193,7 +192,7 @@ class Dimension(np.ndarray):
         if isinstance(value, DimensionType):
             self._dimension_type = value
         else:
-            dimension_type = validate_single_string_arg(value,'dimension_type')
+            dimension_type = validate_single_string_arg(value, 'dimension_type')
 
             if dimension_type.upper() in [member.name for member in DimensionType]:
                 self._dimension_type = DimensionType[dimension_type.upper()]
@@ -226,6 +225,6 @@ class Dimension(np.ndarray):
             return False
         if not (np.array(self) == np.array(other)).all():
             return False
-        if not (self.values==other.values).all():
+        if not (self.values == other.values).all():
             return False
         return True
