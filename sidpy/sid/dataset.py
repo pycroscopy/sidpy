@@ -170,6 +170,8 @@ class Dataset(da.Array):
 
         self.view = None  # this will hold the figure and axis reference for a plot
 
+        self.__protected = set()  # a set to keep track of protected attributes
+
     def __repr__(self):
         rep = 'sidpy.Dataset of type {} with:\n '.format(self.data_type.name)
         rep = rep + super(Dataset, self).__repr__()
@@ -427,11 +429,18 @@ class Dataset(da.Array):
             raise TypeError('New Dimension name must be a string')
         if hasattr(self, self._axes[ind].name):
             delattr(self, self._axes[ind].name)
+        if self._axes[ind].name in self.__protected:
+            self.__protected.remove(self._axes[ind].name)
+
         if hasattr(self, 'dim_{}'.format(ind)):
             delattr(self, 'dim_{}'.format(ind))
-        self._axes[ind].name = name
+            self.__protected.remove('dim_{}'.format(ind))
+
+        self._axes[ind]._name = name  # protected attribute name
         setattr(self, name, self._axes[ind])
+        self.__protected.add(name)
         setattr(self, 'dim_{}'.format(ind), self._axes[ind])
+        self.__protected.add('dim_{}'.format(ind))
 
     def set_dimension(self, ind, dimension):
         """
@@ -464,11 +473,17 @@ class Dataset(da.Array):
         except KeyError:
             pass
 
+        if self._axes[ind].name in self.__protected:
+            self.__protected.remove(self._axes[ind].name)
+
+        self.__protected.add(dimension.name)
         setattr(self, dimension.name, dim)
 
         if hasattr(self, 'dim_{}'.format(ind)):
             delattr(self, 'dim_{}'.format(ind))
+            self.__protected.remove('dim_{}'.format(ind))  # we don't need this. But I am trying to be consistent
 
+        self.__protected.add('dim_{}'.format(ind))
         setattr(self, 'dim_{}'.format(ind), dim)
         self._axes[ind] = dim
 

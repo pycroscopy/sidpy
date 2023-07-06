@@ -161,11 +161,11 @@ class Dimension(np.ndarray):
     def name(self):
         return self._name
 
-    # @name.setter
-    # def name(self, value):
-    #     raise NotImplementedError("Cannot change the name of the dimension. "
-    #                               "If the dimension is associated with the dataset, please try"
-    #                               "dataset.rename_dimension")
+    @name.setter
+    def name(self, value):
+        raise NotImplementedError("Cannot change the name of the dimension. "
+                                  "If the dimension is associated with the dataset, please try"
+                                  "dataset.rename_dimension")
     #     # self._name = validate_single_string_arg(value, 'name')
 
     @property
