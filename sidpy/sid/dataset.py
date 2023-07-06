@@ -191,12 +191,12 @@ class Dataset(da.Array):
             self.h5_dataset.file.close()
             print(self.h5_dataset)
 
-    def __setattr__(self, key, value):
-        if hasattr(self, '_Dataset__protected') and key in self.__protected:
-            raise AttributeError(f"'{key}' attribute is protected as it is a name of the dimension "
-                                 f"and cannot be modified.")
-
-        super().__setattr__(key, value)
+    # def __setattr__(self, key, value):
+    #     if hasattr(self, '_Dataset__protected') and key in self.__protected:
+    #         raise AttributeError(f"'{key}' attribute is protected as it is a name of the dimension "
+    #                              f"and cannot be modified.")
+    #
+    #     super().__setattr__(key, value)
 
 
     @classmethod
