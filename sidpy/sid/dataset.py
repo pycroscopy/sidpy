@@ -429,8 +429,8 @@ class Dataset(da.Array):
             raise TypeError('New Dimension name must be a string')
         if hasattr(self, self._axes[ind].name):
             delattr(self, self._axes[ind].name)
-        if self._axes[ind].name in self.__protected:
-            self.__protected.remove(self._axes[ind].name)
+            if self._axes[ind].name in self.__protected:
+                self.__protected.remove(self._axes[ind].name)
 
         if hasattr(self, 'dim_{}'.format(ind)):
             delattr(self, 'dim_{}'.format(ind))
@@ -470,11 +470,10 @@ class Dataset(da.Array):
         try:
             if hasattr(self, self._axes[ind].name):
                 delattr(self, self._axes[ind].name)
+                if self._axes[ind].name in self.__protected:
+                    self.__protected.remove(self._axes[ind].name)
         except KeyError:
             pass
-
-        if self._axes[ind].name in self.__protected:
-            self.__protected.remove(self._axes[ind].name)
 
         self.__protected.add(dimension.name)
         setattr(self, dimension.name, dim)
