@@ -39,7 +39,7 @@ from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, C
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
 from copy import deepcopy, copy
-
+from sidpy.base.string_utils import validate_single_string_arg
 
 def is_simple_list(lst):
     if isinstance(lst, list):
@@ -436,7 +436,7 @@ class Dataset(da.Array):
             delattr(self, 'dim_{}'.format(ind))
             self.__protected.remove('dim_{}'.format(ind))
 
-        self._axes[ind]._name = name  # protected attribute name
+        self._axes[ind]._name = validate_single_string_arg(name, 'name')  # protected attribute name
         setattr(self, name, self._axes[ind])
         self.__protected.add(name)
         setattr(self, 'dim_{}'.format(ind), self._axes[ind])

@@ -84,20 +84,20 @@ class Dimension(np.ndarray):
         if np.array(values).ndim != 1:
             raise ValueError('Dimension can only be 1 dimensional')
         new_dim = np.asarray(values, dtype=float).view(cls)
-        new_dim._name = name
-        new_dim._quantity = quantity
-        new_dim._units = units
-        new_dim._dimension_type = dimension_type
+        new_dim._name = validate_single_string_arg(name, 'name')
+        new_dim.quantity = quantity
+        new_dim.units = units
+        new_dim.dimension_type = dimension_type
         return new_dim
 
     def __array_finalize__(self, obj):
         # see InfoArray.__array_finalize__ for comments
         if obj is None:
             return
-        self._name = getattr(obj, '_name', 'generic')
-        self._quantity = getattr(obj, '_quantity', 'generic')
-        self._units = getattr(obj, '_units', 'generic')
-        self._dimension_type = getattr(obj, '_dimension_type', 'UNKNOWN')
+        self._name = validate_single_string_arg(getattr(obj, '_name', 'generic'), 'name')
+        self.quantity = getattr(obj, '_quantity', 'generic')
+        self.units = getattr(obj, '_units', 'generic')
+        self.dimension_type = getattr(obj, '_dimension_type', 'UNKNOWN')
 
 
     def __array_wrap__(self, out_arr, context=None):
