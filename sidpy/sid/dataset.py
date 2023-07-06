@@ -191,6 +191,14 @@ class Dataset(da.Array):
             self.h5_dataset.file.close()
             print(self.h5_dataset)
 
+    def __setattr__(self, key, value):
+        if hasattr(self, '_Dataset__protected') and key in self.__protected:
+            raise AttributeError(f"'{key}' attribute is protected as it is a name of the dimension "
+                                 f"and cannot be modified.")
+
+        super().__setattr__(key, value)
+
+
     @classmethod
     def from_array(cls, x, title='generic', chunks='auto', lock=False,
                    datatype='UNKNOWN', units='generic', quantity='generic',
@@ -475,16 +483,16 @@ class Dataset(da.Array):
         except KeyError:
             pass
 
-        self.__protected.add(dimension.name)
         setattr(self, dimension.name, dim)
+        self.__protected.add(dimension.name)
 
         if hasattr(self, 'dim_{}'.format(ind)):
             delattr(self, 'dim_{}'.format(ind))
             self.__protected.remove('dim_{}'.format(ind))  # we don't need this. But I am trying to be consistent
 
-        self.__protected.add('dim_{}'.format(ind))
         setattr(self, 'dim_{}'.format(ind), dim)
         self._axes[ind] = dim
+        self.__protected.add('dim_{}'.format(ind))
 
     def view_metadata(self):
         """
