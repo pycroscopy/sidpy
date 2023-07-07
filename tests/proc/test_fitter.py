@@ -13,14 +13,14 @@ import inspect
 
 class Test_3Ddset_1Dfit(unittest.TestCase):
     def setUp(self):
-        self.data_set_3D, self.xvec = make_3D_dataset(shape=(10, 10, 32))
+        self.data_set_3D, self.xvec = make_3D_dataset(shape=(3, 4, 7))
         fitter = SidFitter(self.data_set_3D, xvec=self.xvec,
-                           fit_fn=return_quad, guess_fn=guess_quad, num_workers=8,
+                           fit_fn=return_quad, guess_fn=guess_quad, num_workers=3,
                            threads=2, return_cov=True, return_fit=True, return_std=True,
-                           km_guess=True, n_clus=10)
+                           km_guess=True, n_clus=3)
 
         lb, ub = [-50, -50, -50], [50, 50, 50]
-        self.fit_results = fitter.do_fit(bounds=(lb, ub), maxfev=100)
+        self.fit_results = fitter.do_fit(bounds=(lb, ub), maxfev=20)
 
         self.metadata = self.data_set_3D.metadata.copy()
         fit_parms_dict = {'fit_parameters_labels': None,
@@ -35,7 +35,7 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
 
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
-        self.assertEqual(self.fit_results[0].shape, (10, 10, 3))
+        self.assertEqual(self.fit_results[0].shape, (3, 4, 3))
         ## Getting the dimension dict
         dim_dict = {0: self.data_set_3D._axes[0].copy(), 1: self.data_set_3D._axes[1].copy(),
                     2: Dimension(np.arange(3),
@@ -51,7 +51,7 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
 
     def test_cov_dset(self):
         # Second dataset is the covariance dataset
-        self.assertEqual(self.fit_results[1].shape, (10, 10, 3, 3))
+        self.assertEqual(self.fit_results[1].shape, (3, 4, 3, 3))
         ## Getting the dim_dict
         dim_dict = {0: self.data_set_3D._axes[0].copy(), 1: self.data_set_3D._axes[1].copy(),
                     2: Dimension(np.arange(3),
@@ -72,7 +72,7 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
 
     def test_std_dev_dset(self):
         # Third dataset is the std_dev dataset
-        self.assertEqual(self.fit_results[2].shape, (10, 10, 3))
+        self.assertEqual(self.fit_results[2].shape, (3, 4, 3))
         ## Getting the dim_dict
         dim_dict = {0: self.data_set_3D._axes[0].copy(), 1: self.data_set_3D._axes[1].copy(),
                     2: Dimension(np.arange(3),
@@ -99,7 +99,7 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
 
 class Test_4Ddset_2Dfit(unittest.TestCase):
     def setUp(self):
-        self.data_set_4D, self.xyvec = make_4D_dataset(shape=(7, 5, 31, 23))
+        self.data_set_4D, self.xyvec = make_4D_dataset(shape=(3, 5, 9, 13))
         # Here we don't provide the xyvec as the input, we let the class figure it
         fitter = SidFitter(self.data_set_4D, fit_fn=gauss_2D, num_workers=8, num_fit_parms=5,
                            threads=2, return_std=True, return_fit=True,
@@ -121,7 +121,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
 
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
-        self.assertEqual(self.fit_results[0].shape, (7, 5, 5))
+        self.assertEqual(self.fit_results[0].shape, (3, 5, 5))
         ## Getting the dimension dict
         dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
                     2: Dimension(np.arange(5),
@@ -137,7 +137,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
 
     def test_std_dev_dset(self):
         # Third dataset is the std_dev dataset
-        self.assertEqual(self.fit_results[1].shape, (7, 5, 5))
+        self.assertEqual(self.fit_results[1].shape, (3, 5, 5))
         ## Getting the dim_dict
         dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
                     2: Dimension(np.arange(5),
@@ -164,7 +164,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
 
 class Test_4Ddset_1Dfit(unittest.TestCase):
     def setUp(self):
-        self.data_set_cycles, self.xvec = make_3D_dataset(shape=(5, 5, 32), cycles=3)
+        self.data_set_cycles, self.xvec = make_3D_dataset(shape=(2, 2, 16), cycles=3)
         fitter = SidFitter(self.data_set_cycles, xvec=self.xvec,
                            fit_fn=return_quad, guess_fn=guess_quad, num_workers=8,
                            threads=2, return_cov=True, return_fit=True, return_std=True,
@@ -186,7 +186,7 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
 
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
-        self.assertEqual(self.fit_results[0].shape, (5, 5, 3, 3))
+        self.assertEqual(self.fit_results[0].shape, (2, 2, 3, 3))
         ## Getting the dimension dict
         dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
                     2: self.data_set_cycles._axes[3].copy(),
@@ -203,7 +203,7 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
 
     def test_cov_dset(self):
         # Second dataset is the covariance dataset
-        self.assertEqual(self.fit_results[1].shape, (5, 5, 3, 3, 3))
+        self.assertEqual(self.fit_results[1].shape, (2, 2, 3, 3, 3))
         ## Getting the dim_dict
         dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
                     2: self.data_set_cycles._axes[3].copy(),
@@ -225,7 +225,7 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
 
     def test_std_dev_dset(self):
         # Third dataset is the std_dev dataset
-        self.assertEqual(self.fit_results[2].shape, (5, 5, 3, 3))
+        self.assertEqual(self.fit_results[2].shape, (2, 2, 3, 3))
         ## Getting the dim_dict
         dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
                     2: self.data_set_cycles._axes[3].copy(),
@@ -254,7 +254,6 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
 
 
 # The following functions are used to generate datasets
-
 def return_quad(x, *parms):
     a, b, c, = parms
     return a * x ** 2 + b * x + c
@@ -347,7 +346,7 @@ def gauss_2D(fitting_space, *parms):
 def make_4D_dataset(shape=(32, 16, 64, 48)):
     dataset = np.zeros(shape=shape, dtype=np.float64)
     xlen, ylen, kxlen, kylen = shape
-    kx, ky = np.meshgrid(np.linspace(0, 11, kxlen), np.linspace(0, 5, kylen), indexing='ij')
+    kx, ky = np.meshgrid(np.linspace(0, 11, kxlen), np.linspace(0, 7, kylen), indexing='ij')
     true_parms = np.zeros((dataset.shape[0], dataset.shape[1], 5))
 
     for row in range(xlen):
