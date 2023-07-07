@@ -198,7 +198,7 @@ class Dataset(da.Array):
             super().__setattr__(key, value)
         else:
             # if key is in __protected, only Dimension and numpy.ndarray instances are allowed to be set
-            if key is not 'none' and key in self._Dataset__protected:
+            if key != 'none' and key in self._Dataset__protected:
                 raise AttributeError('The {} attribute is reserved to represent a dimension'.format(key))
             else:
                 super().__setattr__(key, value)
