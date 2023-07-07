@@ -103,7 +103,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
         # Here we don't provide the xyvec as the input, we let the class figure it
         fitter = SidFitter(self.data_set_4D, fit_fn=gauss_2D, num_workers=8, num_fit_parms=5,
                            threads=2, return_std=True, return_fit=True,
-                           km_guess=True, n_clus=10,
+                           km_guess=True, n_clus=4,
                            fit_parameter_labels=['amplitude', 'x', 'y', 'sigma', 'offset'])
 
         self.fit_results = fitter.do_fit(maxfev=100)
