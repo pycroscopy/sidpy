@@ -40,6 +40,8 @@ from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, C
 from .dimension import DimensionType
 from copy import deepcopy, copy
 from sidpy.base.string_utils import validate_single_string_arg
+import logging
+
 
 def is_simple_list(lst):
     if isinstance(lst, list):
@@ -191,13 +193,15 @@ class Dataset(da.Array):
             self.h5_dataset.file.close()
             print(self.h5_dataset)
 
-    # def __setattr__(self, key, value):
-    #     if hasattr(self, '_Dataset__protected') and key in self.__protected:
-    #         raise AttributeError(f"'{key}' attribute is protected as it is a name of the dimension "
-    #                              f"and cannot be modified.")
-    #
-    #     super().__setattr__(key, value)
-
+    def __setattr__(self, key, value):
+        if not hasattr(self, '_Dataset__protected'):
+            super().__setattr__(key, value)
+        else:
+            # if key is in __protected, only Dimension and numpy.ndarray instances are allowed to be set
+            if key != 'none' and key in self._Dataset__protected:
+                raise AttributeError('The {} attribute is reserved to represent a dimension'.format(key))
+            else:
+                super().__setattr__(key, value)
 
     @classmethod
     def from_array(cls, x, title='generic', chunks='auto', lock=False,
@@ -336,7 +340,7 @@ class Dataset(da.Array):
         return new_data
 
     def __reduce_dimensions(self, new_dataset, axes, keepdims=False):
-        new_dataset._axes = {}
+        new_dataset.del_dimension()
         if not keepdims:
             i = 0
             for key, dim in self._axes.items():
@@ -363,7 +367,7 @@ class Dataset(da.Array):
 
         All the dimensions that are not in the new_order are deleted
         """
-        new_dataset._axes = {}
+        new_dataset.del_dimension()
 
         for i, dim in enumerate(new_order):
             new_dataset.set_dimension(i, self._axes[dim])
@@ -388,7 +392,7 @@ class Dataset(da.Array):
         dataset_copy.modality = self.modality
         dataset_copy.source = self.source
 
-        dataset_copy._axes = {}
+        # dataset_copy._axes = {}
         for dim in self._axes:
             dataset_copy.set_dimension(dim, self._axes[dim])
         dataset_copy.metadata = dict(self.metadata).copy()
@@ -488,11 +492,40 @@ class Dataset(da.Array):
 
         if hasattr(self, 'dim_{}'.format(ind)):
             delattr(self, 'dim_{}'.format(ind))
-            self.__protected.remove('dim_{}'.format(ind))  # we don't need this. But I am trying to be consistent
+            if 'dim_{}'.format(ind) in self.__protected:
+                self.__protected.remove('dim_{}'.format(ind))  # we don't need this. But I am trying to be consistent
 
         setattr(self, 'dim_{}'.format(ind), dim)
         self._axes[ind] = dim
         self.__protected.add('dim_{}'.format(ind))
+
+    def del_dimension(self, ind=None):
+        """
+        Deletes the dimension attached to axis 'ind'.
+        """
+        if isinstance(ind, int):
+            ind = [ind]
+        elif ind is None:
+            ind = list(np.arange(self.ndim))
+        else:
+            ind = list(ind)
+
+        for i in ind:
+            # Delete the attribute with the format dim_0
+            if hasattr(self, 'dim_{}'.format(i)):
+                delattr(self, 'dim_{}'.format(i))
+                if 'dim_{}'.format(i) in self.__protected:
+                    self.__protected.remove('dim_{}'.format(i))
+
+            if i in self._axes.keys():
+                # Deleting the dataset attribute that has the dimension's name
+                if hasattr(self, self._axes[i].name):
+                    delattr(self, self._axes[i].name)
+                    if self._axes[i].name in self.__protected:
+                        self.__protected.remove(self._axes[i].name)
+
+                # Deleting the key-value pair from the _axes dictionary
+                del self._axes[i]
 
     def view_metadata(self):
         """
@@ -1195,6 +1228,7 @@ class Dataset(da.Array):
             new_axes_order = axes[0]
         else:
             new_axes_order = axes
+
         return self.__rearrange_axes(result, new_axes_order)
 
     def round(self, decimals=0):
@@ -1241,7 +1275,7 @@ class Dataset(da.Array):
         result = self.like_data(super().repeat(repeats=repeats, axis=axis),
                                 title_prefix='Repeated_', checkdims=False)
 
-        result._axes = {}
+        # result._axes = {}
         for i, dim in self._axes.items():
             if axis != i:
                 new_dim = dim.copy()
@@ -1495,7 +1529,7 @@ class Dataset(da.Array):
         sliced = self.like_data(super().__getitem__(idx), checkdims=False)
 
         # Delete the dimensions created by like_data
-        sliced._axes.clear()
+        sliced.del_dimension()
 
         old_dims = copy(self._axes)
         j, k = 0, 0  # j is for self (old_dims) and k is for the sliced dataset (new dimensions)
