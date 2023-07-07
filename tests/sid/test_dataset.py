@@ -398,18 +398,18 @@ class TestLikeData(unittest.TestCase):
         self.assertEqual(descriptor.metadata, source_dset.metadata)
         self.assertEqual(descriptor.original_metadata, source_dset.original_metadata)
 
-    # def test_changing_size(self):
-    #     values = np.ones([4, 5])
-    #     source_dset = Dataset.from_array(values)
-    #     source_dset.a *= 0.5
-    #     source_dset.quantity = 'test'
-    #     values = np.zeros([3, 5])
-    #     descriptor = source_dset.like_data(values)
-    #
-    #     # self.assertEqual(descriptor.a.values), np.arange(3)*.5)
-    #     expected = descriptor.a.values
-    #     actual = np.arange(3) * .5
-    #     self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+    def test_changing_size(self):
+        values = np.ones([4, 5])
+        source_dset = Dataset.from_array(values)
+        source_dset.a *= 0.5
+        source_dset.quantity = 'test'
+        values = np.zeros([3, 5])
+        descriptor = source_dset.like_data(values)
+
+        # self.assertEqual(descriptor.a.values), np.arange(3)*.5)
+        expected = descriptor.a.values
+        actual = np.arange(3) * .5
+        self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
 
 class TestCopy(unittest.TestCase):
@@ -863,8 +863,9 @@ class TestSlicing(unittest.TestCase):
                                     metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
 
     def test_getitem_nparray(self):
+
         old_dset = self.dset
-        inds = np.random.choice([True, False], size=old_dset.shape[2])
+        inds = np.array([True, False, True, False, True, False])
         sliced = old_dset[:, :, inds, :]
 
         dim_dict = {0: deepcopy(old_dset._axes[0]),
@@ -881,8 +882,9 @@ class TestSlicing(unittest.TestCase):
                                     metadata=self.dset.metadata, original_metadata=self.dset.original_metadata)
 
     def test_getitem_daarray(self):
+        np.random.seed(0)
         old_dset = self.dset
-        inds = da.array(np.random.choice([True, False], size=old_dset.shape[3]))
+        inds = da.array(np.array([True, False, True, False, True]))
         sliced = old_dset[..., inds]
 
         dim_dict = {0: deepcopy(old_dset._axes[0]),

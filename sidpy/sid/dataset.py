@@ -30,6 +30,7 @@ import string
 import dask.array as da
 import h5py
 from enum import Enum
+from numbers import Number
 
 from .dimension import Dimension, DimensionType
 from ..base.num_utils import get_slope
@@ -199,7 +200,20 @@ class Dataset(da.Array):
         else:
             # if key is in __protected, only Dimension and numpy.ndarray instances are allowed to be set
             if key != 'none' and key in self._Dataset__protected:
-                raise AttributeError('The {} attribute is reserved to represent a dimension'.format(key))
+                if not isinstance(value, Dimension):
+                    raise AttributeError('The attribute "{}" is reserved to represent a dimension'.format(key))
+                else:
+                    if getattr(self, key).name == value.name and len(getattr(self, key)) == len(value):
+                        cur_ind = [i for i in self._axes if self._axes[i].name == key][0]
+                        self.del_dimension(cur_ind)
+                        self._axes[cur_ind] = value
+                        self.__dict__[key] = value
+                        self.__dict__['dim_{}'.format(cur_ind)] = value
+                        self.__protected.add(key)
+                        self.__protected.add('dim_{}'.format(cur_ind))
+                    else:
+                        raise NotImplementedError("The new dimension's name or length does not "
+                                                  "match with the existing dimension.")
             else:
                 super().__setattr__(key, value)
 
@@ -392,7 +406,7 @@ class Dataset(da.Array):
         dataset_copy.modality = self.modality
         dataset_copy.source = self.source
 
-        # dataset_copy._axes = {}
+        dataset_copy.del_dimension()
         for dim in self._axes:
             dataset_copy.set_dimension(dim, self._axes[dim])
         dataset_copy.metadata = dict(self.metadata).copy()
@@ -1235,11 +1249,11 @@ class Dataset(da.Array):
         return self.like_data(super().round(decimals=decimals),
                               title_prefix='Rounded_')
 
-    def reshape(self, *shape, merge_chunks=True):
+    def reshape(self, shape, merge_chunks=True, limit=None):
         # This somehow adds an extra dimension at the end
         # Will come back to this
         warnings.warn('Dimensional information will be lost.\
-                Please use fold, unfold to combine dimensions')
+                       Please use fold, unfold to combine dimensions')
         if len(shape) == 1 and isinstance(shape[0], Iterable):
             new_shape = shape[0]
         else:
