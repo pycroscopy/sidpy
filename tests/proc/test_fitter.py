@@ -36,7 +36,7 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
         self.assertEqual(self.fit_results[0].shape, (10, 10, 3))
-        ## Getting the dimension dict
+        # Getting the dimension dict
         dim_dict = {0: self.data_set_3D._axes[0].copy(), 1: self.data_set_3D._axes[1].copy(),
                     2: Dimension(np.arange(3),
                                  name='fit_parms', units='a.u.',
@@ -52,7 +52,7 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
     def test_cov_dset(self):
         # Second dataset is the covariance dataset
         self.assertEqual(self.fit_results[1].shape, (10, 10, 3, 3))
-        ## Getting the dim_dict
+        # Getting the dim_dict
         dim_dict = {0: self.data_set_3D._axes[0].copy(), 1: self.data_set_3D._axes[1].copy(),
                     2: Dimension(np.arange(3),
                                  name='fit_cov_parms_x', units='a.u.',
@@ -73,7 +73,7 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
     def test_std_dev_dset(self):
         # Third dataset is the std_dev dataset
         self.assertEqual(self.fit_results[2].shape, (10, 10, 3))
-        ## Getting the dim_dict
+        # Getting the dim_dict
         dim_dict = {0: self.data_set_3D._axes[0].copy(), 1: self.data_set_3D._axes[1].copy(),
                     2: Dimension(np.arange(3),
                                  name='std_dev', units='a.u.',
@@ -122,7 +122,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
         self.assertEqual(self.fit_results[0].shape, (7, 5, 5))
-        ## Getting the dimension dict
+        # Getting the dimension dict
         dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
                     2: Dimension(np.arange(5),
                                  name='fit_parms', units='a.u.',
@@ -138,7 +138,7 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
     def test_std_dev_dset(self):
         # Third dataset is the std_dev dataset
         self.assertEqual(self.fit_results[1].shape, (7, 5, 5))
-        ## Getting the dim_dict
+        # Getting the dim_dict
         dim_dict = {0: self.data_set_4D._axes[0].copy(), 1: self.data_set_4D._axes[1].copy(),
                     2: Dimension(np.arange(5),
                                  name='std_dev', units='a.u.',
@@ -187,7 +187,7 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
     def test_fit_parms_dset(self):
         # First dataset would be the fitting parameters dataset
         self.assertEqual(self.fit_results[0].shape, (5, 5, 3, 3))
-        ## Getting the dimension dict
+        # Getting the dimension dict
         dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
                     2: self.data_set_cycles._axes[3].copy(),
                     3: Dimension(np.arange(3),
@@ -204,7 +204,7 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
     def test_cov_dset(self):
         # Second dataset is the covariance dataset
         self.assertEqual(self.fit_results[1].shape, (5, 5, 3, 3, 3))
-        ## Getting the dim_dict
+        # Getting the dim_dict
         dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
                     2: self.data_set_cycles._axes[3].copy(),
                     3: Dimension(np.arange(3),
@@ -226,7 +226,7 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
     def test_std_dev_dset(self):
         # Third dataset is the std_dev dataset
         self.assertEqual(self.fit_results[2].shape, (5, 5, 3, 3))
-        ## Getting the dim_dict
+        # Getting the dim_dict
         dim_dict = {0: self.data_set_cycles._axes[0].copy(), 1: self.data_set_cycles._axes[1].copy(),
                     2: self.data_set_cycles._axes[3].copy(),
                     3: Dimension(np.arange(3),
