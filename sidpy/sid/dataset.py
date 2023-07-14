@@ -51,6 +51,7 @@ class DataType(Enum):
     IMAGE_STACK = 6
     SPECTRAL_IMAGE = 7
     IMAGE_4D = 8
+    POINT_CLOUD = 9
 
 
 def view_subclass(dask_array, cls):
@@ -555,6 +556,11 @@ class Dataset(da.Array):
                 else:
                     self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
+            elif self.data_type == DataType.POINT_CLOUD:
+                _obj = self._mgrid_transform(**kwargs)#TODO
+                print('ura')
+                #self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
+
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 4:
@@ -701,6 +707,19 @@ class Dataset(da.Array):
                 spec_dims.append(dim)
         return spec_dims
 
+    def _mgrid_transform(self, **kwards):
+        '''
+        Interpolate unstructured point cloud for the visualization
+        Parameters
+        ----------
+        kwards: parameters to reduce dataset dimentions to 2D (number of point, spectral data)
+
+        Returns
+        -------
+        sidpy.Dataset with data_type = SPECTRAL_IMAGE
+        '''
+        #TODO
+        return None
     @property
     def labels(self):
         labels = []
