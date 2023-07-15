@@ -557,9 +557,9 @@ class Dataset(da.Array):
                     self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
             elif self.data_type == DataType.POINT_CLOUD:
-                _obj = self._mgrid_transform(**kwargs)#TODO
-                print('ura')
-                #self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
+                _obj = self._griddata_transform(**kwargs)
+
+                self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
 
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
@@ -707,7 +707,7 @@ class Dataset(da.Array):
                 spec_dims.append(dim)
         return spec_dims
 
-    def _mgrid_transform(self, **kwards):
+    def _griddata_transform(self, **kwargs):
         '''
         Interpolate unstructured point cloud for the visualization
         Parameters
@@ -718,8 +718,45 @@ class Dataset(da.Array):
         -------
         sidpy.Dataset with data_type = SPECTRAL_IMAGE
         '''
-        #TODO
-        return None
+
+        from scipy.interpolate import griddata
+
+        coord = self.metadata['coordinates']
+
+
+        im_size = coord.shape[0]#[self._min_dist(coord.T[0]),self._min_dist(coord.T[1])] #size of mgrid in pxl
+
+        _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
+        _y0, _y1 = np.min(coord, axis=0)[1], np.max(coord, axis=0)[1]
+        grid_x, grid_y = np.mgrid[_x0: _x1: (_x1 - _x0)/im_size,
+                                  _y0: _y1: (_y1 - _y0)/im_size]
+        grid_z = griddata(coord, self, (grid_x, grid_y), method='nearest')
+        print(grid_x.shape, grid_y.shape, grid_z.shape)
+
+        _dset = Dataset.from_array(grid_z)
+        _dset.data_type = 'spectral_image'
+        _dset.units = self.units
+        _dset.quantity = self.quantity
+        _dset.title = self.title
+        _dset.set_dimension(0, Dimension(grid_x[:,0], 'x'))
+        _dset.x.dimension_type = 'spatial'
+        _dset.x.units = 'um'
+        _dset.x.quantity = 'distance'
+        _dset.set_dimension(1, Dimension(grid_y[0], 'y'))
+        _dset.y.dimension_type = 'spatial'
+        _dset.y.units = 'um'
+        _dset.y.quantity = 'distance'
+        _dset.set_dimension(2, self.get_dimension_by_number(1)[0])
+        if len(self.shape) == 3:
+            _dset.set_dimension(3, self.get_dimension_by_number(2)[0])
+
+        return _dset
+
+    @staticmethod
+    def _min_dist(array):
+        _sort_ar = np.sort(array)
+        return np.min(_sort_ar[1:] - _sort_ar[:-1])
+
     @property
     def labels(self):
         labels = []
