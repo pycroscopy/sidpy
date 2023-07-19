@@ -56,11 +56,9 @@ class TestDimension(unittest.TestCase):
             self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
         self.assertTrue(np.allclose(copy_descriptor.values, descriptor.values))
         copy_descriptor.units = 'eV'
-        copy_descriptor.name = 'energy'
-        for expected, actual in zip([copy_descriptor.name, copy_descriptor.units],
-                                    [descriptor.name, descriptor.units]):
-            self.assertTrue(np.all([x != y for x, y in zip(expected, actual)]))
-        copy_descriptor = descriptor +1
+        self.assertFalse(copy_descriptor.units == descriptor.units)
+
+        copy_descriptor = descriptor + 1
         self.assertFalse(np.allclose(copy_descriptor.values, descriptor.values))
 
     def test_repr(self):
@@ -73,6 +71,14 @@ class TestDimension(unittest.TestCase):
         units = 'generic'
         expected = '{}:  {} ({}) of size {}'.format(name, quantity, units, values.shape)
         self.assertEqual(actual, expected)
+
+    def test_change_name(self):
+        name = 'Bias'
+        values = np.arange(5)
+
+        descriptor = Dimension(values, name)
+        with self.assertRaises(AttributeError):
+            descriptor.name = 'Voltage'
 
     def test_inequality_req_inputs(self):
         name = 'X'
@@ -100,7 +106,7 @@ class TestDimension(unittest.TestCase):
         vals = np.ones((2, 2))
         expected = 'Dimension can only be 1 dimensional'
         with self.assertRaises(Exception) as context:
-            _ = Dimension(vals, "x",)
+            _ = Dimension(vals, "x", )
         self.assertTrue(expected in str(context.exception))
 
     def test_info(self):
@@ -137,13 +143,13 @@ class TestDimension(unittest.TestCase):
         vals_expected = arr
         for v in vals:
             dim = Dimension(v, "x")
-            self.assertIsInstance(dim,  Dimension)
+            self.assertIsInstance(dim, Dimension)
             assert_array_equal(np.array(dim), vals_expected)
 
     def test_dimension_type(self):
         dim_types = ["spatial", "Spatial", "reciprocal", "Reciprocal",
                      "spectral", "Spectral", "temporal", "Temporal",
-                     "frame", "Frame",  "time", "Time", "stack", "Stack"]
+                     "frame", "Frame", "time", "Time", "stack", "Stack"]
         dim_vals_expected = [1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
         dim_names_expected = ["SPATIAL", "SPATIAL", "RECIPROCAL", "RECIPROCAL",
                               "SPECTRAL", "SPECTRAL", "TEMPORAL", "TEMPORAL",
@@ -157,7 +163,7 @@ class TestDimension(unittest.TestCase):
     def test_dimension_type(self):
         dim_types = ["spatial", "Spatial", "reciprocal", "Reciprocal",
                      "spectral", "Spectral", "temporal", "Temporal",
-                     "frame", "Frame",  "time", "Time", "stack", "Stack"]
+                     "frame", "Frame", "time", "Time", "stack", "Stack"]
         dim_vals_expected = [1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
         dim_names_expected = ["SPATIAL", "SPATIAL", "RECIPROCAL", "RECIPROCAL",
                               "SPECTRAL", "SPECTRAL", "TEMPORAL", "TEMPORAL",
@@ -167,7 +173,6 @@ class TestDimension(unittest.TestCase):
             dim = Dimension(5, "x", dimension_type=dt)
             self.assertEqual(dim.dimension_type.value, dv)
             self.assertEqual(dim.dimension_type.name, dn)
-
 
     def test_unknown_dimension_type(self):
         dim_type = "bad_name"
