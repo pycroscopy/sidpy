@@ -175,7 +175,7 @@ class SidFitter:
         self.return_cov = return_cov
         self.return_fit = return_fit
         self.fitted_dset = None
-        self._numpy = True
+
 
         self.mean_fit_results = []
         if self.return_cov:
@@ -204,6 +204,8 @@ class SidFitter:
                 self.fold_order.append([i])
 
         self.folded_dataset = self.dataset.fold(dim_order=self.fold_order)
+        self.folded_dataset_numpy = np.array(self.folded_dataset)
+        self.dep_vec = np.array(self.dep_vec)
 
         # Here is the tricky part, dataset.unfold is designed to get back the original dataset with minimal loss of
         # information. To do this, unfold utilizes the saved information while folding the original dataset.
@@ -231,12 +233,7 @@ class SidFitter:
         """
         guess_results = []
         for ind in range(self.num_computations):
-            if self._numpy:
-                self.dep_vec=np.array(self.dep_vec)
-                ydata = np.array(self.folded_dataset)
-            else:
-                ydata = self.folded_dataset
-
+            ydata = self.folded_dataset_numpy
             lazy_result = dask.delayed(self.guess_fn)(self.dep_vec, ydata[ind, :])
             guess_results.append(lazy_result)
 
@@ -250,6 +247,8 @@ class SidFitter:
         Perform the fit.
         **kwargs: extra parameters passed to scipy.optimize.curve_fit, e.g. bounds, type of lsq algorithm, etc.
         """
+        
+
         if self.guess_fn is not None:
             guess_function_str = inspect.getsource(self.guess_fn)
         else:
@@ -265,14 +264,10 @@ class SidFitter:
                     p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
                 else:
                     p0 = self.prior[ind, :]
-                ydata = self.folded_dataset[ind, :]
+                ydata = self.folded_dataset_numpy[ind, :]
                 if self._complex_data:
-                    ydata = ydata.flatten_complex()
+                    ydata = np.array(np.hstack([np.real(ydata), np.imag(ydata)]))
 
-                #Convert to numpy - see if this makes it faster??
-                if self._numpy:
-                    ydata = np.array(ydata)
-                    self.dep_vec = np.array(self.dep_vec)
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
                                                                         ydata, self.num_fit_parms,
                                                                         return_cov=(self.return_cov or self.return_std),
