@@ -633,7 +633,6 @@ class SpectralImageVisualizer(object):
 
     def get_spectrum(self):
         from ..sid.dimension import DimensionType
-
         if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
             self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
         if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:
@@ -641,7 +640,6 @@ class SpectralImageVisualizer(object):
         selection = []
 
         for dim, axis in self.dset._axes.items():
-            # print(dim, axis.dimension_type)
             if axis.dimension_type == DimensionType.SPATIAL:
                 if dim == self.image_dims[0]:
                     selection.append(slice(self.x, self.x + self.bin_x))

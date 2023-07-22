@@ -537,6 +537,10 @@ class Dataset(da.Array):
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
                 self.view = CurveVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
+            elif self.data_type == DataType.POINT_CLOUD:
+                _obj, _coord = self._griddata_transform(**kwargs)
+                self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
+                self.view.axes[0].scatter(_coord[0], _coord[1], color='red', s=1)
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
@@ -557,9 +561,9 @@ class Dataset(da.Array):
                     self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
             elif self.data_type == DataType.POINT_CLOUD:
-                _obj = self._griddata_transform(**kwargs)
-
+                _obj, _coord = self._griddata_transform(**kwargs)
                 self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
+                self.view.axes[0].scatter(_coord[0], _coord[1], color='red', s=1)
 
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
@@ -709,7 +713,7 @@ class Dataset(da.Array):
 
     def _griddata_transform(self, **kwargs):
         '''
-        Interpolate unstructured point cloud for the visualization
+        Interpolate unstructured point cloud for the visualization to 3D/4D sidpy.Dataset
         Parameters
         ----------
         kwards: parameters to reduce dataset dimentions to 2D (number of point, spectral data)
@@ -718,21 +722,30 @@ class Dataset(da.Array):
         -------
         sidpy.Dataset with data_type = SPECTRAL_IMAGE
         '''
-
         from scipy.interpolate import griddata
 
-        coord = self.metadata['coordinates']
+        if 'coordinates' in self.metadata.keys():
+            coord = self.metadata['coordinates']
+        else:
+            raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates in metadata.')
 
+        if 'spacial_units' in self.metadata.keys():
+            sp_units  = self.metadata['spacial_units']
+        else:
+            sp_units = 'a.u.'
 
-        im_size = coord.shape[0]#[self._min_dist(coord.T[0]),self._min_dist(coord.T[1])] #size of mgrid in pxl
-
+        im_size = coord.shape[0]
         _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
         _y0, _y1 = np.min(coord, axis=0)[1], np.max(coord, axis=0)[1]
+
+        _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1 - _x0)).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size / (_y1 - _y0)).astype(int)
+
         grid_x, grid_y = np.mgrid[_x0: _x1: (_x1 - _x0)/im_size,
                                   _y0: _y1: (_y1 - _y0)/im_size]
         grid_z = griddata(coord, self, (grid_x, grid_y), method='nearest')
-        print(grid_x.shape, grid_y.shape, grid_z.shape)
 
+        #transpform to 3D
         _dset = Dataset.from_array(grid_z)
         _dset.data_type = 'spectral_image'
         _dset.units = self.units
@@ -740,17 +753,16 @@ class Dataset(da.Array):
         _dset.title = self.title
         _dset.set_dimension(0, Dimension(grid_x[:,0], 'x'))
         _dset.x.dimension_type = 'spatial'
-        _dset.x.units = 'um'
+        _dset.x.units = sp_units
         _dset.x.quantity = 'distance'
         _dset.set_dimension(1, Dimension(grid_y[0], 'y'))
         _dset.y.dimension_type = 'spatial'
-        _dset.y.units = 'um'
+        _dset.y.units = sp_units
         _dset.y.quantity = 'distance'
         _dset.set_dimension(2, self.get_dimension_by_number(1)[0])
         if len(self.shape) == 3:
             _dset.set_dimension(3, self.get_dimension_by_number(2)[0])
-
-        return _dset
+        return _dset, (_px_x, _px_y)
 
     @staticmethod
     def _min_dist(array):
