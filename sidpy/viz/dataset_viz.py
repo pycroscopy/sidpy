@@ -578,6 +578,16 @@ class SpectralImageVisualizer(object):
         else:
             self.axes[0].set_aspect('equal')
 
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    np.round(np.linspace(self.extent[0], self.extent[1], 5),2))
+        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
+
+        self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                    'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                        'px'))
+
         # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
         self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
                                       facecolor='red', alpha=0.2)
@@ -602,8 +612,9 @@ class SpectralImageVisualizer(object):
         import ipywidgets as iwgt
         self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
                             value=1,
-                            description='Pixel Wise or Units Wise Display of Image Data',
-                            tooltip='How to plot spatial data', layout = iwgt.Layout(width='20%', height='50px'))
+                            description='Image',
+                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)', 
+                            layout = iwgt.Layout(width='30%', height='50px',))
 
         self.button.observe(self._pw_uw, 'value') #pixel or unit wise
         self.fig.canvas.draw_idle()
