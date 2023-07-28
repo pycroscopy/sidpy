@@ -547,6 +547,7 @@ class SpectralImageVisualizer(object):
 
         self.image_dims = image_dims
         self.spec_dim = spectral_dim[0]
+        extent_rd = self.dset.get_extent(self.image_dims)
 
         if horizontal:
             self.axes = self.fig.subplots(ncols=2)
@@ -570,16 +571,27 @@ class SpectralImageVisualizer(object):
             self.axes[0].set_aspect('equal')
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                np.round(np.linspace(extent_rd[0], extent_rd[1], 5), 2))
+
+        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                np.round(np.linspace(extent_rd[2], extent_rd[3], 5), 2))
+
+
         if horizontal:
-            self.axes[0].set_xlabel('{} [pixels]'.format(self.dset._axes[image_dims[0]].quantity))
+            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[image_dims[0]].quantity,
+                                                     self.dset._axes[image_dims[0]].units))
         else:
-            self.axes[0].set_ylabel('{} [pixels]'.format(self.dset._axes[image_dims[1]].quantity))
+            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[image_dims[1]].quantity,
+                                                         self.dset._axes[image_dims[1]].units))
 
         if 1 in self.dset.shape:
             self.axes[0].set_aspect('auto')
             self.axes[0].get_yaxis().set_visible(False)
         else:
             self.axes[0].set_aspect('equal')
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5))
+
 
         # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
         self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
@@ -633,7 +645,6 @@ class SpectralImageVisualizer(object):
 
     def get_spectrum(self):
         from ..sid.dimension import DimensionType
-
         if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
             self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
         if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:
@@ -641,7 +652,6 @@ class SpectralImageVisualizer(object):
         selection = []
 
         for dim, axis in self.dset._axes.items():
-            # print(dim, axis.dimension_type)
             if axis.dimension_type == DimensionType.SPATIAL:
                 if dim == self.image_dims[0]:
                     selection.append(slice(self.x, self.x + self.bin_x))
