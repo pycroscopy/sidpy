@@ -547,7 +547,7 @@ class SpectralImageVisualizer(object):
 
         self.image_dims = image_dims
         self.spec_dim = spectral_dim[0]
-        extent_rd = self.dset.get_extent(self.image_dims)
+        self.extent_rd = self.dset.get_extent(self.image_dims)
 
         if horizontal:
             self.axes = self.fig.subplots(ncols=2)
@@ -571,33 +571,30 @@ class SpectralImageVisualizer(object):
             self.axes[0].set_aspect('equal')
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
-        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                np.round(np.linspace(extent_rd[0], extent_rd[1], 5), 2))
-
-        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                np.round(np.linspace(extent_rd[2], extent_rd[3], 5), 2))
-
-
-        if horizontal:
-            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[image_dims[0]].quantity,
-                                                     self.dset._axes[image_dims[0]].units))
-        else:
-            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[image_dims[1]].quantity,
-                                                         self.dset._axes[image_dims[1]].units))
-
+        
         if 1 in self.dset.shape:
             self.axes[0].set_aspect('auto')
             self.axes[0].get_yaxis().set_visible(False)
         else:
             self.axes[0].set_aspect('equal')
-        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5))
 
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    np.round(np.linspace(self.extent[0], self.extent[1], 5),2))
+        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
+
+        self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                    'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                        'px'))
 
         # self.rect = patches.Rectangle((0,0),1,1,linewidth=1,edgecolor='r',facecolor='red', alpha = 0.2)
         self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
                                       facecolor='red', alpha=0.2)
 
         self.axes[0].add_patch(self.rect)
+
+        #Below is code for the spectrum parts
         self.intensity_scale = 1.
         self.spectrum = self.get_spectrum()
         if len(self.energy_scale)!=self.spectrum.shape[0]:
@@ -612,7 +609,68 @@ class SpectralImageVisualizer(object):
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
+        import ipywidgets as iwgt
+        self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+                            value=1,
+                            description='Image',
+                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)', 
+                            layout = iwgt.Layout(width='30%', height='50px',))
+
+        self.button.observe(self._pw_uw, 'value') #pixel or unit wise
         self.fig.canvas.draw_idle()
+        widg = iwgt.HBox([self.button])
+        widg
+        from IPython.display import display
+        display(widg)
+
+    def _pw_uw(self, event): 
+        pw_uw = event.new
+        self._update_image(pw_uw)
+    
+    def _update_image(self, event_value):
+        #pixel wise or unit wise listener
+        if event_value==1:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    np.round(np.linspace(self.extent[0], self.extent[1], 5),2))
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                    np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
+
+            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                     'px'))
+            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                         'px'))
+        else:
+            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                            self.dset._axes[self.image_dims[1]].units))
+
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                    np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2))
+            
+            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                        self.dset._axes[self.image_dims[0]].units))
+            
+            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                            self.dset._axes[self.image_dims[1]].units))
+
+            if self.dset._axes[self.image_dims[0]].units =='m':
+                scaled_values_y = self.dset._axes[self.image_dims[1]].values*1E9
+                scaled_values_x = self.dset._axes[self.image_dims[0]].values*1E9
+                if scaled_values_x.mean() >=0.1 and  scaled_values_x.mean() <=1000:
+                    self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    np.round(np.linspace(scaled_values_x[0], scaled_values_x[-1], 5), 2))
+                    self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                    np.round(np.linspace(scaled_values_y[0], scaled_values_y[-1], 5), 2))
+                    
+                    self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                        'nm'))
+            
+                    self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                            'nm'))
+                    
+        return
 
     def set_bin(self, bin_xy):
 
