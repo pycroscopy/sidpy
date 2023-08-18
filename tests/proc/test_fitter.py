@@ -409,6 +409,72 @@ def make_4D_dataset(shape=(32, 16, 64, 48)):
 
     return data_set, [kx.ravel(), ky.ravel()]
 
+def make_4D_dataset_spectral_image(shape=(32, 16, 64, 48)):
+    dataset = np.zeros(shape=shape, dtype=np.float64)
+    xlen, ylen, kxlen, kylen = shape
+    kx, ky = np.meshgrid(np.linspace(0, 11, kxlen), np.linspace(0, 7, kylen), indexing='ij')
+    true_parms = np.zeros((dataset.shape[0], dataset.shape[1], 5))
+
+    for row in range(xlen):
+        for col in range(ylen):
+            amp = np.sqrt(row * col // xlen * ylen) + 3.5
+            sigma = np.random.normal(loc=2.5, scale=0.34)
+            offset = 0.1  # col
+            xo = np.random.uniform(low=0, high=6)
+            yo = np.random.uniform(low=0, high=5)
+            cur_parms = [amp, xo, yo, sigma, offset]
+            true_parms[row, col, :] = cur_parms
+            # amplitude, xo, yo, sigma, offset
+            gauss_mat = gauss_2D([kx.ravel(), ky.ravel()], *cur_parms)
+            gauss_mat += np.mean(gauss_mat) / 2 * np.random.normal(size=len(gauss_mat))
+            gauss_mat = gauss_mat.reshape([kxlen, kylen])
+            dataset[row, col, :, :] = gauss_mat
+
+    # Now make it a sidpy dataset
+    parms_dict = {'info_1': np.linspace(0, 5.6, 30), 'instrument': 'opportunity rover AFM'}
+
+    # Let's convert it to a sidpy dataset
+    # Specify dimensions
+    x_dim = np.linspace(0, 1E-6,
+                        dataset.shape[0])
+    y_dim = np.linspace(0, 2E-6,
+                        dataset.shape[1])
+    kx_dim = np.linspace(0, 11, kxlen)
+    ky_dim = np.linspace(0, 5, kylen)
+
+    # Make a sidpy dataset
+    data_set = sid.Dataset.from_array(dataset)
+
+    # Set the data type
+    data_set.data_type = sid.DataType.SPECTRAL_IMAGE
+
+    # Add quantity and units
+    data_set.units = 'nA'
+    data_set.quantity = 'Current'
+
+    # Add dimension info
+    data_set.set_dimension(0, sid.Dimension(x_dim,
+                                            name='x',
+                                            units='m', quantity='x',
+                                            dimension_type='spatial'))
+    data_set.set_dimension(1, sid.Dimension(y_dim,
+                                            name='y',
+                                            units='m', quantity='y',
+                                            dimension_type='spatial'))
+    data_set.set_dimension(2, sid.Dimension(kx_dim,
+                                            name='Intensity KX',
+                                            units='counts', quantity='Intensity',
+                                            dimension_type='spectral'))
+    data_set.set_dimension(3, sid.Dimension(ky_dim,
+                                            name='Intensity KY',
+                                            units='counts', quantity='Intensity',
+                                            dimension_type='channel'))
+
+    # append metadata
+    data_set.metadata = parms_dict
+
+    return data_set, [kx.ravel(), ky.ravel()]
+
 
 if __name__ == '__main__':
     unittest.main()
