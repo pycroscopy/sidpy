@@ -1010,7 +1010,7 @@ class FourDimImageVisualizer(object):
 class ComplexSpectralImageVisualizer(object):
     """
     ### Interactive spectrum imaging plot for Complex Data
-    ## 4D support added - Utkarsh Pratiush
+    ## 4D and complex data also works
 
     """
 
@@ -1036,8 +1036,8 @@ class ComplexSpectralImageVisualizer(object):
         else:
             self.fig = figure
 
-        # if len(dset.shape) > 4:
-        #     raise TypeError('dataset must have four dimensions at max')
+        if len(dset.shape) > 4:
+            raise TypeError('dataset must have four dimensions at max')
         if 'complex' not in dset.dtype.name:
             raise TypeError('This visualizer is only for Complex Data, data type is {}'.format(dset.dtype))
         
