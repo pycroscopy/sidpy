@@ -33,7 +33,7 @@ class DimensionType(Enum):
     SPECTRAL = 3
     TEMPORAL = 4
     CHANNEL = 5
-    POINT_NUMBER = 6
+    POINT_CLOUD = 6
 
 
 class Dimension(np.ndarray):
