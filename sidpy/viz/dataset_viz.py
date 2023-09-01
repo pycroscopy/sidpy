@@ -465,7 +465,7 @@ class SpectralImageVisualizer(object):
     """
 
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
-        from ..sid.dataset import Dataset
+        from ..sid.dataset import Dataset, DataType
         from ..sid.dimension import DimensionType
         import matplotlib.widgets
 
@@ -600,7 +600,15 @@ class SpectralImageVisualizer(object):
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute())
-        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+
+        if self.dset.data_type == DataType.POINT_CLOUD:
+            self._dtype_point_cloud = True
+            _point = self._closest_point(self.dset.metadata['coord'],np.array([self.x, self.y]))
+            self.axes[1].set_title('point {}'.format(_point))
+        else:
+            self._dtype_point_cloud = False
+            self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+
         self.xlabel = self.dset.labels[self.spec_dim]
         self.ylabel = self.dset.data_descriptor
         self.axes[1].set_xlabel(self.dset.labels[self.spec_dim])  # + x_suffix)
@@ -776,7 +784,11 @@ class SpectralImageVisualizer(object):
         self.axes[1].plot(self.energy_scale, self.spectrum.compute(), label='experiment')
 
         if self.set_title:
-            self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+            if self._dtype_point_cloud:
+                _point = self._closest_point(self.dset.metadata['coord'], np.array([self.x, self.y]))
+                self.axes[1].set_title('point {}'.format(_point))
+            else:
+                self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
         self.axes[1].set_xlim(xlim)
         #self.axes[1].set_ylim(ylim)
@@ -790,6 +802,11 @@ class SpectralImageVisualizer(object):
 
     def get_xy(self):
         return [self.x, self.y]
+
+    @staticmethod
+    def _closest_point(array_coord, point):
+        diff = array_coord - point
+        return np.argmin(diff[:,0]**2 + diff[:,1]**2)
 
 
 class FourDimImageVisualizer(object):

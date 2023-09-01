@@ -613,9 +613,10 @@ class Dataset(da.Array):
                 self.view = CurveVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
             elif self.data_type == DataType.POINT_CLOUD:
-                _obj, _coord = self._griddata_transform(**kwargs)
+                _obj = self._griddata_transform(**kwargs)
+                _coord = _obj.metadata['coord']
                 self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
-                self.view.axes[0].scatter(_coord[0], _coord[1], color='red', s=1)
+                self.view.axes[0].scatter(_coord[:,0], _coord[:,1], color='red', s=1)
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
@@ -636,9 +637,10 @@ class Dataset(da.Array):
                     self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
                 # plt.show()
             elif self.data_type == DataType.POINT_CLOUD:
-                _obj, _coord = self._griddata_transform(**kwargs)
+                _obj = self._griddata_transform(**kwargs)
+                _coord = _obj.metadata['coord']
                 self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
-                self.view.axes[0].scatter(_coord[0], _coord[1], color='red', s=1)
+                self.view.axes[0].scatter(_coord[:,0], _coord[:,1], color='red', s=1)
 
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
@@ -809,12 +811,19 @@ class Dataset(da.Array):
         else:
             sp_units = 'a.u.'
 
-        im_size = coord.shape[0]
+        im_size = max(50, coord.shape[0])
+
         _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
         _y0, _y1 = np.min(coord, axis=0)[1], np.max(coord, axis=0)[1]
+        _delta_x = _x1 - _x0
+        _delta_y = _y1 - _y0
+
+        #to extend filed of view
+        _x0, _x1 = _x0 - 0.05*_delta_x, _x1 + 0.05*_delta_x
+        _y0, _y1 = _y0 - 0.05*_delta_y, _y1 + 0.05 * _delta_y
 
         _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1 - _x0)).astype(int)
-        _px_y = np.array((coord[:, 1] - _y0) * im_size / (_y1 - _y0)).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1 - _y0)).astype(int)
 
         grid_x, grid_y = np.mgrid[_x0: _x1: (_x1 - _x0)/im_size,
                                   _y0: _y1: (_y1 - _y0)/im_size]
@@ -822,7 +831,7 @@ class Dataset(da.Array):
 
         #transpform to 3D
         _dset = Dataset.from_array(grid_z)
-        _dset.data_type = 'spectral_image'
+        _dset.data_type = 'point_cloud'
         _dset.units = self.units
         _dset.quantity = self.quantity
         _dset.title = self.title
@@ -837,12 +846,18 @@ class Dataset(da.Array):
         _dset.set_dimension(2, self.get_dimension_by_number(1)[0])
         if len(self.shape) == 3:
             _dset.set_dimension(3, self.get_dimension_by_number(2)[0])
-        return _dset, (_px_x, _px_y)
+        _dset.metadata = {'coord':np.array([_px_x, _px_y]).T}
+        return _dset
 
     @staticmethod
     def _min_dist(array):
         _sort_ar = np.sort(array)
         return np.min(_sort_ar[1:] - _sort_ar[:-1])
+
+    @staticmethod
+    def _closest_point(array_coord, point):
+        diff = array_coord - point
+        return np.argmin(diff[:,0]**2 + diff[:,1]**2)
 
     @property
     def labels(self):
