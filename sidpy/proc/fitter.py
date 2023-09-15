@@ -280,9 +280,10 @@ class SidFitter:
         else:
             self.get_km_priors(**kwargs)
             for ind in range(self.num_computations):
-                ydata = self.folded_dataset[ind, :]
+                ydata = self.folded_dataset_numpy[ind, :]
                 if self._complex_data:
-                    ydata = ydata.flatten_complex()
+                    #ydata = ydata.flatten_complex()
+                    ydata = np.array(np.hstack([np.real(ydata), np.imag(ydata)]))
 
                 lazy_result = dask.delayed(SidFitter.default_curve_fit)(self.fit_fn, self.dep_vec,
                                                                         ydata, self.num_fit_parms,
