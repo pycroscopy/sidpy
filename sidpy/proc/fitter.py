@@ -472,6 +472,7 @@ class SidFitter:
             km = KMeans(n_clusters=self.n_clus, random_state=0).fit(km_dset.compute())
 
         self.km_labels, self.km_centers = km.labels_, km.cluster_centers_
+    
         if self._complex_data:
             km_dset = np.array(self.folded_dataset.fold(dim_order))
             self.km_centers = []
@@ -482,15 +483,32 @@ class SidFitter:
 
         km_priors = []
         for i, cen in enumerate(self.km_centers):
+            num_start = 100 #number of times to restart the fit. For now this is fixed.
+
             if self.guess_fn is not None:
                 p0 = self.guess_fn(self.dep_vec, cen)
             else:
                 p0 = np.random.normal(loc=0.5, scale=0.1, size=self.num_fit_parms)
             if self._complex_data:
                 cen = np.hstack([np.real(cen), np.imag(cen)])
-            km_priors.append(SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
-                                                         return_cov=False,
-                                                         p0=p0, **kwargs))
+            
+            residuals = []
+            for _ in range(num_start):
+                try:
+                    popt = SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
+                                            return_cov=False,  p0 = p0, maxfev = 1000, **kwargs)
+                    temp_fit = self.fit_fn(self.dep_vec, *popt)
+                    temp_fit = temp_fit[:len(temp_fit)//2] + 1j* temp_fit[len(temp_fit)//2 :]
+                    resid = cen - temp_fit
+                    resid_ss = np.sum(np.abs(resid@resid))
+                    residuals.append((popt, resid_ss))
+                except:
+                    pass
+            residuals = np.array(residuals, dtype = object)
+            min_idx = np.argmin(residuals[:,1])
+            best_popt = residuals[min_idx,0]
+            km_priors.append(best_popt)
+            
         self.km_priors = np.array(km_priors)
         self.num_fit_parms = self.km_priors.shape[-1]
 
