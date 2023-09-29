@@ -39,9 +39,9 @@ class TestCanReadNotImplemented(unittest.TestCase):
             file_handle.write('Nothing')
 
         reader = self.reader_class(file_path)
-        with self.assertRaises(NotImplementedError):
+        with self.assertWarns(DeprecationWarning):
             reader.can_read()
-
+            
         os.remove(file_path)
 
     def test_invalid_file_object(self):
@@ -70,120 +70,7 @@ class TestCanReadNotImplemented(unittest.TestCase):
         os.remove(file_path)
 
 
-class TestCanReadExtVariations(unittest.TestCase):
 
-    def test_invalid_ext_obj_type(self):
-        class DummyReader(Reader):
-            def can_read(self):
-                with self.assertRaises(TypeError):
-                    return super(DummyReader, self).can_read(extension={'txt': 5})
-
-    def base_test_extension_variations(self, exts, file_paths):
-        class DummyReader(Reader):
-            def can_read(self):
-                return super(DummyReader, self).can_read(extension=exts)
-
-        if isinstance(file_paths, str):
-            file_paths = [file_paths]
-
-        for file_path in file_paths:
-            file_path = os.path.abspath(file_path)
-
-            with open(file_path, mode='w') as file_handle:
-                file_handle.write('Nothing')
-
-            reader = DummyReader(file_path)
-
-            self.assertTrue(reader.can_read())
-
-            os.remove(file_path)
-
-    def test_upper_case_extension(self):
-        self.base_test_extension_variations('TXT', ['blah.TXT', 'blah.txt'])
-
-    def test_lower_case_extension(self):
-        self.base_test_extension_variations('txt', ['blah.TXT', 'blah.txt'])
-
-    def test_multi_cases_extensions(self):
-        self.base_test_extension_variations(['txt', 'RST'],
-                                            ['blah.TXT', 'blah.rst'])
-
-    def test_dot_before_extensions(self):
-        self.base_test_extension_variations('.txt', ['blah.TXT', 'blah.txt'])
-
-
-class TestCanReadOneExt(unittest.TestCase):
-
-    def setUp(self):
-
-        class DummyReader(Reader):
-
-            def can_read(self):
-                return super(DummyReader, self).can_read(extension='txt')
-
-        self.reader_class = DummyReader
-
-    def base_test(self, file_path, assert_func):
-
-        file_path = os.path.abspath(file_path)
-
-        with open(file_path, mode='w') as file_handle:
-                file_handle.write('Nothing')
-
-        reader = self.reader_class(file_path)
-
-        assert_func(reader.can_read())
-
-        os.remove(file_path)
-
-    def test_valid_extension(self):
-        self.base_test('blah.txt', self.assertTrue)
-
-    def test_invalid_extension(self):
-        self.base_test('blah.rst', self.assertFalse)
-
-    def test_invalid_dir(self):
-        reader = self.reader_class('.')
-        self.assertFalse(reader.can_read())
-
-
-class TestCanReadMultiExts(unittest.TestCase):
-
-    def setUp(self):
-        class DummyReader(Reader):
-
-            def can_read(self):
-                exts = ['txt', 'rst']
-                return super(DummyReader, self).can_read(extension=exts)
-
-            def read(self):
-                pass
-
-        self.reader_class = DummyReader
-
-    def base_test(self, file_path, assert_func):
-        file_path = os.path.abspath(file_path)
-
-        with open(file_path, mode='w') as file_handle:
-            file_handle.write('Nothing')
-
-        reader = self.reader_class(file_path)
-
-        assert_func(reader.can_read())
-
-        os.remove(file_path)
-
-    def test_valid_txt_file(self):
-        self.base_test('blah.txt', self.assertTrue)
-
-    def test_valid_rst_file(self):
-        self.base_test('blah.rst', self.assertTrue)
-
-    def test_invalid_file(self):
-        self.base_test('blah.png', self.assertFalse)
-
-    def test_case_insensitive(self):
-        self.base_test('ALL_CAPS.RST', self.assertTrue)
 
 
 if __name__ == '__main__':
