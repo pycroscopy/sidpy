@@ -449,7 +449,7 @@ class SidFitter:
         return fitted_sid_dset
 
     def get_km_priors(self, **kwargs):
-        kwargs['maxfev'] = 1000  # give a large number of tries for fitting the kmeans cluster centers
+        kwargs['maxfev'] = 100  # give a large number of tries for fitting the kmeans cluster centers
 
         shape = self.folded_dataset.shape  # We get the shape of the folded dataset
         # Our prior_dset will have the same shape except for the last dimension whose size will be equal to number of
@@ -478,11 +478,14 @@ class SidFitter:
             self.km_centers = []
             # in the case of complex data, the centers have to be recomputed based on the labels
             for ind_l in range(self.n_clus):
-                self.km_centers.append(np.mean(km_dset[self.km_labels == ind_l, :], axis=0))
+                cent = km_dset[self.km_labels == ind_l, :]
+                centroid = cent.real.mean(axis=0) + 1j*cent.imag.mean(axis=0)
+                self.km_centers.append(centroid)
             self.km_centers = np.array(self.km_centers)
-
+        print('---Finished KMeans, onto fiting each KM Center---')
         km_priors = []
         for i, cen in enumerate(self.km_centers):
+            print('Fitting center {}'.format(i))
             num_start = 100 #number of times to restart the fit. For now this is fixed.
 
             if self.guess_fn is not None:
@@ -494,21 +497,23 @@ class SidFitter:
             
             residuals = []
             for _ in range(num_start):
-                try:
-                    popt = SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
-                                            return_cov=False,  p0 = p0, maxfev = 1000, **kwargs)
-                    temp_fit = self.fit_fn(self.dep_vec, *popt)
-                    temp_fit = temp_fit[:len(temp_fit)//2] + 1j* temp_fit[len(temp_fit)//2 :]
-                    resid = cen - temp_fit
-                    resid_ss = np.sum(np.abs(resid@resid))
-                    residuals.append((popt, resid_ss))
-                except:
-                    pass
+                
+                popt = SidFitter.default_curve_fit(self.fit_fn, self.dep_vec, cen, self.num_fit_parms,
+                                        return_cov=False,  p0 = p0,  **kwargs)
+                temp_fit = self.fit_fn(self.dep_vec, *popt)
+                #temp_fit = temp_fit[:len(temp_fit)//2] + 1j* temp_fit[len(temp_fit)//2 :]
+                #temp_fit = np.hstack([np.real(cen), np.imag(cen)])
+                #print(cen, temp_fit, cen.shape, temp_fit.shape)
+                resid = cen - temp_fit
+                resid_ss = np.sum(np.abs(resid@resid))
+                residuals.append((popt, resid_ss))
+                
             residuals = np.array(residuals, dtype = object)
+            self.residuals = residuals
             min_idx = np.argmin(residuals[:,1])
             best_popt = residuals[min_idx,0]
             km_priors.append(best_popt)
-            
+
         self.km_priors = np.array(km_priors)
         self.num_fit_parms = self.km_priors.shape[-1]
 
