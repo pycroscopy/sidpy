@@ -854,7 +854,6 @@ class FourDimImageVisualizer(object):
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
-
         scale_bar = kwargs.pop('scale_bar', False)
         colorbar = kwargs.pop('colorbar', True)
         self.set_title = kwargs.pop('set_title', True)
@@ -1122,6 +1121,7 @@ class FourDimImageVisualizer(object):
 class ComplexSpectralImageVisualizer(object):
     """
     ### Interactive spectrum imaging plot for Complex Data
+    ## 4D and complex data also works
 
     """
 
@@ -1147,8 +1147,8 @@ class ComplexSpectralImageVisualizer(object):
         else:
             self.fig = figure
 
-        if len(dset.shape) !=3:
-            raise TypeError('dataset must have three dimensions')
+        if len(dset.shape) > 4:
+            raise TypeError('dataset must have four dimensions at max')
         if 'complex' not in dset.dtype.name:
             raise TypeError('This visualizer is only for Complex Data, data type is {}'.format(dset.dtype))
         
@@ -1228,7 +1228,8 @@ class ComplexSpectralImageVisualizer(object):
         else:
             self.axes[0].set_aspect('equal')
 
-        self.axes[0].imshow(np.abs(self.image.T), extent=self.extent, **kwargs)
+        #self.axes[0].imshow(np.abs(self.image.T), extent=self.extent, **kwargs)# throwing an error
+        self.axes[0].imshow(np.abs(np.array(self.image)).T, extent=self.extent, **kwargs)
         if horizontal:
             self.axes[0].set_xlabel('{} [pixels]'.format(self.dset._axes[image_dims[0]].quantity))
         else:
