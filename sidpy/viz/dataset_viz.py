@@ -94,6 +94,12 @@ class CurveVisualizer(object):
         else:
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
             self.axis.plot(self.dim.values, self.dset.compute(), **kwargs)
+            if 'variance' in self.dset.metadata.keys():
+                self.variance = self.dset.metadata['variance']
+                self.axis.fill_between(self.dim.values,
+                                      self.dset.compute()-self.variance,
+                                      self.dset.compute()+self.variance,
+                                      alpha = 0.3, **kwargs)
             if set_title:
                 self.axis.set_title(self.dset.title, pad=15)
             self.axis.set_xlabel(self.dset.labels[self.spectral_dims[0]])
@@ -579,9 +585,9 @@ class SpectralImageVisualizer(object):
             self.axes[0].set_aspect('equal')
 
         self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    np.round(np.linspace(self.extent[0], self.extent[1], 5),2))
+                                list(np.round(np.linspace(self.extent[0], self.extent[1], 5),2)))
         self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
+                                list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
 
         self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                     'px'))
@@ -599,7 +605,17 @@ class SpectralImageVisualizer(object):
         self.spectrum = self.get_spectrum()
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
+            if 'variance' in self.dset.metadata.keys():
+                self.variance = self.variance.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute())
+        if 'variance' in self.dset.metadata.keys():
+            if len(self.variance.shape) > 1:
+                pass#TODO fill_between for 3D point cloud
+            else:
+                self.axes[1].fill_between(self.energy_scale,
+                                          self.spectrum.compute() - self.variance,
+                                          self.spectrum.compute() + self.variance,
+                                          alpha=0.3, **kwargs)
 
         if self.dset.data_type == DataType.POINT_CLOUD:
             self._dtype_point_cloud = True
@@ -639,23 +655,25 @@ class SpectralImageVisualizer(object):
         #pixel wise or unit wise listener
         if event_value==1:
             self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    np.round(np.linspace(self.extent[0], self.extent[1], 5),2))
+                                    list(np.round(np.linspace(self.extent[0], self.extent[1], 5),2)))
             self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                    np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
+                                    list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
 
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                      'px'))
             self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                          'px'))
         else:
+            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                     self.dset._axes[self.image_dims[0]].units))
             self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                             self.dset._axes[self.image_dims[1]].units))
 
             self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2))
+                                    list(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2)))
 
             self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                    np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2))
+                                    list(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2)))
             
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         self.dset._axes[self.image_dims[0]].units))
@@ -668,9 +686,9 @@ class SpectralImageVisualizer(object):
                 scaled_values_x = self.dset._axes[self.image_dims[0]].values*1E9
                 if scaled_values_x.mean() >=0.1 and  scaled_values_x.mean() <=1000:
                     self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    np.round(np.linspace(scaled_values_x[0], scaled_values_x[-1], 5), 2))
+                                    list(np.round(np.linspace(scaled_values_x[0], scaled_values_x[-1], 5), 2)))
                     self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                    np.round(np.linspace(scaled_values_y[0], scaled_values_y[-1], 5), 2))
+                                    list(np.round(np.linspace(scaled_values_y[0], scaled_values_y[-1], 5), 2)))
                     
                     self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         'nm'))
@@ -732,7 +750,10 @@ class SpectralImageVisualizer(object):
                 selection.append(slice(0, 1))
         
         self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
-        
+
+        if 'variance' in self.dset.metadata.keys():
+            self.variance = self.dset.metadata['variance'][tuple(selection)].mean(axis=tuple(self.image_dims))
+
         # * self.intensity_scale[self.x,self.y]
         return self.spectrum.squeeze()
 
@@ -782,6 +803,11 @@ class SpectralImageVisualizer(object):
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute(), label='experiment')
+        if 'variance' in self.dset.metadata.keys():
+            self.axes[1].fill_between(self.energy_scale,
+                                      self.spectrum.compute() - self.variance,
+                                      self.spectrum.compute() + self.variance,
+                                      alpha=0.3)
 
         if self.set_title:
             if self._dtype_point_cloud:
