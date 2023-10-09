@@ -850,6 +850,9 @@ class Dataset(da.Array):
         if len(self.shape) == 3:
             _dset.set_dimension(3, self.get_dimension_by_number(2)[0])
         _dset.metadata = {'coord':np.array([_px_x, _px_y]).T}
+        if 'variance' in self.metadata.keys():
+            grid_z_var = griddata(coord, self.metadata['variance'], (grid_x, grid_y), method='nearest')
+            _dset.metadata['variance'] = grid_z_var
         return _dset
 
     @staticmethod
