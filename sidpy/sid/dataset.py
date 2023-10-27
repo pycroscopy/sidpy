@@ -607,11 +607,9 @@ class Dataset(da.Array):
                 print('2D dataset')
             if self.data_type == DataType.IMAGE:
                 self.view = ImageVisualizer(self, figure=figure, **kwargs)
-                # plt.show()
             elif self.data_type.value <= DataType['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
                 self.view = CurveVisualizer(self, figure=figure, **kwargs)
-                # plt.show()
             elif self.data_type == DataType.POINT_CLOUD:
                 _obj = self._griddata_transform(**kwargs)
                 _coord = _obj.metadata['coord']
