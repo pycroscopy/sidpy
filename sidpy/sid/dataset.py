@@ -37,6 +37,7 @@ from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, ComplexSpectralImageVisualizer
+from ..viz.dataset_viz import PointCloudVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
 from copy import deepcopy, copy
@@ -175,6 +176,9 @@ class Dataset(da.Array):
 
         self.__protected = set()  # a set to keep track of protected attributes
 
+        self.point_cloud = None #attribute to store coordinates and base_image for point_cloud datatype
+        self._variance = None #to save variance dask.array
+
     def __repr__(self):
         rep = 'sidpy.Dataset of type {} with:\n '.format(self.data_type.name)
         rep = rep + super(Dataset, self).__repr__()
@@ -220,7 +224,8 @@ class Dataset(da.Array):
     @classmethod
     def from_array(cls, x, title='generic', chunks='auto', lock=False,
                    datatype='UNKNOWN', units='generic', quantity='generic',
-                   modality='generic', source='generic', **kwargs):
+                   modality='generic', source='generic', coordinates = None,
+                   variance = None, **kwargs):
         """
         Initializes a sidpy dataset from an array-like object (i.e. numpy array)
         All meta-data will be set to be generically.
@@ -240,7 +245,10 @@ class Dataset(da.Array):
             units of dataset i.e. counts, A
         quantity: str
             quantity of dataset like intensity
-
+        point_cloud: dict or None
+            dict with coordinates and base_image for point_cloud data_type
+        variance: array-like object
+             the variance values of the x array
         Returns
         -------
         sidpy dataset
@@ -269,9 +277,17 @@ class Dataset(da.Array):
                                       Dimension(np.arange(sid_dataset.shape[dim]), string.ascii_lowercase[dim]))
         sid_dataset.metadata = {}
         sid_dataset.original_metadata = {}
+        sid_dataset.variance = variance
+
+        #add coordinates for point_cloud datatype
+        if coordinates is not None:
+            sid_dataset.point_cloud = {'coordinates': coordinates}
+        else:
+            sid_dataset.point_cloud = None
         return sid_dataset
 
-    def like_data(self, data, title=None, chunks='auto', lock=False, **kwargs):
+    def like_data(self, data, title=None, chunks='auto', lock=False,
+                  coordinates = None, variance=None, **kwargs):
         """
         Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
@@ -288,7 +304,8 @@ class Dataset(da.Array):
             size of chunks for dask array
         lock: optional boolean
             for dask array
-
+        coordinates: array like
+            coordinates for point cloud
 
         Returns
         -------
@@ -300,9 +317,20 @@ class Dataset(da.Array):
         reset_units = kwargs.get('reset_units', False)
         checkdims = kwargs.get('checkdims', True)
 
-        new_data = self.from_array(data, chunks=chunks, lock=lock)
+        # if coordinates is None:
+        #     coordinates = self.point_cloud['coordinates']
+
+        new_data = self.from_array(data, chunks=chunks, lock=lock,
+                                   coordinates=coordinates, variance =variance)
 
         new_data.data_type = self.data_type
+
+        if coordinates is None:
+            new_data.point_cloud = self.point_cloud
+        if variance is None:
+            if new_data.shape == self.shape:
+                new_data.variance = self.variance
+
 
         # units
         if reset_units:
@@ -405,6 +433,8 @@ class Dataset(da.Array):
         dataset_copy.data_type = self.data_type
         dataset_copy.modality = self.modality
         dataset_copy.source = self.source
+        dataset_copy.point_cloud = self.point_cloud
+        dataset_copy.variance = self.variance
 
         dataset_copy.del_dimension()
         for dim in self._axes:
@@ -607,16 +637,11 @@ class Dataset(da.Array):
                 print('2D dataset')
             if self.data_type == DataType.IMAGE:
                 self.view = ImageVisualizer(self, figure=figure, **kwargs)
-                # plt.show()
             elif self.data_type.value <= DataType['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
                 self.view = CurveVisualizer(self, figure=figure, **kwargs)
-                # plt.show()
             elif self.data_type == DataType.POINT_CLOUD:
-                _obj = self._griddata_transform(**kwargs)
-                _coord = _obj.metadata['coord']
-                self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
-                self.view.axes[0].scatter(_coord[:,0], _coord[:,1], color='red', s=1)
+                self.view = PointCloudVisualizer(self, figure=figure, **kwargs)
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
@@ -624,24 +649,17 @@ class Dataset(da.Array):
                 print('3D dataset')
             if self.data_type == DataType.IMAGE:
                 self.view = ImageVisualizer(self, figure=figure, **kwargs)
-                # plt.show()
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
                 self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
-                # plt.show()
             elif self.data_type == DataType.SPECTRAL_IMAGE:
                 if 'complex' in self.dtype.name:
                     self.view = ComplexSpectralImageVisualizer(self, figure=figure, **kwargs)
                 else:
                     self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
-                # plt.show()
             elif self.data_type == DataType.POINT_CLOUD:
-                _obj = self._griddata_transform(**kwargs)
-                _coord = _obj.metadata['coord']
-                self.view = SpectralImageVisualizer(_obj, figure=figure, **kwargs)
-                self.view.axes[0].scatter(_coord[:,0], _coord[:,1], color='red', s=1)
-
+                self.view = PointCloudVisualizer(self, figure=figure, **kwargs)
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 4:
@@ -1003,6 +1021,22 @@ class Dataset(da.Array):
     @property
     def data_descriptor(self):
         return '{} ({})'.format(self.quantity, self.units)
+
+    @property
+    def variance(self):
+        return self._variance
+
+    @variance.setter
+    def variance(self, value):
+        if value is None:
+            self._variance = None
+        else:
+            if np.array(value).shape != np.array(self).shape:
+                raise ValueError('Variance array must have the same dimensionality as the dataset')
+            if isinstance(value, da.Array) and not np.any(np.isnan(value.shape)):
+                self._variance = value
+            else:
+                self._variance = da.from_array(np.array(value))
 
     def fft(self, dimension_type=None):
         """ Gets the FFT of a sidpy.Dataset of any size

@@ -14,6 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 # from matplotlib.widgets import Slider, Button
 import matplotlib.patches as patches
+
+import sidpy
 # import matplotlib.animation as animation
 
 from ..hdf.dtype_utils import is_complex_dtype
@@ -94,11 +96,10 @@ class CurveVisualizer(object):
         else:
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
             self.axis.plot(self.dim.values, self.dset.compute(), **kwargs)
-            if 'variance' in self.dset.metadata.keys():
-                self.variance = self.dset.metadata['variance']
+            if self.dset.variance is not None:
                 self.axis.fill_between(self.dim.values,
-                                      self.dset.compute()-self.variance,
-                                      self.dset.compute()+self.variance,
+                                      self.dset.compute()-self.dset.variance,
+                                      self.dset.compute()+self.dset.variance,
                                       alpha = 0.3, **kwargs)
             if set_title:
                 self.axis.set_title(self.dset.title, pad=15)
@@ -135,6 +136,8 @@ class ImageVisualizer(object):
     def __init__(self, dset, figure=None, image_number=0, **kwargs):
         from ..sid.dataset import Dataset
         from ..sid.dimension import DimensionType
+        import ipywidgets as iwgt
+        from IPython.display import display
 
         """
         plotting of data according to two axis marked as SPATIAL in the dimensions
@@ -170,42 +173,32 @@ class ImageVisualizer(object):
         if len(self.image_dims) != 2:
             raise TypeError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
 
-        if is_complex_dtype(dset.dtype):
-            colorbar = kwargs.pop('colorbar', True)
-            # Plot complex image
-            self.axes = []
-            self.axes.append(self.fig.add_subplot(121))
-            self.img = self.axes[0].imshow(self.dset[tuple(self.selection)].abs().squeeze().T,
-                                           extent=self.dset.get_extent(self.image_dims), **kwargs)
-            self.axes[0].set_xlabel(self.dset.labels[self.image_dims[0]])
-            self.axes[0].set_ylabel(self.dset.labels[self.image_dims[1]])
-            self.axes[0].set_title(dset.title + '\n(Magnitude)', pad=15)
-            if colorbar:
-                cbar = self.fig.colorbar(self.img)
-            cbar.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
-            self.axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
-
-            self.axes.append(self.fig.add_subplot(122, sharex=self.axes[0], sharey=self.axes[0]))
-            self.img_c = self.axes[1].imshow(self.dset[tuple(self.selection)].squeeze().angle().T,
-                                             extent=self.dset.get_extent(self.image_dims), **kwargs)
-            self.axes[1].set_xlabel(self.dset.labels[self.image_dims[0]])
-            self.axes[1].set_ylabel(self.dset.labels[self.image_dims[1]])
-            self.axes[1].set_title(dset.title + '\n(Phase)', pad=15)
-            if colorbar:
-                cbar_c = self.fig.colorbar(self.img_c)
-            cbar_c.set_label(self.dset.data_descriptor)
-            self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
-
-            self.fig.tight_layout()
-
+        if is_complex_dtype(self.dset.dtype):
+            self.plot_complex_image(**kwargs)
         else:
             self.axis = self.fig.add_subplot(1, 1, 1)
             self.plot_image(**kwargs)
 
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
+                raise ValueError('Variance array must have the same dimensionality as the dataset')
+
+            self._variance_button = iwgt.widgets.Dropdown(options=[('z', 1), ('σ', 2), ('z + σ', 3), ('z - σ', 4)],
+                                                value=1,
+                                                description='Image',
+                                                tooltip='What to plot: image data (z), variance of z (σ), etc.',
+                                                layout=iwgt.Layout(width='20%', height='40px', ))
+
+            self._variance_button.observe(self._var_button_event, 'value')  # pixel or unit wise
+            self.fig.canvas.draw_idle()
+            widg = iwgt.HBox([self._variance_button])
+            display(widg)
+
     def plot_image(self, **kwargs):
         from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+
         scale_bar = kwargs.pop('scale_bar', False)
-        colorbar = kwargs.pop('colorbar', True)
+        self.colorbar = kwargs.pop('colorbar', True)
         set_title = kwargs.pop('set_title', True)
         rgb = False
         if set_title:
@@ -241,8 +234,7 @@ class ImageVisualizer(object):
 
             plt.gca().add_artist(scalebar)
 
-        if colorbar:
-            
+        if self.colorbar:
             cbar = self.fig.colorbar(self.img)
             cbar.set_label(self.dset.data_descriptor)
 
@@ -250,6 +242,75 @@ class ImageVisualizer(object):
             self.fig.tight_layout()
         self.img.axes.figure.canvas.draw_idle()
 
+    def plot_complex_image(self, **kwargs):
+        from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+        scale_bar = kwargs.pop('scale_bar', False)
+        self.colorbar = kwargs.pop('colorbar', True)
+
+        self.axes = []
+        #magnitude
+        self.axes.append(self.fig.add_subplot(121))
+        self.img = self.axes[0].imshow(self.dset[tuple(self.selection)].abs().squeeze().T,
+                                       extent=self.dset.get_extent(self.image_dims), **kwargs)
+        self.axes[0].set_xlabel(self.dset.labels[self.image_dims[0]])
+        self.axes[0].set_ylabel(self.dset.labels[self.image_dims[1]])
+        self.axes[0].set_title(self.dset.title + '\n(Magnitude)', pad=15)
+        if self.colorbar:
+            cbar = self.fig.colorbar(self.img)
+            cbar.set_label("{} [{}]".format(self.dset.quantity, self.dset.units))
+        self.axes[0].ticklabel_format(style='sci', scilimits=(-2, 3))
+
+        # phase
+        self.axes.append(self.fig.add_subplot(122, sharex=self.axes[0], sharey=self.axes[0]))
+        self.img_c = self.axes[1].imshow(self.dset[tuple(self.selection)].squeeze().angle().T,
+                                         extent=self.dset.get_extent(self.image_dims), **kwargs)
+        self.axes[1].set_xlabel(self.dset.labels[self.image_dims[0]])
+        self.axes[1].set_ylabel(self.dset.labels[self.image_dims[1]])
+        self.axes[1].set_title(self.dset.title + '\n(Phase)', pad=15)
+        if self.colorbar:
+            cbar_c = self.fig.colorbar(self.img_c)
+            cbar_c.set_label(self.dset.data_descriptor)
+        self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+
+        if scale_bar:
+            for ax in self.axes:
+                ax.axis('off')
+                extent = self.dset.get_extent(self.image_dims)
+                size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
+                if size_of_bar < 1:
+                    size_of_bar = 1
+                scalebar = AnchoredSizeBar(ax.transData,
+                                           size_of_bar, '{} {}'.format(size_of_bar,
+                                                                       self.dset._axes[self.image_dims[0]].units),
+                                           'lower left',
+                                           pad=1,
+                                           color='white',
+                                           frameon=False,
+                                           size_vertical=.2)
+                ax.add_artist(scalebar)
+
+        self.fig.tight_layout()
+
+    def _var_button_event(self, event):
+        disp = event.new
+        self._update_image(disp)
+
+    def _update_image(self, event_value, **kwargs):
+        _data = {1: self.dset[tuple(self.selection)].squeeze().T,
+                 2: self.dset.variance[tuple(self.selection)].squeeze().T,
+                 3: self.dset.variance[tuple(self.selection)].squeeze().T + self.dset[tuple(self.selection)].squeeze().T,
+                 4: self.dset[tuple(self.selection)].squeeze().T - self.dset.variance[tuple(self.selection)].squeeze().T}
+
+        if is_complex_dtype(self.dset.dtype):
+            _dat = np.array(_data[event_value] + 0*1j)
+            self.img.set_data(np.abs(_dat))
+            self.img.set_clim(np.abs(_dat).min(), np.abs(_dat).max())
+
+            self.img_c.set_data(np.angle(_dat))
+            self.img_c.set_clim(np.angle(_dat).min(), np.angle(_dat).max())
+        else:
+            self.img.set_data(_data[event_value])
+            self.img.set_clim(_data[event_value].min(), _data[event_value].max())
 
 class ImageStackVisualizer(object):
     """
@@ -278,6 +339,7 @@ class ImageStackVisualizer(object):
         from ..sid.dataset import Dataset
         from ..sid.dimension import DimensionType
 
+        import ipywidgets as iwgt
         from IPython.display import display
 
         if not isinstance(dset, Dataset):
@@ -345,8 +407,7 @@ class ImageStackVisualizer(object):
         self.axis = plt.gca()
         #self.axis.set_title(image_titles)
         self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
-    
-        import ipywidgets as iwgt
+
         self.play = iwgt.Play(
             value=0,
             min=0,
@@ -375,10 +436,29 @@ class ImageStackVisualizer(object):
             button_style='',  # 'success', 'info', 'warning', 'danger' or ''
             tooltip='Average Images of Stack')
 
+        self.average = False
         self.button.observe(self._average_slices, 'value')
 
-        # set play and slider widgets next to each other
-        widg = iwgt.HBox([self.play, self.slider, self.button])
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
+                raise ValueError('Variance array must have the same dimensionality as the dataset')
+
+            self._variance_button = iwgt.widgets.Dropdown(options=[('z', 1), ('σ', 2), ('z + σ', 3), ('z - σ', 4)],
+                                                value=1,
+                                                #description='Image',
+                                                tooltip='What to plot: image data (z), variance of z (σ), etc.',)
+                                                #layout=iwgt.Layout(height='20px', ))
+
+            self._variance_button.observe(self._var_button_event, 'value')
+
+            widg0 = iwgt.HBox([self.play, self.slider])
+            widg1 = iwgt.HBox([self.button, self._variance_button])
+            widg  = iwgt.VBox([widg0, widg1])
+            self.display = 1 #0 - without var, 1 z, 2 sigma, 3 z-sigma, 4 z+sigma
+        else:
+            widg = iwgt.HBox([self.play, self.slider, self.button])
+            self.display = 0
+
         display(widg)
 
         # self.anim = animation.FuncAnimation(self.fig, self._updatefig, interval=200, blit=False, repeat=True)
@@ -419,30 +499,31 @@ class ImageStackVisualizer(object):
 
             plt.gca().add_artist(scalebar)
 
-        else:
-            if colorbar:
-                cbar = self.fig.colorbar(self.img)
-                cbar.set_label(self.dset.data_descriptor)
+        if colorbar:
+            cbar = self.fig.colorbar(self.img)
+            cbar.set_label(self.dset.data_descriptor)
 
-                self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
-                self.fig.tight_layout()
+            self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
+            self.fig.tight_layout()
 
         self.img.axes.figure.canvas.draw_idle()
 
     def _average_slices(self, event):
-        if event.new:
-            if len(self.dset.shape) == 3:
-                image_stack = self.dset
-            else:
-                stack_selection = self.selection.copy()
-                stack_selection[self.stack_dim] = slice(None)
-                image_stack = self.dset[stack_selection].squeeze()
-
-            self.img.set_data(image_stack.mean(axis=self.stack_dim).T)
-            self.fig.canvas.draw_idle()
-        elif event.old:
-            self.ind = self.ind % self.number_of_slices
-            self._update(self.ind)
+        self.average = event.new
+        self._update(self.ind)
+        # if event.new:
+        #     if len(self.dset.shape) == 3:
+        #         image_stack = self.dset
+        #     else:
+        #         stack_selection = self.selection.copy()
+        #         stack_selection[self.stack_dim] = slice(None)
+        #         image_stack = self.dset[stack_selection].squeeze()
+        #
+        #     self.img.set_data(image_stack.mean(axis=self.stack_dim).T)
+        #     self.fig.canvas.draw_idle()
+        # elif event.old:
+        #     self.ind = self.ind % self.number_of_slices
+        #    self._update(self.ind)
 
     def _onscroll(self, event):
         if event.button == 'up':
@@ -451,15 +532,41 @@ class ImageStackVisualizer(object):
             self.slider.value = (self.slider.value - 1) % self.number_of_slices
         self.ind = int(self.slider.value)
 
+    def _var_button_event(self, event):
+        self.display = event.new
+        self._update(self.ind)
+
     def _update(self, frame=0):
-        self.ind = frame
-        self.selection[self.stack_dim] = slice(frame, frame + 1)
-        self.img.set_data((self.dset[tuple(self.selection)].squeeze()).T)
-        self.img.axes.figure.canvas.draw_idle()
-        if self.plot_fit_labels:
-            self.axis.set_title(self.image_titles[frame])
+        if self.display == 2:
+            _dset = self.dset.variance
+        elif self.display == 3:
+            _dset = self.dset + self.dset.variance
+        elif self.display == 4:
+            _dset = self.dset - self.dset.variance
         else:
-            self.axis.set_title(self.image_titles)
+            _dset = self.dset
+
+        if self.average:
+            if len(self.dset.shape) == 3:
+                image_stack = _dset
+            else:
+                stack_selection = self.selection.copy()
+                stack_selection[self.stack_dim] = slice(None)
+                image_stack = self.dset[stack_selection].squeeze()
+
+            self.img.set_data(image_stack.mean(axis=self.stack_dim).T)
+            self.fig.canvas.draw_idle()
+        else:
+            self.ind = frame
+            self.selection[self.stack_dim] = slice(frame, frame + 1)
+            self.img.set_data((_dset[tuple(self.selection)].squeeze()).T)
+            self.img.set_clim(_dset[tuple(self.selection)].min(), _dset[tuple(self.selection)].max())
+            self.img.axes.figure.canvas.draw_idle()
+
+            if self.plot_fit_labels:
+                self.axis.set_title(self.image_titles[frame])
+            else:
+                self.axis.set_title(self.image_titles)
 
 class SpectralImageVisualizer(object):
     """
@@ -473,6 +580,8 @@ class SpectralImageVisualizer(object):
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
         from ..sid.dataset import Dataset, DataType
         from ..sid.dimension import DimensionType
+        import ipywidgets as iwgt
+        from IPython.display import display
         import matplotlib.widgets
 
         if not isinstance(dset, Dataset):
@@ -541,6 +650,11 @@ class SpectralImageVisualizer(object):
         size_y = dset.shape[image_dims[1]]
 
         self.dset = dset
+
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
+                raise ValueError('Variance array must have the same dimensionality as the dataset')
+
         self.energy_axis = spectral_dim[0]
         if len(channel_dim)>0: self.channel_axis = channel_dim
         self.energy_scale = dset._axes[self.energy_axis].values
@@ -568,13 +682,13 @@ class SpectralImageVisualizer(object):
         else:
             self.image = dset.mean(axis=(spectral_dim[0]))
 
-        if 1 in self.dset.shape:
-            self.image = dset.squeeze()
-            # self.extent[2]=self.image.shape[1]
-            # self.bin_y=self.image.shape[1]
-            self.axes[0].set_aspect('auto')
-        else:
-            self.axes[0].set_aspect('equal')
+        # if 1 in self.dset.shape:
+        #     self.image = dset.squeeze()
+        #     # self.extent[2]=self.image.shape[1]
+        #     # self.bin_y=self.image.shape[1]
+        #     self.axes[0].set_aspect('auto')
+        # else:
+        #     self.axes[0].set_aspect('equal')
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         
@@ -605,25 +719,24 @@ class SpectralImageVisualizer(object):
         self.spectrum = self.get_spectrum()
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
-            if 'variance' in self.dset.metadata.keys():
-                self.variance = self.variance.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute())
-        if 'variance' in self.dset.metadata.keys():
+        #add variance shadow graph
+        if self.variance is not None:
+            #3d - many curves
             if len(self.variance.shape) > 1:
-                pass#TODO fill_between for 3D point cloud
+                for i in range(len(self.variance)):
+                    self.axes[1].fill_between(self.energy_scale,
+                                              self.spectrum.compute().T[i] - self.variance[i],
+                                              self.spectrum.compute().T[i] + self.variance[i],
+                                              alpha=0.3, **kwargs)
+            # 2d - one curve at each point
             else:
                 self.axes[1].fill_between(self.energy_scale,
                                           self.spectrum.compute() - self.variance,
                                           self.spectrum.compute() + self.variance,
                                           alpha=0.3, **kwargs)
 
-        if self.dset.data_type == DataType.POINT_CLOUD:
-            self._dtype_point_cloud = True
-            _point = self._closest_point(self.dset.metadata['coord'],np.array([self.x, self.y]))
-            self.axes[1].set_title('point {}'.format(_point))
-        else:
-            self._dtype_point_cloud = False
-            self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
         self.xlabel = self.dset.labels[self.spec_dim]
         self.ylabel = self.dset.data_descriptor
@@ -633,7 +746,6 @@ class SpectralImageVisualizer(object):
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
-        import ipywidgets as iwgt
         self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
                             value=1,
                             description='Image',
@@ -643,8 +755,7 @@ class SpectralImageVisualizer(object):
         self.button.observe(self._pw_uw, 'value') #pixel or unit wise
         self.fig.canvas.draw_idle()
         widg = iwgt.HBox([self.button])
-        widg
-        from IPython.display import display
+        #widg
         display(widg)
 
     def _pw_uw(self, event): 
@@ -654,9 +765,9 @@ class SpectralImageVisualizer(object):
     def _update_image(self, event_value):
         #pixel wise or unit wise listener
         if event_value==1:
-            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    list(np.round(np.linspace(self.extent[0], self.extent[1], 5),2)))
-            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+            self.axes[0].xaxis.set_ticks(ticks=list(np.linspace(self.extent[0], self.extent[1], 5)),
+                                    labels=list(np.round(np.linspace(self.extent[0], self.extent[1], 5),2)))
+            self.axes[0].yaxis.set_ticks(list(np.linspace(self.extent[2], self.extent[3], 5)),
                                     list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
 
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
@@ -669,11 +780,13 @@ class SpectralImageVisualizer(object):
             self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                             self.dset._axes[self.image_dims[1]].units))
 
-            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    list(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2)))
+            self.axes[0].xaxis.set_ticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    list(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2)),
+                                         minor=False)
 
-            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                    list(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2)))
+            self.axes[0].yaxis.set_ticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                    list(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2)),
+                                         minor=False)
             
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         self.dset._axes[self.image_dims[0]].units))
@@ -751,8 +864,10 @@ class SpectralImageVisualizer(object):
         
         self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
 
-        if 'variance' in self.dset.metadata.keys():
-            self.variance = self.dset.metadata['variance'][tuple(selection)].mean(axis=tuple(self.image_dims))
+        if self.dset.variance is not None:
+            self.variance = self.dset.variance[tuple(selection)].mean(axis=tuple(self.image_dims))
+        else:
+            self.variance = None
 
         # * self.intensity_scale[self.x,self.y]
         return self.spectrum.squeeze()
@@ -803,18 +918,23 @@ class SpectralImageVisualizer(object):
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute(), label='experiment')
-        if 'variance' in self.dset.metadata.keys():
-            self.axes[1].fill_between(self.energy_scale,
-                                      self.spectrum.compute() - self.variance,
-                                      self.spectrum.compute() + self.variance,
-                                      alpha=0.3)
 
-        if self.set_title:
-            if self._dtype_point_cloud:
-                _point = self._closest_point(self.dset.metadata['coord'], np.array([self.x, self.y]))
-                self.axes[1].set_title('point {}'.format(_point))
+        if self.dset.variance is not None:
+            #3d - many curves
+            if len(self.variance.shape) > 1:
+                for i in range(len(self.variance)):
+                    self.axes[1].fill_between(self.energy_scale,
+                                              self.spectrum.compute().T[i] - self.variance[i],
+                                              self.spectrum.compute().T[i] + self.variance[i],
+                                              alpha=0.3)
+            # 2d - one curve at each point
             else:
-                self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+                self.axes[1].fill_between(self.energy_scale,
+                                          self.spectrum.compute() - self.variance,
+                                          self.spectrum.compute() + self.variance,
+                                          alpha=0.3)
+
+        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
         self.axes[1].set_xlim(xlim)
         #self.axes[1].set_ylim(ylim)
@@ -834,9 +954,359 @@ class SpectralImageVisualizer(object):
         diff = array_coord - point
         return np.argmin(diff[:,0]**2 + diff[:,1]**2)
 
+class PointCloudVisualizer(object):
+    def __init__(self, dset, base_image = None, figure=None, horizontal=True, **kwargs):
+        from ..sid.dataset import Dataset, DataType
+        from ..sid.dimension import DimensionType
+        # from scipy.spatial import cKDTree
+        # import ipywidgets as iwgt
+        # from IPython.display import display
+
+        if not isinstance(dset, Dataset):
+            raise TypeError('dset should be a sidpy.Dataset object')
+
+        self.dset = dset
+
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
+                raise ValueError('Variance array must have the same dimensionality as the dataset')
+
+        #kwargs parsing
+        scale_bar = kwargs.pop('scale_bar', False)
+        self.set_title = kwargs.pop('set_title', True)
+
+        fig_args = dict()
+        temp = kwargs.pop('figsize', None)
+        if temp is not None:
+            fig_args['figsize'] = temp
+
+        #initial checks
+        if len(dset.shape) < 2:
+            raise TypeError('dataset must have at least two dimensions')
+        if len(dset.shape) > 3:
+            raise TypeError('dataset must have at most tree dimensions')
+        if dset.point_cloud is None:
+            raise TypeError(r'''must contain dataset.point_cloud attribute''')
+
+        selection = []
+        point_dims = []
+        spectral_dim = []
+        channel_dim = []
+
+        for dim, axis in dset._axes.items():
+            if axis.dimension_type == DimensionType.POINT_CLOUD:
+                selection.append(slice(None))
+                point_dims.append(dim)
+            elif axis.dimension_type == DimensionType.SPECTRAL:
+                selection.append(slice(0, 1))
+                spectral_dim.append(dim)
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                channel_dim.append(dim)
+            else:
+                selection.append(slice(0, 1))
+
+        #checking dimension types
+        if len(channel_dim) >1:
+            raise ValueError("We have more than one Channel Dimension, this won't work for the visualizer")
+        if len(spectral_dim)>1:
+            raise ValueError("We have more than one Spectral Dimension, this won't work for the visualizer...")
+        if len(dset.shape)==3:
+            if len(channel_dim)!=1:
+                raise TypeError("We need one dimension with type CHANNEL \
+                    for a spectral image plot for a 4D dataset")
+        elif len(dset.shape)==2:
+            if len(spectral_dim) != 1:
+                raise TypeError("We need one dimension with dimension_type SPECTRAL \
+                 to plot a spectra for a 3D dataset")
+
+        #figure creation
+        if figure is None:
+            self.fig = plt.figure(**fig_args)
+        else:
+            self.fig = figure
+
+        if horizontal:
+            self.axes = self.fig.subplots(ncols=2)
+        else:
+            self.axes = self.fig.subplots(nrows=2, **fig_args)
+
+        if self.set_title:
+            self.fig.canvas.manager.set_window_title(self.dset.title)
+
+        #pull base_image
+        if base_image is not None:
+            self.image, self.px_coord = self._base_image(base_image)
+        else:
+            if len(channel_dim) > 0:
+                self.cloud= dset.mean(axis=(spectral_dim[0], channel_dim[0]))
+            else:
+                self.cloud = dset.mean(axis=(spectral_dim[0],))
+            self.image, self.px_coord = self._mask_image()
+
+        self.x = 0
+        self.y = 0
+        size_x, size_y = self.image.shape
+        self.extent = [0, size_x, size_y, 0]
+        self.rectangle = [0, size_x, 0, size_y]
+
+        self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                list(np.round(np.linspace(self.extent[0], self.extent[1], 5),1)))
+        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
+        self.axes[0].set_xlabel('{} [{}]'.format('distance', 'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format('distance', 'px'))
+
+        self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
+
+        if scale_bar:
+            self._scale_bar()
+
+        #---spectral part----
+        #find closest spectrum
+        #self.tree = cKDTree(self.px_coord)
+        _point_number = self.tree.query(np.array([self.x, self.y]))[1]
+        self.sel_point = self.axes[0].scatter(self.px_coord[_point_number, 0], self.px_coord[_point_number, 1],
+                             color='red', s=10, edgecolors='darkred')
+
+        self.spectrum, self.variance = self.get_spectrum(_point_number)
+        self.energy_axis = spectral_dim[0]
+        if len(channel_dim)>0: self.channel_axis = channel_dim
+        self.energy_scale = self.dset._axes[self.energy_axis].values
+
+        self.spectrum_plot = [] #list is required for the case of several channels
+        if len(self.spectrum.shape) > 1:
+            for i in range(len(self.spectrum)):
+                _spectrum_plot, = self.axes[1].plot(self.energy_scale, self.spectrum.compute()[i])
+                self.spectrum_plot.append(_spectrum_plot)
+        else:
+            _spectrum_plot, = self.axes[1].plot(self.energy_scale, self.spectrum.compute())
+            self.spectrum_plot.append(_spectrum_plot)
+
+        self.fill_between = []
+        if self.variance is not None:
+            #3d - many curves
+            if len(self.variance.shape) > 1:
+                for i in range(len(self.variance)):
+                    _fill_between = self.axes[1].fill_between(self.energy_scale,
+                                              self.spectrum[i] - self.variance[i],
+                                              self.spectrum[i] + self.variance[i],
+                                              alpha=0.3, **kwargs)
+                    self.fill_between.append(_fill_between)
+            # 2d - one curve at each point
+            else:
+                _fill_between = self.axes[1].fill_between(self.energy_scale,
+                                          self.spectrum - self.variance,
+                                          self.spectrum + self.variance,
+                                          alpha=0.3, **kwargs)
+                self.fill_between.append(_fill_between)
+
+        self.axes[1].set_title('point {}'.format(_point_number))
+        self.axes[1].set_xlabel(self.dset.labels[self.energy_axis])
+        self.axes[1].set_ylabel(self.dset.data_descriptor)
+        self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+        self.fig.tight_layout()
+
+        self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+        self.fig.canvas.draw_idle()
+
+    def _base_image(self, base_image):
+        from ..sid.dataset import Dataset, DataType
+        from ..sid.dimension import DimensionType
+        from scipy.spatial import cKDTree
+
+        if not isinstance(base_image, Dataset):
+            raise TypeError('base_image should be a sidpy.Dataset object')
+        if base_image.data_type.value != DataType.IMAGE.value:
+            raise TypeError(f'base_image expected to be IMAGE')
+        if 'coordinates' in self.dset.point_cloud:
+            coord = self.dset.point_cloud['coordinates']
+        else:
+            raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates\
+                                       in point_cloud attribute')
+
+        image_dims = []
+        selection = []
+
+        for dim, axis in base_image._axes.items():
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
+                image_dims.append(dim)
+                selection.append(slice(None))
+            else:
+                selection.append(slice(0, 1))
+
+        if len(image_dims) != 2:
+            raise TypeError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
+
+        self.image = base_image[tuple(selection)].squeeze()
+
+        im_size = self.image.shape
+        _x0, _x1, _y1, _y0 = base_image.get_extent(image_dims)
+        _delta_x = _x1 - _x0
+        _delta_y = _y1 - _y0
+
+        _px_x = np.array((coord[:,0] - _x0)*im_size[1]/_delta_x).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size[0]/_delta_y).astype(int)
+        _px_coord = np.array([_px_x, _px_y]).T
+
+        self.tree = cKDTree(_px_coord)
+
+        return self.image, _px_coord
+
+
+    def _scale_bar(self):
+        from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+        self.axes[0].axis('off')
+        extent = self.extent
+        size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
+        if 'units' in self.dset.point_cloud:
+            _units = self.dset.point_cloud['units']
+        else:
+            _units = 'px'
+
+        if size_of_bar < 1:
+            size_of_bar = 1
+        scalebar = AnchoredSizeBar(self.axes[0].transData,
+                                   size_of_bar, '{} {}'.format(size_of_bar,
+                                                               _units),
+                                   'lower left',
+                                   pad=1,
+                                   color='white',
+                                   frameon=False,
+                                   size_vertical=size_of_bar/5)
+
+        self.axes[0].add_artist(scalebar)
+
+
+    def _onclick(self, event):
+        self.event = event
+        if event.inaxes in [self.axes[0]]:
+            self.x = round(event.xdata)
+            self.y = round(event.ydata)
+            _point_number = self.tree.query(np.array([self.x, self.y]))[1]
+            self.spectrum, self.variance = self.get_spectrum(_point_number)
+            if len(self.spectrum.shape) > 1:
+                for i in range(len(self.spectrum)):
+                    self.spectrum_plot[i].set_data(self.energy_scale, self.spectrum.compute()[i])
+            else:
+                self.spectrum_plot[0].set_data(self.energy_scale, self.spectrum.compute())
+
+            if self.variance is not None:
+                # 3d - many curves
+                if len(self.variance.shape) > 1:
+                    for i in range(len(self.variance)):
+                        _c = self.fill_between[i].get_facecolor()[0]
+                        self.fill_between[i].remove()
+                        self.fill_between[i] = self.axes[1].fill_between(self.energy_scale,
+                                              self.spectrum[i] - self.variance[i],
+                                              self.spectrum[i] + self.variance[i],
+                                              color= _c)
+                else:
+                    _c = self.fill_between[0].get_facecolor()[0]
+                    self.fill_between[0].remove()
+                    self.fill_between[0] = self.axes[1].fill_between(self.energy_scale,
+                                                                     self.spectrum - self.variance,
+                                                                     self.spectrum + self.variance,
+                                                                     color=_c)
+
+            self.axes[1].set_title('point {}'.format(_point_number))
+            self.sel_point.set_offsets(np.column_stack((self.px_coord[_point_number, 0],
+                                                        self.px_coord[_point_number, 1])))
+
+            self.fig.canvas.draw_idle()
+        else:
+            if event.dblclick:
+                bottom = float(self.spectrum.min())
+                if bottom < 0:
+                    bottom *= 1.02
+                else:
+                    bottom *= 0.98
+                top = float(self.spectrum.max())
+                if top > 0:
+                    top *= 1.02
+                else:
+                    top *= 0.98
+
+                self.axes[1].set_ylim(bottom=bottom, top=top)
+
+    def get_spectrum(self, point_number):
+        '''
+        Getting the spectrum by the point number in the point cloud.
+        Parameters
+        ----------
+        point_number: int
+
+        Returns
+        -------
+        self.spectrum: sidpy.array
+        '''
+        from ..sid.dimension import DimensionType
+        selection = []
+        for dim, axis in self.dset._axes.items():
+            if axis.dimension_type == DimensionType.POINT_CLOUD:
+                selection.append(point_number)
+            elif axis.dimension_type == DimensionType.SPECTRAL:
+                selection.append(slice(None))
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                selection.append(slice(None))
+            else:
+                selection.append(slice(0, 1))
+
+        self.spectrum = self.dset[tuple(selection)].squeeze()
+        if self.dset.variance is not None:
+            self.variance = self.dset.variance[tuple(selection)].squeeze()
+        else:
+            self.variance = None
+        return self.spectrum, self.variance
+
+    def _mask_image(self):
+        '''
+        Griddata transformation of the unstructured point cloud to the numpy 2D array
+
+        Returns
+        -------
+        2D np.array - image data
+        2D np.array - coordinate data
+        '''
+        from scipy.interpolate import griddata
+        from scipy.spatial import cKDTree
+        import time
+
+
+        if 'coordinates' in self.dset.point_cloud:
+            coord = self.dset.point_cloud['coordinates']
+        else:
+            raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates\
+                                       in point_cloud attribute')
+
+        # minimal image size in 50x50px or equal to the number of point for dimensions
+        im_size = max(50, coord.shape[0])
+
+        _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
+        _y0, _y1 = np.min(coord, axis=0)[1], np.max(coord, axis=0)[1]
+        _delta_x = _x1 - _x0
+        _delta_y = _y1 - _y0
+
+        #to extend filed of view
+        _x0, _x1 = _x0 - 0.05*_delta_x, _x1 + 0.05*_delta_x
+        _y0, _y1 = _y0 - 0.05*_delta_y, _y1 + 0.05 * _delta_y
+
+        _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1-_x0)).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1-_y0)).astype(int)
+        _px_coord = np.array([_px_x, _px_y]).T
+        self.tree = cKDTree(_px_coord)
+        grid_x, grid_y = np.mgrid[0:im_size, 0:im_size]
+        mask = griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
+        return mask, _px_coord
+
+    def get_xy(self):
+        return [self.x, self.y]
+
+
+
 
 class FourDimImageVisualizer(object):
-    
+
     """
     ### Interactive 4D imaging plot
 
