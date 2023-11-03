@@ -14,6 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 # from matplotlib.widgets import Slider, Button
 import matplotlib.patches as patches
+
+import sidpy
 # import matplotlib.animation as animation
 
 from ..hdf.dtype_utils import is_complex_dtype
@@ -94,11 +96,10 @@ class CurveVisualizer(object):
         else:
             self.axis = self.fig.add_subplot(1, 1, 1, **fig_args)
             self.axis.plot(self.dim.values, self.dset.compute(), **kwargs)
-            if 'variance' in self.dset.metadata.keys():
-                self.variance = self.dset.metadata['variance']
+            if self.dset.variance is not None:
                 self.axis.fill_between(self.dim.values,
-                                      self.dset.compute()-self.variance,
-                                      self.dset.compute()+self.variance,
+                                      self.dset.compute()-self.dset.variance,
+                                      self.dset.compute()+self.dset.variance,
                                       alpha = 0.3, **kwargs)
             if set_title:
                 self.axis.set_title(self.dset.title, pad=15)
@@ -178,10 +179,8 @@ class ImageVisualizer(object):
             self.axis = self.fig.add_subplot(1, 1, 1)
             self.plot_image(**kwargs)
 
-        if 'variance' in self.dset.metadata.keys():
-            self.variance = self.dset.metadata['variance']
-
-            if self.variance.shape != self.dset.shape:
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
 
             self._variance_button = iwgt.widgets.Dropdown(options=[('z', 1), ('σ', 2), ('z + σ', 3), ('z - σ', 4)],
@@ -298,9 +297,9 @@ class ImageVisualizer(object):
 
     def _update_image(self, event_value, **kwargs):
         _data = {1: self.dset[tuple(self.selection)].squeeze().T,
-                 2: self.variance[tuple(self.selection)].squeeze().T,
-                 3: self.variance[tuple(self.selection)].squeeze().T + self.dset[tuple(self.selection)].squeeze().T,
-                 4: self.dset[tuple(self.selection)].squeeze().T - self.variance[tuple(self.selection)].squeeze().T}
+                 2: self.dset.variance[tuple(self.selection)].squeeze().T,
+                 3: self.dset.variance[tuple(self.selection)].squeeze().T + self.dset[tuple(self.selection)].squeeze().T,
+                 4: self.dset[tuple(self.selection)].squeeze().T - self.dset.variance[tuple(self.selection)].squeeze().T}
 
         if is_complex_dtype(self.dset.dtype):
             _dat = np.array(_data[event_value] + 0*1j)
@@ -440,10 +439,8 @@ class ImageStackVisualizer(object):
         self.average = False
         self.button.observe(self._average_slices, 'value')
 
-        if 'variance' in self.dset.metadata.keys():
-            self.variance = self.dset.metadata['variance']
-
-            if self.variance.shape != self.dset.shape:
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
 
             self._variance_button = iwgt.widgets.Dropdown(options=[('z', 1), ('σ', 2), ('z + σ', 3), ('z - σ', 4)],
@@ -541,11 +538,11 @@ class ImageStackVisualizer(object):
 
     def _update(self, frame=0):
         if self.display == 2:
-            _dset = self.variance
+            _dset = self.dset.variance
         elif self.display == 3:
-            _dset = self.dset + self.variance
+            _dset = self.dset + self.dset.variance
         elif self.display == 4:
-            _dset = self.dset - self.variance
+            _dset = self.dset - self.dset.variance
         else:
             _dset = self.dset
 
@@ -654,8 +651,8 @@ class SpectralImageVisualizer(object):
 
         self.dset = dset
 
-        if 'variance' in self.dset.metadata.keys():
-            if self.dset.metadata['variance'].shape != self.dset.shape:
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
 
         self.energy_axis = spectral_dim[0]
@@ -685,13 +682,13 @@ class SpectralImageVisualizer(object):
         else:
             self.image = dset.mean(axis=(spectral_dim[0]))
 
-        if 1 in self.dset.shape:
-            self.image = dset.squeeze()
-            # self.extent[2]=self.image.shape[1]
-            # self.bin_y=self.image.shape[1]
-            self.axes[0].set_aspect('auto')
-        else:
-            self.axes[0].set_aspect('equal')
+        # if 1 in self.dset.shape:
+        #     self.image = dset.squeeze()
+        #     # self.extent[2]=self.image.shape[1]
+        #     # self.bin_y=self.image.shape[1]
+        #     self.axes[0].set_aspect('auto')
+        # else:
+        #     self.axes[0].set_aspect('equal')
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         
@@ -724,7 +721,7 @@ class SpectralImageVisualizer(object):
             self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute())
         #add variance shadow graph
-        if 'variance' in self.dset.metadata.keys():
+        if self.variance is not None:
             #3d - many curves
             if len(self.variance.shape) > 1:
                 for i in range(len(self.variance)):
@@ -739,13 +736,7 @@ class SpectralImageVisualizer(object):
                                           self.spectrum.compute() + self.variance,
                                           alpha=0.3, **kwargs)
 
-        if self.dset.data_type == DataType.POINT_CLOUD:
-            self._dtype_point_cloud = True
-            _point = self._closest_point(self.dset.metadata['coord'],np.array([self.x, self.y]))
-            self.axes[1].set_title('point {}'.format(_point))
-        else:
-            self._dtype_point_cloud = False
-            self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
         self.xlabel = self.dset.labels[self.spec_dim]
         self.ylabel = self.dset.data_descriptor
@@ -873,9 +864,9 @@ class SpectralImageVisualizer(object):
         
         self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
 
-        if 'variance' in self.dset.metadata.keys():
+        if self.dset.variance is not None:
 
-            self.variance = self.dset.metadata['variance'][tuple(selection)].mean(axis=tuple(self.image_dims))
+            self.variance = self.dset.variance[tuple(selection)].mean(axis=tuple(self.image_dims))
 
         # * self.intensity_scale[self.x,self.y]
         return self.spectrum.squeeze()
@@ -927,10 +918,9 @@ class SpectralImageVisualizer(object):
             self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute(), label='experiment')
 
-        if 'variance' in self.dset.metadata.keys():
+        if self.dset.variance is not None:
             #3d - many curves
             if len(self.variance.shape) > 1:
-                print('3d')
                 for i in range(len(self.variance)):
                     self.axes[1].fill_between(self.energy_scale,
                                               self.spectrum.compute().T[i] - self.variance[i],
@@ -938,18 +928,12 @@ class SpectralImageVisualizer(object):
                                               alpha=0.3)
             # 2d - one curve at each point
             else:
-                print('2d')
                 self.axes[1].fill_between(self.energy_scale,
                                           self.spectrum.compute() - self.variance,
                                           self.spectrum.compute() + self.variance,
                                           alpha=0.3)
 
-        if self.set_title:
-            if self._dtype_point_cloud:
-                _point = self._closest_point(self.dset.metadata['coord'], np.array([self.x, self.y]))
-                self.axes[1].set_title('point {}'.format(_point))
-            else:
-                self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
+        self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
         self.axes[1].set_xlim(xlim)
         #self.axes[1].set_ylim(ylim)
@@ -969,9 +953,359 @@ class SpectralImageVisualizer(object):
         diff = array_coord - point
         return np.argmin(diff[:,0]**2 + diff[:,1]**2)
 
+class PointCloudVisualizer(object):
+    def __init__(self, dset, base_image = None, figure=None, horizontal=True, **kwargs):
+        from ..sid.dataset import Dataset, DataType
+        from ..sid.dimension import DimensionType
+        # from scipy.spatial import cKDTree
+        # import ipywidgets as iwgt
+        # from IPython.display import display
+
+        if not isinstance(dset, Dataset):
+            raise TypeError('dset should be a sidpy.Dataset object')
+
+        self.dset = dset
+
+        if self.dset.variance is not None:
+            if self.dset.variance.shape != self.dset.shape:
+                raise ValueError('Variance array must have the same dimensionality as the dataset')
+
+        #kwargs parsing
+        scale_bar = kwargs.pop('scale_bar', False)
+        self.set_title = kwargs.pop('set_title', True)
+
+        fig_args = dict()
+        temp = kwargs.pop('figsize', None)
+        if temp is not None:
+            fig_args['figsize'] = temp
+
+        #initial checks
+        if len(dset.shape) < 2:
+            raise TypeError('dataset must have at least two dimensions')
+        if len(dset.shape) > 3:
+            raise TypeError('dataset must have at most tree dimensions')
+        if dset.point_cloud is None:
+            raise TypeError(r'''must contain dataset.point_cloud attribute''')
+
+        selection = []
+        point_dims = []
+        spectral_dim = []
+        channel_dim = []
+
+        for dim, axis in dset._axes.items():
+            if axis.dimension_type == DimensionType.POINT_CLOUD:
+                selection.append(slice(None))
+                point_dims.append(dim)
+            elif axis.dimension_type == DimensionType.SPECTRAL:
+                selection.append(slice(0, 1))
+                spectral_dim.append(dim)
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                channel_dim.append(dim)
+            else:
+                selection.append(slice(0, 1))
+
+        #checking dimension types
+        if len(channel_dim) >1:
+            raise ValueError("We have more than one Channel Dimension, this won't work for the visualizer")
+        if len(spectral_dim)>1:
+            raise ValueError("We have more than one Spectral Dimension, this won't work for the visualizer...")
+        if len(dset.shape)==3:
+            if len(channel_dim)!=1:
+                raise TypeError("We need one dimension with type CHANNEL \
+                    for a spectral image plot for a 4D dataset")
+        elif len(dset.shape)==2:
+            if len(spectral_dim) != 1:
+                raise TypeError("We need one dimension with dimension_type SPECTRAL \
+                 to plot a spectra for a 3D dataset")
+
+        #figure creation
+        if figure is None:
+            self.fig = plt.figure(**fig_args)
+        else:
+            self.fig = figure
+
+        if horizontal:
+            self.axes = self.fig.subplots(ncols=2)
+        else:
+            self.axes = self.fig.subplots(nrows=2, **fig_args)
+
+        if self.set_title:
+            self.fig.canvas.manager.set_window_title(self.dset.title)
+
+        #pull base_image
+        if base_image is not None:
+            self.image, self.px_coord = self._base_image(base_image)
+        else:
+            if len(channel_dim) > 0:
+                self.cloud= dset.mean(axis=(spectral_dim[0], channel_dim[0]))
+            else:
+                self.cloud = dset.mean(axis=(spectral_dim[0],))
+            self.image, self.px_coord = self._mask_image()
+
+        self.x = 0
+        self.y = 0
+        size_x, size_y = self.image.shape
+        self.extent = [0, size_x, size_y, 0]
+        self.rectangle = [0, size_x, 0, size_y]
+
+        self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                list(np.round(np.linspace(self.extent[0], self.extent[1], 5),1)))
+        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
+        self.axes[0].set_xlabel('{} [{}]'.format('distance', 'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format('distance', 'px'))
+
+        self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
+
+        if scale_bar:
+            self._scale_bar()
+
+        #---spectral part----
+        #find closest spectrum
+        #self.tree = cKDTree(self.px_coord)
+        _point_number = self.tree.query(np.array([self.x, self.y]))[1]
+        self.sel_point = self.axes[0].scatter(self.px_coord[_point_number, 0], self.px_coord[_point_number, 1],
+                             color='red', s=10, edgecolors='darkred')
+
+        self.spectrum, self.variance = self.get_spectrum(_point_number)
+        self.energy_axis = spectral_dim[0]
+        if len(channel_dim)>0: self.channel_axis = channel_dim
+        self.energy_scale = self.dset._axes[self.energy_axis].values
+
+        self.spectrum_plot = [] #list is required for the case of several channels
+        if len(self.spectrum.shape) > 1:
+            for i in range(len(self.spectrum)):
+                _spectrum_plot, = self.axes[1].plot(self.energy_scale, self.spectrum.compute()[i])
+                self.spectrum_plot.append(_spectrum_plot)
+        else:
+            _spectrum_plot, = self.axes[1].plot(self.energy_scale, self.spectrum.compute())
+            self.spectrum_plot.append(_spectrum_plot)
+
+        self.fill_between = []
+        if self.variance is not None:
+            #3d - many curves
+            if len(self.variance.shape) > 1:
+                for i in range(len(self.variance)):
+                    _fill_between = self.axes[1].fill_between(self.energy_scale,
+                                              self.spectrum[i] - self.variance[i],
+                                              self.spectrum[i] + self.variance[i],
+                                              alpha=0.3, **kwargs)
+                    self.fill_between.append(_fill_between)
+            # 2d - one curve at each point
+            else:
+                _fill_between = self.axes[1].fill_between(self.energy_scale,
+                                          self.spectrum - self.variance,
+                                          self.spectrum + self.variance,
+                                          alpha=0.3, **kwargs)
+                self.fill_between.append(_fill_between)
+
+        self.axes[1].set_title('point {}'.format(_point_number))
+        self.axes[1].set_xlabel(self.dset.labels[self.energy_axis])
+        self.axes[1].set_ylabel(self.dset.data_descriptor)
+        self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+        self.fig.tight_layout()
+
+        self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+        self.fig.canvas.draw_idle()
+
+    def _base_image(self, base_image):
+        from ..sid.dataset import Dataset, DataType
+        from ..sid.dimension import DimensionType
+        from scipy.spatial import cKDTree
+
+        if not isinstance(base_image, Dataset):
+            raise TypeError('base_image should be a sidpy.Dataset object')
+        if base_image.data_type.value != DataType.IMAGE.value:
+            raise TypeError(f'base_image expected to be IMAGE')
+        if 'coordinates' in self.dset.point_cloud:
+            coord = self.dset.point_cloud['coordinates']
+        else:
+            raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates\
+                                       in point_cloud attribute')
+
+        image_dims = []
+        selection = []
+
+        for dim, axis in base_image._axes.items():
+            if axis.dimension_type in [DimensionType.SPATIAL, DimensionType.RECIPROCAL]:
+                image_dims.append(dim)
+                selection.append(slice(None))
+            else:
+                selection.append(slice(0, 1))
+
+        if len(image_dims) != 2:
+            raise TypeError('We need two dimensions with dimension_type SPATIAL or RECIPROCAL to plot an image')
+
+        self.image = base_image[tuple(selection)].squeeze()
+
+        im_size = self.image.shape
+        _x0, _x1, _y1, _y0 = base_image.get_extent(image_dims)
+        _delta_x = _x1 - _x0
+        _delta_y = _y1 - _y0
+
+        _px_x = np.array((coord[:,0] - _x0)*im_size[1]/_delta_x).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size[0]/_delta_y).astype(int)
+        _px_coord = np.array([_px_x, _px_y]).T
+
+        self.tree = cKDTree(_px_coord)
+
+        return self.image, _px_coord
+
+
+    def _scale_bar(self):
+        from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+        self.axes[0].axis('off')
+        extent = self.extent
+        size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
+        if 'units' in self.dset.point_cloud:
+            _units = self.dset.point_cloud['units']
+        else:
+            _units = 'px'
+
+        if size_of_bar < 1:
+            size_of_bar = 1
+        scalebar = AnchoredSizeBar(self.axes[0].transData,
+                                   size_of_bar, '{} {}'.format(size_of_bar,
+                                                               _units),
+                                   'lower left',
+                                   pad=1,
+                                   color='white',
+                                   frameon=False,
+                                   size_vertical=size_of_bar/5)
+
+        self.axes[0].add_artist(scalebar)
+
+
+    def _onclick(self, event):
+        self.event = event
+        if event.inaxes in [self.axes[0]]:
+            self.x = round(event.xdata)
+            self.y = round(event.ydata)
+            _point_number = self.tree.query(np.array([self.x, self.y]))[1]
+            self.spectrum, self.variance = self.get_spectrum(_point_number)
+            if len(self.spectrum.shape) > 1:
+                for i in range(len(self.spectrum)):
+                    self.spectrum_plot[i].set_data(self.energy_scale, self.spectrum.compute()[i])
+            else:
+                self.spectrum_plot[0].set_data(self.energy_scale, self.spectrum.compute())
+
+            if self.variance is not None:
+                # 3d - many curves
+                if len(self.variance.shape) > 1:
+                    for i in range(len(self.variance)):
+                        _c = self.fill_between[i].get_facecolor()[0]
+                        self.fill_between[i].remove()
+                        self.fill_between[i] = self.axes[1].fill_between(self.energy_scale,
+                                              self.spectrum[i] - self.variance[i],
+                                              self.spectrum[i] + self.variance[i],
+                                              color= _c)
+                else:
+                    _c = self.fill_between[0].get_facecolor()[0]
+                    self.fill_between[0].remove()
+                    self.fill_between[0] = self.axes[1].fill_between(self.energy_scale,
+                                                                     self.spectrum - self.variance,
+                                                                     self.spectrum + self.variance,
+                                                                     color=_c)
+
+            self.axes[1].set_title('point {}'.format(_point_number))
+            self.sel_point.set_offsets(np.column_stack((self.px_coord[_point_number, 0],
+                                                        self.px_coord[_point_number, 1])))
+
+            self.fig.canvas.draw_idle()
+        else:
+            if event.dblclick:
+                bottom = float(self.spectrum.min())
+                if bottom < 0:
+                    bottom *= 1.02
+                else:
+                    bottom *= 0.98
+                top = float(self.spectrum.max())
+                if top > 0:
+                    top *= 1.02
+                else:
+                    top *= 0.98
+
+                self.axes[1].set_ylim(bottom=bottom, top=top)
+
+    def get_spectrum(self, point_number):
+        '''
+        Getting the spectrum by the point number in the point cloud.
+        Parameters
+        ----------
+        point_number: int
+
+        Returns
+        -------
+        self.spectrum: sidpy.array
+        '''
+        from ..sid.dimension import DimensionType
+        selection = []
+        for dim, axis in self.dset._axes.items():
+            if axis.dimension_type == DimensionType.POINT_CLOUD:
+                selection.append(point_number)
+            elif axis.dimension_type == DimensionType.SPECTRAL:
+                selection.append(slice(None))
+            elif axis.dimension_type == DimensionType.CHANNEL:
+                selection.append(slice(None))
+            else:
+                selection.append(slice(0, 1))
+
+        self.spectrum = self.dset[tuple(selection)].squeeze()
+        if self.dset.variance is not None:
+            self.variance = self.dset.variance[tuple(selection)].squeeze()
+        else:
+            self.variance = None
+        return self.spectrum, self.variance
+
+    def _mask_image(self):
+        '''
+        Griddata transformation of the unstructured point cloud to the numpy 2D array
+
+        Returns
+        -------
+        2D np.array - image data
+        2D np.array - coordinate data
+        '''
+        from scipy.interpolate import griddata
+        from scipy.spatial import cKDTree
+        import time
+
+
+        if 'coordinates' in self.dset.point_cloud:
+            coord = self.dset.point_cloud['coordinates']
+        else:
+            raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates\
+                                       in point_cloud attribute')
+
+        # minimal image size in 50x50px or equal to the number of point for dimensions
+        im_size = max(50, coord.shape[0])
+
+        _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
+        _y0, _y1 = np.min(coord, axis=0)[1], np.max(coord, axis=0)[1]
+        _delta_x = _x1 - _x0
+        _delta_y = _y1 - _y0
+
+        #to extend filed of view
+        _x0, _x1 = _x0 - 0.05*_delta_x, _x1 + 0.05*_delta_x
+        _y0, _y1 = _y0 - 0.05*_delta_y, _y1 + 0.05 * _delta_y
+
+        _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1-_x0)).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1-_y0)).astype(int)
+        _px_coord = np.array([_px_x, _px_y]).T
+        self.tree = cKDTree(_px_coord)
+        grid_x, grid_y = np.mgrid[0:im_size, 0:im_size]
+        mask = griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
+        return mask, _px_coord
+
+    def get_xy(self):
+        return [self.x, self.y]
+
+
+
 
 class FourDimImageVisualizer(object):
-    
+
     """
     ### Interactive 4D imaging plot
 
