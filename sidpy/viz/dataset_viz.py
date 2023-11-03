@@ -865,8 +865,9 @@ class SpectralImageVisualizer(object):
         self.spectrum = self.dset[tuple(selection)].mean(axis=tuple(self.image_dims))
 
         if self.dset.variance is not None:
-
             self.variance = self.dset.variance[tuple(selection)].mean(axis=tuple(self.image_dims))
+        else:
+            self.variance = None
 
         # * self.intensity_scale[self.x,self.y]
         return self.spectrum.squeeze()
