@@ -101,6 +101,9 @@ def get_spectral_image(dtype=float):
 
     return dset, x
 
+def get_point_cloud(dtype=float):
+    pass
+
 
 def get_4d_image(dtype=float):
 
@@ -132,6 +135,8 @@ def get_4d_image(dtype=float):
     dataset.y.quantity = 'distance'
 
     return dataset, data
+
+
 
 
 class TestSpectrumPlot(unittest.TestCase):

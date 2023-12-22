@@ -31,7 +31,8 @@ def validate_dataset_properties(self, dataset, values,
                                 title='generic', quantity='generic', units='generic',
                                 modality='generic', source='generic', dimension_dict=None,
                                 data_type=DataType.UNKNOWN,
-                                metadata={}, original_metadata={}
+                                metadata={}, original_metadata={},
+                                coordinates=None,
                                 ):
     self.assertIsInstance(self, unittest.TestCase)
     self.assertIsInstance(dataset, Dataset)

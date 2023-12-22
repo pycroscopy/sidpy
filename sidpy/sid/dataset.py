@@ -287,7 +287,7 @@ class Dataset(da.Array):
         return sid_dataset
 
     def like_data(self, data, title=None, chunks='auto', lock=False,
-                  coordinates = None, variance=None, **kwargs):
+                  variance=None, **kwargs):
         """
         Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
@@ -304,8 +304,6 @@ class Dataset(da.Array):
             size of chunks for dask array
         lock: optional boolean
             for dask array
-        coordinates: array like
-            coordinates for point cloud
 
         Returns
         -------
@@ -320,13 +318,12 @@ class Dataset(da.Array):
         # if coordinates is None:
         #     coordinates = self.point_cloud['coordinates']
 
-        new_data = self.from_array(data, chunks=chunks, lock=lock,
-                                   coordinates=coordinates, variance =variance)
+        new_data = self.from_array(data, chunks=chunks, lock=lock, variance =variance)
 
         new_data.data_type = self.data_type
 
-        if coordinates is None:
-            new_data.point_cloud = self.point_cloud
+        # if coordinates is None:
+        #     new_data.point_cloud = self.point_cloud
         if variance is None:
             if new_data.shape == self.shape:
                 new_data.variance = self.variance
@@ -1286,9 +1283,13 @@ class Dataset(da.Array):
         result = self.like_data(super().mean(axis=axis, dtype=dtype, keepdims=keepdims,
                                              split_every=split_every, out=out), title_prefix='mean_aggregate_',
                                 checkdims=False)
-        if self._variance is not None:
+        if (self._variance is not None) and (axis is not None):
+            if type(axis) is tuple:
+                sh = np.prod(np.array(self._variance.shape, dtype=int)[list(axis)])
+            else:
+                sh = axis
             result._variance = self._variance.sum(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                   split_every=split_every, out=out)/self._variance.shape[axis]**2
+                                                   split_every=split_every, out=out)/sh**2
 
         return result, locals().copy()
 
