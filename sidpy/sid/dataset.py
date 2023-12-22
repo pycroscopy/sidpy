@@ -1242,7 +1242,7 @@ class Dataset(da.Array):
         if self._variance is not None:
             if axis is not None:
                 _min_ind_axis = super().argmin(axis=axis, split_every=split_every, out=out)
-                _coords = np.array(list(np.ndindex(_min_ind_axis.shape))) #TODO list? reshape?
+                _coords = np.array(list(np.ndindex(_min_ind_axis.shape))) #list?
                 _inds = np.insert(_coords, axis, np.array(_min_ind_axis).flatten(), axis=1)
                 _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, (self._variance.shape)))
                 result._variance = _extracted_points.reshape(result.shape).rechunk(result.chunksize)
@@ -1261,7 +1261,7 @@ class Dataset(da.Array):
         if self._variance is not None:
             if axis is not None:
                 _max_ind_axis = super().argmax(axis=axis, split_every=split_every, out=out)
-                _coords = np.array(list(np.ndindex(_max_ind_axis.shape))) #TODO list? reshape?
+                _coords = np.array(list(np.ndindex(_max_ind_axis.shape))) #list?
                 _inds = np.insert(_coords, axis, np.array(_max_ind_axis).flatten(), axis=1)
                 _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, (self._variance.shape)))
                 result._variance = _extracted_points.reshape(result.shape).rechunk(result.chunksize)
