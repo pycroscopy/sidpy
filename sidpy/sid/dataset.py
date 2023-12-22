@@ -1160,6 +1160,11 @@ class Dataset(da.Array):
                 return False
             if self._axes != other._axes:
                 return False
+            if (self._variance is not None) and (other._variance is not None):
+                if not (self._variance.__eq__(other._variance)).all():
+                    return False
+            elif (self._variance is not None) or (other._variance is not None):
+                return False
             return True
         return False
 
@@ -1175,11 +1180,17 @@ class Dataset(da.Array):
     ##################################################
     @property
     def real(self):
-        return self.like_data(super().real)
+        result = self.like_data(super().real)
+        if self._variance is not None:
+            result._variance = self._variance.real
+        return result
 
     @property
     def imag(self):
-        return self.like_data(super().imag)
+        result = self.like_data(super().imag)
+        if self._variance is not None:
+            result._variance = self._variance.image
+        return result
 
     # This is wrapper method for the methods that reduce dimensions
     def reduce_dims(original_method):
@@ -1206,6 +1217,9 @@ class Dataset(da.Array):
         result = self.like_data(super().all(axis=axis, keepdims=keepdims,
                                             split_every=split_every, out=out), title_prefix='all_aggregate_',
                                 checkdims=False)
+        if self._variance is not None:
+            result._variance = self._variance.all(axis=axis, keepdims=keepdims,
+                                                split_every=split_every, out=out)
         return result, locals().copy()
 
     @reduce_dims
@@ -1214,6 +1228,9 @@ class Dataset(da.Array):
         result = self.like_data(super().any(axis=axis, keepdims=keepdims,
                                             split_every=split_every, out=out), title_prefix='any_aggregate_',
                                 checkdims=False)
+        if self._variance is not None:
+            result._variance = self._variance.any(axis=axis, keepdims=keepdims,
+                                                  split_every=split_every, out=out)
         return result, locals().copy()
 
     @reduce_dims
@@ -1222,6 +1239,16 @@ class Dataset(da.Array):
         result = self.like_data(super().min(axis=axis, keepdims=keepdims,
                                             split_every=split_every, out=out), title_prefix='min_aggregate_',
                                 checkdims=False)
+        if self._variance is not None:
+            if axis is not None:
+                _min_ind_axis = super().argmin(axis=axis, split_every=split_every, out=out)
+                _coords = np.array(list(np.ndindex(_min_ind_axis.shape))) #TODO list? reshape?
+                _inds = np.insert(_coords, axis, np.array(_min_ind_axis).flatten(), axis=1)
+                _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, (self._variance.shape)))
+                result._variance = _extracted_points.reshape(result.shape).rechunk(result.chunksize)
+            else:
+                _ind = np.unravel_index(super().min(), self._variance.shape)
+                result._variance = self._variance[_ind]
         return result, locals().copy()
 
     @reduce_dims
@@ -1230,6 +1257,15 @@ class Dataset(da.Array):
         result = self.like_data(super().max(axis=axis, keepdims=keepdims,
                                             split_every=split_every, out=out), title_prefix='max_aggregate_',
                                 checkdims=False)
+
+        if self._variance is not None:
+            if axis is not None:
+                _max_ind_axis = super().argmax(axis=axis, split_every=split_every, out=out)
+                _coords = np.array(list(np.ndindex(_max_ind_axis.shape))) #TODO list? reshape?
+                _inds = np.insert(_coords, axis, np.array(_max_ind_axis).flatten(), axis=1)
+                _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, (self._variance.shape)))
+                result._variance = _extracted_points.reshape(result.shape).rechunk(result.chunksize)
+
         return result, locals().copy()
 
     @reduce_dims
@@ -1238,6 +1274,10 @@ class Dataset(da.Array):
         result = self.like_data(super().sum(axis=axis, dtype=dtype, keepdims=keepdims,
                                             split_every=split_every, out=out), title_prefix='sum_aggregate_',
                                 checkdims=False)
+        if self._variance is not None:
+            result._variance = abs(self._variance).sum(axis=axis, dtype=dtype, keepdims=keepdims,
+                                                    split_every=split_every, out=out)
+        #TODO imaginary
         return result, locals().copy()
 
     @reduce_dims
@@ -1246,6 +1286,10 @@ class Dataset(da.Array):
         result = self.like_data(super().mean(axis=axis, dtype=dtype, keepdims=keepdims,
                                              split_every=split_every, out=out), title_prefix='mean_aggregate_',
                                 checkdims=False)
+        if self._variance is not None:
+            result._variance = self._variance.sum(axis=axis, dtype=dtype, keepdims=keepdims,
+                                                   split_every=split_every, out=out)/self._variance.shape[axis]**2
+
         return result, locals().copy()
 
     @reduce_dims
@@ -1297,11 +1341,16 @@ class Dataset(da.Array):
                               reset_quantity=True, title_prefix='conj_', checkdims=True)
 
     def astype(self, dtype, **kwargs):
-        return self.like_data(super().astype(dtype=dtype, **kwargs))
+        return self.like_data(super().astype(dtype=dtype, **kwargs), variance=self._variance)
 
     def flatten(self):
-        return self.like_data(super().flatten(), title_prefix='flattened_',
+
+        result =  self.like_data(super().flatten(), title_prefix='flattened_',
                               check_dims=False)
+
+        if self._variance is not None:
+            result.variance = self._variance.flatten()
+        return result
 
     def ravel(self):
         return self.flatten()
@@ -1336,6 +1385,9 @@ class Dataset(da.Array):
     def squeeze(self, axis=None):
         result = self.like_data(super().squeeze(axis=axis), title_prefix='Squeezed_',
                                 checkdims=False)
+        if self._variance is not None:
+            result._variance = self._variance.squeeze(axis=axis)
+
         if axis is None:
             shape_list = list(self.shape)
             axes = [i for i in range(self.ndim) if shape_list[i] == 1]
@@ -1349,6 +1401,9 @@ class Dataset(da.Array):
     def swapaxes(self, axis1, axis2):
         result = self.like_data(super().swapaxes(axis1, axis2),
                                 title_prefix='Swapped_axes_', checkdims=False)
+        if self._variance is not None:
+            result._variance = self._variance.swapaxes(axis1, axis2)
+
         new_order = np.arange(self.ndim)
         new_order[axis1] = axis2
         new_order[axis2] = axis1
@@ -1358,6 +1413,8 @@ class Dataset(da.Array):
     def transpose(self, *axes):
         result = self.like_data(super().transpose(*axes),
                                 title_prefix='Transposed_', checkdims=False)
+        if self._variance is not None:
+            result._variance = self._variance.transpose(*axes)
         if not axes:
             new_axes_order = range(self.ndim)[::-1]
         elif len(axes) == 1 and isinstance(axes[0], Iterable):
