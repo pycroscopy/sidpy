@@ -959,8 +959,8 @@ class PointCloudVisualizer(object):
         from ..sid.dataset import Dataset, DataType
         from ..sid.dimension import DimensionType
         # from scipy.spatial import cKDTree
-        # import ipywidgets as iwgt
-        # from IPython.display import display
+        import ipywidgets as iwgt
+        from IPython.display import display
 
         if not isinstance(dset, Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
@@ -1049,13 +1049,22 @@ class PointCloudVisualizer(object):
         self.extent = [0, size_x, size_y, 0]
         self.rectangle = [0, size_x, 0, size_y]
 
+        if 'quantity' in self.dset.point_cloud:
+            _quantity = self.dset.point_cloud['quantity']
+            if isinstance(_quantity, str):
+                _quantity = (_quantity, _quantity)
+            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
+                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
+        else:
+            _quantity = ('distance', 'distance')
+
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
                                 list(np.round(np.linspace(self.extent[0], self.extent[1], 5),1)))
         self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
                                 list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
-        self.axes[0].set_xlabel('{} [{}]'.format('distance', 'px'))
-        self.axes[0].set_ylabel('{} [{}]'.format('distance', 'px'))
+        self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
 
         self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
 
@@ -1108,7 +1117,60 @@ class PointCloudVisualizer(object):
         self.fig.tight_layout()
 
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+
+        self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+                            value=1,
+                            description='Image',
+                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
+                            layout = iwgt.Layout(width='30%', height='50px',))
+
+        self.button.observe(self._pw_uw, 'value') #pixel or unit wise
+
         self.fig.canvas.draw_idle()
+        widg = iwgt.HBox([self.button])
+        #widg
+        display(widg)
+
+    def _pw_uw(self, event):
+        pw_uw = event.new
+        self._update_image(pw_uw)
+
+    def _update_image(self, event_value):
+        # pixel wise or unit wise listener
+        if 'spacial_units' in self.dset.point_cloud:
+            _sp_units = self.dset.point_cloud['spacial_units']
+            if isinstance(_sp_units, str):
+                _sp_units = (_sp_units, _sp_units)
+            elif not (isinstance(_sp_units, list) or isinstance(_sp_units, tuple)):
+                raise ValueError('Spacial units in Dataset.point_cloud should be str or list, or tuple.')
+
+        if 'quantity' in self.dset.point_cloud:
+            _quantity = self.dset.point_cloud['quantity']
+            if isinstance(_quantity, str):
+                _quantity = (_quantity, _quantity)
+            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
+                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
+        else:
+            _quantity = ('distance', 'distance')
+
+        if event_value == 1:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    list(np.round(np.linspace(self.extent[0], self.extent[1], 5), 1)))
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                    list(np.round(np.linspace(self.extent[2], self.extent[3], 5), 1)))
+            self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
+            self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
+        else:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
+                                    list(np.round(np.linspace(self.real_extent[0], self.real_extent[1], 5), 2)))
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
+                                    list(np.round(np.linspace(self.real_extent[2], self.real_extent[3], 5), 2)))
+            if 'spacial_units' in self.dset.point_cloud:
+                self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], _sp_units[0]))
+                self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], _sp_units[1]))
+            else:
+                self.axes[0].set_xlabel('{}'.format(_quantity[0]))
+                self.axes[0].set_ylabel('{}'.format(_quantity[1]))
 
     def _base_image(self, base_image):
         from ..sid.dataset import Dataset, DataType
@@ -1144,6 +1206,12 @@ class PointCloudVisualizer(object):
         _x0, _x1, _y1, _y0 = base_image.get_extent(image_dims)
         _delta_x = _x1 - _x0
         _delta_y = _y1 - _y0
+
+        self.real_extent = [_x0, _x1, _y1, _y0]
+        self.dset.point_cloud['spacial_units'] = (base_image._axes[image_dims[0]].units,
+                                                  base_image._axes[image_dims[1]].units)
+        self.dset.point_cloud['quantity']      = (base_image._axes[image_dims[0]].quantity,
+                                                  base_image._axes[image_dims[1]].quantity)
 
         _px_x = np.array((coord[:,0] - _x0)*im_size[1]/_delta_x).astype(int)
         _px_y = np.array((coord[:, 1] - _y0) * im_size[0]/_delta_y).astype(int)
@@ -1290,6 +1358,7 @@ class PointCloudVisualizer(object):
         #to extend filed of view
         _x0, _x1 = _x0 - 0.05*_delta_x, _x1 + 0.05*_delta_x
         _y0, _y1 = _y0 - 0.05*_delta_y, _y1 + 0.05 * _delta_y
+        self.real_extent = [_x0, _x1, _y1, _y0]
 
         _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1-_x0)).astype(int)
         _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1-_y0)).astype(int)
