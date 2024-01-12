@@ -322,11 +322,9 @@ class Dataset(da.Array):
 
         new_data.data_type = self.data_type
 
-        # if coordinates is None:
-        #     new_data.point_cloud = self.point_cloud
-        if variance is None:
-            if new_data.shape == self.shape:
-                new_data.variance = self.variance
+        # if variance is None:
+        #     if new_data.shape == self.shape:
+        #         new_data.variance = self.variance
 
 
         # units

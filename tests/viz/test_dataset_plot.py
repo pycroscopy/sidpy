@@ -7,6 +7,8 @@ Created on Thurs Dec 10 2021
 import unittest
 import sys
 import os
+
+import ipywidgets
 import matplotlib as mpl
 if os.environ.get('DISPLAY', '') == '':
     print('no display found. Using non-interactive Agg backend')
@@ -102,7 +104,33 @@ def get_spectral_image(dtype=float):
     return dset, x
 
 def get_point_cloud(dtype=float):
-    pass
+    data = np.array(np.random.normal(3, 2.5, size=(20, 10)), dtype=dtype)
+    data_var = np.array(np.random.normal(10, 2.5, size=(20, 10)), dtype=dtype)
+    coordinates = np.array(np.random.rand(20, 2) + 10, dtype=dtype)
+
+    dset = sidpy.Dataset.from_array(data, coordinates=coordinates)
+    dset.data_type = 'point_cloud'
+
+    dset.variance = data_var
+    dset.point_cloud['spacial_units'] = 'um'
+    dset.point_cloud['quantity'] = 'Distance'
+
+    dset.set_dimension(0, sidpy.Dimension(np.arange(data.shape[0]),
+                                          name='point number',
+                                          quantity='Point number',
+                                          dimension_type='point_cloud'))
+
+    dset.set_dimension(1, sidpy.Dimension(np.arange(data.shape[1]),
+                                          name='X',
+                                          units='a.u.',
+                                          quantity='X',
+                                          dimension_type='spectral'))
+    dset.units = 'a.u.'
+    dset.quantity = 'Intensity'
+    return dset, data
+
+
+
 
 
 def get_4d_image(dtype=float):
@@ -337,6 +365,78 @@ class TestSpectralImagePlot(unittest.TestCase):
         dset, x = get_4d_image()
         with self.assertRaises(TypeError):
             sidpy.viz.dataset_viz.SpectralImageVisualizer(dset)
+
+class TestPointCloudPlot(unittest.TestCase):
+    def test_plot_basic(self):
+        dset, x = get_point_cloud()
+        view = dset.plot()
+        self.assertEqual(len(view.axes), 2)
+        self.assertEqual(view.axes[0].get_xlabel(), 'Distance [px]')
+        self.assertEqual(view.axes[0].get_ylabel(), 'Distance [px]')
+
+        self.assertEqual(view.axes[1].get_xlabel(), 'X (a.u.)')
+        self.assertEqual(view.axes[1].get_ylabel(), 'Intensity (a.u.)')
+
+        x_y = view.axes[1].lines[0].get_xydata()
+        self.assertEqual(x_y.shape, (10, 2))
+
+    def test_false_type(self):
+        x = np.zeros(5)
+        with self.assertRaises(TypeError):
+            sidpy.viz.dataset_viz.PointCloudVisualizer(x)
+
+    def test_false_dim(self):
+        dset, x = get_spectrum()
+        with self.assertRaises(TypeError):
+            sidpy.viz.dataset_viz.PointCloudVisualizer(dset)
+        dset, x = get_image()
+        with self.assertRaises(TypeError):
+            sidpy.viz.dataset_viz.PointCloudVisualizer(dset)
+        dset, x = get_4d_image()
+        with self.assertRaises(TypeError):
+            sidpy.viz.dataset_viz.PointCloudVisualizer(dset)
+        dset, x = get_spectral_image()
+        with self.assertRaises(TypeError):
+            sidpy.viz.dataset_viz.PointCloudVisualizer(dset)
+
+    def test_units_button(self):
+        dset, x = get_point_cloud()
+        view = dset.plot()
+        self.assertIsInstance(dset.view.button, ipywidgets.Dropdown)
+        self.assertEqual(dset.view.button.value, 1)
+
+        dset.view.button.value = 2
+        self.assertEqual(view.axes[0].get_xlabel(), 'Distance [um]')
+        self.assertEqual(view.axes[0].get_ylabel(), 'Distance [um]')
+
+    def test_point_selection(self):
+        dset, x = get_point_cloud()
+        view = dset.plot()
+
+        event = mpl.backend_bases.MouseEvent(
+            name='button_press_event',
+            canvas=dset.view.fig.canvas,
+            x=0,  # x-coordinate of the click (adjust as needed)
+            y=0,  # y-coordinate of the click (adjust as needed)
+            button=1,  # button number (1 for left button)
+        )
+        xpos, ypos = 25, 25
+        event.inaxes = dset.view.axes[0]
+        event.xdata = xpos
+        event.ydata = ypos
+        dset.view._onclick(event)
+
+        selected_point = dset.view.tree.query(np.array([xpos, ypos]))[1]
+        spectrum_title = dset.view.axes[1].get_title()
+        self.assertEqual(spectrum_title, 'point {}'.format(selected_point))
+        actual = dset.view.axes[1].lines[0].get_ydata()
+        expected = dset[selected_point].compute()
+        self.assertTrue(np.allclose(actual, expected, equal_nan=True, rtol=1e-05, atol=1e-08))
+
+
+
+
+
 
 
 class Test4DImageStackPlot(unittest.TestCase):
