@@ -1023,12 +1023,7 @@ class PointCloudVisualizer(object):
 
         if not isinstance(dset, sidpy.Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
-        from scipy.interpolate import griddata
-        from scipy.spatial import cKDTree
-        import time
-
         self.dset = dset
-
         if self.dset.variance is not None:
             if self.dset.variance.shape != self.dset.shape:
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
@@ -1414,7 +1409,7 @@ class PointCloudVisualizer(object):
         _px_coord = np.array([_px_x, _px_y]).T
         self.tree = scipy.spatial.cKDTree(_px_coord)
         grid_x, grid_y = np.mgrid[0:im_size, 0:im_size]
-        mask = scipy.interpolat.griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
+        mask = scipy.interpolate.griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
         return mask, _px_coord
 
     def get_xy(self):
