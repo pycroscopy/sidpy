@@ -764,7 +764,7 @@ class Dataset(da.Array):
         axis = None
         if isinstance(dim, int):
             axis = self._axes[dim]
-        elif isinstance(dim, sidpy.Dimension):
+        elif isinstance(dim, Dimension):
             axis = dim
         return get_slope(axis)
 
