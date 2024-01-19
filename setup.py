@@ -26,7 +26,8 @@ requirements = ['numpy>=1.10',
                 'ipython',  # Beginning with IPython 6.0, Python 3.3 and above is required.
                 'scikit-learn',
                 'scipy',
-                'ase'
+                'ase',
+                'ipympl'
                 ]
 
 setup(

@@ -682,35 +682,6 @@ class SpectralImageVisualizerBase(object):
 
         self.extent_rd = self.dset.get_extent(self.image_dims)
 
-    def set_bin(self, bin_xy):
-
-        old_bin_x = self.bin_x
-        old_bin_y = self.bin_y
-        if isinstance(bin_xy, list):
-
-            self.bin_x = int(bin_xy[0])
-            self.bin_y = int(bin_xy[1])
-
-        else:
-            self.bin_x = int(bin_xy)
-            self.bin_y = int(bin_xy)
-
-        if self.bin_x > self.dset.shape[self.image_dims[0]]:
-            self.bin_x = self.dset.shape[self.image_dims[0]]
-        if self.bin_y > self.dset.shape[self.image_dims[1]]:
-            self.bin_y = self.dset.shape[self.image_dims[1]]
-
-        self.rect.set_width(self.rect.get_width() * self.bin_x / old_bin_x)
-        self.rect.set_height((self.rect.get_height() * self.bin_y / old_bin_y))
-        if self.x + self.bin_x > self.dset.shape[self.image_dims[0]]:
-            self.x = self.dset.shape[0] - self.bin_x
-        if self.y + self.bin_y > self.dset.shape[self.image_dims[1]]:
-            self.y = self.dset.shape[1] - self.bin_y
-
-        self.rect.set_xy([self.x * self.rect.get_width() / self.bin_x + self.rectangle[0],
-                          self.y * self.rect.get_height() / self.bin_y + self.rectangle[2]])
-        self._update()
-
     def set_image(self, **kwargs):
         if len(self.channel_axis)>0:
             self.image = self.dset.mean(axis=(self.energy_axis,self.channel_axis[0]))
@@ -741,14 +712,12 @@ class SpectralImageVisualizerBase(object):
         self.axes[0].add_patch(self.rect)
 
     def set_spectrum(self):
-
-        #Below is code for the spectrum parts
         self.intensity_scale = 1.
         self.spectrum = self.get_spectrum()
         if len(self.energy_scale)!=self.spectrum.shape[0]:
             self.spectrum = self.spectrum.T
         self.axes[1].plot(self.energy_scale, self.spectrum.compute())
-        #add variance shadow graph
+        # add variance shadow graph
         if self.variance is not None:
             #3d - many curves
             if len(self.variance.shape) > 1:
@@ -774,21 +743,16 @@ class SpectralImageVisualizerBase(object):
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
-        self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+        self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
                             value=1,
                             description='Image',
                             tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)', 
-                            layout = iwgt.Layout(width='30%', height='50px',))
+                            layout = ipywidgets.Layout(width='30%', height='50px',))
 
         self.button.observe(self._pw_uw, 'value') #pixel or unit wise
         self.fig.canvas.draw_idle()
-        widg = iwgt.HBox([self.button])
-        #widg
+        widg = ipywidgets.HBox([self.button])
         display(widg)
-
-    def _pw_uw(self, event): 
-        pw_uw = event.new
-        self._update_image(pw_uw)
     
     def _update_image(self, event_value):
         #pixel wise or unit wise listener
@@ -841,14 +805,11 @@ class SpectralImageVisualizerBase(object):
         return
 
     def set_bin(self, bin_xy):
-
         old_bin_x = self.bin_x
         old_bin_y = self.bin_y
         if isinstance(bin_xy, list):
-
             self.bin_x = int(bin_xy[0])
             self.bin_y = int(bin_xy[1])
-
         else:
             self.bin_x = int(bin_xy)
             self.bin_y = int(bin_xy)
@@ -1156,8 +1117,8 @@ class PointCloudVisualizer(object):
 
         self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
         self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
-        self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
-        self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
+        self.axes[0].set_xlabel('{} [{}]'.format(self._quantity[0], 'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format(self._quantity[1], 'px'))
 
         self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
 
@@ -1211,16 +1172,16 @@ class PointCloudVisualizer(object):
 
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
-        self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+        self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
                             value=1,
                             description='Image',
                             tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
-                            layout = iwgt.Layout(width='30%', height='50px',))
+                            layout = ipywidgets.Layout(width='30%', height='50px',))
 
         self.button.observe(self._pw_uw, 'value') #pixel or unit wise
 
         self.fig.canvas.draw_idle()
-        widg = iwgt.HBox([self.button])
+        widg = ipywidgets.HBox([self.button])
         #widg
         display(widg)
 
