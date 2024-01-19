@@ -58,7 +58,7 @@ class DataType(Enum):
     LINE_PLOT_FAMILY = 3
     IMAGE = 4
     IMAGE_MAP = 5
-    IMAGE_STACK = 6# 3d
+    IMAGE_STACK = 6  # 3d
     SPECTRAL_IMAGE = 7
     IMAGE_4D = 8
     POINT_CLOUD = 9
@@ -157,7 +157,7 @@ class Dataset(da.Array):
             of the analysis algorithm
         """
         # TODO: Consider using python package - pint for quantities
-        super(Dataset, self).__init__()
+        super().__init__()
 
         self._units = ''
         self._quantity = ''
@@ -176,8 +176,8 @@ class Dataset(da.Array):
 
         self.__protected = set()  # a set to keep track of protected attributes
 
-        self.point_cloud = None #attribute to store coordinates and base_image for point_cloud datatype
-        self._variance = None #to save variance dask.array
+        self.point_cloud = None  # attribute to store coordinates and base_image for point_cloud datatype
+        self._variance = None    # to save variance dask.array
 
     def __repr__(self):
         rep = 'sidpy.Dataset of type {} with:\n '.format(self.data_type.name)
@@ -224,8 +224,8 @@ class Dataset(da.Array):
     @classmethod
     def from_array(cls, x, title='generic', chunks='auto', lock=False,
                    datatype='UNKNOWN', units='generic', quantity='generic',
-                   modality='generic', source='generic', coordinates = None,
-                   variance = None, **kwargs):
+                   modality='generic', source='generic', coordinates=None,
+                   variance=None, **kwargs):
         """
         Initializes a sidpy dataset from an array-like object (i.e. numpy array)
         All meta-data will be set to be generically.
@@ -245,6 +245,12 @@ class Dataset(da.Array):
             units of dataset i.e. counts, A
         quantity: str
             quantity of dataset like intensity
+        modality: str
+            modality of dataset like
+        source: str
+            source of dataset like what kind of microscope or function
+        coordinates: numpy array, optional
+            coordinates for point cloud
         point_cloud: dict or None
             dict with coordinates and base_image for point_cloud data_type
         variance: array-like object
@@ -279,7 +285,7 @@ class Dataset(da.Array):
         sid_dataset.original_metadata = {}
         sid_dataset.variance = variance
 
-        #add coordinates for point_cloud datatype
+        # add coordinates for point_cloud datatype
         if coordinates is not None:
             sid_dataset.point_cloud = {'coordinates': coordinates}
         else:
@@ -287,7 +293,7 @@ class Dataset(da.Array):
         return sid_dataset
 
     def like_data(self, data, title=None, chunks='auto', lock=False,
-                  variance=None, **kwargs):
+                  coordinates=None, variance=None, **kwargs):
         """
         Returns sidpy.Dataset of new values but with metadata of this dataset
         - if dimension of new dataset is different from this dataset and the scale is linear,
@@ -304,6 +310,10 @@ class Dataset(da.Array):
             size of chunks for dask array
         lock: optional boolean
             for dask array
+        coordinates: array like
+            coordinates for point cloud
+        variance: numpy array, optional
+            variance of dataset
 
         Returns
         -------
@@ -325,7 +335,6 @@ class Dataset(da.Array):
         # if variance is None:
         #     if new_data.shape == self.shape:
         #         new_data.variance = self.variance
-
 
         # units
         if reset_units:
@@ -608,7 +617,8 @@ class Dataset(da.Array):
         kwargs: dictionary for additional plotting parameters
             additional keywords (besides the matplotlib ones) for plotting are:
             - scale_bar: for images to replace axis with a scale bar inside the image
-
+        figure: matplotlib figure object
+            define figure to which this datset will be plotted
         Returns
         -------
         self.view.fig: matplotlib figure reference
@@ -750,6 +760,14 @@ class Dataset(da.Array):
                 extent.append(end)
         return extent
 
+    def get_dimension_slope(self, dim):
+        axis = None
+        if isinstance(dim, int):
+            axis = self._axes[dim]
+        elif isinstance(dim, Dimension):
+            axis = dim
+        return get_slope(axis)
+
     def get_dimension_by_number(self, dims_in):
         if isinstance(dims_in, int):
             dims_in = [dims_in]
@@ -761,17 +779,23 @@ class Dataset(da.Array):
             out_dim.append(self._axes[dim])
         return out_dim
 
-    def get_dimensions_by_type(self, dims_in):
+    def get_dimensions_types(self):
+        out_types = []
+        for dim, axis in self._axes.items():
+            out_types.append(axis.dimension_type)
+        return out_types
+
+
+    def get_dimensions_by_type(self, dims_in, return_axis=False):
         """ get dimension by dimension_type name
 
-        Parameters
-        ----------
+        Parameter
+        ---------
         dims_in: dimension_type/str or list of dimension_types/string
-
 
         Returns
         -------
-        dims_out: list of [index, dimension]
+        dims_out: list of [index]
             the kind of dimensions specified in input in numerical order of the dataset, not the input!
         """
 
@@ -783,29 +807,22 @@ class Dataset(da.Array):
         dims_out = []
         for dim, axis in self._axes.items():
             if axis.dimension_type in dims_in:
-                dims_out.append(dim)  # , self._axes[dim]])
+                if return_axis:
+                    dims_out.append(axis)
+                else:
+                    dims_out.append(dim)  # , self._axes[dim]])
         return dims_out
 
-    def get_image_dims(self):
+    def get_image_dims(self, return_axis=False):
         """Get all spatial dimensions"""
+        return self.get_dimensions_by_type(DimensionType.SPATIAL, return_axis=return_axis)
 
-        image_dims = []
-        for dim, axis in self._axes.items():
-            if axis.dimension_type == DimensionType.SPATIAL:
-                image_dims.append(dim)
-        return image_dims
-
-    def get_spectrum_dims(self):
+    def get_spectral_dims(self, return_axis=False):
         """Get all spectral dimensions"""
-
-        spec_dims = []
-        for dim, axis in self._axes.items():
-            if axis.dimension_type == DimensionType.SPECTRAL:
-                spec_dims.append(dim)
-        return spec_dims
+        return self.get_dimensions_by_type(DimensionType.SPECTRAL, return_axis=return_axis)
 
     def _griddata_transform(self, **kwargs):
-        '''
+        """
         Interpolate unstructured point cloud for the visualization to 3D/4D sidpy.Dataset
         Parameters
         ----------
@@ -814,7 +831,7 @@ class Dataset(da.Array):
         Returns
         -------
         sidpy.Dataset with data_type = SPECTRAL_IMAGE
-        '''
+        """
         from scipy.interpolate import griddata
 
         if 'coordinates' in self.metadata.keys():
@@ -823,7 +840,7 @@ class Dataset(da.Array):
             raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates in metadata.')
 
         if 'spacial_units' in self.metadata.keys():
-            sp_units  = self.metadata['spacial_units']
+            sp_units = self.metadata['spacial_units']
         else:
             sp_units = 'a.u.'
 
@@ -834,24 +851,24 @@ class Dataset(da.Array):
         _delta_x = _x1 - _x0
         _delta_y = _y1 - _y0
 
-        #to extend filed of view
+        # to extend filed of view
         _x0, _x1 = _x0 - 0.05*_delta_x, _x1 + 0.05*_delta_x
         _y0, _y1 = _y0 - 0.05*_delta_y, _y1 + 0.05 * _delta_y
 
-        _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1 - _x0)).astype(int)
-        _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1 - _y0)).astype(int)
+        _px_x = np.array((coord[:, 0] - _x0) * im_size/(_x1 - _x0)).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size/(_y1 - _y0)).astype(int)
 
         grid_x, grid_y = np.mgrid[_x0: _x1: (_x1 - _x0)/im_size,
                                   _y0: _y1: (_y1 - _y0)/im_size]
         grid_z = griddata(coord, self, (grid_x, grid_y), method='nearest')
 
-        #transpform to 3D
+        # transpform to 3D
         _dset = Dataset.from_array(grid_z)
         _dset.data_type = 'point_cloud'
         _dset.units = self.units
         _dset.quantity = self.quantity
         _dset.title = self.title
-        _dset.set_dimension(0, Dimension(grid_x[:,0], 'x'))
+        _dset.set_dimension(0, Dimension(grid_x[:, 0], 'x'))
         _dset.x.dimension_type = 'spatial'
         _dset.x.units = sp_units
         _dset.x.quantity = 'distance'
@@ -862,7 +879,7 @@ class Dataset(da.Array):
         _dset.set_dimension(2, self.get_dimension_by_number(1)[0])
         if len(self.shape) == 3:
             _dset.set_dimension(3, self.get_dimension_by_number(2)[0])
-        _dset.metadata = {'coord':np.array([_px_x, _px_y]).T}
+        _dset.metadata = {'coord': np.array([_px_x, _px_y]).T}
         if 'variance' in self.metadata.keys():
             grid_z_var = griddata(coord, self.metadata['variance'], (grid_x, grid_y), method='nearest')
             _dset.metadata['variance'] = grid_z_var
@@ -876,7 +893,7 @@ class Dataset(da.Array):
     @staticmethod
     def _closest_point(array_coord, point):
         diff = array_coord - point
-        return np.argmin(diff[:,0]**2 + diff[:,1]**2)
+        return np.argmin(diff[:, 0]**2 + diff[:, 1]**2)
 
     @property
     def labels(self):
@@ -1110,13 +1127,13 @@ class Dataset(da.Array):
         return fft_dset
 
     def flatten_complex(self):
-        '''
+        """
         This function returns a dataset with real and imaginary components that have been flattened
         This is necessary for scenarios such as fitting of complex functions
         Must be a 2D or 1D dataset to begin with
         Output:
         - ouput_arr: sidpy.Dataset object
-        '''
+        """
         assert self.ndim < 3, "flatten_complex() only works on 1D or 2D datasets, current dataset has {}".format(
             self.ndim)
         # Only the second dimension needs to be changed
