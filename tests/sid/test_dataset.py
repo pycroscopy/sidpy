@@ -570,15 +570,15 @@ class TestHelperFunctions(unittest.TestCase):
         descriptor = Dataset.from_array(values)
         descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', dimension_type='spatial'))
 
-        spec_dims = descriptor.test_get_spectral_dims()
+        spec_dims = descriptor.get_spectral_dims()
         self.assertEqual(len(spec_dims), 0)
         descriptor.x.dimension_type = 'spectral'
-        spec_dims = descriptor.test_get_spectral_dims()
+        spec_dims = descriptor.get_spectral_dims()
         self.assertEqual(len(spec_dims), 1)
         self.assertEqual(spec_dims[0], 0)
 
         descriptor.dim_1.dimension_type = 'spectral'
-        spec_dims = descriptor.test_get_spectral_dims()
+        spec_dims = descriptor.get_spectral_dims()
         self.assertEqual(len(spec_dims), 2)
         self.assertEqual(spec_dims[1], 1)
 

@@ -1106,14 +1106,23 @@ class PointCloudVisualizer(object):
         self.extent = [0, size_x, size_y, 0]
         self.rectangle = [0, size_x, 0, size_y]
 
+        if 'quantity' in self.dset.point_cloud:
+            _quantity = self.dset.point_cloud['quantity']
+            if isinstance(_quantity, str):
+                _quantity = (_quantity, _quantity)
+            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
+                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
+        else:
+            _quantity = ('distance', 'distance')
+
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
         self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),1))
 
         self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
         self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
-        self.axes[0].set_xlabel('{} [{}]'.format(self._quantity[0], 'px'))
-        self.axes[0].set_ylabel('{} [{}]'.format(self._quantity[1], 'px'))
+        self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
 
         self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
 
@@ -1169,15 +1178,14 @@ class PointCloudVisualizer(object):
 
         self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
                             value=1,
-                            description='Image',
+                            descrption='Image',
                             tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
                             layout = ipywidgets.Layout(width='30%', height='50px',))
 
         self.button.observe(self._pw_uw, 'value') #pixel or unit wise
-
         self.fig.canvas.draw_idle()
+
         widg = ipywidgets.HBox([self.button])
-        #widg
         display(widg)
 
     def _pw_uw(self, event):
@@ -1550,8 +1558,8 @@ class FourDimImageVisualizer(object):
             self.image_4d = np.log(1+self.image_4d)
         
         self.reciprocal_extent = None
-        if len(self.dset.get_extent(self.dset.get_spectrum_dims()))==4:
-            self.reciprocal_extent = self.dset.get_extent(self.dset.get_spectrum_dims())
+        if len(self.dset.get_extent(self.dset.get_spectral_dims()))==4:
+            self.reciprocal_extent = self.dset.get_extent(self.dset.get_spectral_dims())
 
         self.axes[1].imshow(self.image_4d, extent = self.reciprocal_extent)
 
@@ -1833,8 +1841,8 @@ class ComplexSpectralImageVisualizer(object):
             leg.get_frame().set_linewidth(0.0)
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
-        import ipywidgets as iwgt
-        self.button = iwgt.widgets.Dropdown(options=['Real and Imaginary', 'Amplitude and Phase'],
+
+        self.button = ipywidgets.Dropdown(options=['Real and Imaginary', 'Amplitude and Phase'],
                                 description='Plot',
                                 disabled=False,
                                 tooltip='How to plot complex data')
