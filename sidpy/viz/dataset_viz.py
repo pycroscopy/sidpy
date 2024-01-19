@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import ipywidgets
 from IPython.display import display
+import scipy
 
 
 # import matplotlib.animation as animation
@@ -182,10 +183,10 @@ class ImageVisualizer(object):
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
 
             self._variance_button = ipywidgets.widgets.Dropdown(options=[('z', 1), ('σ', 2), ('z + σ', 3), ('z - σ', 4)],
-                                                value=1,
-                                                description='Image',
-                                                tooltip='What to plot: image data (z), variance of z (σ), etc.',
-                                                layout=iwgt.Layout(width='20%', height='40px', ))
+                                                                value=1,
+                                                                description='Image',
+                                                                tooltip='What to plot: image data (z), variance of z (σ), etc.',
+                                                                layout=ipywidgets.Layout(width='20%', height='40px', ))
 
             self._variance_button.observe(self._var_button_event, 'value')  # pixel or unit wise
             self.fig.canvas.draw_idle()
@@ -202,8 +203,8 @@ class ImageVisualizer(object):
         if set_title:
             self.axis.set_title(self.dset.title)
             if len(self.dset.shape) > 2:
-                if self.dset.shape[2]>4:
-                  self.axis.set_title(self.dset.title + '_image {}'.format(self.image_number))
+                if self.dset.shape[2] > 4:
+                    self.axis.set_title(self.dset.title + '_image {}'.format(self.image_number))
                 else:
                     rgb = True
 
@@ -211,7 +212,7 @@ class ImageVisualizer(object):
             self.img = self.axis.imshow(self.dset, extent=self.dset.get_extent(self.image_dims), **kwargs)
         else:
             self.img = self.axis.imshow(self.dset[tuple(self.selection)].squeeze().T,
-                                    extent=self.dset.get_extent(self.image_dims), **kwargs)
+                                        extent=self.dset.get_extent(self.image_dims), **kwargs)
         self.axis.set_xlabel(self.dset.labels[self.image_dims[0]])
         self.axis.set_ylabel(self.dset.labels[self.image_dims[1]])
         if scale_bar:
@@ -246,7 +247,7 @@ class ImageVisualizer(object):
         self.colorbar = kwargs.pop('colorbar', True)
 
         self.axes = []
-        #magnitude
+        # magnitude
         self.axes.append(self.fig.add_subplot(121))
         self.img = self.axes[0].imshow(self.dset[tuple(self.selection)].abs().squeeze().T,
                                        extent=self.dset.get_extent(self.image_dims), **kwargs)
@@ -309,6 +310,7 @@ class ImageVisualizer(object):
         else:
             self.img.set_data(_data[event_value])
             self.img.set_clim(_data[event_value].min(), _data[event_value].max())
+
 
 class ImageStackVisualizer(object):
     """
@@ -382,7 +384,7 @@ class ImageStackVisualizer(object):
         self.number_of_slices = self.dset.shape[self.stack_dim]
         
         if self.set_title:
-            if 'fit_dataset'  in dir(dset):
+            if 'fit_dataset' in dir(dset):
                 if dset.fit_dataset:
                     if dset.metadata['fit_parms_dict']['fit_parameters_labels'] is not None: 
                         self.plot_fit_labels = True
@@ -398,36 +400,32 @@ class ImageStackVisualizer(object):
         self.axis = None
         self.plot_image(**kwargs)
         self.axis = plt.gca()
-        #self.axis.set_title(image_titles)
+        # self.axis.set_title(image_titles)
         self.img.axes.figure.canvas.mpl_connect('scroll_event', self._onscroll)
 
-        self.play = ipywidgets.Play(
-            value=0,
-            min=0,
-            max=self.number_of_slices,
-            step=1,
-            interval=500,
-            description="Press play",
-            disabled=False
-        )
-        self.slider = ipywidgets.IntSlider(
-            value=0,
-            min=0,
-            max=self.number_of_slices,
-            continuous_update=False,
-            description="Frame:")
+        self.play = ipywidgets.Play(value=0,
+                                    min=0,
+                                    max=self.number_of_slices,
+                                    step=1,
+                                    interval=500,
+                                    description="Press play",
+                                    disabled=False)
+        self.slider = ipywidgets.IntSlider(value=0,
+                                           min=0,
+                                           max=self.number_of_slices,
+                                           continuous_update=False,
+                                           description="Frame:")
         # set the slider function
         ipywidgets.interactive(self._update, frame=self.slider)
         # link slider and play function
         ipywidgets.jslink((self.play, 'value'), (self.slider, 'value'))
 
         # We add a button to average the images
-        self.button = ipywidgets.widgets.ToggleButton(
-            value=False,
-            description='Average',
-            disabled=False,
-            button_style='',  # 'success', 'info', 'warning', 'danger' or ''
-            tooltip='Average Images of Stack')
+        self.button = ipywidgets.widgets.ToggleButton(value=False,
+                                                      description='Average',
+                                                      disabled=False,
+                                                      button_style='',
+                                                      tooltip='Average Images of Stack')
 
         self.average = False
         self.button.observe(self._average_slices, 'value')
@@ -437,17 +435,15 @@ class ImageStackVisualizer(object):
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
 
             self._variance_button = ipywidgets.widgets.Dropdown(options=[('z', 1), ('σ', 2), ('z + σ', 3), ('z - σ', 4)],
-                                                value=1,
-                                                #description='Image',
-                                                tooltip='What to plot: image data (z), variance of z (σ), etc.',)
-                                                #layout=iwgt.Layout(height='20px', ))
+                                                                value=1,
+                                                                tooltip='What to plot: image data (z), variance of z (σ), etc.',)
 
             self._variance_button.observe(self._var_button_event, 'value')
 
             widg0 = ipywidgets.HBox([self.play, self.slider])
             widg1 = ipywidgets.HBox([self.button, self._variance_button])
-            widg  = ipywidgets.VBox([widg0, widg1])
-            self.display = 1 #0 - without var, 1 z, 2 sigma, 3 z-sigma, 4 z+sigma
+            widg = ipywidgets.VBox([widg0, widg1])
+            self.display = 1  # 0 - without var, 1 z, 2 sigma, 3 z-sigma, 4 z+sigma
         else:
             widg = ipywidgets.HBox([self.play, self.slider, self.button])
             self.display = 0
@@ -463,7 +459,6 @@ class ImageStackVisualizer(object):
 
         scale_bar = kwargs.pop('scale_bar', False)
         colorbar = kwargs.pop('colorbar', True)
-        
 
         self.axis = plt.gca()
         if self.set_title:
@@ -561,6 +556,7 @@ class ImageStackVisualizer(object):
             else:
                 self.axis.set_title(self.image_titles)
 
+
 class SpectralImageVisualizerBase(object):
     """
     ### Interactive spectrum imaging plot
@@ -624,7 +620,7 @@ class SpectralImageVisualizerBase(object):
 
         if len(dset.shape) < 3:
             raise TypeError('dataset must have at least three dimensions')
-        if len(dset.shape)>4:
+        if len(dset.shape) > 4:
             raise TypeError('dataset must have at most four dimensions')
 
         # We need one stack dim and two image dimes as lists in dictionary
@@ -656,8 +652,8 @@ class SpectralImageVisualizerBase(object):
             if self.dset.variance.shape != self.dset.shape:
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
 
-        if len(dset.shape)==4:
-            if len(channel_dim)!=1:
+        if len(dset.shape) == 4:
+            if len(channel_dim) != 1:
                 raise TypeError("We need one dimension with type CHANNEL \
                     for a spectral image plot for a 4D dataset")
         elif len(dset.shape)==3:
@@ -759,13 +755,13 @@ class SpectralImageVisualizerBase(object):
                     self.axes[1].fill_between(self.energy_scale,
                                               self.spectrum.compute().T[i] - self.variance[i],
                                               self.spectrum.compute().T[i] + self.variance[i],
-                                              alpha=0.3, **kwargs)
+                                              alpha=0.3) # , **kwargs)
             # 2d - one curve at each point
             else:
                 self.axes[1].fill_between(self.energy_scale,
                                           self.spectrum.compute() - self.variance,
                                           self.spectrum.compute() + self.variance,
-                                          alpha=0.3, **kwargs)
+                                          alpha=0.3) # , **self.kwargs)
 
         self.axes[1].set_title('spectrum {}, {}'.format(self.x, self.y))
 
@@ -1150,7 +1146,7 @@ class PointCloudVisualizer(object):
         _px_y = np.array((coord[:, 1] - _y0) * im_size[0]/_delta_y).astype(int)
         _px_coord = np.array([_px_x, _px_y]).T
 
-        self.tree = cKDTree(_px_coord)
+        self.tree = scipy.spatial.cKDTree(_px_coord)
 
         return self.image, _px_coord
 
@@ -1290,9 +1286,9 @@ class PointCloudVisualizer(object):
         _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1-_x0)).astype(int)
         _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1-_y0)).astype(int)
         _px_coord = np.array([_px_x, _px_y]).T
-        self.tree = cKDTree(_px_coord)
+        self.tree = scipy.spatial.cKDTree(_px_coord)
         grid_x, grid_y = np.mgrid[0:im_size, 0:im_size]
-        mask = griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
+        mask = scipy.interpolat.griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
         return mask, _px_coord
 
     def get_xy(self):
