@@ -567,7 +567,7 @@ class SpectralImageVisualizerBase(object):
     """
 
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
-        
+
         if not isinstance(dset, sidpy.Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
         
@@ -590,7 +590,7 @@ class SpectralImageVisualizerBase(object):
         self.channel_axis = []
         self.dset = dset
         self.verify_dataset()
-       
+
         self.horizontal = horizontal
         self.x = 0
         self.y = 0
@@ -610,7 +610,7 @@ class SpectralImageVisualizerBase(object):
         self.set_image(**kwargs)
 
         self.set_spectrum()
-       
+
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
         self.fig.canvas.draw_idle()
@@ -647,7 +647,7 @@ class SpectralImageVisualizerBase(object):
             raise ValueError("We have more than one Channel Dimension, this won't work for the visualizer")
         if len(spectral_dim)>1:
             raise ValueError("We have more than one Spectral Dimension, this won't work for the visualizer...")
-        
+
         if self.dset.variance is not None:
             if self.dset.variance.shape != self.dset.shape:
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
@@ -660,18 +660,18 @@ class SpectralImageVisualizerBase(object):
             if len(spectral_dim) != 1:
                 raise TypeError("We need one dimension with dimension_type SPECTRAL \
                  to plot a spectra for a 3D dataset")
-            
+
         self.image_dims = image_dims
         self.energy_axis = spectral_dim[0]
-        if len(channel_dim)>0: 
+        if len(channel_dim)>0:
             self.channel_axis = channel_dim
         return True
-    
+
     def set_dataset(self):
-        
+
         size_x = self.dset.shape[self.image_dims[0]]
         size_y = self.dset.shape[self.image_dims[1]]
-        
+
         self.energy_scale = self.dset._axes[self.energy_axis].values
         self.extent = [0, size_x, size_y, 0]
         self.rectangle = [0, size_x, 0, size_y]
@@ -681,7 +681,7 @@ class SpectralImageVisualizerBase(object):
         self.plot_legend = False
 
         self.extent_rd = self.dset.get_extent(self.image_dims)
-    
+
     def set_bin(self, bin_xy):
 
         old_bin_x = self.bin_x
@@ -725,22 +725,23 @@ class SpectralImageVisualizerBase(object):
         else:
             self.axes[0].set_aspect('equal')
 
-        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                list(np.round(np.linspace(self.extent[0], self.extent[1], 5),2)))
-        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5))
+        self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),2))
+
+        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5))
+        self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
 
         self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
-                                                    'px'))
+                                                 'px'))
         self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                         'px'))
         self.rect = patches.Rectangle((0, 0), self.bin_x, self.bin_y, linewidth=1, edgecolor='r',
                                       facecolor='red', alpha=0.2)
 
         self.axes[0].add_patch(self.rect)
-    
+
     def set_spectrum(self):
-        
+
         #Below is code for the spectrum parts
         self.intensity_scale = 1.
         self.spectrum = self.get_spectrum()
@@ -770,10 +771,106 @@ class SpectralImageVisualizerBase(object):
         self.axes[1].set_xlabel(self.dset.labels[self.energy_axis])  # + x_suffix)
         self.axes[1].set_ylabel(self.dset.data_descriptor)
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+        self.fig.tight_layout()
+        self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
+        self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+                            value=1,
+                            description='Image',
+                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)', 
+                            layout = iwgt.Layout(width='30%', height='50px',))
+
+        self.button.observe(self._pw_uw, 'value') #pixel or unit wise
+        self.fig.canvas.draw_idle()
+        widg = iwgt.HBox([self.button])
+        #widg
+        display(widg)
+
+    def _pw_uw(self, event): 
+        pw_uw = event.new
+        self._update_image(pw_uw)
+    
+    def _update_image(self, event_value):
+        #pixel wise or unit wise listener
+        if event_value==1:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5))
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),2))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5))
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5),2))
+
+            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                     'px'))
+            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                         'px'))
+        else:
+            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                     self.dset._axes[self.image_dims[0]].units))
+            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                            self.dset._axes[self.image_dims[1]].units))
+
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2))
+
+
+            self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                        self.dset._axes[self.image_dims[0]].units))
+
+            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                            self.dset._axes[self.image_dims[1]].units))
+
+            if self.dset._axes[self.image_dims[0]].units =='m':
+                scaled_values_y = self.dset._axes[self.image_dims[1]].values*1E9
+                scaled_values_x = self.dset._axes[self.image_dims[0]].values*1E9
+                if scaled_values_x.mean() >=0.1 and  scaled_values_x.mean() <=1000:
+                    self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+                    self.axes[0].set_xticklabels(np.round(np.linspace(scaled_values_x[0], scaled_values_x[-1], 5), 2))
+
+                    self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+                    self.axes[0].set_yticklabels(np.round(np.linspace(scaled_values_y[0], scaled_values_y[-1], 5), 2))
+                    
+                    self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
+                                                        'nm'))
+            
+                    self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                            'nm'))
+                    
+        return
+
+    def set_bin(self, bin_xy):
+
+        old_bin_x = self.bin_x
+        old_bin_y = self.bin_y
+        if isinstance(bin_xy, list):
+
+            self.bin_x = int(bin_xy[0])
+            self.bin_y = int(bin_xy[1])
+
+        else:
+            self.bin_x = int(bin_xy)
+            self.bin_y = int(bin_xy)
+
+        if self.bin_x > self.dset.shape[self.image_dims[0]]:
+            self.bin_x = self.dset.shape[self.image_dims[0]]
+        if self.bin_y > self.dset.shape[self.image_dims[1]]:
+            self.bin_y = self.dset.shape[self.image_dims[1]]
+
+        self.rect.set_width(self.rect.get_width() * self.bin_x / old_bin_x)
+        self.rect.set_height((self.rect.get_height() * self.bin_y / old_bin_y))
+        if self.x + self.bin_x > self.dset.shape[self.image_dims[0]]:
+            self.x = self.dset.shape[0] - self.bin_x
+        if self.y + self.bin_y > self.dset.shape[self.image_dims[1]]:
+            self.y = self.dset.shape[1] - self.bin_y
+
+        self.rect.set_xy([self.x * self.rect.get_width() / self.bin_x + self.rectangle[0],
+                          self.y * self.rect.get_height() / self.bin_y + self.rectangle[2]])
+        self._update()
 
     def get_spectrum(self):
-        
+
         if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
             self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
         if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:
@@ -885,7 +982,7 @@ class SpectralImageVisualizerBase(object):
     def _closest_point(array_coord, point):
         diff = array_coord - point
         return np.argmin(diff[:,0]**2 + diff[:,1]**2)
-    
+
 
 class SpectralImageVisualizer(SpectralImageVisualizerBase):
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
@@ -894,20 +991,20 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
         self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
                             value=1,
                             description='Image',
-                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)', 
+                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
                             layout = ipywidgets.Layout(width='30%', height='50px',))
 
         self.button.observe(self._pw_uw, 'value') #pixel or unit wise
-        
+
         widg = ipywidgets.HBox([self.button])
         #widg
         display(widg)
 
-    def _pw_uw(self, event): 
+    def _pw_uw(self, event):
         pw_uw = event.new
         self.update_image(pw_uw)
-        
-    
+
+
     def update_image(self, event_value):
         #pixel wise or unit wise listener
         if event_value==1:
@@ -933,10 +1030,10 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
             self.axes[0].yaxis.set_ticks(np.linspace(self.extent[2], self.extent[3], 5),
                                     list(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2)),
                                          minor=False)
-            
+
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         self.dset._axes[self.image_dims[0]].units))
-            
+
             self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                             self.dset._axes[self.image_dims[1]].units))
 
@@ -948,18 +1045,21 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
                                     list(np.round(np.linspace(scaled_values_x[0], scaled_values_x[-1], 5), 2)))
                     self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
                                     list(np.round(np.linspace(scaled_values_y[0], scaled_values_y[-1], 5), 2)))
-                    
+
                     self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         'nm'))
-            
+
                     self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                             'nm'))
-                    
+
         return
 
 class PointCloudVisualizer(object):
+    """
+    Interactive point cloud visualization
+    """
     def __init__(self, dset, base_image = None, figure=None, horizontal=True, **kwargs):
-        
+
         if not isinstance(dset, sidpy.Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
         from scipy.interpolate import griddata
@@ -1051,12 +1151,13 @@ class PointCloudVisualizer(object):
         self.rectangle = [0, size_x, 0, size_y]
 
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
-        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                list(np.round(np.linspace(self.extent[0], self.extent[1], 5),1)))
-        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
-        self.axes[0].set_xlabel('{} [{}]'.format('distance', 'px'))
-        self.axes[0].set_ylabel('{} [{}]'.format('distance', 'px'))
+        self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+        self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),1))
+
+        self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+        self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
+        self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
 
         self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
 
@@ -1109,7 +1210,64 @@ class PointCloudVisualizer(object):
         self.fig.tight_layout()
 
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+
+        self.button = iwgt.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+                            value=1,
+                            description='Image',
+                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
+                            layout = iwgt.Layout(width='30%', height='50px',))
+
+        self.button.observe(self._pw_uw, 'value') #pixel or unit wise
+
         self.fig.canvas.draw_idle()
+        widg = iwgt.HBox([self.button])
+        #widg
+        display(widg)
+
+    def _pw_uw(self, event):
+        pw_uw = event.new
+        self._update_image(pw_uw)
+
+    def _update_image(self, event_value):
+        # pixel wise or unit wise listener
+        if 'spacial_units' in self.dset.point_cloud:
+            _sp_units = self.dset.point_cloud['spacial_units']
+            if isinstance(_sp_units, str):
+                _sp_units = (_sp_units, _sp_units)
+            elif not (isinstance(_sp_units, list) or isinstance(_sp_units, tuple)):
+                raise ValueError('Spacial units in Dataset.point_cloud should be str or list, or tuple.')
+
+        if 'quantity' in self.dset.point_cloud:
+            _quantity = self.dset.point_cloud['quantity']
+            if isinstance(_quantity, str):
+                _quantity = (_quantity, _quantity)
+            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
+                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
+        else:
+            _quantity = ('distance', 'distance')
+
+        if event_value == 1:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5), 1))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5), 1))
+
+            self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
+            self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
+        else:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.real_extent[0], self.real_extent[1], 5), 2))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.real_extent[2], self.real_extent[3], 5), 2))
+
+            if 'spacial_units' in self.dset.point_cloud:
+                self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], _sp_units[0]))
+                self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], _sp_units[1]))
+            else:
+                self.axes[0].set_xlabel('{}'.format(_quantity[0]))
+                self.axes[0].set_ylabel('{}'.format(_quantity[1]))
 
     def _base_image(self, base_image):
         if not isinstance(base_image, sidpy.Dataset):
@@ -1141,6 +1299,12 @@ class PointCloudVisualizer(object):
         _x0, _x1, _y1, _y0 = base_image.get_extent(image_dims)
         _delta_x = _x1 - _x0
         _delta_y = _y1 - _y0
+
+        self.real_extent = [_x0, _x1, _y1, _y0]
+        self.dset.point_cloud['spacial_units'] = (base_image._axes[image_dims[0]].units,
+                                                  base_image._axes[image_dims[1]].units)
+        self.dset.point_cloud['quantity']      = (base_image._axes[image_dims[0]].quantity,
+                                                  base_image._axes[image_dims[1]].quantity)
 
         _px_x = np.array((coord[:,0] - _x0)*im_size[1]/_delta_x).astype(int)
         _px_y = np.array((coord[:, 1] - _y0) * im_size[0]/_delta_y).astype(int)
@@ -1282,6 +1446,7 @@ class PointCloudVisualizer(object):
         #to extend filed of view
         _x0, _x1 = _x0 - 0.05*_delta_x, _x1 + 0.05*_delta_x
         _y0, _y1 = _y0 - 0.05*_delta_y, _y1 + 0.05 * _delta_y
+        self.real_extent = [_x0, _x1, _y1, _y0]
 
         _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1-_x0)).astype(int)
         _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1-_y0)).astype(int)
@@ -1293,9 +1458,6 @@ class PointCloudVisualizer(object):
 
     def get_xy(self):
         return [self.x, self.y]
-
-
-
 
 class FourDimImageVisualizer(object):
 
@@ -1311,7 +1473,7 @@ class FourDimImageVisualizer(object):
     """
 
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
-        
+
         if not isinstance(dset, sidpy.Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
         scale_bar = kwargs.pop('scale_bar', False)
@@ -1582,7 +1744,7 @@ class ComplexSpectralImageVisualizer(object):
     """
 
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
-        
+
         if not isinstance(dset, sidpy.Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
         
@@ -1762,7 +1924,7 @@ class ComplexSpectralImageVisualizer(object):
         self._update()
 
     def get_spectrum(self):
-        
+
         if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
             self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
         if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:
@@ -1892,7 +2054,7 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
         self.axes[1].plot(self.energy_scale, self.fit_spectrum, 'r-')
         
     def get_fit_spectrum(self):
-    
+
         if self.x > self.dset.shape[self.image_dims[0]] - self.bin_x:
             self.x = self.dset.shape[self.image_dims[0]] - self.bin_x
         if self.y > self.dset.shape[self.image_dims[1]] - self.bin_y:

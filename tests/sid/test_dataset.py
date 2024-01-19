@@ -30,8 +30,8 @@ generic_attributes = ['title', 'quantity', 'units', 'modality', 'source']
 def validate_dataset_properties(self, dataset, values,
                                 title='generic', quantity='generic', units='generic',
                                 modality='generic', source='generic', dimension_dict=None,
-                                data_type=DataType.UNKNOWN,
-                                metadata={}, original_metadata={}
+                                data_type=DataType.UNKNOWN, variance=None,
+                                metadata={}, original_metadata={},
                                 ):
     self.assertIsInstance(self, unittest.TestCase)
     self.assertIsInstance(dataset, Dataset)
@@ -50,6 +50,14 @@ def validate_dataset_properties(self, dataset, values,
 
     for expected, actual in zip(dataset_attributes, this_attributes):
         self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+
+    if variance is None:
+        self.assertEqual(dataset.variance, None)
+    else:
+        self.assertTrue(isinstance(dataset.variance, da.core.Array))
+        expected_var = np.array(variance).flatten()
+        actual_var = dataset.variance.compute().flatten()
+        self.assertTrue(np.allclose(expected_var, actual_var, equal_nan=True, rtol=1e-05, atol=1e-08))
 
     self.assertEqual(dataset.data_type, data_type)
 
@@ -160,6 +168,13 @@ class TestDatasetFromArray(unittest.TestCase):
         descriptor = Dataset.from_array(values)
 
         validate_dataset_properties(self, descriptor, values)
+
+    def test_dset_with_variance(self):
+        values = np.random.random([4, 5, 6])
+        variance = np.random.random([4, 5, 6])
+        descriptor = Dataset.from_array(values, variance=variance)
+        validate_dataset_properties(self, descriptor, values, variance=variance)
+
 
 
 class TestDatasetConstructor(unittest.TestCase):
@@ -411,6 +426,14 @@ class TestLikeData(unittest.TestCase):
         actual = np.arange(3) * .5
         self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
+    def test_variance(self):
+        values = np.ones([4, 5])
+        var = np.random.normal(size=(4,5))
+        source_dset = Dataset.from_array(values, variance=var)
+        descriptor = source_dset.like_data(values)
+        self.assertEqual(descriptor.variance, None)
+        descriptor = source_dset.like_data(values, variance=var)
+        self.assertEqual(descriptor.variance.all(), source_dset.variance.all())
 
 class TestCopy(unittest.TestCase):
 
