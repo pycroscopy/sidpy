@@ -6,7 +6,6 @@ Created on Fri Sep 18 17:07:16 2020
 """
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
-from os import name
 import unittest
 
 import numpy as np
@@ -14,11 +13,11 @@ import dask.array as da
 import string
 import ase.build
 import sys
-from copy import copy, deepcopy
+from copy import deepcopy
 
 sys.path.insert(0, "../../sidpy/")
 
-from sidpy.sid.dimension import Dimension, DimensionType
+from sidpy.sid.dimension import Dimension
 from sidpy.sid.dataset import DataType, Dataset
 
 if sys.version_info.major == 3:
@@ -174,7 +173,6 @@ class TestDatasetFromArray(unittest.TestCase):
         variance = np.random.random([4, 5, 6])
         descriptor = Dataset.from_array(values, variance=variance)
         validate_dataset_properties(self, descriptor, values, variance=variance)
-
 
 
 class TestDatasetConstructor(unittest.TestCase):
@@ -428,12 +426,13 @@ class TestLikeData(unittest.TestCase):
 
     def test_variance(self):
         values = np.ones([4, 5])
-        var = np.random.normal(size=(4,5))
+        var = np.random.normal(size=(4, 5))
         source_dset = Dataset.from_array(values, variance=var)
         descriptor = source_dset.like_data(values)
         self.assertEqual(descriptor.variance, None)
         descriptor = source_dset.like_data(values, variance=var)
         self.assertEqual(descriptor.variance.all(), source_dset.variance.all())
+
 
 class TestCopy(unittest.TestCase):
 
@@ -701,7 +700,7 @@ class Testanymethod(unittest.TestCase):
         keepdims_multiple_axes_test(self, 'any', title_prefix='any_aggregate_')
 
 
-class Testminmethod(unittest.TestCase):
+class TestMinMethod(unittest.TestCase):
     def test_min_single_axis(self):
         single_axis_test(self, 'min', title_prefix='min_aggregate_')
 
@@ -715,7 +714,7 @@ class Testminmethod(unittest.TestCase):
         keepdims_multiple_axes_test(self, 'min', title_prefix='min_aggregate_')
 
 
-class Testmaxmethod(unittest.TestCase):
+class TestMaxMethod(unittest.TestCase):
     def test_max_single_axis(self):
         single_axis_test(self, 'max', title_prefix='max_aggregate_')
 
@@ -729,7 +728,7 @@ class Testmaxmethod(unittest.TestCase):
         keepdims_multiple_axes_test(self, 'max', title_prefix='max_aggregate_')
 
 
-class Testsummethod(unittest.TestCase):
+class TestSumMethod(unittest.TestCase):
     def test_sum_single_axis(self):
         single_axis_test(self, 'sum', title_prefix='sum_aggregate_')
 
@@ -747,7 +746,7 @@ class Testsummethod(unittest.TestCase):
         pass
 
 
-class Testmeanmethod(unittest.TestCase):
+class TestMeanMethod(unittest.TestCase):
     def test_mean_single_axis(self):
         single_axis_test(self, 'mean', title_prefix='mean_aggregate_')
 
