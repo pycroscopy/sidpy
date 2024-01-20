@@ -957,10 +957,6 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
 
         self.button.observe(self._pw_uw, 'value') #pixel or unit wise
 
-        widg = ipywidgets.HBox([self.button])
-        #widg
-        display(widg)
-
     def _pw_uw(self, event):
         pw_uw = event.new
         self.update_image(pw_uw)

@@ -651,7 +651,7 @@ class Dataset(da.Array):
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
             if verbose:
-                print('3D dataset')
+                print('3D dataset:', self.data_type)
             if self.data_type == DataType.IMAGE:
                 self.view = ImageVisualizer(self, figure=figure, **kwargs)
             elif self.data_type == DataType.IMAGE_MAP:
@@ -659,6 +659,12 @@ class Dataset(da.Array):
             elif self.data_type == DataType.IMAGE_STACK:
                 self.view = ImageStackVisualizer(self, figure=figure, **kwargs)
             elif self.data_type == DataType.SPECTRAL_IMAGE:
+                if 'complex' in self.dtype.name:
+                    self.view = ComplexSpectralImageVisualizer(self, figure=figure, **kwargs)
+                else:
+                    self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
+            elif self.data_type.name == 'SPECTRAL_IMAGE':
+                print('spec3')
                 if 'complex' in self.dtype.name:
                     self.view = ComplexSpectralImageVisualizer(self, figure=figure, **kwargs)
                 else:
