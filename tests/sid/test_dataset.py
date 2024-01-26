@@ -6,7 +6,6 @@ Created on Fri Sep 18 17:07:16 2020
 """
 from __future__ import division, print_function, unicode_literals, \
     absolute_import
-from os import name
 import unittest
 
 import numpy as np
@@ -14,11 +13,11 @@ import dask.array as da
 import string
 import ase.build
 import sys
-from copy import copy, deepcopy
+from copy import deepcopy
 
 sys.path.insert(0, "../../sidpy/")
 
-from sidpy.sid.dimension import Dimension, DimensionType
+from sidpy.sid.dimension import Dimension
 from sidpy.sid.dataset import DataType, Dataset
 
 if sys.version_info.major == 3:
@@ -30,8 +29,8 @@ generic_attributes = ['title', 'quantity', 'units', 'modality', 'source']
 def validate_dataset_properties(self, dataset, values,
                                 title='generic', quantity='generic', units='generic',
                                 modality='generic', source='generic', dimension_dict=None,
-                                data_type=DataType.UNKNOWN,
-                                metadata={}, original_metadata={}
+                                data_type=DataType.UNKNOWN, variance=None,
+                                metadata={}, original_metadata={},
                                 ):
     self.assertIsInstance(self, unittest.TestCase)
     self.assertIsInstance(dataset, Dataset)
@@ -50,6 +49,14 @@ def validate_dataset_properties(self, dataset, values,
 
     for expected, actual in zip(dataset_attributes, this_attributes):
         self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+
+    if variance is None:
+        self.assertEqual(dataset.variance, None)
+    else:
+        self.assertTrue(isinstance(dataset.variance, da.core.Array))
+        expected_var = np.array(variance).flatten()
+        actual_var = dataset.variance.compute().flatten()
+        self.assertTrue(np.allclose(expected_var, actual_var, equal_nan=True, rtol=1e-05, atol=1e-08))
 
     self.assertEqual(dataset.data_type, data_type)
 
@@ -160,6 +167,12 @@ class TestDatasetFromArray(unittest.TestCase):
         descriptor = Dataset.from_array(values)
 
         validate_dataset_properties(self, descriptor, values)
+
+    def test_dset_with_variance(self):
+        values = np.random.random([4, 5, 6])
+        variance = np.random.random([4, 5, 6])
+        descriptor = Dataset.from_array(values, variance=variance)
+        validate_dataset_properties(self, descriptor, values, variance=variance)
 
 
 class TestDatasetConstructor(unittest.TestCase):
@@ -411,6 +424,15 @@ class TestLikeData(unittest.TestCase):
         actual = np.arange(3) * .5
         self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
+    def test_variance(self):
+        values = np.ones([4, 5])
+        var = np.random.normal(size=(4, 5))
+        source_dset = Dataset.from_array(values, variance=var)
+        descriptor = source_dset.like_data(values)
+        self.assertEqual(descriptor.variance, None)
+        descriptor = source_dset.like_data(values, variance=var)
+        self.assertEqual(descriptor.variance.all(), source_dset.variance.all())
+
 
 class TestCopy(unittest.TestCase):
 
@@ -542,20 +564,20 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(len(image_dims), 2)
         self.assertEqual(image_dims[1], 1)
 
-    def test_get_spectrum_dims(self):
+    def test_get_spectral_dims(self):
         values = np.zeros([4, 5])
         descriptor = Dataset.from_array(values)
         descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', dimension_type='spatial'))
 
-        spec_dims = descriptor.get_spectrum_dims()
+        spec_dims = descriptor.get_spectral_dims()
         self.assertEqual(len(spec_dims), 0)
         descriptor.x.dimension_type = 'spectral'
-        spec_dims = descriptor.get_spectrum_dims()
+        spec_dims = descriptor.get_spectral_dims()
         self.assertEqual(len(spec_dims), 1)
         self.assertEqual(spec_dims[0], 0)
 
         descriptor.dim_1.dimension_type = 'spectral'
-        spec_dims = descriptor.get_spectrum_dims()
+        spec_dims = descriptor.get_spectral_dims()
         self.assertEqual(len(spec_dims), 2)
         self.assertEqual(spec_dims[1], 1)
 
@@ -678,7 +700,7 @@ class Testanymethod(unittest.TestCase):
         keepdims_multiple_axes_test(self, 'any', title_prefix='any_aggregate_')
 
 
-class Testminmethod(unittest.TestCase):
+class TestMinMethod(unittest.TestCase):
     def test_min_single_axis(self):
         single_axis_test(self, 'min', title_prefix='min_aggregate_')
 
@@ -692,7 +714,7 @@ class Testminmethod(unittest.TestCase):
         keepdims_multiple_axes_test(self, 'min', title_prefix='min_aggregate_')
 
 
-class Testmaxmethod(unittest.TestCase):
+class TestMaxMethod(unittest.TestCase):
     def test_max_single_axis(self):
         single_axis_test(self, 'max', title_prefix='max_aggregate_')
 
@@ -706,7 +728,7 @@ class Testmaxmethod(unittest.TestCase):
         keepdims_multiple_axes_test(self, 'max', title_prefix='max_aggregate_')
 
 
-class Testsummethod(unittest.TestCase):
+class TestSumMethod(unittest.TestCase):
     def test_sum_single_axis(self):
         single_axis_test(self, 'sum', title_prefix='sum_aggregate_')
 
@@ -724,7 +746,7 @@ class Testsummethod(unittest.TestCase):
         pass
 
 
-class Testmeanmethod(unittest.TestCase):
+class TestMeanMethod(unittest.TestCase):
     def test_mean_single_axis(self):
         single_axis_test(self, 'mean', title_prefix='mean_aggregate_')
 
