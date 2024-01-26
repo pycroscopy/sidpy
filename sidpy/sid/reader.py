@@ -58,6 +58,7 @@ class Reader(object):
         if not os.path.exists(file_path):
             raise FileNotFoundError(file_path + ' does not exist')
         self._input_file_path = file_path
+        _, self._file_type = os.path.splitext(file_path)
         self.datasets = []
 
     def _list_to_dict(self):
