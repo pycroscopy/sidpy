@@ -7,7 +7,6 @@ Created on Sun Aug 22 11:07:16 2020
 @author: Suhas Somnath
 """
 
-
 from __future__ import division, print_function, absolute_import, unicode_literals
 import warnings
 import abc
@@ -20,6 +19,7 @@ if sys.version_info.major == 3:
     unicode = str
 else:
     FileNotFoundError = ValueError
+from .dataset import Dataset
 
 
 class Reader(object):
@@ -58,6 +58,26 @@ class Reader(object):
         if not os.path.exists(file_path):
             raise FileNotFoundError(file_path + ' does not exist')
         self._input_file_path = file_path
+        self.datasets = []
+
+    def _list_to_dict(self):
+        if isinstance(self.datasets, Dataset):
+            return self.datasets
+        elif isinstance(self.datasets, list):
+            if all(isinstance(dataset, Dataset) for dataset in self.datasets):
+                dataset_dict = {}
+                for ind, dataset in enumerate(self.datasets):
+                    key = f"Channel_{int(ind):03d}"
+                    dataset_dict[key] = dataset
+                return dataset_dict
+            else:
+                raise NotImplementedError('All items in the dataset list are '
+                                          'expected to be sidpy.Dataset type')
+
+        else:
+            raise NotImplementedError('datasets attribute is expected to hold a '
+                                      'sidpy.Dataset object or a list '
+                                      'with sidpy.Dataset objects')
 
     @abc.abstractmethod
     def can_read(self):
