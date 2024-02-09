@@ -9,6 +9,8 @@ Created on Mar 9, 2022
 from xml.dom import NotFoundErr
 from dask.distributed import Client
 import numpy as np
+import dill
+import base64
 import dask
 import inspect
 from ..sid import Dimension, Dataset
@@ -331,6 +333,36 @@ class SidFitter:
         mean_sid_dset.metadata = self.dataset.metadata.copy()
         mean_sid_dset.metadata['fit_parms_dict'] = fit_parms_dict.copy()
         mean_sid_dset.original_metadata = self.dataset.original_metadata.copy()
+        #TODO: Here we want to save the fitting function as well
+        #We should do this in a dictionary called 'fitting_functions'
+        #Here is an example
+        '''
+        import dill
+
+        # Create your dictionary
+        fit_fn_dict = {'func1': self.fit_fn,'func2': another_func, ...}
+
+        # Serialize the functions in the dictionary using dill and encode as base64
+        encoded_dict = {}
+        for key, value in my_dictionary.items():
+            serialized_value = dill.dumps(value)
+            encoded_value = base64.b64encode(serialized_value).decode('utf-8')
+            encoded_dict[key] = encoded_value
+
+        fit_data.metadata['fitting_functions'] = encoded_dict #save to the metadata
+        When these files are read with the NSID reader, we should be able to use these functions out of the block.
+
+        '''
+        fit_fn_dict = {'func1': self.fit_fn}
+
+        # Serialize the functions in the dictionary using dill and encode as base64
+        encoded_dict = {}
+        for key, value in fit_fn_dict.items():
+            serialized_value = dill.dumps(value)
+            encoded_value = base64.b64encode(serialized_value).decode('utf-8')
+            encoded_dict[key] = encoded_value
+
+        mean_sid_dset.metadata['fitting_functions'] = encoded_dict.copy() #save to the metadata
 
         cov_sid_dset, std_fit_dset, fit_dset = None, None, None
 
