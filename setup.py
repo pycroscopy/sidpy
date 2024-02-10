@@ -27,7 +27,8 @@ requirements = ['numpy>=1.10',
                 'scikit-learn',
                 'scipy',
                 'ase',
-                'ipympl'
+                'ipympl',
+                'dill'
                 ]
 
 setup(
