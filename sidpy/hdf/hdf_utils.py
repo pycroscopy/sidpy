@@ -808,7 +808,7 @@ def h5_group_to_dict(group_iter, group_dict={}):
     """
 
     if not isinstance(group_iter, h5py.Group):
-        raise TypeError('we need a h5py group to read from')
+        raise TypeError('we need a h5py group to read from. Type given was {}'.format(type(group_iter)))
     if not isinstance(group_dict, dict):
         raise TypeError('group_dict needs to be a python dictionary')
    

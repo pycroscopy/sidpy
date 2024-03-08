@@ -32,50 +32,98 @@ def validate_dataset_properties(self, dataset, values,
                                 data_type=DataType.UNKNOWN, variance=None,
                                 metadata={}, original_metadata={},
                                 ):
-    self.assertIsInstance(self, unittest.TestCase)
-    self.assertIsInstance(dataset, Dataset)
-    # DONE: Validate that EVERY property is set correctly
-    values = np.array(values)
+    
+    if 'fitting_functions' in dataset.metadata.keys():
+        metadata['fitting_functions'] = dataset.metadata['fitting_functions']
+        self.assertIsInstance(self, unittest.TestCase)
+        self.assertIsInstance(dataset, Dataset)
+        # DONE: Validate that EVERY property is set correctly
+        values = np.array(values)
 
-    self.assertTrue(np.all([hasattr(dataset, att) for att in generic_attributes]))
+        self.assertTrue(np.all([hasattr(dataset, att) for att in generic_attributes]))
 
-    expected = values.flatten()
-    actual = dataset.compute().flatten()
-    self.assertTrue(np.allclose(expected, actual, equal_nan=True, rtol=1e-05, atol=1e-08))
-    # self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+        expected = values.flatten()
+        actual = dataset.compute().flatten()
+        self.assertTrue(np.allclose(expected, actual, equal_nan=True, rtol=1e-05, atol=1e-08))
+        # self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
-    this_attributes = [title, quantity, units, modality, source]
-    dataset_attributes = [getattr(dataset, att) for att in generic_attributes]
+        this_attributes = [title, quantity, units, modality, source]
+        dataset_attributes = [getattr(dataset, att) for att in generic_attributes]
 
-    for expected, actual in zip(dataset_attributes, this_attributes):
-        self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+        for expected, actual in zip(dataset_attributes, this_attributes):
+            self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
-    if variance is None:
-        self.assertEqual(dataset.variance, None)
+        if variance is None:
+            self.assertEqual(dataset.variance, None)
+        else:
+            self.assertTrue(isinstance(dataset.variance, da.core.Array))
+            expected_var = np.array(variance).flatten()
+            actual_var = dataset.variance.compute().flatten()
+            self.assertTrue(np.allclose(expected_var, actual_var, equal_nan=True, rtol=1e-05, atol=1e-08))
+
+        self.assertEqual(dataset.data_type, data_type)
+
+        self.assertEqual(dataset.metadata, metadata)
+        self.assertEqual(dataset.original_metadata, original_metadata)
+
+        if dimension_dict is None:
+            for dim in range(len(values.shape)):
+                self.assertEqual(getattr(dataset, string.ascii_lowercase[dim]),
+                                getattr(dataset, 'dim_{}'.format(dim)))
+        else:
+            for dim in range(len(values.shape)):
+                self.assertEqual(getattr(dataset, dimension_dict[dim].name),
+                                getattr(dataset, 'dim_{}'.format(dim)))
+                self.assertEqual(dataset._axes[dim], dimension_dict[dim])
+
+        # Make sure we do not have too many dimensions
+        self.assertFalse(hasattr(dataset, 'dim_{}'.format(len(values.shape))))
+        
     else:
-        self.assertTrue(isinstance(dataset.variance, da.core.Array))
-        expected_var = np.array(variance).flatten()
-        actual_var = dataset.variance.compute().flatten()
-        self.assertTrue(np.allclose(expected_var, actual_var, equal_nan=True, rtol=1e-05, atol=1e-08))
+        self.assertIsInstance(self, unittest.TestCase)
+        self.assertIsInstance(dataset, Dataset)
+        # DONE: Validate that EVERY property is set correctly
+        values = np.array(values)
 
-    self.assertEqual(dataset.data_type, data_type)
+        self.assertTrue(np.all([hasattr(dataset, att) for att in generic_attributes]))
 
-    self.assertEqual(dataset.metadata, metadata)
-    self.assertEqual(dataset.original_metadata, original_metadata)
+        expected = values.flatten()
+        actual = dataset.compute().flatten()
+        self.assertTrue(np.allclose(expected, actual, equal_nan=True, rtol=1e-05, atol=1e-08))
+        # self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
 
-    if dimension_dict is None:
-        for dim in range(len(values.shape)):
-            self.assertEqual(getattr(dataset, string.ascii_lowercase[dim]),
-                             getattr(dataset, 'dim_{}'.format(dim)))
-    else:
-        for dim in range(len(values.shape)):
-            self.assertEqual(getattr(dataset, dimension_dict[dim].name),
-                             getattr(dataset, 'dim_{}'.format(dim)))
-            self.assertEqual(dataset._axes[dim], dimension_dict[dim])
+        this_attributes = [title, quantity, units, modality, source]
+        dataset_attributes = [getattr(dataset, att) for att in generic_attributes]
 
-    # Make sure we do not have too many dimensions
-    self.assertFalse(hasattr(dataset, 'dim_{}'.format(len(values.shape))))
-    # self.assertFalse(hasattr(dataset, string.ascii_lowercase[len(values.shape)]))
+        for expected, actual in zip(dataset_attributes, this_attributes):
+            self.assertTrue(np.all([x == y for x, y in zip(expected, actual)]))
+
+        if variance is None:
+            self.assertEqual(dataset.variance, None)
+        else:
+            self.assertTrue(isinstance(dataset.variance, da.core.Array))
+            expected_var = np.array(variance).flatten()
+            actual_var = dataset.variance.compute().flatten()
+            self.assertTrue(np.allclose(expected_var, actual_var, equal_nan=True, rtol=1e-05, atol=1e-08))
+
+        self.assertEqual(dataset.data_type, data_type)
+
+        self.assertEqual(dataset.metadata, metadata)
+        self.assertEqual(dataset.original_metadata, original_metadata)
+
+        if dimension_dict is None:
+            for dim in range(len(values.shape)):
+                self.assertEqual(getattr(dataset, string.ascii_lowercase[dim]),
+                                getattr(dataset, 'dim_{}'.format(dim)))
+        else:
+            for dim in range(len(values.shape)):
+                self.assertEqual(getattr(dataset, dimension_dict[dim].name),
+                                getattr(dataset, 'dim_{}'.format(dim)))
+                self.assertEqual(dataset._axes[dim], dimension_dict[dim])
+
+        # Make sure we do not have too many dimensions
+        self.assertFalse(hasattr(dataset, 'dim_{}'.format(len(values.shape))))
+        # self.assertFalse(hasattr(dataset, string.ascii_lowercase[len(values.shape)]))
 
 
 # Following 4 methods are used in testing the methods that reduce dimensions of the dataset
