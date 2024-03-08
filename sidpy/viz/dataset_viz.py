@@ -611,6 +611,9 @@ class SpectralImageVisualizerBase(object):
 
         self.set_spectrum()
 
+        if scale_bar:
+            self._scale_bar()
+
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
         self.fig.canvas.draw_idle()
@@ -742,17 +745,6 @@ class SpectralImageVisualizerBase(object):
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
         self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
-
-        self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
-                            value=1,
-                            description='Image',
-                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)', 
-                            layout = ipywidgets.Layout(width='30%', height='50px',))
-
-        self.button.observe(self._pw_uw, 'value') #pixel or unit wise
-        self.fig.canvas.draw_idle()
-        widg = ipywidgets.HBox([self.button])
-        display(widg)
     
     def _update_image(self, event_value):
         #pixel wise or unit wise listener
@@ -939,6 +931,39 @@ class SpectralImageVisualizerBase(object):
     def get_xy(self):
         return [self.x, self.y]
 
+    def _scale_bar(self):
+        from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+        self.axes[0].axis('off')
+
+        # # remove previous scale_bars
+        # for artist in self.axes[0].artists:
+        #     if isinstance(artist, AnchoredSizeBar):
+        #         artist.remove()
+
+        extent = self.extent_rd
+        _units = self.dset._axes[self.image_dims[0]].units
+
+        size_of_bar_real = (extent[1] - extent[0]) / 5
+        if size_of_bar_real < 1:
+            size_of_bar_real = round(size_of_bar_real, 1)
+        else:
+            size_of_bar_real = int(round(size_of_bar_real))
+        px_size = self.axes[0].get_xlim()
+        size_of_bar = int((px_size[1] - px_size[0]) * (size_of_bar_real / (extent[1] - extent[0])))
+
+        if size_of_bar < 1:
+            size_of_bar = 1
+        scalebar = AnchoredSizeBar(self.axes[0].transData,
+                                   size_of_bar, '{} {}'.format(size_of_bar_real,
+                                                               _units),
+                                   'lower left',
+                                   pad=1,
+                                   color='white',
+                                   frameon=False,
+                                   size_vertical=size_of_bar / 7)
+
+        self.axes[0].add_artist(scalebar)
+
     @staticmethod
     def _closest_point(array_coord, point):
         diff = array_coord - point
@@ -949,26 +974,32 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
         super().__init__(dset, figure, horizontal, **kwargs)
 
-        self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
-                            value=1,
-                            description='Image',
-                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
-                            layout = ipywidgets.Layout(width='30%', height='50px',))
+        scale_bar = kwargs.pop('scale_bar', False)
 
-        self.button.observe(self._pw_uw, 'value') #pixel or unit wise
+        if scale_bar is False:
+            self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+                                value=1,
+                                description='Image',
+                                tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
+                                layout = ipywidgets.Layout(width='30%', height='50px',))
+
+            self.button.observe(self._pw_uw, 'value') #pixel or unit wise
+            self.fig.canvas.draw_idle()
+            widg = ipywidgets.HBox([self.button])
+            display(widg)
 
     def _pw_uw(self, event):
         pw_uw = event.new
         self.update_image(pw_uw)
 
-
     def update_image(self, event_value):
         #pixel wise or unit wise listener
         if event_value==1:
-            self.axes[0].xaxis.set_ticks(ticks=list(np.linspace(self.extent[0], self.extent[1], 5)),
-                                    labels=list(np.round(np.linspace(self.extent[0], self.extent[1], 5),2)))
-            self.axes[0].yaxis.set_ticks(list(np.linspace(self.extent[2], self.extent[3], 5)),
-                                    list(np.round(np.linspace(self.extent[2], self.extent[3], 5),1)))
+            self.axes[0].xaxis.set_ticks(list(np.linspace(self.extent[0], self.extent[1], 5)))
+            self.axes[0].set_xticklabels(list(np.round(np.linspace(self.extent[0], self.extent[1], 5),2)))
+
+            self.axes[0].yaxis.set_ticks(list(np.linspace(self.extent[2], self.extent[3], 5)))
+            self.axes[0].set_yticklabels(list(np.round(np.linspace(self.extent[2], self.extent[3], 5),2)))
 
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                      'px'))
@@ -980,13 +1011,11 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
             self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                             self.dset._axes[self.image_dims[1]].units))
 
-            self.axes[0].xaxis.set_ticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    list(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2)),
-                                         minor=False)
+            self.axes[0].xaxis.set_ticks(np.linspace(self.extent[0], self.extent[1], 5))
+            self.axes[0].set_xticklabels(list(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2)))
 
-            self.axes[0].yaxis.set_ticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                    list(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2)),
-                                         minor=False)
+            self.axes[0].yaxis.set_ticks(np.linspace(self.extent[2], self.extent[3], 5))
+            self.axes[0].set_yticklabels(list(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2)))
 
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         self.dset._axes[self.image_dims[0]].units))
@@ -998,10 +1027,10 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
                 scaled_values_y = self.dset._axes[self.image_dims[1]].values*1E9
                 scaled_values_x = self.dset._axes[self.image_dims[0]].values*1E9
                 if scaled_values_x.mean() >=0.1 and  scaled_values_x.mean() <=1000:
-                    self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),
-                                    list(np.round(np.linspace(scaled_values_x[0], scaled_values_x[-1], 5), 2)))
-                    self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),
-                                    list(np.round(np.linspace(scaled_values_y[0], scaled_values_y[-1], 5), 2)))
+                    self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5))
+                    self.axes[0].set_xticklabels(list(np.round(np.linspace(scaled_values_x[0], scaled_values_x[-1], 5), 2)))
+                    self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5))
+                    self.axes[0].set_yticklabels(list(np.round(np.linspace(scaled_values_y[0], scaled_values_y[-1], 5), 2)))
 
                     self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         'nm'))
@@ -1009,17 +1038,16 @@ class SpectralImageVisualizer(SpectralImageVisualizerBase):
                     self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                             'nm'))
 
-        return
+        # if self.scale_bar:
+        #     self._scale_bar(event_value=event_value)
 
-class PointCloudVisualizer(object):
-    """
-    Interactive point cloud visualization
-    """
-    def __init__(self, dset, base_image = None, figure=None, horizontal=True, **kwargs):
 
+class PointCloudVisualizerBase(object):
+    def __init__(self, dset, base_image=None, figure=None, horizontal=True, **kwargs):
         if not isinstance(dset, sidpy.Dataset):
             raise TypeError('dset should be a sidpy.Dataset object')
         self.dset = dset
+
         if self.dset.variance is not None:
             if self.dset.variance.shape != self.dset.shape:
                 raise ValueError('Variance array must have the same dimensionality as the dataset')
@@ -1027,13 +1055,77 @@ class PointCloudVisualizer(object):
         #kwargs parsing
         scale_bar = kwargs.pop('scale_bar', False)
         self.set_title = kwargs.pop('set_title', True)
-
-        fig_args = dict()
         temp = kwargs.pop('figsize', None)
+
+        self.verify_dataset()
+
+        #figure creation
+        fig_args = dict()
         if temp is not None:
             fig_args['figsize'] = temp
 
-        #initial checks
+        if figure is None:
+            self.fig = plt.figure(**fig_args)
+        else:
+            self.fig = figure
+
+        if horizontal:
+            self.axes = self.fig.subplots(ncols=2)
+        else:
+            self.axes = self.fig.subplots(nrows=2, **fig_args)
+
+        if self.set_title:
+            self.fig.canvas.manager.set_window_title(self.dset.title)
+
+            # pull base_image
+            if base_image is not None:
+                self.image, self.px_coord = self._base_image(base_image)
+            else:
+                if len(self.channel_dim) > 0:
+                    self.cloud = dset.mean(axis=(self.spectral_dim[0], self.channel_dim[0]))
+                else:
+                    self.cloud = dset.mean(axis=(self.spectral_dim[0],))
+                self.image, self.px_coord = self._mask_image()
+
+        self.x = 0
+        self.y = 0
+        size_x, size_y = self.image.shape
+        self.extent = [0, size_x, size_y, 0]
+        self.rectangle = [0, size_x, 0, size_y]
+
+        if 'quantity' in self.dset.point_cloud:
+            _quantity = self.dset.point_cloud['quantity']
+            if isinstance(_quantity, str):
+                _quantity = (_quantity, _quantity)
+            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
+                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
+        else:
+            _quantity = ('distance', 'distance')
+
+        #image
+        self.set_image(_quantity, **kwargs)
+
+        #highlighting selected point
+        _point_number = self.tree.query(np.array([self.x, self.y]))[1]
+        self.sel_point = self.axes[0].scatter(self.px_coord[_point_number, 0], self.px_coord[_point_number, 1],
+                                              color='red', s=10, edgecolors='darkred')
+
+        if scale_bar:
+            self._scale_bar()
+
+        self.spectrum, self.variance = self.get_spectrum(_point_number)
+        self.energy_axis = self.spectral_dim[0]
+        if len(self.channel_dim)>0: self.channel_axis = self.channel_dim
+        self.energy_scale = self.dset._axes[self.energy_axis].values
+        #spectrum
+        self.set_spectrum(_point_number, **kwargs)
+
+        self.fig.tight_layout()
+        self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+
+    def verify_dataset(self):
+        dset = self.dset
+        # initial checks
         if len(dset.shape) < 2:
             raise TypeError('dataset must have at least two dimensions')
         if len(dset.shape) > 3:
@@ -1058,86 +1150,40 @@ class PointCloudVisualizer(object):
             else:
                 selection.append(slice(0, 1))
 
-        #checking dimension types
-        if len(channel_dim) >1:
+        # checking dimension types
+        if len(channel_dim) > 1:
             raise ValueError("We have more than one Channel Dimension, this won't work for the visualizer")
-        if len(spectral_dim)>1:
+        if len(spectral_dim) > 1:
             raise ValueError("We have more than one Spectral Dimension, this won't work for the visualizer...")
-        if len(dset.shape)==3:
-            if len(channel_dim)!=1:
+        if len(dset.shape) == 3:
+            if len(channel_dim) != 1:
                 raise TypeError("We need one dimension with type CHANNEL \
                     for a spectral image plot for a 4D dataset")
-        elif len(dset.shape)==2:
+        elif len(dset.shape) == 2:
             if len(spectral_dim) != 1:
                 raise TypeError("We need one dimension with dimension_type SPECTRAL \
                  to plot a spectra for a 3D dataset")
 
-        #figure creation
-        if figure is None:
-            self.fig = plt.figure(**fig_args)
-        else:
-            self.fig = figure
+        self.selection = selection
+        self.point_dims = point_dims
+        self.spectral_dim = spectral_dim
+        self.channel_dim = channel_dim
+        return True
 
-        if horizontal:
-            self.axes = self.fig.subplots(ncols=2)
-        else:
-            self.axes = self.fig.subplots(nrows=2, **fig_args)
-
-        if self.set_title:
-            self.fig.canvas.manager.set_window_title(self.dset.title)
-
-        #pull base_image
-        if base_image is not None:
-            self.image, self.px_coord = self._base_image(base_image)
-        else:
-            if len(channel_dim) > 0:
-                self.cloud= dset.mean(axis=(spectral_dim[0], channel_dim[0]))
-            else:
-                self.cloud = dset.mean(axis=(spectral_dim[0],))
-            self.image, self.px_coord = self._mask_image()
-
-        self.x = 0
-        self.y = 0
-        size_x, size_y = self.image.shape
-        self.extent = [0, size_x, size_y, 0]
-        self.rectangle = [0, size_x, 0, size_y]
-
-        if 'quantity' in self.dset.point_cloud:
-            _quantity = self.dset.point_cloud['quantity']
-            if isinstance(_quantity, str):
-                _quantity = (_quantity, _quantity)
-            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
-                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
-        else:
-            _quantity = ('distance', 'distance')
-
+    def set_image(self, quantity, **kwargs):
         self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
         self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
         self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),1))
 
         self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
         self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5),1))
-        self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
-        self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
+        self.axes[0].set_xlabel('{} [{}]'.format(quantity[0], 'px'))
+        self.axes[0].set_ylabel('{} [{}]'.format(quantity[1], 'px'))
 
         self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
 
-        if scale_bar:
-            self._scale_bar()
-
-        #---spectral part----
-        #find closest spectrum
-        #self.tree = cKDTree(self.px_coord)
-        _point_number = self.tree.query(np.array([self.x, self.y]))[1]
-        self.sel_point = self.axes[0].scatter(self.px_coord[_point_number, 0], self.px_coord[_point_number, 1],
-                             color='red', s=10, edgecolors='darkred')
-
-        self.spectrum, self.variance = self.get_spectrum(_point_number)
-        self.energy_axis = spectral_dim[0]
-        if len(channel_dim)>0: self.channel_axis = channel_dim
-        self.energy_scale = self.dset._axes[self.energy_axis].values
-
-        self.spectrum_plot = [] #list is required for the case of several channels
+    def set_spectrum(self, point_number, **kwargs):
+        self.spectrum_plot = []  # list is required for the case of several channels
         if len(self.spectrum.shape) > 1:
             for i in range(len(self.spectrum)):
                 _spectrum_plot, = self.axes[1].plot(self.energy_scale, self.spectrum.compute()[i])
@@ -1148,86 +1194,55 @@ class PointCloudVisualizer(object):
 
         self.fill_between = []
         if self.variance is not None:
-            #3d - many curves
+            # 3d - many curves
             if len(self.variance.shape) > 1:
                 for i in range(len(self.variance)):
                     _fill_between = self.axes[1].fill_between(self.energy_scale,
-                                              self.spectrum[i] - self.variance[i],
-                                              self.spectrum[i] + self.variance[i],
-                                              alpha=0.3, **kwargs)
+                                                              self.spectrum[i] - self.variance[i],
+                                                              self.spectrum[i] + self.variance[i],
+                                                              alpha=0.3, **kwargs)
                     self.fill_between.append(_fill_between)
             # 2d - one curve at each point
             else:
                 _fill_between = self.axes[1].fill_between(self.energy_scale,
-                                          self.spectrum - self.variance,
-                                          self.spectrum + self.variance,
-                                          alpha=0.3, **kwargs)
+                                                          self.spectrum - self.variance,
+                                                          self.spectrum + self.variance,
+                                                          alpha=0.3, **kwargs)
                 self.fill_between.append(_fill_between)
 
-        self.axes[1].set_title('point {}'.format(_point_number))
+        self.axes[1].set_title('point {}'.format(point_number))
         self.axes[1].set_xlabel(self.dset.labels[self.energy_axis])
         self.axes[1].set_ylabel(self.dset.data_descriptor)
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
-        self.fig.tight_layout()
 
-        self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+    def get_spectrum(self, point_number):
+        '''
+        Getting the spectrum by the point number in the point cloud.
+        Parameters
+        ----------
+        point_number: int
 
-        self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
-                            value=1,
-                            descrption='Image',
-                            tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
-                            layout = ipywidgets.Layout(width='30%', height='50px',))
-
-        self.button.observe(self._pw_uw, 'value') #pixel or unit wise
-        self.fig.canvas.draw_idle()
-
-        widg = ipywidgets.HBox([self.button])
-        display(widg)
-
-    def _pw_uw(self, event):
-        pw_uw = event.new
-        self._update_image(pw_uw)
-
-    def _update_image(self, event_value):
-        # pixel wise or unit wise listener
-        if 'spacial_units' in self.dset.point_cloud:
-            _sp_units = self.dset.point_cloud['spacial_units']
-            if isinstance(_sp_units, str):
-                _sp_units = (_sp_units, _sp_units)
-            elif not (isinstance(_sp_units, list) or isinstance(_sp_units, tuple)):
-                raise ValueError('Spacial units in Dataset.point_cloud should be str or list, or tuple.')
-
-        if 'quantity' in self.dset.point_cloud:
-            _quantity = self.dset.point_cloud['quantity']
-            if isinstance(_quantity, str):
-                _quantity = (_quantity, _quantity)
-            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
-                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
-        else:
-            _quantity = ('distance', 'distance')
-
-        if event_value == 1:
-            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
-            self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5), 1))
-
-            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
-            self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5), 1))
-
-            self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
-            self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
-        else:
-            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
-            self.axes[0].set_xticklabels(np.round(np.linspace(self.real_extent[0], self.real_extent[1], 5), 2))
-
-            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
-            self.axes[0].set_yticklabels(np.round(np.linspace(self.real_extent[2], self.real_extent[3], 5), 2))
-
-            if 'spacial_units' in self.dset.point_cloud:
-                self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], _sp_units[0]))
-                self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], _sp_units[1]))
+        Returns
+        -------
+        self.spectrum: sidpy.array
+        '''
+        selection = []
+        for dim, axis in self.dset._axes.items():
+            if axis.dimension_type == sidpy.DimensionType.POINT_CLOUD:
+                selection.append(point_number)
+            elif axis.dimension_type == sidpy.DimensionType.SPECTRAL:
+                selection.append(slice(None))
+            elif axis.dimension_type == sidpy.DimensionType.CHANNEL:
+                selection.append(slice(None))
             else:
-                self.axes[0].set_xlabel('{}'.format(_quantity[0]))
-                self.axes[0].set_ylabel('{}'.format(_quantity[1]))
+                selection.append(slice(0, 1))
+
+        self.spectrum = self.dset[tuple(selection)].squeeze()
+        if self.dset.variance is not None:
+            self.variance = self.dset.variance[tuple(selection)].squeeze()
+        else:
+            self.variance = None
+        return self.spectrum, self.variance
 
     def _base_image(self, base_image):
         if not isinstance(base_image, sidpy.Dataset):
@@ -1238,7 +1253,7 @@ class PointCloudVisualizer(object):
             coord = self.dset.point_cloud['coordinates']
         else:
             raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates\
-                                       in point_cloud attribute')
+                                          in point_cloud attribute')
 
         image_dims = []
         selection = []
@@ -1263,41 +1278,53 @@ class PointCloudVisualizer(object):
         self.real_extent = [_x0, _x1, _y1, _y0]
         self.dset.point_cloud['spacial_units'] = (base_image._axes[image_dims[0]].units,
                                                   base_image._axes[image_dims[1]].units)
-        self.dset.point_cloud['quantity']      = (base_image._axes[image_dims[0]].quantity,
-                                                  base_image._axes[image_dims[1]].quantity)
+        self.dset.point_cloud['quantity'] = (base_image._axes[image_dims[0]].quantity,
+                                             base_image._axes[image_dims[1]].quantity)
 
-        _px_x = np.array((coord[:,0] - _x0)*im_size[1]/_delta_x).astype(int)
-        _px_y = np.array((coord[:, 1] - _y0) * im_size[0]/_delta_y).astype(int)
+        _px_x = np.array((coord[:, 0] - _x0) * im_size[1] / _delta_x).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size[0] / _delta_y).astype(int)
         _px_coord = np.array([_px_x, _px_y]).T
 
         self.tree = scipy.spatial.cKDTree(_px_coord)
 
         return self.image, _px_coord
 
+    def _mask_image(self):
+        '''
+        Griddata transformation of the unstructured point cloud to the numpy 2D array
 
-    def _scale_bar(self):
-        from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
-        self.axes[0].axis('off')
-        extent = self.extent
-        size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
-        if 'units' in self.dset.point_cloud:
-            _units = self.dset.point_cloud['units']
+        Returns
+        -------
+        2D np.array - image data
+        2D np.array - coordinate data
+        '''
+
+        if 'coordinates' in self.dset.point_cloud:
+            coord = self.dset.point_cloud['coordinates']
         else:
-            _units = 'px'
+            raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates\
+                                          in point_cloud attribute')
 
-        if size_of_bar < 1:
-            size_of_bar = 1
-        scalebar = AnchoredSizeBar(self.axes[0].transData,
-                                   size_of_bar, '{} {}'.format(size_of_bar,
-                                                               _units),
-                                   'lower left',
-                                   pad=1,
-                                   color='white',
-                                   frameon=False,
-                                   size_vertical=size_of_bar/5)
+        # minimal image size in 50x50px or equal to the number of point for dimensions
+        im_size = max(50, coord.shape[0])
 
-        self.axes[0].add_artist(scalebar)
+        _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
+        _y0, _y1 = np.min(coord, axis=0)[1], np.max(coord, axis=0)[1]
+        _delta_x = _x1 - _x0
+        _delta_y = _y1 - _y0
 
+        # to extend filed of view
+        _x0, _x1 = _x0 - 0.05 * _delta_x, _x1 + 0.05 * _delta_x
+        _y0, _y1 = _y0 - 0.05 * _delta_y, _y1 + 0.05 * _delta_y
+        self.real_extent = [_x0, _x1, _y1, _y0]
+
+        _px_x = np.array((coord[:, 0] - _x0) * im_size / (_x1 - _x0)).astype(int)
+        _px_y = np.array((coord[:, 1] - _y0) * im_size / (_y1 - _y0)).astype(int)
+        _px_coord = np.array([_px_x, _px_y]).T
+        self.tree = scipy.spatial.cKDTree(_px_coord)
+        grid_x, grid_y = np.mgrid[0:im_size, 0:im_size]
+        mask = scipy.interpolate.griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
+        return mask, _px_coord
 
     def _onclick(self, event):
         self.event = event
@@ -1350,74 +1377,116 @@ class PointCloudVisualizer(object):
 
                 self.axes[1].set_ylim(bottom=bottom, top=top)
 
-    def get_spectrum(self, point_number):
-        '''
-        Getting the spectrum by the point number in the point cloud.
-        Parameters
-        ----------
-        point_number: int
+    def _scale_bar(self):
+        from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+        self.axes[0].axis('off')
 
-        Returns
-        -------
-        self.spectrum: sidpy.array
-        '''
-        selection = []
-        for dim, axis in self.dset._axes.items():
-            if axis.dimension_type == sidpy.DimensionType.POINT_CLOUD:
-                selection.append(point_number)
-            elif axis.dimension_type == sidpy.DimensionType.SPECTRAL:
-                selection.append(slice(None))
-            elif axis.dimension_type == sidpy.DimensionType.CHANNEL:
-                selection.append(slice(None))
+        # remove previous scale_bars
+        # for artist in self.axes[0].artists:
+        #     if isinstance(artist, AnchoredSizeBar):
+        #         artist.remove()
+
+        extent = self.real_extent
+        if 'spacial_units' in self.dset.point_cloud:
+            if isinstance(self.dset.point_cloud['spacial_units'], (list, tuple)):
+                _units = self.dset.point_cloud['spacial_units'][0]
             else:
-                selection.append(slice(0, 1))
-
-        self.spectrum = self.dset[tuple(selection)].squeeze()
-        if self.dset.variance is not None:
-            self.variance = self.dset.variance[tuple(selection)].squeeze()
+                _units = self.dset.point_cloud['spacial_units']
         else:
-            self.variance = None
-        return self.spectrum, self.variance
-
-    def _mask_image(self):
-        '''
-        Griddata transformation of the unstructured point cloud to the numpy 2D array
-
-        Returns
-        -------
-        2D np.array - image data
-        2D np.array - coordinate data
-        '''
-
-        if 'coordinates' in self.dset.point_cloud:
-            coord = self.dset.point_cloud['coordinates']
+            _units = ''
+        size_of_bar_real = (extent[1] - extent[0]) / 5
+        if size_of_bar_real < 1:
+            size_of_bar_real = round(size_of_bar_real, 1)
         else:
-            raise NotImplementedError('Datasets with data_type POINT_CLOUD must contain coordinates\
-                                       in point_cloud attribute')
+            size_of_bar_real = int(round(size_of_bar_real))
+        px_size = self.axes[0].get_xlim()
+        size_of_bar = int((px_size[1] - px_size[0]) * (size_of_bar_real / (extent[1] - extent[0])))
 
-        # minimal image size in 50x50px or equal to the number of point for dimensions
-        im_size = max(50, coord.shape[0])
 
-        _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
-        _y0, _y1 = np.min(coord, axis=0)[1], np.max(coord, axis=0)[1]
-        _delta_x = _x1 - _x0
-        _delta_y = _y1 - _y0
+        if size_of_bar < 1:
+            size_of_bar = 1
+        scalebar = AnchoredSizeBar(self.axes[0].transData,
+                                   size_of_bar, '{} {}'.format(size_of_bar_real,
+                                                               _units),
+                                   'lower left',
+                                   pad=1,
+                                   color='white',
+                                   frameon=False,
+                                   size_vertical=size_of_bar / 7)
 
-        #to extend filed of view
-        _x0, _x1 = _x0 - 0.05*_delta_x, _x1 + 0.05*_delta_x
-        _y0, _y1 = _y0 - 0.05*_delta_y, _y1 + 0.05 * _delta_y
-        self.real_extent = [_x0, _x1, _y1, _y0]
-
-        _px_x = np.array((coord[:,0] - _x0)*im_size/(_x1-_x0)).astype(int)
-        _px_y = np.array((coord[:, 1] - _y0) * im_size/ (_y1-_y0)).astype(int)
-        _px_coord = np.array([_px_x, _px_y]).T
-        self.tree = scipy.spatial.cKDTree(_px_coord)
-        grid_x, grid_y = np.mgrid[0:im_size, 0:im_size]
-        mask = scipy.interpolate.griddata(_px_coord, self.cloud, (grid_x, grid_y), method='nearest')
-        return mask, _px_coord
+        self.axes[0].add_artist(scalebar)
 
     def get_xy(self):
         return [self.x, self.y]
+
+
+class PointCloudVisualizer(PointCloudVisualizerBase):
+    """
+    Interactive point cloud visualization
+    """
+    def __init__(self, dset, base_image=None, figure=None, horizontal=True, **kwargs):
+        super().__init__(dset, base_image, figure, horizontal, **kwargs)
+
+        scale_bar = kwargs.pop('scale_bar', False)
+
+        #from here
+        if scale_bar == False:
+            self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+                                value=1,
+                                descrption='Image',
+                                tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
+                                layout = ipywidgets.Layout(width='30%', height='50px',))
+
+            self.button.observe(self._pw_uw, 'value') #pixel or unit wise
+            self.fig.canvas.draw_idle()
+
+            widg = ipywidgets.HBox([self.button])
+            display(widg)
+
+    def _pw_uw(self, event):
+        pw_uw = event.new
+        self._update_image(pw_uw)
+
+    def _update_image(self, event_value):
+        # pixel wise or unit wise listener
+        if 'spacial_units' in self.dset.point_cloud:
+            _sp_units = self.dset.point_cloud['spacial_units']
+            if isinstance(_sp_units, str):
+                _sp_units = (_sp_units, _sp_units)
+            elif not (isinstance(_sp_units, list) or isinstance(_sp_units, tuple)):
+                raise ValueError('Spacial units in Dataset.point_cloud should be str or list, or tuple.')
+
+        if 'quantity' in self.dset.point_cloud:
+            _quantity = self.dset.point_cloud['quantity']
+            if isinstance(_quantity, str):
+                _quantity = (_quantity, _quantity)
+            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
+                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
+        else:
+            _quantity = ('distance', 'distance')
+
+        if event_value == 1:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5), 1))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5), 1))
+
+            self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
+            self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
+        else:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.real_extent[0], self.real_extent[1], 5), 2))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.real_extent[2], self.real_extent[3], 5), 2))
+
+            if 'spacial_units' in self.dset.point_cloud:
+                self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], _sp_units[0]))
+                self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], _sp_units[1]))
+            else:
+                self.axes[0].set_xlabel('{}'.format(_quantity[0]))
+                self.axes[0].set_ylabel('{}'.format(_quantity[1]))
 
 class FourDimImageVisualizer(object):
 
