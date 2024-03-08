@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speed up computations with parallel_compute() &mdash; sidpy 0.12.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=56343b9b"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Visualization" href="../02_visualization/index.html" />
+    <link rel="prev" title="Parallel computing" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+              <div class="version">
+                0.12.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Parallel computing</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Speed up computations with parallel_compute()</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Example-scientific-problem">Example scientific problem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Load-the-dataset">Load the dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#The-operation">The operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Testing-the-function">Testing the function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Serial-computing">Serial computing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sidpy.proc.comp_utils.parallel_compute()">sidpy.proc.comp_utils.parallel_compute()</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Compare-the-results">Compare the results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Simplifying-the-function">Simplifying the function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#More-cores!">More cores!</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Scalability">Scalability</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Parallel computing</a></li>
+      <li class="breadcrumb-item active">Speed up computations with parallel_compute()</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/01_parallel_computing/parallel_compute.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+<section id="Speed-up-computations-with-parallel_compute()">
+<h1>Speed up computations with parallel_compute()<a class="headerlink" href="#Speed-up-computations-with-parallel_compute()" title="Link to this heading">¶</a></h1>
+<p><strong>Suhas Somnath, Chris R. Smith</strong></p>
+<p>9/8/2017</p>
+<p><strong>This document will demonstrate how ``sidpy.proc.comp_utils.parallel_compute()`` can significantly speed up data processing by using all available CPU cores in a computer</strong></p>
+<section id="Introduction">
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Link to this heading">¶</a></h2>
+<p>Quite often, we need to perform the same operation on every single component in our data. One of the most popular examples is functional fitting applied to spectra collected at each location on a grid. While, the operation itself may not take very long, computing this operation thousands of times, once per location, using a single CPU core can take a long time to complete. Most personal computers today come with at least two cores, and in many cases, each of these cores is represented via two
+logical cores, thereby summing to a total of at least four cores. Thus, it is prudent to make use of these unused cores whenever possible. Fortunately, there are a few python packages that facilitate the efficient use of all CPU cores with minimal modifications to the existing code.</p>
+<p><code class="docutils literal notranslate"><span class="pre">sidpy.proc.comp_utils.parallel_compute()</span></code> is a very handy function that simplifies parallel computation significantly to a <strong>single function call</strong> and will be discussed in this document.</p>
+</section>
+<section id="Example-scientific-problem">
+<h2>Example scientific problem<a class="headerlink" href="#Example-scientific-problem" title="Link to this heading">¶</a></h2>
+<p>For this example, we will be working with a <code class="docutils literal notranslate"><span class="pre">Band</span> <span class="pre">Excitation</span> <span class="pre">Piezoresponse</span> <span class="pre">Force</span> <span class="pre">Microscopy</span> <span class="pre">(BE-PFM)</span></code> imaging dataset acquired from advanced atomic force microscopes. In this dataset, a spectra was collected for each position in a two dimensional grid of spatial locations. Thus, this is a three dimensional dataset that has been flattened to a two dimensional matrix in accordance with <strong>Universal Spectroscopy and Imaging Data (USID)</strong> model.</p>
+<p>Each spectra in this dataset is expected to have a single peak. The goal is to find the positions of the peaks in each spectra. Clearly, the operation of finding the peak in one spectra is independent of the same operation on another spectra. Thus, we could in theory divide the dataset in to N parts and use N CPU cores to compute the results much faster than it would take a single core to compute the results. There is an important caveat to this statement and it will be discussed at the end of
+this document.</p>
+<p><strong>Here, we will learn how to fit the thousands of spectra using all available cores on a computer.</strong> Note, that this is applicable only for a single CPU. Please refer to another advanced example for multi-CPU computing.</p>
+<div class="alert alert-info"><h4><p>Note</p>
+</h4><p><p>In order to run this document on your own computer, you will need to:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>1. Download the document as a Jupyter notebook using the link at the bottom of this page.
+2. Save the contents of `this python file &lt;https://github.com/pycroscopy/sidpy/blob/master/examples/proc/supporting_docs/peak_finding.py&gt;`_ as ``peak_finding.py`` in the
+   same folder as the notebook from step 1.&lt;/p&gt;&lt;/div&gt;
+</pre></div>
+</div>
+<p>Ensure python 3 compatibility:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+
+<span class="c1"># The package for accessing files in directories, etc.:</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c1"># Warning package in case something goes wrong</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+
+<span class="k">def</span> <span class="nf">install</span><span class="p">(</span><span class="n">package</span><span class="p">):</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="n">package</span><span class="p">])</span>
+<span class="c1"># Package for downloading online files:</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># This package is not part of anaconda and may need to be installed.</span>
+    <span class="kn">import</span> <span class="nn">wget</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;wget not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">pip</span>
+    <span class="n">install</span><span class="p">(</span><span class="n">wget</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">wget</span>
+
+<span class="c1"># The mathematical computation package:</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># The package used for creating and manipulating HDF5 files:</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="c1"># Packages for plotting:</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Parallel computation library:</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">joblib</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;joblib not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">pip</span>
+    <span class="n">install</span><span class="p">(</span><span class="s1">&#39;joblib&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">joblib</span>
+
+<span class="c1"># Timing</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="c1"># A handy python utility that allows us to preconfigure parts of a function</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="c1"># Finally import sidpy:</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">sidpy.proc.comp_utils</span> <span class="kn">import</span> <span class="n">parallel_compute</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;sidpy not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">pip</span>
+    <span class="n">install</span><span class="p">(</span><span class="s1">&#39;sidpy&#39;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">sidpy.proc.comp_utils</span> <span class="kn">import</span> <span class="n">parallel_compute</span>
+
+<span class="c1"># import the scientific function:</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;./supporting_docs/&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">peak_finding</span> <span class="kn">import</span> <span class="n">find_all_peaks</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/tmp/ipykernel_4945/1808274654.py:51: UserWarning: sidpy not found.  Will install with pip.
+  warn(&#39;sidpy not found.  Will install with pip.&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ModuleNotFoundError</span>                       Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[2], line 49</span>
+<span class="ansi-green-intense-fg ansi-bold">     48</span> <span class="ansi-bold" style="color: rgb(0,135,0)">try</span>:
+<span class="ansi-green-fg">---&gt; 49</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">from</span> <span class="ansi-bold" style="color: rgb(0,0,255)">sidpy</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">proc</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">comp_utils</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span> parallel_compute
+<span class="ansi-green-intense-fg ansi-bold">     50</span> <span class="ansi-bold" style="color: rgb(0,135,0)">except</span> <span class="ansi-bold" style="color: rgb(215,95,95)">ImportError</span>:
+
+<span class="ansi-red-fg">ModuleNotFoundError</span>: No module named &#39;sidpy.proc.comp_utils&#39;
+
+During handling of the above exception, another exception occurred:
+
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[2], line 53</span>
+<span class="ansi-green-intense-fg ansi-bold">     51</span>     warn(<span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">sidpy not found.  Will install with pip.</span><span style="color: rgb(175,0,0)">&#39;</span>)
+<span class="ansi-green-intense-fg ansi-bold">     52</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">import</span> <span class="ansi-bold" style="color: rgb(0,0,255)">pip</span>
+<span class="ansi-green-fg">---&gt; 53</span>     <span class="ansi-yellow-bg">install</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">sidpy</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     54</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">from</span> <span class="ansi-bold" style="color: rgb(0,0,255)">sidpy</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">proc</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">comp_utils</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span> parallel_compute
+<span class="ansi-green-intense-fg ansi-bold">     56</span> <span style="color: rgb(95,135,135)"># import the scientific function:</span>
+
+Cell <span class="ansi-green-fg">In[2], line 12</span>, in <span class="ansi-cyan-fg">install</span><span class="ansi-blue-fg">(package)</span>
+<span class="ansi-green-intense-fg ansi-bold">     11</span> <span class="ansi-bold" style="color: rgb(0,135,0)">def</span> <span style="color: rgb(0,0,255)">install</span>(package):
+<span class="ansi-green-fg">---&gt; 12</span>     subprocess<span style="color: rgb(98,98,98)">.</span>call([<span class="ansi-yellow-bg">sys</span><span style="color: rgb(98,98,98)">.</span>executable, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">-m</span><span style="color: rgb(175,0,0)">&#34;</span>, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">pip</span><span style="color: rgb(175,0,0)">&#34;</span>, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">install</span><span style="color: rgb(175,0,0)">&#34;</span>, package])
+
+<span class="ansi-red-fg">NameError</span>: name &#39;sys&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Load-the-dataset">
+<h2>Load the dataset<a class="headerlink" href="#Load-the-dataset" title="Link to this heading">¶</a></h2>
+<p>In order to demonstrate parallel computing, we will be using a real experimental dataset that is available on the pyUSID GitHub project. First, lets download this file from Github:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h5_path</span> <span class="o">=</span> <span class="s1">&#39;temp.h5&#39;</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://raw.githubusercontent.com/pycroscopy/pyUSID/master/data/BELine_0004.h5&#39;</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">h5_path</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">h5_path</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">h5_path</span><span class="p">,</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Now, lets open this HDF5 file. The focus of this example is not on the data storage or arrangement but rather on demonstrating parallel computation so lets dive straight into the main dataset that requires fitting of the spectra:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Open the file in read-only mode</span>
+<span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+<span class="c1"># Get handle to the the raw data</span>
+<span class="n">h5_meas_grp</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="s1">&#39;Measurement_000&#39;</span><span class="p">]</span>
+
+<span class="c1"># Accessing the dataset of interest:</span>
+<span class="n">h5_main</span> <span class="o">=</span> <span class="n">h5_meas_grp</span><span class="p">[</span><span class="s1">&#39;Channel_000/Raw_Data&#39;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">The main dataset:</span><span class="se">\n</span><span class="s1">------------------------------------&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">h5_main</span><span class="p">)</span>
+
+<span class="n">num_cols</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">cores_vec</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="n">times_vec</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+The main dataset:
+------------------------------------
+&lt;HDF5 dataset &#34;Raw_Data&#34;: shape (16384, 119), type &#34;&lt;c8&#34;&gt;
+</pre></div></div>
+</div>
+</section>
+<section id="The-operation">
+<h2>The operation<a class="headerlink" href="#The-operation" title="Link to this heading">¶</a></h2>
+<p>The scipy package has a very handy function called <em>find_peaks_cwt()</em> that facilitates the search for one or more peaks in a spectrum. We will be using a function called <em>find_all_peaks()</em> that uses <em>find_peaks_cwt()</em>. For the purposes of this example, we do not be concerned with how this function works. All we need to know is that this function takes 3 inputs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vector</span></code> - a 1D array containing the spectra at a single location</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">width_bounds</span></code> - something like [20, 50] that instructs the function to look for peaks that are 20-50 data-points wide. The function will look for a peak with width of 20, then again for a peak of width - 21 and so on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_steps</span></code> - The number of steps within the possible widths [20, 50], that the search must be performed</p></li>
+</ul>
+<p>The function has one output:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">peak_indices</span></code> - an array of the positions at which peaks were found.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<p>def find_all_peaks(vector, width_bounds, num_steps=20, **kwargs): “”” This is the function that will be mapped by multiprocess. This is a wrapper around the scipy function. It uses a parameter - wavelet_widths that is configured outside this function.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Parameters
+----------
+vector : 1D numpy array
+    Feature vector containing peaks
+width_bounds : tuple / list / iterable
+    Min and max for the size of the window
+num_steps : uint, (optional). Default = 20
+    Number of different peak widths to search
+
+Returns
+-------
+peak_indices : list
+    List of indices of peaks within the prescribed peak widths
+&quot;&quot;&quot;
+# The below numpy array is used to configure the returned function wpeaks
+wavelet_widths = np.linspace(width_bounds[0], width_bounds[1], num_steps)
+
+peak_indices = find_peaks_cwt(np.abs(vector), wavelet_widths, **kwargs)
+
+return peak_indices
+</pre></div>
+</div>
+</section>
+<section id="Testing-the-function">
+<h2>Testing the function<a class="headerlink" href="#Testing-the-function" title="Link to this heading">¶</a></h2>
+<p>Let’s see what the operation on an example spectra returns.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">row_ind</span><span class="p">,</span> <span class="n">col_ind</span> <span class="o">=</span> <span class="mi">103</span><span class="p">,</span> <span class="mi">19</span>
+<span class="n">pixel_ind</span> <span class="o">=</span> <span class="n">col_ind</span> <span class="o">+</span> <span class="n">row_ind</span> <span class="o">*</span> <span class="n">num_cols</span>
+<span class="n">spectra</span> <span class="o">=</span> <span class="n">h5_main</span><span class="p">[</span><span class="n">pixel_ind</span><span class="p">]</span>
+
+<span class="n">peak_inds</span> <span class="o">=</span> <span class="n">find_all_peaks</span><span class="p">(</span><span class="n">spectra</span><span class="p">,</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">],</span> <span class="n">num_steps</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">axis</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spectra</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">spectra</span><span class="p">),</span> <span class="n">c</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+<span class="n">axis</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">peak_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">axis</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">spectra</span><span class="p">))]);</span>
+<span class="n">axis</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;find_all_peaks found peaks at index: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">peak_inds</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[5], line 5</span>
+<span class="ansi-green-intense-fg ansi-bold">      2</span> pixel_ind <span style="color: rgb(98,98,98)">=</span> col_ind <span style="color: rgb(98,98,98)">+</span> row_ind <span style="color: rgb(98,98,98)">*</span> num_cols
+<span class="ansi-green-intense-fg ansi-bold">      3</span> spectra <span style="color: rgb(98,98,98)">=</span> h5_main[pixel_ind]
+<span class="ansi-green-fg">----&gt; 5</span> peak_inds <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">find_all_peaks</span>(spectra, [<span style="color: rgb(98,98,98)">20</span>, <span style="color: rgb(98,98,98)">60</span>], num_steps<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(98,98,98)">30</span>)
+<span class="ansi-green-intense-fg ansi-bold">      7</span> fig, axis <span style="color: rgb(98,98,98)">=</span> plt<span style="color: rgb(98,98,98)">.</span>subplots()
+<span class="ansi-green-intense-fg ansi-bold">      8</span> axis<span style="color: rgb(98,98,98)">.</span>scatter(np<span style="color: rgb(98,98,98)">.</span>arange(<span style="color: rgb(0,135,0)">len</span>(spectra)), np<span style="color: rgb(98,98,98)">.</span>abs(spectra), c<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">black</span><span style="color: rgb(175,0,0)">&#39;</span>)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;find_all_peaks&#39; is not defined
+</pre></div></div>
+</div>
+<p>Before we apply the function to the entire dataset, lets load the dataset to memory so that file-loading time is not a factor when comparing the times for serial and parallel computing times:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">raw_data</span> <span class="o">=</span> <span class="n">h5_main</span><span class="p">[()]</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<div class="admonition-title fa fa-exclamation-circle"><h4></div><p>Note</p>
+</h4><p><p>This documentation is being generated automatically by a computer in the cloud whose workload cannot be controlled or predicted. Therefore, the computational times reported in this document may not be consistent and can even be contradictory. For best results, we recommend that download and run this document as a jupyter notebook.</p>
+</p></div>
+</section>
+<section id="Serial-computing">
+<h2>Serial computing<a class="headerlink" href="#Serial-computing" title="Link to this heading">¶</a></h2>
+<p>A single call to the function does not take substantial time. However, performing the same operation on each of the <code class="docutils literal notranslate"><span class="pre">16,384</span></code> pixels sequentially can take substantial time. The simplest way to find all peak positions is to simply loop over each position in the dataset:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">serial_results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<span class="n">t_0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+    <span class="n">serial_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">find_all_peaks</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">],</span> <span class="n">num_steps</span><span class="o">=</span><span class="mi">30</span><span class="p">))</span>
+<span class="n">times_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t_0</span><span class="p">)</span>
+<span class="n">cores_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Serial computation took&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">times_vec</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="s1">&#39; seconds&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[7], line 5</span>
+<span class="ansi-green-intense-fg ansi-bold">      3</span> t_0 <span style="color: rgb(98,98,98)">=</span> time<span style="color: rgb(98,98,98)">.</span>time()
+<span class="ansi-green-intense-fg ansi-bold">      4</span> <span class="ansi-bold" style="color: rgb(0,135,0)">for</span> vector <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> raw_data:
+<span class="ansi-green-fg">----&gt; 5</span>     serial_results<span style="color: rgb(98,98,98)">.</span>append(<span class="ansi-yellow-bg">find_all_peaks</span>(vector, [<span style="color: rgb(98,98,98)">20</span>, <span style="color: rgb(98,98,98)">60</span>], num_steps<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(98,98,98)">30</span>))
+<span class="ansi-green-intense-fg ansi-bold">      6</span> times_vec<span style="color: rgb(98,98,98)">.</span>append(time<span style="color: rgb(98,98,98)">.</span>time()<span style="color: rgb(98,98,98)">-</span>t_0)
+<span class="ansi-green-intense-fg ansi-bold">      7</span> cores_vec<span style="color: rgb(98,98,98)">.</span>append(<span style="color: rgb(98,98,98)">1</span>)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;find_all_peaks&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="sidpy.proc.comp_utils.parallel_compute()">
+<h2>sidpy.proc.comp_utils.parallel_compute()<a class="headerlink" href="#sidpy.proc.comp_utils.parallel_compute()" title="Link to this heading">¶</a></h2>
+<p>There are several libraries that can utilize multiple CPU cores to perform the same computation in parallel. Popular examples are <code class="docutils literal notranslate"><span class="pre">Multiprocessing</span></code>, <code class="docutils literal notranslate"><span class="pre">Mutiprocess</span></code>, <code class="docutils literal notranslate"><span class="pre">Dask</span></code>, <code class="docutils literal notranslate"><span class="pre">Joblib</span></code> etc. Each of these has their own strengths and weaknesses. Some of them have painful caveats such as the inability to perform the parallel computation within a jupyter notebook. In order to lower the barrier to parallel computation, we have developed a very handy function called
+<code class="docutils literal notranslate"><span class="pre">sidpy.proc.comp_utils.parallel_compute()</span></code> that simplifies the process to a single function call.</p>
+<p>It is a lot <strong>more straightforward</strong> to provide the arguments and keyword arguments of the function that needs to be applied to the entire dataset. Furthermore, this function intelligently assigns the number of CPU cores for the parallel computation based on the size of the dataset and the computational complexity of the unit computation. For instance, it scales down the number of cores for small datasets if each computation is short. It also ensures that 1-2 cores fewer than all available cores
+are used by default so that the user can continue using their computer for other purposes while the computation runs.</p>
+<p>Lets apply this <code class="docutils literal notranslate"><span class="pre">parallel_compute</span></code> to this problem:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cpu_cores</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">args</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">]]</span>
+<span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;num_steps&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">}</span>
+
+<span class="n">t_0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<span class="c1"># Execute the parallel computation</span>
+<span class="n">parallel_results</span> <span class="o">=</span> <span class="n">parallel_compute</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">find_all_peaks</span><span class="p">,</span>
+                                         <span class="n">cores</span><span class="o">=</span><span class="n">cpu_cores</span><span class="p">,</span> <span class="n">func_args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                                         <span class="n">func_kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+                                         <span class="n">joblib_backend</span><span class="o">=</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">)</span>
+
+<span class="n">cores_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cpu_cores</span><span class="p">)</span>
+<span class="n">times_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t_0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Parallel computation with </span><span class="si">{}</span><span class="s1"> cores took </span><span class="si">{}</span><span class="s1"> seconds&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cpu_cores</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">times_vec</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[8], line 8</span>
+<span class="ansi-green-intense-fg ansi-bold">      5</span> t_0 <span style="color: rgb(98,98,98)">=</span> time<span style="color: rgb(98,98,98)">.</span>time()
+<span class="ansi-green-intense-fg ansi-bold">      7</span> <span style="color: rgb(95,135,135)"># Execute the parallel computation</span>
+<span class="ansi-green-fg">----&gt; 8</span> parallel_results <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">parallel_compute</span>(raw_data, find_all_peaks,
+<span class="ansi-green-intense-fg ansi-bold">      9</span>                                          cores<span style="color: rgb(98,98,98)">=</span>cpu_cores, func_args<span style="color: rgb(98,98,98)">=</span>args,
+<span class="ansi-green-intense-fg ansi-bold">     10</span>                                          func_kwargs<span style="color: rgb(98,98,98)">=</span>kwargs,
+<span class="ansi-green-intense-fg ansi-bold">     11</span>                                          joblib_backend<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">multiprocessing</span><span style="color: rgb(175,0,0)">&#39;</span>)
+<span class="ansi-green-intense-fg ansi-bold">     13</span> cores_vec<span style="color: rgb(98,98,98)">.</span>append(cpu_cores)
+<span class="ansi-green-intense-fg ansi-bold">     14</span> times_vec<span style="color: rgb(98,98,98)">.</span>append(time<span style="color: rgb(98,98,98)">.</span>time()<span style="color: rgb(98,98,98)">-</span>t_0)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;parallel_compute&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Compare-the-results">
+<h2>Compare the results<a class="headerlink" href="#Compare-the-results" title="Link to this heading">¶</a></h2>
+<p>By comparing the run-times for the two approaches, we see that the parallel computation is substantially faster than the serial computation. Note that the numbers will differ between computers. Also, the computation was performed on a relatively small dataset for illustrative purposes. The benefits of using such parallel computation will be far more apparent for much larger datasets.</p>
+<p>Let’s compare the results from both the serial and parallel methods to ensure they give the same results:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Result from serial computation: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">serial_results</span><span class="p">[</span><span class="n">pixel_ind</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Result from parallel computation: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parallel_results</span><span class="p">[</span><span class="n">pixel_ind</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">IndexError</span>                                Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[9], line 1</span>
+<span class="ansi-green-fg">----&gt; 1</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Result from serial computation: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{}</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(98,98,98)">.</span>format(<span class="ansi-yellow-bg">serial_results</span><span class="ansi-yellow-bg">[</span><span class="ansi-yellow-bg">pixel_ind</span><span class="ansi-yellow-bg">]</span>))
+<span class="ansi-green-intense-fg ansi-bold">      2</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Result from parallel computation: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{}</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(98,98,98)">.</span>format(parallel_results[pixel_ind]))
+
+<span class="ansi-red-fg">IndexError</span>: list index out of range
+</pre></div></div>
+</div>
+</section>
+<section id="Simplifying-the-function">
+<h2>Simplifying the function<a class="headerlink" href="#Simplifying-the-function" title="Link to this heading">¶</a></h2>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">width_bounds</span></code> and <code class="docutils literal notranslate"><span class="pre">num_steps</span></code> arguments will not be changed from one pixel to another. It would be great if we didn’t have to keep track of these constant arguments. We can use a very handy python tool called <code class="docutils literal notranslate"><span class="pre">partial()</span></code> to do just this. Below, all we are doing is creating a new function that always passes our preferred values for <code class="docutils literal notranslate"><span class="pre">width_bounds</span></code> and <code class="docutils literal notranslate"><span class="pre">num_steps</span></code> arguments to find_all_peaks. While it may seem like this is unimportant, it is very convenient when setting up
+the parallel computing:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">find_peaks</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">find_all_peaks</span><span class="p">,</span> <span class="n">num_steps</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">width_bounds</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">60</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[10], line 1</span>
+<span class="ansi-green-fg">----&gt; 1</span> find_peaks <span style="color: rgb(98,98,98)">=</span> partial(<span class="ansi-yellow-bg">find_all_peaks</span>, num_steps<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(98,98,98)">30</span>, width_bounds<span style="color: rgb(98,98,98)">=</span>[<span style="color: rgb(98,98,98)">20</span>, <span style="color: rgb(98,98,98)">60</span>])
+
+<span class="ansi-red-fg">NameError</span>: name &#39;find_all_peaks&#39; is not defined
+</pre></div></div>
+</div>
+<p>Notice that even though <code class="docutils literal notranslate"><span class="pre">width_bounds</span></code> is an argument, it needs to be specified as though it were a keyword argument like <code class="docutils literal notranslate"><span class="pre">num_steps</span></code>. Let’s try calling our simplified function, <code class="docutils literal notranslate"><span class="pre">find_peaks()</span></code> to make sure that it results in the same peak index for the aforementioned chosen spectra:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;find_peaks found peaks at index: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">find_peaks</span><span class="p">(</span><span class="n">h5_main</span><span class="p">[</span><span class="n">pixel_ind</span><span class="p">])))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[11], line 1</span>
+<span class="ansi-green-fg">----&gt; 1</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">find_peaks found peaks at index: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{}</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(98,98,98)">.</span>format(<span class="ansi-yellow-bg">find_peaks</span>(h5_main[pixel_ind])))
+
+<span class="ansi-red-fg">NameError</span>: name &#39;find_peaks&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="More-cores!">
+<h2>More cores!<a class="headerlink" href="#More-cores!" title="Link to this heading">¶</a></h2>
+<p>Lets use <code class="docutils literal notranslate"><span class="pre">find_peaks()</span></code> instead of <code class="docutils literal notranslate"><span class="pre">find_all_peaks</span></code> on the entire dataset but increase the number of cores to 3. Note that we do not need to specify <code class="docutils literal notranslate"><span class="pre">func_kwargs</span></code> anymore. Also note that this is a very simple function and the benefits of <code class="docutils literal notranslate"><span class="pre">partial()</span></code> will be greater for more complex problems.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cpu_cores</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">t_0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<span class="c1"># Execute the parallel computation</span>
+<span class="n">parallel_results</span> <span class="o">=</span> <span class="n">parallel_compute</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">find_peaks</span><span class="p">,</span>
+                                         <span class="n">cores</span><span class="o">=</span><span class="n">cpu_cores</span><span class="p">,</span>
+                                         <span class="n">joblib_backend</span><span class="o">=</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">)</span>
+
+<span class="n">cores_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cpu_cores</span><span class="p">)</span>
+<span class="n">times_vec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t_0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Parallel computation with </span><span class="si">{}</span><span class="s1"> cores took </span><span class="si">{}</span><span class="s1"> seconds&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cpu_cores</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">times_vec</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[12], line 6</span>
+<span class="ansi-green-intense-fg ansi-bold">      3</span> t_0 <span style="color: rgb(98,98,98)">=</span> time<span style="color: rgb(98,98,98)">.</span>time()
+<span class="ansi-green-intense-fg ansi-bold">      5</span> <span style="color: rgb(95,135,135)"># Execute the parallel computation</span>
+<span class="ansi-green-fg">----&gt; 6</span> parallel_results <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">parallel_compute</span>(raw_data, find_peaks,
+<span class="ansi-green-intense-fg ansi-bold">      7</span>                                          cores<span style="color: rgb(98,98,98)">=</span>cpu_cores,
+<span class="ansi-green-intense-fg ansi-bold">      8</span>                                          joblib_backend<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">multiprocessing</span><span style="color: rgb(175,0,0)">&#39;</span>)
+<span class="ansi-green-intense-fg ansi-bold">     10</span> cores_vec<span style="color: rgb(98,98,98)">.</span>append(cpu_cores)
+<span class="ansi-green-intense-fg ansi-bold">     11</span> times_vec<span style="color: rgb(98,98,98)">.</span>append(time<span style="color: rgb(98,98,98)">.</span>time()<span style="color: rgb(98,98,98)">-</span>t_0)
+
+<span class="ansi-red-fg">NameError</span>: name &#39;parallel_compute&#39; is not defined
+</pre></div></div>
+</div>
+</section>
+<section id="Scalability">
+<h2>Scalability<a class="headerlink" href="#Scalability" title="Link to this heading">¶</a></h2>
+<p>Now lets see how the computational time relates to the number of cores. Depending on your computer (and what was running on your computer along with this computation), you are likely to see diminishing benefits of additional cores beyond 2 cores for this specific problem in the plot below. This is because the dataset is relatively small and each peak-finding operation is relatively quick. The overhead of adding additional cores quickly outweighs the speedup in distributing the work among
+multiple CPU cores.</p>
+<div class="alert alert-info"><h4><p>Note</p>
+</h4><p><p>This documentation is being generated automatically by a computer in the cloud whose workload cannot be controlled or predicted. Therefore, the computational times reported in this document may not be consistent and can even be contradictory. For best results, we recommend that download and run this document as a jupyter notebook.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>If everything ran correctly, you should see the computational time decrease substantially from 1 to 2 cores but
+the decrease from 2 to 3 or 3 to 4 cores should be minimal or negligible.&lt;/p&gt;&lt;/div&gt;
+</pre></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
+<span class="n">axis</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">cores_vec</span><span class="p">,</span> <span class="n">times_vec</span><span class="p">)</span>
+<span class="n">axis</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;CPU cores&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">axis</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Compute time (sec)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_01_parallel_computing_parallel_compute_25_0.png" src="../../_images/notebooks_01_parallel_computing_parallel_compute_25_0.png" />
+</div>
+</div>
+<p>Best practices for parallel computing ————————————–</p>
+<p>While it may seem tempting to do everything in parallel, it is important to be aware of some of the trade-offs and best-practices for parallel computing (multiple CPU cores) when compared to traditional serial computing (single CPU core):</p>
+<ul class="simple">
+<li><p>There is noticeable time overhead involved with setting up each compute worker (CPU core in this case). For very simple or small computations, this overhead may outweigh the speed-up gained with using multiple cores.</p></li>
+<li><p>Parallelizing computations that read and write to files at each iteration may be actually be noticeably <em>slower</em> than serial computation since the cores will compete for rights to read and write to the file(s) and these input/output operations are by far the slowest components of the workflow. Instead, it makes sense to read large amounts of data from the necessary files once, perform the computation, and then write to the files once after all the computation is complete. In fact, this is
+what we automatically do in the <code class="docutils literal notranslate"><span class="pre">Process</span></code> class in pyUSID or pyNSID. Please see <code class="docutils literal notranslate"><span class="pre">another</span> <span class="pre">example</span> <span class="pre">&lt;./plot_process.html&gt;</span></code>_ on how to write a Process class to formalize data processing.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">parallel_compute()</span></code> will revert to serial processing when called within the message passing interface (MPI) context in a high-performance computing (HPC) cluster. Due to conflicts between MPI, numpy, and joblib, it is recommended to use a pure MPI approach for computing instead of the MPI + OpenMP (joblib) paradigm.</p>
+</div>
+<p>Cleaning up ~~~~~~~~~~~ Lets not forget to close and delete the temporarily downloaded file:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">h5_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Parallel computing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../02_visualization/index.html" class="btn btn-neutral float-right" title="Visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+sidpy.hdf.prov\_utils.find\_results\_groups
+===========================================
+
+.. currentmodule:: sidpy.hdf.prov_utils
+
+.. autofunction:: find_results_groups

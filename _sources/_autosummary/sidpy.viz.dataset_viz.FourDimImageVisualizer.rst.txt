@@ -1,0 +1,28 @@
+sidpy.viz.dataset\_viz.FourDimImageVisualizer
+=============================================
+
+.. currentmodule:: sidpy.viz.dataset_viz
+
+.. autoclass:: FourDimImageVisualizer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~FourDimImageVisualizer.get_image_4d
+      ~FourDimImageVisualizer.get_xy
+      ~FourDimImageVisualizer.set_bin
+      ~FourDimImageVisualizer.set_legend
+   
+   
+
+   
+   
+   

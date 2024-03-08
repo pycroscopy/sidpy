@@ -1,0 +1,33 @@
+sidpy.hdf
+=========
+
+.. automodule:: sidpy.hdf
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   sidpy.hdf.dtype_utils
+   sidpy.hdf.hdf_utils
+   sidpy.hdf.prov_utils
+   sidpy.hdf.reg_ref
+
