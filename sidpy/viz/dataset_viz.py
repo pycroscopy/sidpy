@@ -21,7 +21,8 @@ import matplotlib.patches as patches
 import ipywidgets
 from IPython.display import display
 import scipy
-
+import dill
+import base64
 
 # import matplotlib.animation as animation
 
@@ -2058,29 +2059,73 @@ class ComplexSpectralImageVisualizer(object):
     def get_xy(self):
         return [self.x, self.y]
 
-
 class SpectralImageFitVisualizer(SpectralImageVisualizer):
     
-    def __init__(self, original_dataset, fit_dataset, figure=None, horizontal=True):
+    def __init__(self, original_dataset, fit_dataset, xvec = None, figure=None, horizontal=True):
         '''
         Visualizer for spectral image datasets, fit by the Sidpy Fitter
         This class is called by Sidpy Fitter for visualizing the raw/fit dataset interactively.
 
         Inputs:
             - original_dataset: sidpy.Dataset containing the raw data
-            - fit_dataset: sidpy.Dataset with the fitted data. This is returned by the 
-            Sidpy Fitter after functional fitting.
+            - fit_dataset: sidpy.Dataset with the fitted parameters, or the sidpy.Dataset returned by SidpyFitter.
+            - xvec: Independent dimension vector, default is None (will be acquired from original_dataset if not provided).
             - figure: (Optional, default None) - handle to existing figure
             - horiziontal: (Optional, default True) - whether spectrum should be plotted horizontally
         '''
 
         super().__init__(original_dataset, figure, horizontal)
+        
+        self.original_dataset = original_dataset
+        if xvec is not None:
+            self.xvec = xvec
+        else:
+            self.xvec = None
+        if fit_dataset.shape != original_dataset.shape: #check if we have an actual fitted dataset or just the parameters
+            self.fit_parameters = fit_dataset
+            self.fit_dset = self._return_fit_dataset()
+        else:
+            self.fit_parameters = None
+            self.fit_dset = fit_dataset
        
-        self.fit_dset = fit_dataset
         self.axes[1].clear()
         self.get_fit_spectrum()
         self.axes[1].plot(self.energy_scale, self.spectrum, 'bo')
         self.axes[1].plot(self.energy_scale, self.fit_spectrum, 'r-')
+
+    def _return_fit_dataset(self):
+        #let's get back the fit function
+        fit_fn_packed = self.fit_parameters.metadata['fitting_functions']
+        key_f = list(self.fit_parameters.metadata['fitting_functions'].keys())[0]
+        encoded_value = fit_fn_packed[key_f]
+        serialized_value = base64.b64decode(encoded_value)
+        self._fit_function = dill.loads(serialized_value)
+        
+        #Let's get the independent vector
+        if self.xvec is None:
+            ind_dims = []
+            for ind, (shape1, shape2) in enumerate(zip(self.fit_parameters.shape, self.original_dataset.shape)):
+                if shape1!=shape2: 
+                    ind_dims.append(ind)
+            
+            #We need to get the vector. 
+            if len(ind_dims)>1:
+                raise NotImplementedError("2 dimensional indepndent vectors are not implemented yet. TODO!")
+            else:
+                ind_vec = self.original_dataset._axes[ind_dims[0]].values
+        else:
+            ind_vec = self.xvec.copy()
+
+        #create a copy of the original dataset
+        self.fitted_dataset = self.original_dataset.copy()
+        self.fitted_dataset = self.fitted_dataset.fold(method = 'spaspec') #TODO: this might not always be the case. 
+        self.fit_parameters_folded = self.fit_parameters[:].reshape((self.fitted_dataset.shape[0],-1))
+        
+        for ind in range(self.fitted_dataset.shape[0]):
+            self.fitted_dataset[ind,:] = self._fit_function(ind_vec, *self.fit_parameters_folded[ind])
+        fitted_dataset = self.fitted_dataset.unfold()
+
+        return fitted_dataset
         
     def get_fit_spectrum(self):
 
@@ -2128,5 +2173,4 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
         self.axes[1].set_ylabel(self.ylabel)
 
         self.fig.canvas.draw_idle()
-        
         
