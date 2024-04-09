@@ -2083,6 +2083,10 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
         else:
             self.fit_parameters = None
             self.fit_dset = fit_dataset
+        if xvec is not None:
+            self.xvec = xvec
+        else:
+            self.xvec = None
         self.axes[1].clear()
         self.get_fit_spectrum()
         self.axes[1].plot(self.energy_scale, self.spectrum, 'bo')
@@ -2097,16 +2101,19 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
         self._fit_function = dill.loads(serialized_value)
         
         #Let's get the independent vector
-        ind_dims = []
-        for ind, (shape1, shape2) in enumerate(zip(self.fit_parameters.shape, self.original_dataset.shape)):
-            if shape1!=shape2: 
-                ind_dims.append(ind)
-        
-        #We need to get the vector. 
-        if len(ind_dims)>1:
-            raise NotImplementedError("2 dimensional indepndent vectors are not implemented yet. TODO!")
+        if self.xvec is None:
+            ind_dims = []
+            for ind, (shape1, shape2) in enumerate(zip(self.fit_parameters.shape, self.original_dataset.shape)):
+                if shape1!=shape2: 
+                    ind_dims.append(ind)
+            
+            #We need to get the vector. 
+            if len(ind_dims)>1:
+                raise NotImplementedError("2 dimensional indepndent vectors are not implemented yet. TODO!")
+            else:
+                ind_vec = self.original_dataset._axes[ind_dims[0]].values
         else:
-            ind_vec = self.original_dataset._axes[ind_dims[0]].values
+            ind_vec = self.xvec.copy()
 
         #create a copy of the original dataset
         self.fitted_dataset = self.original_dataset.copy()
@@ -2116,6 +2123,7 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
         for ind in range(self.fitted_dataset.shape[0]):
             self.fitted_dataset[ind,:] = self._fit_function(ind_vec, *self.fit_parameters_folded[ind])
         fitted_dataset = self.fitted_dataset.unfold()
+        
         return fitted_dataset
         
     def get_fit_spectrum(self):
