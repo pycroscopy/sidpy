@@ -28,8 +28,8 @@ def get_fit_dataset(dset_shape=(5,5,32)):
 
 
     #create a dataset
-    xvec = np.linspace(0,1, dset_shape.shape[-1])
-    data_mat = np.zeros(shape=(dset_shape.shape[0]*dset_shape.shape[1], dset_shape.shape[2]))
+    xvec = np.linspace(0,1, dset_shape[-1])
+    data_mat = np.zeros(shape=(dset_shape[0]*dset_shape[1], dset_shape[2]))
     noise_level = 0.10
 
     for xind in range(data_mat.shape[0]):
@@ -37,7 +37,7 @@ def get_fit_dataset(dset_shape=(5,5,32)):
         noise_level*np.random.normal(size=len(xvec))
         data_mat[xind] = y_values
         
-    data_mat = data_mat.reshape(dset_shape.shape)
+    data_mat = data_mat.reshape(dset_shape)
 
     #make it a sidpy dataset
     data_set = sidpy.Dataset.from_array(data_mat, name='test_dataset')
@@ -535,7 +535,6 @@ class TestSpectralImageFitVisualizer(unittest.TestCase):
         xvec = np.linspace(-1,2,32)
         view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fit_parameters, xvec = xvec)
         self.assertEqual(len(view.axes), 2)
-
     
 
 if __name__ == '__main__':
