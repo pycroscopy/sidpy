@@ -2077,16 +2077,17 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
         super().__init__(original_dataset, figure, horizontal)
         
         self.original_dataset = original_dataset
+        if xvec is not None:
+            self.xvec = xvec
+        else:
+            self.xvec = None
         if fit_dataset.shape != original_dataset.shape: #check if we have an actual fitted dataset or just the parameters
             self.fit_parameters = fit_dataset
             self.fit_dset = self._return_fit_dataset()
         else:
             self.fit_parameters = None
             self.fit_dset = fit_dataset
-        if xvec is not None:
-            self.xvec = xvec
-        else:
-            self.xvec = None
+       
         self.axes[1].clear()
         self.get_fit_spectrum()
         self.axes[1].plot(self.energy_scale, self.spectrum, 'bo')
@@ -2123,7 +2124,7 @@ class SpectralImageFitVisualizer(SpectralImageVisualizer):
         for ind in range(self.fitted_dataset.shape[0]):
             self.fitted_dataset[ind,:] = self._fit_function(ind_vec, *self.fit_parameters_folded[ind])
         fitted_dataset = self.fitted_dataset.unfold()
-        
+
         return fitted_dataset
         
     def get_fit_spectrum(self):
