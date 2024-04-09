@@ -16,7 +16,48 @@ mpl.use('Agg')
 import numpy as np
 sys.path.insert(0, "../../sidpy/")
 import sidpy
+from sidpy.proc.fitter import SidFitter
 
+
+def get_fit_dataset(dset_shape=(5,5,32)):
+    #Define the function we want each spectrum to
+
+    def one_lin_func(xvec, *coeff):
+        a1,a2 = coeff
+        return a1*xvec + a2 
+
+
+    #create a dataset
+    xvec = np.linspace(0,1, dset_shape.shape[-1])
+    data_mat = np.zeros(shape=(dset_shape.shape[0]*dset_shape.shape[1], dset_shape.shape[2]))
+    noise_level = 0.10
+
+    for xind in range(data_mat.shape[0]):
+        y_values = one_lin_func(xvec, *[np.random.uniform(0,1), np.random.normal()]) + \
+        noise_level*np.random.normal(size=len(xvec))
+        data_mat[xind] = y_values
+        
+    data_mat = data_mat.reshape(dset_shape.shape)
+
+    #make it a sidpy dataset
+    data_set = sidpy.Dataset.from_array(data_mat, name='test_dataset')
+    data_set.data_type = 'spectral_image' 
+    data_set.units = 'nA'
+    data_set.quantity = 'Current'
+
+    data_set.set_dimension(0, sidpy.Dimension(np.arange(data_set.shape[0]),
+                                            name='x', units='um', quantity='Length',
+                                            dimension_type='spatial'))
+    data_set.set_dimension(1, sidpy.Dimension(np.arange(data_set.shape[0]),
+                                            'y', units='um', quantity='Length',
+                                            dimension_type='spatial'))
+    data_set.set_dimension(2, sidpy.Dimension(xvec,
+                                            name = 'bias',quantity = 'V', units = 'V', dimension_type='spectral'))
+    fitter = SidFitter(data_set, one_lin_func,num_workers=4,
+                           threads=2, return_cov=False, return_fit=True, return_std=False,
+                           km_guess=False,num_fit_parms = 2)
+    output = fitter.do_fit()
+    return data_set, output[0], output[1]
 
 def get_spectrum(dtype=float):
     x = np.array(np.random.normal(3, 2.5, size=1024), dtype=dtype)
@@ -434,11 +475,6 @@ class TestPointCloudPlot(unittest.TestCase):
         self.assertTrue(np.allclose(actual, expected, equal_nan=True, rtol=1e-05, atol=1e-08))
 
 
-
-
-
-
-
 class Test4DImageStackPlot(unittest.TestCase):
 
     def test_plot(self):
@@ -480,6 +516,27 @@ class Test4DImageStackPlot(unittest.TestCase):
         dataset, data = get_4d_image(dtype=complex)
         view = dataset.plot()
         self.assertEqual(len(view.axes), 3)
+
+
+class TestSpectralImageFitVisualizer(unittest.TestCase):
+
+    def test_plot_with_fit_parms(self):
+        original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
+        view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fit_parameters)
+        self.assertEqual(len(view.axes), 2)
+
+    def test_plot_with_fitted_dataset(self):
+        original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
+        view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fitted_dataset)
+        self.assertEqual(len(view.axes), 2)
+
+    def test_plot_with_custom_xvec(self):
+        original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
+        xvec = np.linspace(-1,2,32)
+        view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fit_parameters, xvec = xvec)
+        self.assertEqual(len(view.axes), 2)
+
+    
 
 if __name__ == '__main__':
     unittest.main()
