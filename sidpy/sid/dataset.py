@@ -240,7 +240,7 @@ class Dataset(da.Array):
             the title of this dataset
         lock: boolean
         datatype: str or sidpy.DataType
-            data type of set: i.e.: 'image', spectrum', ..
+            data type of set: i.e.: 'image', 'spectrum', ...
         units: str
             units of dataset i.e. counts, A
         quantity: str
@@ -328,7 +328,7 @@ class Dataset(da.Array):
         # if coordinates is None:
         #     coordinates = self.point_cloud['coordinates']
 
-        new_data = self.from_array(data, chunks=chunks, lock=lock, variance =variance)
+        new_data = self.from_array(data, chunks=chunks, lock=lock, variance=variance)
 
         new_data.data_type = self.data_type
 
@@ -647,6 +647,9 @@ class Dataset(da.Array):
                 self.view = CurveVisualizer(self, figure=figure, **kwargs)
             elif self.data_type == DataType.POINT_CLOUD:
                 self.view = PointCloudVisualizer(self, figure=figure, **kwargs)
+            elif self.data_type == DataType.SPECTRAL_IMAGE:
+                print('sp')
+                self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 3:
@@ -708,6 +711,8 @@ class Dataset(da.Array):
 
         Parameters
         ----------
+        figure : matplotlib figure object
+            optional figure directive for output
         thumbnail_size: int
             size of icon in pixels (length of square)
 
@@ -791,7 +796,6 @@ class Dataset(da.Array):
             out_types.append(axis.dimension_type)
         return out_types
 
-
     def get_dimensions_by_type(self, dims_in, return_axis=False):
         """ get dimension by dimension_type name
 
@@ -821,7 +825,7 @@ class Dataset(da.Array):
 
     def get_image_dims(self, return_axis=False):
         """Get all spatial dimensions"""
-        return self.get_dimensions_by_type(DimensionType.SPATIAL, return_axis=return_axis)
+        return self.get_dimensions_by_type([DimensionType.SPATIAL,DimensionType.RECIPROCAL], return_axis=return_axis)
 
     def get_spectral_dims(self, return_axis=False):
         """Get all spectral dimensions"""
@@ -1073,7 +1077,7 @@ class Dataset(da.Array):
         Returns
         -------
         fft_dset: 2D or 3D complex sidpy.Dataset (not tested for higher dimensions)
-            2 or 3 dimensional matrix arranged in the same way as input
+            2 or 3-dimensional matrix arranged in the same way as input
 
         Example
         -------
@@ -1237,7 +1241,7 @@ class Dataset(da.Array):
                                 checkdims=False)
         if self._variance is not None:
             result._variance = self._variance.all(axis=axis, keepdims=keepdims,
-                                                split_every=split_every, out=out)
+                                                  split_every=split_every, out=out)
         return result, locals().copy()
 
     @reduce_dims
@@ -1260,9 +1264,9 @@ class Dataset(da.Array):
         if self._variance is not None:
             if axis is not None:
                 _min_ind_axis = super().argmin(axis=axis, split_every=split_every, out=out)
-                _coords = np.array(list(np.ndindex(_min_ind_axis.shape))) #list?
+                _coords = np.array(list(np.ndindex(_min_ind_axis.shape)))  # list?
                 _inds = np.insert(_coords, axis, np.array(_min_ind_axis).flatten(), axis=1)
-                _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, (self._variance.shape)))
+                _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, self._variance.shape))
                 result._variance = _extracted_points.reshape(result.shape).rechunk(result.chunksize)
             else:
                 _ind = np.unravel_index(super().min(), self._variance.shape)
@@ -1279,9 +1283,9 @@ class Dataset(da.Array):
         if self._variance is not None:
             if axis is not None:
                 _max_ind_axis = super().argmax(axis=axis, split_every=split_every, out=out)
-                _coords = np.array(list(np.ndindex(_max_ind_axis.shape))) #list?
+                _coords = np.array(list(np.ndindex(_max_ind_axis.shape)))  # list?
                 _inds = np.insert(_coords, axis, np.array(_max_ind_axis).flatten(), axis=1)
-                _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, (self._variance.shape)))
+                _extracted_points = da.take(self._variance.flatten(), np.ravel_multi_index(_inds.T, self._variance.shape))
                 result._variance = _extracted_points.reshape(result.shape).rechunk(result.chunksize)
 
         return result, locals().copy()
@@ -1294,8 +1298,8 @@ class Dataset(da.Array):
                                 checkdims=False)
         if self._variance is not None:
             result._variance = abs(self._variance).sum(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                    split_every=split_every, out=out)
-        #TODO imaginary
+                                                       split_every=split_every, out=out)
+        # TODO imaginary
         return result, locals().copy()
 
     @reduce_dims
@@ -1310,7 +1314,7 @@ class Dataset(da.Array):
             else:
                 sh = axis
             result._variance = self._variance.sum(axis=axis, dtype=dtype, keepdims=keepdims,
-                                                   split_every=split_every, out=out)/sh**2
+                                                  split_every=split_every, out=out)/sh**2
 
         return result, locals().copy()
 
@@ -1367,7 +1371,7 @@ class Dataset(da.Array):
 
     def flatten(self):
 
-        result =  self.like_data(super().flatten(), title_prefix='flattened_',
+        result = self.like_data(super().flatten(), title_prefix='flattened_',
                               check_dims=False)
 
         if self._variance is not None:
