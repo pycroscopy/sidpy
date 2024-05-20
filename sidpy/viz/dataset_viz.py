@@ -30,6 +30,7 @@ from ..hdf.dtype_utils import is_complex_dtype
 if sys.version_info.major == 3:
     unicode = str
 
+
 default_cmap = plt.cm.viridis
 
 
@@ -597,6 +598,7 @@ class SpectralImageVisualizerBase(object):
         self.y = 0
         self.bin_x = 1
         self.bin_y = 1
+        self.line_scan = False
 
         self.set_dataset()
 
@@ -645,7 +647,9 @@ class SpectralImageVisualizerBase(object):
             else:
                 selection.append(slice(0, 1))
         
-        if len(image_dims) != 2:
+        if len(image_dims) == 1:
+            self.line_scan = True
+        elif len(image_dims) != 2:
             raise TypeError('We need two dimensions with dimension_type SPATIAL: to plot an image')
         if len(channel_dim) >1:
             raise ValueError("We have more than one Channel Dimension, this won't work for the visualizer")
@@ -683,8 +687,9 @@ class SpectralImageVisualizerBase(object):
         self.scaleY = 1.0
         self.analysis = []
         self.plot_legend = False
+        if not self.line_scan:
+            self.extent_rd = self.dset.get_extent(self.image_dims)
 
-        self.extent_rd = self.dset.get_extent(self.image_dims)
 
     def set_image(self, **kwargs):
         if len(self.channel_axis)>0:
@@ -766,19 +771,20 @@ class SpectralImageVisualizerBase(object):
             self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
                                                             self.dset._axes[self.image_dims[1]].units))
 
-            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
-            self.axes[0].set_xticklabels(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2))
+            if not self.line_scan:
+                self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+                self.axes[0].set_xticklabels(np.round(np.linspace(self.extent_rd[0], self.extent_rd[1], 5), 2))
 
-            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
-            self.axes[0].set_yticklabels(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2))
+                self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+                self.axes[0].set_yticklabels(np.round(np.linspace(self.extent_rd[2], self.extent_rd[3], 5), 2))
 
+                self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
+                                                                self.dset._axes[self.image_dims[1]].units))
 
             self.axes[0].set_xlabel('{} [{}]'.format(self.dset._axes[self.image_dims[0]].quantity,
                                                         self.dset._axes[self.image_dims[0]].units))
 
-            self.axes[0].set_ylabel('{} [{}]'.format(self.dset._axes[self.image_dims[1]].quantity,
-                                                            self.dset._axes[self.image_dims[1]].units))
-
+            
             if self.dset._axes[self.image_dims[0]].units =='m':
                 scaled_values_y = self.dset._axes[self.image_dims[1]].values*1E9
                 scaled_values_x = self.dset._axes[self.image_dims[0]].values*1E9
