@@ -1,0 +1,6 @@
+sidpy.base.num\_utils.contains\_integers
+========================================
+
+.. currentmodule:: sidpy.base.num_utils
+
+.. autofunction:: contains_integers

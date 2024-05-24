@@ -1,0 +1,6 @@
+sidpy.viz.jupyter\_utils.save\_fig\_filebox\_button
+===================================================
+
+.. currentmodule:: sidpy.viz.jupyter_utils
+
+.. autofunction:: save_fig_filebox_button

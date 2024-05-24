@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.savefile\_dialog\_qt
+==============================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: savefile_dialog_qt
