@@ -42,6 +42,13 @@ class TestCleanStringAtt(unittest.TestCase):
         expected = np.array(expected, dtype='S')
         for exp, act in zip(expected, returned):
             self.assertEqual(exp, act)
+
+    def test_string_unicode_handling(self):
+        expected = ['a', 'bc', 'µm']
+        returned = clean_string_att(expected)
+        for ind,x in enumerate(expected): 
+            assert returned[ind].decode('utf-8') == expected[ind]
+        
             
 
 class TestFormattedStrToNum(unittest.TestCase):
