@@ -37,7 +37,7 @@ from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, ComplexSpectralImageVisualizer
-from ..viz.dataset_viz import PointCloudVisualizer
+from ..viz.dataset_viz import PointCloudVisualizer, DictionaryVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
 from copy import deepcopy, copy
@@ -597,7 +597,7 @@ class Dataset(da.Array):
         if isinstance(self.original_metadata, dict):
             print_nested_dict(self.original_metadata)
 
-    def plot(self, verbose=False, figure=None, **kwargs):
+    def plot(self, verbose=False, figure=None, dict_data=None, **kwargs):
         """
         Plots the dataset according to the
          - shape of the sidpy Dataset,
@@ -619,6 +619,8 @@ class Dataset(da.Array):
             - scale_bar: for images to replace axis with a scale bar inside the image
         figure: matplotlib figure object
             define figure to which this datset will be plotted
+        dict_data: dict
+            the dictionary with the spectra and images. If not None, the Dictionary visualizer is initiated
         Returns
         -------
         self.view.fig: matplotlib figure reference
@@ -631,7 +633,11 @@ class Dataset(da.Array):
         if self.data_type.value < 0:
             raise NameError('Datasets with UNKNOWN data_types cannot be plotted')
 
-        if len(self.shape) == 1:
+        if dict_data is not None:
+            if verbose:
+                print('Dictionary')
+            self.view = DictionaryVisualizer(self, dict_data, figure=figure, **kwargs)
+        elif len(self.shape) == 1:
             if verbose:
                 print('1D dataset')
             self.view = CurveVisualizer(self, figure=figure, **kwargs)
