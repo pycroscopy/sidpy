@@ -1366,7 +1366,7 @@ class PointCloudVisualizerBase(object):
             self.axes[1].set_title('point {}'.format(_point_number))
             _sp_min, _sp_max = np.min(self.spectrum.compute()), np.max(self.spectrum.compute())
             _sp_d = _sp_max - _sp_min
-            self..axes[1].set_ylim(_sp_min-0.2*_sp_d, _sp_max+0.2*_sp_d)
+            self.axes[1].set_ylim(_sp_min-0.2*_sp_d, _sp_max+0.2*_sp_d)
             self.sel_point.set_offsets(np.column_stack((self.px_coord[_point_number, 0],
                                                         self.px_coord[_point_number, 1])))
 
