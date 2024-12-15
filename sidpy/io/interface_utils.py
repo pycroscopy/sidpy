@@ -158,7 +158,8 @@ def update_directory_list(directory_name):
     for name in dir_list:
         if os.path.isfile(os.path.join(file_dict['directory'], name)):
             if name not in file_dict:
-                add_to_dict(file_dict, name)
+                pass
+                # add_to_dict(file_dict, name)
             file_dict['file_list'].append(name)
             file_dict['display_file_list'].append(file_dict[name]['display_string'])
         else:
