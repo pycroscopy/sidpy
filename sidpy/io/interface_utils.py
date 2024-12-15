@@ -52,20 +52,23 @@ class open_file_dialog(object):
 
     """
 
-    def __init__(self, dir_name='.', extension=['*']):
+    def __init__(self, dir_name=None, extension=['*'], sum_frames=False):
         self.save_path = False
         self.dir_dictionary = {}
         self.dir_list = ['.', '..']
         self.display_list = ['.', '..']
+        self.sum_frames = sum_frames
 
+        self.dir_name = '.'
         if os.path.isdir(dir_name):
             self.dir_name = dir_name
-        else:
-            self.dir_name = '.'
+
         self.get_directory(self.dir_name)
         self.dir_list = ['.']
         self.extensions = extension
         self.file_name = ''
+        self.datasets = {}
+        self.dataset = None
 
         self.select_files = widgets.Select(
             options=self.dir_list,
@@ -75,15 +78,30 @@ class open_file_dialog(object):
             rows=10,
             layout=widgets.Layout(width='70%')
         )
-        display(self.select_files)
+        self.path_choice = widgets.Dropdown(options=['None'],
+                                            value='None',
+                                            description='directory:',
+                                            disabled=False,
+                                            button_style='',
+                                            layout=widgets.Layout(width='90%'))
+        
         self.set_options()
+        ui = widgets.VBox([self.path_choice, self.select_files])
+        display(ui)
+        
         self.select_files.observe(self.get_file_name, names='value')
+        self.path_choice.observe(self.set_dir, names='value')
 
     def get_directory(self, directory=None):
         self.dir_name = directory
         self.dir_dictionary = {}
         self.dir_list = []
         self.dir_list = ['.', '..'] + os.listdir(directory)
+
+    def set_dir(self, value=0):
+        self.dir_name = self.path_choice.value
+        self.select_files.index = 0
+        self.set_options()
 
     def set_options(self):
         self.dir_name = os.path.abspath(os.path.join(self.dir_name, self.dir_list[self.select_files.index]))
@@ -108,29 +126,23 @@ class open_file_dialog(object):
 
         self.dir_label = os.path.split(self.dir_name)[-1] + ':'
         self.select_files.options = self.display_list
+        
+        path = self.dir_name
+        old_path = ' '
+        path_list = []
+        while path != old_path:
+            path_list.append(path)
+            old_path = path
+            path = os.path.split(path)[0]
+        self.path_choice.options = path_list
+        self.path_choice.value = path_list[0]
 
     def get_file_name(self, b):
+
         if os.path.isdir(os.path.join(self.dir_name, self.dir_list[self.select_files.index])):
             self.set_options()
-
         elif os.path.isfile(os.path.join(self.dir_name, self.dir_list[self.select_files.index])):
             self.file_name = os.path.join(self.dir_name, self.dir_list[self.select_files.index])
-
-
-def add_to_dict(file_dict, name):
-    full_name = os.path.join(file_dict['directory'], name)
-    basename, extension = os.path.splitext(name)
-    size = os.path.getsize(full_name) * 2 ** -20
-    display_name = name
-    if len(extension) == 0:
-        display_file_list = f' {name}  - {size:.1f} MB'
-    elif extension[0] == 'hf5':
-        if extension in ['.hf5']:
-            display_file_list = f" {name}  - {size:.1f} MB"
-    else:
-        display_file_list = f' {name}  - {size:.1f} MB'
-    file_dict[name] = {'display_string': display_file_list, 'basename': basename, 'extension': extension,
-                       'size': size, 'display_name': display_name}
 
 
 def update_directory_list(directory_name):

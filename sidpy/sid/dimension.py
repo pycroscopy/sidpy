@@ -102,7 +102,7 @@ class Dimension(np.ndarray):
 
     def __array_wrap__(self, out_arr, context=None):
         # just call the parent
-        super(Dimension, self).__array_wrap__(self, out_arr, context)
+        super(Dimension, self).values.__array_wrap__(self, out_arr, context)
         # return correct values
         return out_arr
 
