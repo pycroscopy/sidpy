@@ -1344,6 +1344,7 @@ class PointCloudVisualizerBase(object):
             else:
                 self.spectrum_plot[0].set_data(self.energy_scale, self.spectrum.compute())
 
+
             if self.variance is not None:
                 # 3d - many curves
                 if len(self.variance.shape) > 1:
@@ -1363,6 +1364,12 @@ class PointCloudVisualizerBase(object):
                                                                      color=_c)
 
             self.axes[1].set_title('point {}'.format(_point_number))
+
+            _sp_min, _sp_max = np.min(self.spectrum.compute()), np.max(self.spectrum.compute())
+            if self.variance is not None:
+                _sp_min, _sp_max = _sp_min - np.max(self.variance.compute()), _sp_max + np.max(self.variance.compute())
+            _sp_d = _sp_max - _sp_min
+            self.axes[1].set_ylim(_sp_min-0.2*_sp_d, _sp_max+0.2*_sp_d)
             self.sel_point.set_offsets(np.column_stack((self.px_coord[_point_number, 0],
                                                         self.px_coord[_point_number, 1])))
 
