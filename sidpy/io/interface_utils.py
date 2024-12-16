@@ -32,13 +32,7 @@ def add_to_dict(file_dict, name):
         if extension in ['.hf5']:
             display_file_list = f" {name}  - {size:.1f} MB"
     elif extension in ['.h5', '.ndata']:
-        try:
-            reader = SciFiReaders.NionReader(full_name)
-            dataset_nion = reader.read()
-            display_name = dataset_nion.title
-            display_file_list = f" {display_name}{extension}  - {size:.1f} MB"
-        except:
-            display_file_list = f" {name}  - {size:.1f} MB"
+       display_file_list = f" {name}  - {size:.1f} MB"
     else:
         display_file_list = f' {name}  - {size:.1f} MB'
     file_dict[name] = {'display_string': display_file_list, 'basename': basename, 'extension': extension,
