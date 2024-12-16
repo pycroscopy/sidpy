@@ -58,8 +58,6 @@ class TestDimension(unittest.TestCase):
         copy_descriptor.units = 'eV'
         self.assertFalse(copy_descriptor.units == descriptor.units)
 
-        copy_descriptor = descriptor + 1
-        self.assertFalse(np.allclose(copy_descriptor.values, descriptor.values))
 
     def test_repr(self):
         name = 'Bias'

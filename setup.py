@@ -61,7 +61,7 @@ setup(
     install_requires=requirements,
     
     tests_require=['pytest'],
-    platforms=['Linux', 'Mac OSX', 'Windows 10/8.1/8/7'],
+    platforms=['Linux', 'Mac OSX', 'Windows 11/10'],
     # package_data={'sample':['dataset_1.dat']}
     test_suite='pytest',
     # dependency='',
