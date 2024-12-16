@@ -21,6 +21,29 @@ if sys.version_info.major == 3:
     if sys.version_info.minor < 6:
         ModuleNotFoundError = ValueError
 
+def add_to_dict(file_dict, name):
+    full_name = os.path.join(file_dict['directory'], name)
+    basename, extension = os.path.splitext(name)
+    size = os.path.getsize(full_name) * 2 ** -20
+    display_name = name
+    if len(extension) == 0:
+        display_file_list = f' {name}  - {size:.1f} MB'
+    elif extension[0] == 'hf5':
+        if extension in ['.hf5']:
+            display_file_list = f" {name}  - {size:.1f} MB"
+    elif extension in ['.h5', '.ndata']:
+        try:
+            reader = SciFiReaders.NionReader(full_name)
+            dataset_nion = reader.read()
+            display_name = dataset_nion.title
+            display_file_list = f" {display_name}{extension}  - {size:.1f} MB"
+        except:
+            display_file_list = f" {name}  - {size:.1f} MB"
+    else:
+        display_file_list = f' {name}  - {size:.1f} MB'
+    file_dict[name] = {'display_string': display_file_list, 'basename': basename, 'extension': extension,
+                       'size': size, 'display_name': display_name}
+
 
 class open_file_dialog(object):
     """Widget to select directories or widgets from a list
@@ -52,7 +75,7 @@ class open_file_dialog(object):
 
     """
 
-    def __init__(self, dir_name=None, extension=['*'], sum_frames=False):
+    def __init__(self, dir_name='.', extension=['*'], sum_frames=False):
         self.save_path = False
         self.dir_dictionary = {}
         self.dir_list = ['.', '..']
@@ -158,8 +181,7 @@ def update_directory_list(directory_name):
     for name in dir_list:
         if os.path.isfile(os.path.join(file_dict['directory'], name)):
             if name not in file_dict:
-                pass
-                # add_to_dict(file_dict, name)
+                add_to_dict(file_dict, name)
             file_dict['file_list'].append(name)
             file_dict['display_file_list'].append(file_dict[name]['display_string'])
         else:
