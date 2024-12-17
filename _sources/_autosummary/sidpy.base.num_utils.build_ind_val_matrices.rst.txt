@@ -1,0 +1,6 @@
+sidpy.base.num\_utils.build\_ind\_val\_matrices
+===============================================
+
+.. currentmodule:: sidpy.base.num_utils
+
+.. autofunction:: build_ind_val_matrices

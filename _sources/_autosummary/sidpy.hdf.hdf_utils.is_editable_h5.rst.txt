@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.is\_editable\_h5
+=====================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: is_editable_h5

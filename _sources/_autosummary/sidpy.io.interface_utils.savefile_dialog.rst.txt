@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.savefile\_dialog
+==========================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: savefile_dialog
