@@ -1254,11 +1254,20 @@ class PointCloudVisualizerBase(object):
         return True
 
     def set_image(self, quantity, **kwargs):
+
         if self.image.dtype == 'complex':
             _image = np.abs(self.image)
         else:
             _image = self.image
-        self.axes[0].imshow(_image.T, extent=self.extent, **kwargs)
+        #self.axes[0].imshow(_image.T, extent=self.extent, **kwargs)
+        _aspect = abs((self.real_extent[3] - self.real_extent[2]) / (self.real_extent[1] - self.real_extent[0]))
+        if _aspect > 5:
+            print(f'Attention: Non-square pixel size. Real y/x aspect ration: {round(_aspect,2)}')
+            _aspect = 5
+        elif _aspect < 0.2:
+            print(f'Attention: Non-square pixel size. Real y/x aspect ration: {round(_aspect,2)}')
+            _aspect = 0.2
+        self.axes[0].imshow(_image.T, extent=self.extent, aspect=_aspect, **kwargs)
         self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
         self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),1))
 
@@ -1423,6 +1432,7 @@ class PointCloudVisualizerBase(object):
                                           in point_cloud attribute')
 
         # minimal image size in 50x50px or equal to the number of point for dimensions
+
         im_size = max(50, coord.shape[0])
 
         _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
@@ -1451,8 +1461,35 @@ class PointCloudVisualizerBase(object):
             self._update_spectrum()
             _point_number = self.tree.query(np.array([self.x, self.y]))[1]
 
-
             #self.axes[1].set_title('Point {}'.format(_point_number))
+
+
+            if self.variance is not None:
+                # 3d - many curves
+                if len(self.variance.shape) > 1:
+                    for i in range(len(self.variance)):
+                        _c = self.fill_between[i].get_facecolor()[0]
+                        self.fill_between[i].remove()
+                        self.fill_between[i] = self.axes[1].fill_between(self.energy_scale,
+                                              self.spectrum[i] - self.variance[i],
+                                              self.spectrum[i] + self.variance[i],
+                                              color= _c)
+                else:
+                    _c = self.fill_between[0].get_facecolor()[0]
+                    self.fill_between[0].remove()
+                    self.fill_between[0] = self.axes[1].fill_between(self.energy_scale,
+                                                                     self.spectrum - self.variance,
+                                                                     self.spectrum + self.variance,
+                                                                     color=_c)
+
+            self.axes[1].set_title('point {}'.format(_point_number))
+
+            _sp_min, _sp_max = np.min(self.spectrum.compute()), np.max(self.spectrum.compute())
+            if self.variance is not None:
+                _sp_min, _sp_max = _sp_min - np.max(self.variance.compute()), _sp_max + np.max(self.variance.compute())
+            _sp_d = _sp_max - _sp_min
+            self.axes[1].set_ylim(_sp_min-0.2*_sp_d, _sp_max+0.2*_sp_d)
+
             self.sel_point.set_offsets(np.column_stack((self.px_coord[_point_number, 0],
                                                         self.px_coord[_point_number, 1])))
 
@@ -2535,8 +2572,10 @@ class ComplexSpectralImageFitVisualizer(ComplexSpectralImageVisualizer):
             leg = self.axes[ax_ind].legend(loc = 'best')
             leg.get_frame().set_linewidth(0.0)
         self.fig.canvas.draw_idle()
+
         if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
             self.fig.tight_layout()
+
 
 class MultiImageStackVisualizer(object):
     """

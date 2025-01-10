@@ -31,6 +31,7 @@ import dask.array as da
 import h5py
 from enum import Enum
 from numbers import Number
+import datetime
 
 from .dimension import Dimension, DimensionType
 from ..base.num_utils import get_slope
@@ -43,7 +44,7 @@ from .dimension import DimensionType
 from copy import deepcopy, copy
 from sidpy.base.string_utils import validate_single_string_arg
 import logging
-
+from ..__version__ import version
 
 def is_simple_list(lst):
     if isinstance(lst, list):
@@ -166,6 +167,7 @@ class Dataset(da.Array):
         self._modality = ''
         self._source = ''
         self._structures = {}
+        self.provenance = {'sidpy': f"init_{version}_"+str(datetime.datetime.now()).replace(' ','-')}
 
         self._h5_dataset = None
         self._metadata = {}
@@ -275,6 +277,7 @@ class Dataset(da.Array):
 
         sid_dataset.modality = modality
         sid_dataset.source = source
+        sid_dataset.provenance = {'sidpy': {'from_array_': f"_{version}_"+str(datetime.datetime.now()).replace(' ','-')}}
 
         sid_dataset._axes = {}
         for dim in range(sid_dataset.ndim):
@@ -351,6 +354,9 @@ class Dataset(da.Array):
                 new_data.title = self.title + '_new'
 
         new_data.title = title_prefix + new_data.title + title_suffix
+        new_data.provenance = {'sidpy': {'like_data': f"_{version}_"+str(datetime.datetime.now()).replace(' ','-'),
+                                         'parent_data': {'title': self.title,
+                                                         'provenance': self.provenance} }}
 
         # quantity
         if reset_quantity:
@@ -420,6 +426,25 @@ class Dataset(da.Array):
 
         return new_dataset
 
+    def add_provenance(self, package, package_function,  version=0, linked_data = None):
+        """
+        Add provenance information to the dataset
+
+        package: str
+            name of the package that generated the data
+        package_function: str
+            name of the function that generated the data
+        linked_data: dict or str
+            data that is linked to the dataset
+        version: int
+            version of the package that generated the data
+        """
+        self.provenance[package] = {package_function: f"_{version}_"+str(datetime.datetime.now()).replace(' ','-')}
+
+        if isinstance(linked_data, (dict, str)):
+            self.provenance[package]['linked_data'] = linked_data
+            
+    
     def copy(self):
         """
         Returns a deep copy of this dataset.

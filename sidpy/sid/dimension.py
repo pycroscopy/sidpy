@@ -102,10 +102,12 @@ class Dimension(np.ndarray):
 
     def __array_wrap__(self, out_arr, context=None):
         # just call the parent
-        super(Dimension, self).__array_wrap__(self, out_arr, context)
+        values = super(Dimension, self).__array_wrap__(self, out_arr, context)
+        new_dim = Dimension(values, name=self.name, quantity=self.quantity, units=self.units)
         # return correct values
-        return out_arr
-
+        return new_dim
+    
+   
     def __repr__(self):
         return '{}:  {} ({}) of size {}'.format(self.name, self.quantity, self.units, self.shape)
 
