@@ -1176,7 +1176,14 @@ class PointCloudVisualizerBase(object):
         return True
 
     def set_image(self, quantity, **kwargs):
-        self.axes[0].imshow(self.image.T, extent=self.extent, **kwargs)
+        _aspect = abs((self.real_extent[3] - self.real_extent[2]) / (self.real_extent[1] - self.real_extent[0]))
+        if _aspect > 5:
+            print(f'Attention: Non-square pixel size. Real y/x aspect ration: {round(_aspect,2)}')
+            _aspect = 5
+        elif _aspect < 0.2:
+            print(f'Attention: Non-square pixel size. Real y/x aspect ration: {round(_aspect,2)}')
+            _aspect = 0.2
+        self.axes[0].imshow(self.image.T, extent=self.extent, aspect=_aspect, **kwargs)
         self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
         self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),1))
 
@@ -1311,6 +1318,7 @@ class PointCloudVisualizerBase(object):
                                           in point_cloud attribute')
 
         # minimal image size in 50x50px or equal to the number of point for dimensions
+
         im_size = max(50, coord.shape[0])
 
         _x0, _x1 = np.min(coord, axis=0)[0], np.max(coord, axis=0)[0]
@@ -2334,7 +2342,6 @@ class ComplexSpectralImageFitVisualizer(ComplexSpectralImageVisualizer):
             leg.get_frame().set_linewidth(0.0)
         self.fig.canvas.draw_idle()
         self.fig.tight_layout()
-        
 
 class MultiImageStackVisualizer(object):
     """
