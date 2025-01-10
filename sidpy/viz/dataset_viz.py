@@ -16,17 +16,22 @@ if TYPE_CHECKING:
 import sidpy
 import sys
 import numpy as np
+from matplotlib.figure import SubFigure
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.cm import ScalarMappable
 import ipywidgets
 from IPython.display import display
 import scipy
 import dill
 import base64
+import dask.array as da
 
 # import matplotlib.animation as animation
 
 from ..hdf.dtype_utils import is_complex_dtype
+from ..base.num_utils import convert_length
 if sys.version_info.major == 3:
     unicode = str
 
@@ -95,8 +100,8 @@ class CurveVisualizer(object):
             self.axes[1].set_ylabel('Phase (rad)')
             self.axes[1].set_xlabel(self.dset.labels[0])  # + x_suffix)
             self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
-
-            self.fig.tight_layout()
+            if ~isinstance(self.fig, SubFigure): #for sparse array vis #TODO
+                self.fig.tight_layout()
             self.fig.canvas.draw_idle()
 
         else:
@@ -221,17 +226,23 @@ class ImageVisualizer(object):
 
             plt.axis('off')
             extent = self.dset.get_extent(self.image_dims)
-            size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
-            if size_of_bar < 1:
-                size_of_bar = 1
+            #size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
+            size_of_bar = (extent[1] - extent[0]) / 10
+            scale_bar_label, units = convert_length(size_of_bar, self.dset.x.units)
+
+            power = size_of_bar / scale_bar_label
+            scale_bar_label = max(2, round(scale_bar_label))
+            size_of_bar = scale_bar_label*power
+
+
+
             scalebar = AnchoredSizeBar(plt.gca().transData,
-                                       size_of_bar, '{} {}'.format(size_of_bar,
-                                                                   self.dset._axes[self.image_dims[0]].units),
+                                       size_of_bar, '{} {}'.format(scale_bar_label, units),
                                        'lower left',
                                        pad=1,
                                        color='white',
                                        frameon=False,
-                                       size_vertical=.2)
+                                       size_vertical=(extent[2] - extent[3]) / 50)
 
             plt.gca().add_artist(scalebar)
 
@@ -240,7 +251,8 @@ class ImageVisualizer(object):
             cbar.set_label(self.dset.data_descriptor)
 
             self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
-            self.fig.tight_layout()
+            if not isinstance(self.fig, SubFigure): #for sparse array vis #TODO
+                self.fig.tight_layout()
         self.img.axes.figure.canvas.draw_idle()
 
     def plot_complex_image(self, **kwargs):
@@ -277,20 +289,25 @@ class ImageVisualizer(object):
             for ax in self.axes:
                 ax.axis('off')
                 extent = self.dset.get_extent(self.image_dims)
-                size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
-                if size_of_bar < 1:
-                    size_of_bar = 1
+                # size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
+                # if size_of_bar < 1:
+                #     size_of_bar = 1
+                size_of_bar = (extent[1] - extent[0]) / 10
+                scale_bar_label, units = convert_length(size_of_bar, self.dset.x.units)
+
+                power = size_of_bar / scale_bar_label
+                scale_bar_label = max(2, round(scale_bar_label))
+                size_of_bar = scale_bar_label * power
                 scalebar = AnchoredSizeBar(ax.transData,
-                                           size_of_bar, '{} {}'.format(size_of_bar,
-                                                                       self.dset._axes[self.image_dims[0]].units),
+                                           size_of_bar, '{} {}'.format( scale_bar_label, units),
                                            'lower left',
                                            pad=1,
                                            color='white',
                                            frameon=False,
-                                           size_vertical=.2)
+                                           size_vertical=(extent[2] - extent[3]) / 50)
                 ax.add_artist(scalebar)
-
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
 
     def _var_button_event(self, event):
         disp = event.new
@@ -475,17 +492,23 @@ class ImageStackVisualizer(object):
 
             plt.axis('off')
             extent = self.dset.get_extent(self.image_dims)
-            size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
-            if size_of_bar < 1:
-                size_of_bar = 1
+            # size_of_bar = int((extent[1] - extent[0]) / 10 + .5)
+            # if size_of_bar < 1:
+            #     size_of_bar = 1
+
+            size_of_bar = (extent[1] - extent[0]) / 10
+            scale_bar_label, units = convert_length(size_of_bar, self.dset.x.units)
+
+            power = size_of_bar / scale_bar_label
+            scale_bar_label = max(2, round(scale_bar_label))
+            size_of_bar = scale_bar_label * power
             scalebar = AnchoredSizeBar(plt.gca().transData,
-                                       size_of_bar, '{} {}'.format(size_of_bar,
-                                                                   self.dset._axes[self.image_dims[0]].units),
+                                       size_of_bar, '{} {}'.format(scale_bar_label, units),
                                        'lower left',
                                        pad=1,
                                        color='white',
                                        frameon=False,
-                                       size_vertical=.2)
+                                       size_vertical=(extent[2] - extent[3]) / 50)
 
             plt.gca().add_artist(scalebar)
 
@@ -494,7 +517,8 @@ class ImageStackVisualizer(object):
             cbar.set_label(self.dset.data_descriptor)
 
             self.axis.ticklabel_format(style='sci', scilimits=(-2, 3))
-            self.fig.tight_layout()
+            if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+                self.fig.tight_layout()
 
         self.img.axes.figure.canvas.draw_idle()
 
@@ -615,8 +639,8 @@ class SpectralImageVisualizerBase(object):
 
         if scale_bar:
             self._scale_bar()
-
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
         self.fig.canvas.draw_idle()
 
@@ -748,7 +772,8 @@ class SpectralImageVisualizerBase(object):
         self.axes[1].set_xlabel(self.dset.labels[self.energy_axis])  # + x_suffix)
         self.axes[1].set_ylabel(self.dset.data_descriptor)
         self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
     
     def _update_image(self, event_value):
@@ -947,26 +972,41 @@ class SpectralImageVisualizerBase(object):
         #         artist.remove()
 
         extent = self.extent_rd
-        _units = self.dset._axes[self.image_dims[0]].units
+        #_units = self.dset._axes[self.image_dims[0]].units
+        #size_of_bar_real = (extent[1] - extent[0]) / 5
+        size_of_bar = (extent[1] - extent[0]) / 10
+        scale_bar_label, units = convert_length(size_of_bar, self.dset.x.units)
 
-        size_of_bar_real = (extent[1] - extent[0]) / 5
-        if size_of_bar_real < 1:
-            size_of_bar_real = round(size_of_bar_real, 1)
-        else:
-            size_of_bar_real = int(round(size_of_bar_real))
+        power = size_of_bar / scale_bar_label
+        scale_bar_label = max(2, round(scale_bar_label))
         px_size = self.axes[0].get_xlim()
-        size_of_bar = int((px_size[1] - px_size[0]) * (size_of_bar_real / (extent[1] - extent[0])))
+        size_of_bar = int((px_size[1] - px_size[0]) * (scale_bar_label * power / (extent[1] - extent[0])))
 
-        if size_of_bar < 1:
-            size_of_bar = 1
         scalebar = AnchoredSizeBar(self.axes[0].transData,
-                                   size_of_bar, '{} {}'.format(size_of_bar_real,
-                                                               _units),
+                                   size_of_bar, '{} {}'.format(scale_bar_label, units),
                                    'lower left',
                                    pad=1,
                                    color='white',
                                    frameon=False,
-                                   size_vertical=size_of_bar / 7)
+                                   size_vertical=(px_size[1] - px_size[0]) / 50)
+        # if size_of_bar_real < 1:
+        #     size_of_bar_real = round(size_of_bar_real, 1)
+        # else:
+        #     size_of_bar_real = int(round(size_of_bar_real))
+        # px_size = self.axes[0].get_xlim()
+        # size_of_bar = int((px_size[1] - px_size[0]) * (size_of_bar_real / (extent[1] - extent[0])))
+
+        # if size_of_bar < 1:
+        #     size_of_bar = 1
+        # scalebar = AnchoredSizeBar(self.axes[0].transData,
+        #                            size_of_bar, '{} {}'.format(size_of_bar_real,
+        #                                                        _units),
+        #                            'lower left',
+        #                            pad=1,
+        #                            color='white',
+        #                            frameon=False,
+        #                            size_vertical=size_of_bar / 7)
+
 
         self.axes[0].add_artist(scalebar)
 
@@ -974,7 +1014,6 @@ class SpectralImageVisualizerBase(object):
     def _closest_point(array_coord, point):
         diff = array_coord - point
         return np.argmin(diff[:,0]**2 + diff[:,1]**2)
-
 
 class SpectralImageVisualizer(SpectralImageVisualizerBase):
     def __init__(self, dset, figure=None, horizontal=True, **kwargs):
@@ -1059,6 +1098,7 @@ class PointCloudVisualizerBase(object):
 
         #kwargs parsing
         scale_bar = kwargs.pop('scale_bar', False)
+        amp_phase = kwargs.pop('amp_phase', False)
         self.set_title = kwargs.pop('set_title', True)
         temp = kwargs.pop('figsize', None)
 
@@ -1074,23 +1114,33 @@ class PointCloudVisualizerBase(object):
         else:
             self.fig = figure
 
-        if horizontal:
-            self.axes = self.fig.subplots(ncols=2)
+        # pull base_image
+        if base_image is not None:
+            self.image, self.px_coord = self._base_image(base_image)
         else:
-            self.axes = self.fig.subplots(nrows=2, **fig_args)
+            if len(self.channel_dim) > 0:
+                self.cloud = dset.mean(axis=(self.spectral_dim[0], self.channel_dim[0]))
+            else:
+                self.cloud = dset.mean(axis=(self.spectral_dim[0],))
+            self.image, self.px_coord = self._mask_image()
+
+        if self.dset.dtype == 'complex':
+            if amp_phase:
+                self.ri_ap = 'Amplitude and Phase'
+            else:
+                self.ri_ap = 'Real and Imaginary'
+        else:
+            self.ri_ap = None
+
+        _n = 3 if self.ri_ap is not None else 2
+
+        if horizontal:
+            self.axes = self.fig.subplots(ncols=_n)
+        else:
+            self.axes = self.fig.subplots(nrows=_n)
 
         if self.set_title:
             self.fig.canvas.manager.set_window_title(self.dset.title)
-
-            # pull base_image
-            if base_image is not None:
-                self.image, self.px_coord = self._base_image(base_image)
-            else:
-                if len(self.channel_dim) > 0:
-                    self.cloud = dset.mean(axis=(self.spectral_dim[0], self.channel_dim[0]))
-                else:
-                    self.cloud = dset.mean(axis=(self.spectral_dim[0],))
-                self.image, self.px_coord = self._mask_image()
 
         self.x = 0
         self.y = 0
@@ -1109,7 +1159,6 @@ class PointCloudVisualizerBase(object):
 
         #image
         self.set_image(_quantity, **kwargs)
-
         #highlighting selected point
         _point_number = self.tree.query(np.array([self.x, self.y]))[1]
         self.sel_point = self.axes[0].scatter(self.px_coord[_point_number, 0], self.px_coord[_point_number, 1],
@@ -1123,10 +1172,39 @@ class PointCloudVisualizerBase(object):
         if len(self.channel_dim)>0: self.channel_axis = self.channel_dim
         self.energy_scale = self.dset._axes[self.energy_axis].values
         #spectrum
-        self.set_spectrum(_point_number, **kwargs)
+        self.spectrum_plot = []
+        if self.ri_ap is not None:
+            if self.ri_ap == 'Real and Imaginary':
+                _complex = ['real', 'imag']
+            elif self.ri_ap == 'Amplitude and Phase':
+                _complex = ['amp', 'phase']
+            self.spectrum_plot, self.fill_between = self.set_spectrum(_point_number, complex=_complex[0], axis=self.axes[1], **kwargs)
+            #add colorbar for multi chanell figures
+            if len(self.spectrum_plot) > 1:
+                self.add_colorbar(self.spectrum_plot)
+            _spectrum_plots, _fill_between = self.set_spectrum(_point_number, complex=_complex[1], axis=self.axes[2], **kwargs)
+            for sp in _spectrum_plots:  self.spectrum_plot.append(sp)
+            for fb in _fill_between:  self.fill_between.append(fb)
+        else:
+            self.spectrum_plot, self.fill_between = self.set_spectrum(_point_number, **kwargs)
+            if len(self.spectrum_plot) > 1:
+                self.add_colorbar(self.spectrum_plot)
 
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
+
+
+    def add_colorbar(self, lines):
+        colors = [line.get_color() for line in lines]
+        cmap = ListedColormap(colors)
+        bounds = np.arange(len(colors) + 1)
+        norm = BoundaryNorm(bounds, cmap.N)
+        sm = ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])
+        self.cbar = self.fig.colorbar(sm, ax=self.axes[-1], ticks=np.arange(len(colors)) + 0.5)
+        self.cbar.ax.set_yticklabels(np.arange(len(colors)))
+        self.cbar.set_label('Channel')
 
     def verify_dataset(self):
         dset = self.dset
@@ -1176,6 +1254,12 @@ class PointCloudVisualizerBase(object):
         return True
 
     def set_image(self, quantity, **kwargs):
+
+        if self.image.dtype == 'complex':
+            _image = np.abs(self.image)
+        else:
+            _image = self.image
+        #self.axes[0].imshow(_image.T, extent=self.extent, **kwargs)
         _aspect = abs((self.real_extent[3] - self.real_extent[2]) / (self.real_extent[1] - self.real_extent[0]))
         if _aspect > 5:
             print(f'Attention: Non-square pixel size. Real y/x aspect ration: {round(_aspect,2)}')
@@ -1183,7 +1267,7 @@ class PointCloudVisualizerBase(object):
         elif _aspect < 0.2:
             print(f'Attention: Non-square pixel size. Real y/x aspect ration: {round(_aspect,2)}')
             _aspect = 0.2
-        self.axes[0].imshow(self.image.T, extent=self.extent, aspect=_aspect, **kwargs)
+        self.axes[0].imshow(_image.T, extent=self.extent, aspect=_aspect, **kwargs)
         self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
         self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5),1))
 
@@ -1194,38 +1278,68 @@ class PointCloudVisualizerBase(object):
 
         self.axes[0].scatter(self.px_coord[:,0], self.px_coord[:,1], color='red', s=1)
 
-    def set_spectrum(self, point_number, **kwargs):
-        self.spectrum_plot = []  # list is required for the case of several channels
+    def set_spectrum(self, point_number, complex = None, axis = None, **kwargs):
+
+        if complex == 'real':
+            _spectrums = self.spectrum.real.compute()
+        elif complex == 'imag':
+            _spectrums = self.spectrum.imag.compute()
+        elif complex == 'amp':
+            _spectrums = self.spectrum.abs()
+        elif complex == 'phase':
+            _spectrums = self.spectrum.angle()
+        else:
+            _spectrums = self.spectrum
+
+        if axis is None:
+            axis = self.axes[1]
+
+        spectrum_plot = []  # list is required for the case of several channels
         if len(self.spectrum.shape) > 1:
             for i in range(len(self.spectrum)):
-                _spectrum_plot, = self.axes[1].plot(self.energy_scale, self.spectrum.compute()[i])
-                self.spectrum_plot.append(_spectrum_plot)
+                _spectrum_plot, = axis.plot(self.energy_scale, _spectrums[i])
+                spectrum_plot.append(_spectrum_plot)
         else:
-            _spectrum_plot, = self.axes[1].plot(self.energy_scale, self.spectrum.compute())
-            self.spectrum_plot.append(_spectrum_plot)
+            _spectrum_plot, = axis.plot(self.energy_scale, _spectrums)
+            spectrum_plot.append(_spectrum_plot)
 
-        self.fill_between = []
+        fill_between = []
         if self.variance is not None:
+            if complex == 'real':
+                _variance = self.variance.real
+            elif complex == 'imag':
+                _variance = self.variance.imag
+            elif complex == 'amp':
+                _variance = da.abs(self.variance)
+            elif complex == 'phase':
+                _variance = da.angle(self.variance)
+            else:
+                _variance = self.variance
+
             # 3d - many curves
             if len(self.variance.shape) > 1:
                 for i in range(len(self.variance)):
-                    _fill_between = self.axes[1].fill_between(self.energy_scale,
-                                                              self.spectrum[i] - self.variance[i],
-                                                              self.spectrum[i] + self.variance[i],
-                                                              alpha=0.3, **kwargs)
-                    self.fill_between.append(_fill_between)
+                    _fill_between = axis.fill_between(self.energy_scale,
+                                                      _spectrums[i] - _variance[i],
+                                                      _spectrums[i] + _variance[i],
+                                                      alpha=0.3, **kwargs)
+                    fill_between.append(_fill_between)
             # 2d - one curve at each point
             else:
-                _fill_between = self.axes[1].fill_between(self.energy_scale,
-                                                          self.spectrum - self.variance,
-                                                          self.spectrum + self.variance,
-                                                          alpha=0.3, **kwargs)
-                self.fill_between.append(_fill_between)
+                _fill_between = axis.fill_between(self.energy_scale,
+                                                  _spectrums - _variance,
+                                                  _spectrums + _variance,
+                                                  alpha=0.3, **kwargs)
+                fill_between.append(_fill_between)
 
-        self.axes[1].set_title('point {}'.format(point_number))
-        self.axes[1].set_xlabel(self.dset.labels[self.energy_axis])
-        self.axes[1].set_ylabel(self.dset.data_descriptor)
-        self.axes[1].ticklabel_format(style='sci', scilimits=(-2, 3))
+        if complex is None:
+            axis.set_title('Point {}'.format(point_number))
+        else:
+            axis.set_title('Point {}, {}'.format(point_number, complex))
+        axis.set_xlabel(self.dset.labels[self.energy_axis])
+        axis.set_ylabel(self.dset.data_descriptor)
+        axis.ticklabel_format(style='sci', scilimits=(-2, 3))
+        return spectrum_plot, fill_between
 
     def get_spectrum(self, point_number):
         '''
@@ -1344,13 +1458,10 @@ class PointCloudVisualizerBase(object):
         if event.inaxes in [self.axes[0]]:
             self.x = round(event.xdata)
             self.y = round(event.ydata)
+            self._update_spectrum()
             _point_number = self.tree.query(np.array([self.x, self.y]))[1]
-            self.spectrum, self.variance = self.get_spectrum(_point_number)
-            if len(self.spectrum.shape) > 1:
-                for i in range(len(self.spectrum)):
-                    self.spectrum_plot[i].set_data(self.energy_scale, self.spectrum.compute()[i])
-            else:
-                self.spectrum_plot[0].set_data(self.energy_scale, self.spectrum.compute())
+
+            #self.axes[1].set_title('Point {}'.format(_point_number))
 
 
             if self.variance is not None:
@@ -1378,6 +1489,7 @@ class PointCloudVisualizerBase(object):
                 _sp_min, _sp_max = _sp_min - np.max(self.variance.compute()), _sp_max + np.max(self.variance.compute())
             _sp_d = _sp_max - _sp_min
             self.axes[1].set_ylim(_sp_min-0.2*_sp_d, _sp_max+0.2*_sp_d)
+
             self.sel_point.set_offsets(np.column_stack((self.px_coord[_point_number, 0],
                                                         self.px_coord[_point_number, 1])))
 
@@ -1397,6 +1509,91 @@ class PointCloudVisualizerBase(object):
 
                 self.axes[1].set_ylim(bottom=bottom, top=top)
 
+    def _update_spectrum(self):
+        _point_number = self.tree.query(np.array([self.x, self.y]))[1]
+        self.spectrum, self.variance = self.get_spectrum(_point_number)
+        if self.ri_ap == 'Real and Imaginary':
+            _s = self.real_imag(self.spectrum)
+            _v = self.real_imag(self.variance)
+            self.axes[1].set_title('Point {}, real'.format(_point_number))
+            self.axes[2].set_title('Point {}, imag'.format(_point_number))
+        elif self.ri_ap == 'Amplitude and Phase':
+            _s = self.amp_ph(self.spectrum)
+            _v = self.amp_ph(self.variance)
+            self.axes[1].set_title('Point {}, amp'.format(_point_number))
+            self.axes[2].set_title('Point {}, phase'.format(_point_number))
+        else:
+            _s = self.spectrum
+            _v = self.variance
+            self.axes[1].set_title('Point {}'.format(_point_number))
+
+        self.real = self.real_imag(self.spectrum)
+        if len(self.spectrum.shape) > 1:
+            if self.ri_ap is None:
+                for i in range(len(self.spectrum)):
+                    self.spectrum_plot[i].set_data(self.energy_scale, _s.compute()[i])
+            else:
+                for i in range(len(self.spectrum)):
+                    k = i + len(self.spectrum)
+                    self.spectrum_plot[i].set_data(self.energy_scale, _s[0].compute()[i])
+                    self.spectrum_plot[k].set_data(self.energy_scale, _s[1].compute()[i])
+        else:
+            if self.ri_ap is None:
+                self.spectrum_plot[0].set_data(self.energy_scale, _s.compute())
+            else:
+                self.spectrum_plot[0].set_data(self.energy_scale, _s[0].compute())
+                self.spectrum_plot[1].set_data(self.energy_scale, _s[1].compute())
+
+        if self.variance is not None:
+            # 3d - many curves
+            if len(self.variance.shape) > 1:
+                if self.ri_ap is None:
+                    for i in range(len(self.variance)):
+                        _c = self.fill_between[i].get_facecolor()[0]
+                        self.fill_between[i].remove()
+                        self.fill_between[i] = self.axes[1].fill_between(self.energy_scale,
+                                                                         _s[i] - _v[i],
+                                                                         _s[i] + _v[i],
+                                                                         color=_c)
+                else:
+                    for i in range(len(self.variance)):
+                        k = i + len(self.variance)
+                        _c = self.fill_between[i].get_facecolor()[0]
+                        self.fill_between[i].remove()
+                        self.fill_between[k].remove()
+                        self.fill_between[i] = self.axes[1].fill_between(self.energy_scale,
+                                                                         _s[0].compute()[i] - _v[0].compute()[i],
+                                                                         _s[0].compute()[i] + _v[0].compute()[i],
+                                                                         color=_c)
+                        self.fill_between[k] = self.axes[2].fill_between(self.energy_scale,
+                                                                         _s[1].compute()[i] - _v[1].compute()[i],
+                                                                         _s[1].compute()[i] + _v[1].compute()[i],
+                                                                         color=_c)
+            else:
+                if self.ri_ap is None:
+                    _c = self.fill_between[0].get_facecolor()[0]
+                    self.fill_between[0].remove()
+                    self.fill_between[0] = self.axes[1].fill_between(self.energy_scale,
+                                                                     _s - _v,
+                                                                     _s + _v,
+                                                                     color=_c)
+                else:
+                    for i in range(len(self.fill_between)):
+                        _c = self.fill_between[i].get_facecolor()[0]
+                        self.fill_between[i].remove()
+                        self.fill_between[i] = self.axes[i + 1].fill_between(self.energy_scale,
+                                                                             _s[i] - _v[i],
+                                                                             _s[i] + _v[i],
+                                                                             color=_c)
+
+    @staticmethod
+    def real_imag(array):
+        return [array.real, array.imag]
+
+    @staticmethod
+    def amp_ph(array):
+        return [da.abs(array), da.angle(array)]
+
     def _scale_bar(self):
         from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
         self.axes[0].axis('off')
@@ -1414,25 +1611,38 @@ class PointCloudVisualizerBase(object):
                 _units = self.dset.point_cloud['spacial_units']
         else:
             _units = ''
-        size_of_bar_real = (extent[1] - extent[0]) / 5
-        if size_of_bar_real < 1:
-            size_of_bar_real = round(size_of_bar_real, 1)
+
+        size_of_bar = (extent[1] - extent[0]) / 7
+        if _units != '':
+            scale_bar_label, units = convert_length(size_of_bar, _units)
+            power = size_of_bar / scale_bar_label
+            scale_bar_label = max(2, round(scale_bar_label))
         else:
-            size_of_bar_real = int(round(size_of_bar_real))
+            units = _units
+            scale_bar_label = round(size_of_bar,2)
+            power = size_of_bar / scale_bar_label
+
         px_size = self.axes[0].get_xlim()
-        size_of_bar = int((px_size[1] - px_size[0]) * (size_of_bar_real / (extent[1] - extent[0])))
+        size_of_bar = int((px_size[1] - px_size[0]) * (scale_bar_label * power / (extent[1] - extent[0])))
 
-
-        if size_of_bar < 1:
-            size_of_bar = 1
         scalebar = AnchoredSizeBar(self.axes[0].transData,
-                                   size_of_bar, '{} {}'.format(size_of_bar_real,
-                                                               _units),
+                                   size_of_bar, '{} {}'.format(scale_bar_label, units),
                                    'lower left',
                                    pad=1,
                                    color='white',
                                    frameon=False,
-                                   size_vertical=size_of_bar / 7)
+                                   size_vertical=(px_size[1] - px_size[0]) / 50)
+
+        # if size_of_bar < 1:
+        #     size_of_bar = 1
+        # scalebar = AnchoredSizeBar(self.axes[0].transData,
+        #                            size_of_bar, '{} {}'.format(size_of_bar_real,
+        #                                                        _units),
+        #                            'lower left',
+        #                            pad=1,
+        #                            color='white',
+        #                            frameon=False,
+        #                            size_vertical=size_of_bar / 7)
 
         self.axes[0].add_artist(scalebar)
 
@@ -1447,24 +1657,42 @@ class PointCloudVisualizer(PointCloudVisualizerBase):
         super().__init__(dset, base_image, figure, horizontal, **kwargs)
 
         scale_bar = kwargs.pop('scale_bar', False)
+        amp_phase = kwargs.pop('amp_phase', False)
+        if amp_phase:
+            amp_phase_val = 'Amplitude and Phase'
+        else:
+            amp_phase_val = 'Real and Imaginary'
+
 
         #from here
+        buttons = []
+        if self.ri_ap is not None:
+            self.button0 = ipywidgets.Dropdown(options=['Real and Imaginary', 'Amplitude and Phase'],
+                                               value=amp_phase_val,
+                                               tooltip='How to plot complex data')
+            self.button0.observe(self._ri_ap, 'value')  # real/imag or amp/phase
+            buttons.append(self.button0)
+
         if scale_bar == False:
             self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
                                 value=1,
                                 descrption='Image',
-                                tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)',
-                                layout = ipywidgets.Layout(width='30%', height='50px',))
-
+                                tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)')
             self.button.observe(self._pw_uw, 'value') #pixel or unit wise
-            self.fig.canvas.draw_idle()
+            buttons.append(self.button)
+            #self.fig.canvas.draw_idle()
 
-            widg = ipywidgets.HBox([self.button])
+        if len(buttons) > 0:
+            widg = ipywidgets.HBox(buttons)
             display(widg)
 
     def _pw_uw(self, event):
         pw_uw = event.new
         self._update_image(pw_uw)
+
+    def _ri_ap(self, event):
+        self.ri_ap = event.new
+        self._update_spectrum()
 
     def _update_image(self, event_value):
         # pixel wise or unit wise listener
@@ -1662,8 +1890,9 @@ class FourDimImageVisualizer(object):
             self.axes[2].set_xlabel(self.xlabel)  # + x_suffix)
             self.axes[2].set_ylabel(self.ylabel)
             self.axes[2].ticklabel_format(style='sci', scilimits=(-2, 3))
-            
-        self.fig.tight_layout()
+
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
         self.fig.canvas.draw_idle()
@@ -1922,7 +2151,8 @@ class ComplexSpectralImageVisualizer(object):
             self.axes[ax_ind].ticklabel_format(style='sci', scilimits=(-2, 3))
             leg = self.axes[ax_ind].legend(loc = 'best')
             leg.get_frame().set_linewidth(0.0)
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
         self.button = ipywidgets.Dropdown(options=['Real and Imaginary', 'Amplitude and Phase'],
@@ -2068,7 +2298,8 @@ class ComplexSpectralImageVisualizer(object):
             leg = self.axes[ax_ind].legend(loc = 'best')
             leg.get_frame().set_linewidth(0.0)
         self.fig.canvas.draw_idle()
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
 
     def set_legend(self, set_legend):
         self.plot_legend = set_legend
@@ -2341,7 +2572,10 @@ class ComplexSpectralImageFitVisualizer(ComplexSpectralImageVisualizer):
             leg = self.axes[ax_ind].legend(loc = 'best')
             leg.get_frame().set_linewidth(0.0)
         self.fig.canvas.draw_idle()
-        self.fig.tight_layout()
+
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
+
 
 class MultiImageStackVisualizer(object):
     """
@@ -2480,7 +2714,8 @@ class MultiImageStackVisualizer(object):
             self.axes[ax_ind].ticklabel_format(style='sci', scilimits=(-2, 3))
             leg = self.axes[ax_ind].legend(loc = 'best')
             leg.get_frame().set_linewidth(0.0)
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
         self.cid = self.axes[1].figure.canvas.mpl_connect('button_press_event', self._onclick)
 
         self.button = ipywidgets.Dropdown(options=['Real and Imaginary', 'Amplitude and Phase'],
@@ -2630,10 +2865,22 @@ class MultiImageStackVisualizer(object):
             leg = self.axes[ax_ind].legend(loc = 'best')
             leg.get_frame().set_linewidth(0.0)
         self.fig.canvas.draw_idle()
-        self.fig.tight_layout()
+        if not isinstance(self.fig, SubFigure):  # for sparse array vis #TODO
+            self.fig.tight_layout()
 
     def set_legend(self, set_legend):
         self.plot_legend = set_legend
 
     def get_xy(self):
         return [self.x, self.y]
+
+class DictionaryVisualizer(object):
+    def __init__(self, dict_dset, figure=None, horizontal=True, **kwargs):
+
+        if not isinstance(dict_dset, dict):
+            raise TypeError('dict_dset should be a dictionary of sidpy.Dataset objects')
+        if '_reference' not in dict_dset:
+            raise KeyError("The key '_reference' is missing from the dictionary.")
+        for _, value in dict_dset.items():
+            if not isinstance(value, sidpy.Dataset):
+                raise TypeError('all elements of dict_dset should be sidpy.Dataset objects')
