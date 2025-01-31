@@ -1,0 +1,37 @@
+sidpy.viz.plot\_utils.misc
+==========================
+
+.. automodule:: sidpy.viz.plot_utils.misc
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      export_fig_data
+      get_plot_grid_size
+      make_scalar_mappable
+      reset_plot_params
+      set_tick_font_size
+      use_nice_plot_params
+      use_scientific_ticks
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

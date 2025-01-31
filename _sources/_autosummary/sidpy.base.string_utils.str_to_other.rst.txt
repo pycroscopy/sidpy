@@ -1,0 +1,6 @@
+sidpy.base.string\_utils.str\_to\_other
+=======================================
+
+.. currentmodule:: sidpy.base.string_utils
+
+.. autofunction:: str_to_other

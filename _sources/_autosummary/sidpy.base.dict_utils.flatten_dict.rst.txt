@@ -1,0 +1,6 @@
+sidpy.base.dict\_utils.flatten\_dict
+====================================
+
+.. currentmodule:: sidpy.base.dict_utils
+
+.. autofunction:: flatten_dict
