@@ -818,7 +818,7 @@ class Dataset(da.Array):
             axis = self._axes[dim]
         elif isinstance(dim, Dimension):
             axis = dim
-        return get_slope(axis)
+        return get_slope(axis.values)
 
     def get_dimension_by_number(self, dims_in):
         if isinstance(dims_in, int):
