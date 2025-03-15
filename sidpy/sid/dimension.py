@@ -215,6 +215,16 @@ class Dimension(np.ndarray):
     # def values(self, value):
     #     isinstance(np.ndarray)
 
+    @property
+    def slope(self):
+        if len(self.values) < 2:
+            return 0
+        derivative = np.diff(self.values)
+        slope = np.average(derivative)
+        if derivative.std() > slope/1000:
+            warn(f'Slope of dimension {self.name} is not constant')
+        return slope
+
     def __eq__(self, other):
         if not isinstance(other, Dimension):
             return False
