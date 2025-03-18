@@ -24,6 +24,7 @@ __all__ += viz.__all__
 __all__ += ['dict_utils', 'num_utils', 'string_utils']
 __all__ += ['hdf_utils', 'reg_ref', 'dtype_utils', 'prov_utils']
 __all__ += ['interface_utils']
+__all__ += ['FileWidget', 'ChooseDataset']
 __all__ += ['comp_utils']
 __all__ += ['Dimension', 'Translator', 'Dataset', 'Reader']
 __all__ += ['plot_utils', 'jupyter_utils']
