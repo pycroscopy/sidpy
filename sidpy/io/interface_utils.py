@@ -13,6 +13,7 @@ import sys
 import warnings
 import numpy as np
 import sidpy
+import h5py
 
 import ipywidgets as widgets
 from IPython.display import display
