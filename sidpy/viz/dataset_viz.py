@@ -1610,13 +1610,10 @@ class PointCloudVisualizerBase(object):
             else:
                 _units = self.dset.point_cloud['spacial_units']
         else:
-            _units = ''
-
-        size_of_bar = (extent[1] - extent[0]) / 7
-        if _units != '':
-            scale_bar_label, units = convert_length(size_of_bar, _units)
-            power = size_of_bar / scale_bar_label
-            scale_bar_label = max(2, round(scale_bar_label))
+            _units = 'px'
+        size_of_bar_real = (extent[1] - extent[0]) / 5
+        if size_of_bar_real < 1:
+            size_of_bar_real = round(size_of_bar_real, 1)
         else:
             units = _units
             scale_bar_label = round(size_of_bar,2)

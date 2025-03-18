@@ -12,6 +12,8 @@ import os
 import sys
 import warnings
 import numpy as np
+import sidpy
+import h5py
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -39,7 +41,7 @@ def add_to_dict(file_dict, name):
                        'size': size, 'display_name': display_name}
 
 
-class open_file_dialog(object):
+class FileWidget(object):
     """Widget to select directories or widgets from a list
 
     Works in google colab.
@@ -123,7 +125,7 @@ class open_file_dialog(object):
     def set_options(self):
         self.dir_name = os.path.abspath(os.path.join(self.dir_name, self.dir_list[self.select_files.index]))
         dir_list = os.listdir(self.dir_name)
-        file_dict = update_directory_list(self.dir_name)
+        file_dict = self.update_directory_list(self.dir_name)
 
         sort = np.argsort(file_dict['directory_list'])
         self.dir_list = ['.', '..']
@@ -161,6 +163,14 @@ class open_file_dialog(object):
         elif os.path.isfile(os.path.join(self.dir_name, self.dir_list[self.select_files.index])):
             self.file_name = os.path.join(self.dir_name, self.dir_list[self.select_files.index])
 
+    def update_directory_list(self, directory_name):
+        """
+        Update the list of files in the current directory
+        Cam be overwritten in child class
+        """
+        return update_directory_list(directory_name)
+
+open_file_dialog = FileWidget
 
 def update_directory_list(directory_name):
     dir_list = os.listdir(directory_name)
@@ -182,6 +192,69 @@ def update_directory_list(directory_name):
             file_dict['directory_list'].append(name)
     return file_dict
 
+
+class ChooseDataset(object):
+    """Widget to select dataset object """
+
+    def __init__(self, input_object, data_type=None, show_dialog=True):
+        self.datasets = None
+        if isinstance(input_object, sidpy.Dataset):
+            if isinstance(input_object.h5_dataset, h5py.Dataset):
+                self.current_channel = input_object.h5_dataset.parent
+        elif isinstance(input_object, dict):
+            self.datasets = input_object
+        else:
+            raise ValueError('Need dictionary of sidpy.Datasets to determine data choices')
+        self.dataset_names = []
+        self.dataset_list = []
+        self.dataset_type = data_type
+        self.dataset = None
+        
+        self.get_dataset_list()
+        if len(self.dataset_list) < 1:
+            self.dataset_list = ['None']
+        self.select_dataset = widgets.Dropdown(options=self.dataset_list,
+                                             value=self.dataset_list[0],
+                                             description='select dataset:',
+                                             disabled=False,
+                                             button_style='')
+        if show_dialog:
+            display(self.select_dataset)
+
+        self.select_dataset.observe(self.set_dataset, names='value')
+        self.set_dataset(0)
+        self.select_dataset.index = (len(self.dataset_names) - 1)
+
+    def get_dataset_list(self):
+        """ Get by Log number sorted list of datasets"""
+        dataset_list = []
+        if not isinstance(self.datasets, dict):
+            dataset_list = self.reader.read()
+            self.datasets = {}
+            for dataset in dataset_list:
+                self.datasets[dataset.title] = dataset
+        order = []
+        keys = []
+        for title, dset in self.datasets.items():
+            if isinstance(dset, sidpy.Dataset):
+                if self.dataset_type is None or dset.data_type == self.data_type:
+                    if 'Log' in title:
+                        order.append(2)
+                    else:
+                        order.append(0)
+                    keys.append(title)
+        for index in np.argsort(order):
+            self.dataset_names.append(keys[index])
+            self.dataset_list.append(keys[index] + ': ' + self.datasets[keys[index]].title)
+
+    def set_dataset(self, b):
+        index = self.select_dataset.index
+        if index < len(self.dataset_names):
+            self.key = self.dataset_names[index]
+            self.dataset = self.datasets[self.key]
+            self.dataset.title = self.dataset.title.split('/')[-1]
+            self.dataset.title = self.dataset.title.split('/')[-1]
+    
 
 def check_ssh():
     """
