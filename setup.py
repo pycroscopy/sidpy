@@ -19,6 +19,7 @@ requirements = ['numpy>=1.10',
                 'matplotlib>=2.0.0',
                 'distributed>=2.0.0',
                 'psutil',
+                'six',
                 'joblib>=0.11.0',
                 'ipywidgets',
                 'ipykernel',
@@ -45,10 +46,10 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Cython',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Scientific/Engineering :: Information Analysis'],
     keywords=['imaging', 'spectra', 'multidimensional', 'scientific',
@@ -69,8 +70,7 @@ setup(
     include_package_data=True,
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-dependencies
     extras_require={
-        'MPI': ["mpi4py"],
-        'File_Widgets': ['pyqt5']
+        'MPI': ["mpi4py"]
     },
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
