@@ -334,7 +334,15 @@ def clean_string_att(att_val):
             if type(att_val) in [unicode, str]:
                 return att_val
             elif np.any([type(x) in [str, unicode, bytes, np.str_] for x in att_val]):
-                return np.array(att_val, dtype='S')
+                new_atts = []
+                for x in att_val:
+                    if type(x)==str:
+                        new_str = x.encode('utf-8')
+                        new_atts.append(new_str)
+                    else:
+                        new_atts.append(x)
+
+                return np.array(new_atts, dtype='S')
             elif isinstance(att_val, (list, tuple)):
                 # Not sure how to do this elegantly,
                 for item in att_val:

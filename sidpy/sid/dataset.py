@@ -280,10 +280,26 @@ class Dataset(da.Array):
         sid_dataset.provenance = {'sidpy': {'from_array_': f"_{version}_"+str(datetime.datetime.now()).replace(' ','-')}}
 
         sid_dataset._axes = {}
+
+        if sid_dataset.data_type == DataType.POINT_CLOUD and coordinates is None:
+            raise ValueError("coordinates must be specified for a point cloud dataset")
+
         for dim in range(sid_dataset.ndim):
             # TODO: add parent to dimension to set attribute if name changes
-            sid_dataset.set_dimension(dim,
-                                      Dimension(np.arange(sid_dataset.shape[dim]), string.ascii_lowercase[dim]))
+            if datatype == "point_cloud":
+                dimension_map = {
+                    0: 'point_cloud',
+                    1: 'spectral',
+                    2: 'channel'
+                }
+                dimension_type = dimension_map.get(dim, None)
+            else:
+                dimension_type = 'unknown'
+            sid_dataset.set_dimension(dim, Dimension(np.arange(sid_dataset.shape[dim]),
+                                                     string.ascii_lowercase[dim],
+                                                     dimension_type = dimension_type))
+
+
         sid_dataset.metadata = {}
         sid_dataset.original_metadata = {}
         sid_dataset.variance = variance
