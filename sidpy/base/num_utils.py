@@ -246,3 +246,43 @@ def build_ind_val_matrices(unit_values):
         val_mat = val_mat.T
         ind_mat = ind_mat.T
         return ind_mat, val_mat
+
+def to_meters(value, unit):
+    """Convert any length unit to meters."""
+    unit_to_meters = {
+        'fm': 1e-15,
+        'pm': 1e-12,
+        'nm': 1e-9,
+        'µm': 1e-6,
+        'um': 1e-6,
+        'mm': 1e-3,
+        'cm': 1e-2,
+        'm': 1,
+    }
+    if unit not in unit_to_meters:
+        raise ValueError(f"Unknown unit: {unit}")
+    return value * unit_to_meters[unit]
+
+def from_meters(value):
+    """Convert from meters to the most appropriate unit."""
+    prefixes = [
+        (1, 'm'),  # meters
+        (1e-3, 'mm'),  # millimeters
+        (1e-6, 'um'),
+        (1e-6, 'µm'),  # micrometers
+        (1e-9, 'nm'),  # nanometers
+        (1e-12, 'pm'),  # picometers
+        (1e-15, 'fm'),  # femtometers
+    ]
+    for factor, prefix in prefixes:
+        if abs(value) >= factor:
+            converted_value = value / factor
+            return converted_value, prefix
+
+    return value, 'm'
+
+def convert_length(value, unit):
+    """Convert length from any given unit to the most appropriate unit."""
+    value_in_meters = to_meters(value, unit)
+    return from_meters(value_in_meters)
+
