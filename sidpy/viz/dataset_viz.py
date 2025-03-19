@@ -1617,8 +1617,8 @@ class PointCloudVisualizerBase(object):
             size_of_bar_real = round(size_of_bar_real, 1)
         else:
             units = _units
-            scale_bar_label = round(size_of_bar,2)
-            power = size_of_bar / scale_bar_label
+            scale_bar_label = round(size_of_bar_real,2)
+            power = size_of_bar_real / scale_bar_label
 
         px_size = self.axes[0].get_xlim()
         size_of_bar = int((px_size[1] - px_size[0]) * (scale_bar_label * power / (extent[1] - extent[0])))
