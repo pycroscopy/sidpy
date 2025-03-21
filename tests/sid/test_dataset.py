@@ -580,6 +580,12 @@ class TestSetDimension(unittest.TestCase):
         with self.assertRaises(TypeError):
             descriptor.set_dimension(2, np.arange(4))
 
+    def test_dim_obj_slope(self):
+        values = np.zeros([4, 5])
+        descriptor = Dataset.from_array(values)
+        descriptor.set_dimension(0, Dimension(np.arange(4), 'x', quantity='test', units='test'))
+        self.assertTrue(descriptor.x.slope==1)
+
     # validity of index tested in TestRenameDimension
 
 
@@ -692,6 +698,19 @@ class TestHelperFunctions(unittest.TestCase):
         values = np.ones([4, 5])
         source_dset = Dataset.from_array(values)
 
+    def test_auto_provenance(self):
+        values = np.zeros([4, 5])
+        descriptor = Dataset.from_array(values)
+        self.assertEqual(list(descriptor.provenance.keys())[0][:5] ,  'sidpy' )
+        summed_dataset = descriptor.sum(axis=0)
+        self.assertEqual(list(descriptor.provenance.keys())[0][:5] ,  'sidpy' )
+        self.assertEqual(list(summed_dataset.provenance.keys())[1][:3] ,  'sum' )
+
+    def test_add_Prevenance(self):
+        values = np.zeros([4, 5])
+        descriptor = Dataset.from_array(values)
+        descriptor.add_provenance('test', 'test_function', version=1)
+        self.assertEqual(list(descriptor.provenance.keys())[1][:4], 'test')
 
 class TestViewMetadata(unittest.TestCase):
 

@@ -452,13 +452,13 @@ class Dataset(da.Array):
             name of the function that generated the data
         linked_data: dict or str
             data that is linked to the dataset
-        version: int
+        version: any
             version of the package that generated the data
         """
-        self.provenance[package] = {package_function: f"_{version}_"+str(datetime.datetime.now()).replace(' ','-')}
-
+        key = package_function + '_' + str(datetime.datetime.now()).replace(' ','-')
+        self.provenance[key] = {'package': package, 'version': version}
         if isinstance(linked_data, (dict, str)):
-            self.provenance[package]['linked_data'] = linked_data
+            self.provenance[key]['linked_data'] = linked_data
             
     
     def copy(self):
@@ -1347,6 +1347,10 @@ class Dataset(da.Array):
             result._variance = abs(self._variance).sum(axis=axis, dtype=dtype, keepdims=keepdims,
                                                        split_every=split_every, out=out)
         # TODO imaginary
+        if result.data_type == DataType.IMAGE_STACK:
+            result.data_type = DataType.IMAGE
+        result.provenance = self.provenance.copy()
+        result.add_provenance('sidpy', 'sum', version=version)
         return result, locals().copy()
 
     @reduce_dims
@@ -1362,7 +1366,10 @@ class Dataset(da.Array):
                 sh = axis
             result._variance = self._variance.sum(axis=axis, dtype=dtype, keepdims=keepdims,
                                                   split_every=split_every, out=out)/sh**2
-
+        if result.data_type == DataType.IMAGE_STACK:
+            result.data_type = DataType.IMAGE
+        result.provenance = self.provenance
+        result.add_provenance('sidpy', 'mean', version=version)
         return result, locals().copy()
 
     @reduce_dims
@@ -1372,6 +1379,10 @@ class Dataset(da.Array):
                                             ddof=0, split_every=split_every, out=out),
                                 title_prefix='std_aggregate_', checkdims=False)
 
+        if result.data_type == DataType.IMAGE_STACK:
+            result.data_type = DataType.IMAGE
+        result.provenance = self.provenance.copy()
+        result.add_provenance('sidpy', 'std', version=version)
         return result, locals().copy()
 
     @reduce_dims
@@ -1417,7 +1428,6 @@ class Dataset(da.Array):
         return self.like_data(super().astype(dtype=dtype, **kwargs), variance=self._variance)
 
     def flatten(self):
-
         result = self.like_data(super().flatten(), title_prefix='flattened_',
                               check_dims=False)
 

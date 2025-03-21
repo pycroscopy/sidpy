@@ -101,7 +101,6 @@ class FileWidget(object):
                                             value='None',
                                             description='directory:',
                                             disabled=False,
-                                            button_style='',
                                             layout=widgets.Layout(width='90%'))
         
         self.set_options()
