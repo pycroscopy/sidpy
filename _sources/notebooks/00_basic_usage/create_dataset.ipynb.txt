@@ -1,0 +1,860 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\n",
+    "# Creating and Manipulating Datasets\n",
+    "\n",
+    "**Gerd Duscher and Suhas Somnath**\n",
+    "\n",
+    "08/25/2020\n",
+    "\n",
+    "**This document is a simple example of how to create and manipulate Dataset\n",
+    "objects**\n",
+    "\n",
+    "**UNDER CONSTRUCTION**\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "sidpy version:  0.12.3\n"
+     ]
+    }
+   ],
+   "source": [
+    "%matplotlib widget\n",
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "\n",
+    "import sys\n",
+    "sys.path.insert(0, '../../')\n",
+    "\n",
+    "import sidpy\n",
+    "print('sidpy version: ', sidpy.__version__)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Creating a ``sidpy.Dataset`` object\n",
+    "We can create a simple sidpy Dataset from any array like object\n",
+    "Here we just use a numpy array filled with zeros\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "sidpy.Dataset of type UNKNOWN with:\n",
+      " dask.array<array, shape=(4, 5, 10), dtype=float64, chunksize=(4, 5, 10), chunktype=numpy.ndarray>\n",
+      " data contains: generic (generic)\n",
+      " and Dimensions: \n",
+      "a:  generic (generic) of size (4,)\n",
+      "b:  generic (generic) of size (5,)\n",
+      "c:  generic (generic) of size (10,)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<table>\n",
+       "    <tr>\n",
+       "        <td>\n",
+       "            <table style=\"border-collapse: collapse;\">\n",
+       "                <thead>\n",
+       "                    <tr>\n",
+       "                        <td> </td>\n",
+       "                        <th> Array </th>\n",
+       "                        <th> Chunk </th>\n",
+       "                    </tr>\n",
+       "                </thead>\n",
+       "                <tbody>\n",
+       "                    \n",
+       "                    <tr>\n",
+       "                        <th> Bytes </th>\n",
+       "                        <td> 1.56 kiB </td>\n",
+       "                        <td> 1.56 kiB </td>\n",
+       "                    </tr>\n",
+       "                    \n",
+       "                    <tr>\n",
+       "                        <th> Shape </th>\n",
+       "                        <td> (4, 5, 10) </td>\n",
+       "                        <td> (4, 5, 10) </td>\n",
+       "                    </tr>\n",
+       "                    <tr>\n",
+       "                        <th> Dask graph </th>\n",
+       "                        <td colspan=\"2\"> 1 chunks in 1 graph layer </td>\n",
+       "                    </tr>\n",
+       "                    <tr>\n",
+       "                        <th> Data type </th>\n",
+       "                        <td colspan=\"2\"> float64 numpy.ndarray </td>\n",
+       "                    </tr>\n",
+       "                </tbody>\n",
+       "            </table>\n",
+       "        </td>\n",
+       "        <td>\n",
+       "        <svg width=\"208\" height=\"138\" style=\"stroke:rgb(0,0,0);stroke-width:1\" >\n",
+       "\n",
+       "  <!-- Horizontal lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"38\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"10\" y1=\"60\" x2=\"38\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Vertical lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"10\" y2=\"60\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"38\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Colored Rectangle -->\n",
+       "  <polygon points=\"10.0,0.0 38.23529411764706,28.235294117647058 38.23529411764706,88.23529411764706 10.0,60.0\" style=\"fill:#ECB172A0;stroke-width:0\"/>\n",
+       "\n",
+       "  <!-- Horizontal lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"130\" y2=\"0\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"158\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Vertical lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"38\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"130\" y1=\"0\" x2=\"158\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Colored Rectangle -->\n",
+       "  <polygon points=\"10.0,0.0 130.0,0.0 158.23529411764707,28.235294117647058 38.23529411764706,28.235294117647058\" style=\"fill:#ECB172A0;stroke-width:0\"/>\n",
+       "\n",
+       "  <!-- Horizontal lines -->\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"158\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"38\" y1=\"88\" x2=\"158\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Vertical lines -->\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"38\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"158\" y1=\"28\" x2=\"158\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Colored Rectangle -->\n",
+       "  <polygon points=\"38.23529411764706,28.235294117647058 158.23529411764707,28.235294117647058 158.23529411764707,88.23529411764706 38.23529411764706,88.23529411764706\" style=\"fill:#ECB172A0;stroke-width:0\"/>\n",
+       "\n",
+       "  <!-- Text -->\n",
+       "  <text x=\"98.235294\" y=\"108.235294\" font-size=\"1.0rem\" font-weight=\"100\" text-anchor=\"middle\" >10</text>\n",
+       "  <text x=\"178.235294\" y=\"58.235294\" font-size=\"1.0rem\" font-weight=\"100\" text-anchor=\"middle\" transform=\"rotate(0,178.235294,58.235294)\">5</text>\n",
+       "  <text x=\"14.117647\" y=\"94.117647\" font-size=\"1.0rem\" font-weight=\"100\" text-anchor=\"middle\" transform=\"rotate(45,14.117647,94.117647)\">4</text>\n",
+       "</svg>\n",
+       "        </td>\n",
+       "    </tr>\n",
+       "</table>"
+      ],
+      "text/plain": [
+       "sidpy.Dataset of type UNKNOWN with:\n",
+       " dask.array<array, shape=(4, 5, 10), dtype=float64, chunksize=(4, 5, 10), chunktype=numpy.ndarray>\n",
+       " data contains: generic (generic)\n",
+       " and Dimensions: \n",
+       "a:  generic (generic) of size (4,)\n",
+       "b:  generic (generic) of size (5,)\n",
+       "c:  generic (generic) of size (10,)"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset = sidpy.Dataset.from_array(np.random.random([4, 5, 10]), name='random')\n",
+    "\n",
+    "print(dataset)\n",
+    "dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'sidpy': {'from_array_': '_0.12.3_2024-07-12-16:56:52.772361'}}"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset.provenance"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "sidpy.Dataset of type UNKNOWN with:\n",
+      " dask.array<array, shape=(4, 5, 10), dtype=float64, chunksize=(4, 5, 10), chunktype=numpy.ndarray>\n",
+      " data contains: generic (generic)\n",
+      " and Dimensions: \n",
+      "a:  generic (generic) of size (4,)\n",
+      "b:  generic (generic) of size (5,)\n",
+      "c:  generic (generic) of size (10,)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "{'sidpy': {'like_data': '_0.12.3_2024-07-12-16:57:11.387639',\n",
+       "  'parent_data': {'title': 'generic',\n",
+       "   'provenance': {'sidpy': {'from_array_': '_0.12.3_2024-07-12-16:56:52.772361'}}}}}"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "new_dataset = dataset.like_data(np.random.random([4, 5, 10]), name='random2')\n",
+    "print(new_dataset)\n",
+    "new_dataset.provenance"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "sidpy.Dataset of type UNKNOWN with:\n",
+      " dask.array<array, shape=(4, 5, 10), dtype=float64, chunksize=(4, 5, 10), chunktype=numpy.ndarray>\n",
+      " data contains: generic (generic)\n",
+      " and Dimensions: \n",
+      "a:  generic (generic) of size (4,)\n",
+      "b:  generic (generic) of size (5,)\n",
+      "c:  generic (generic) of size (10,)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "{'sidpy': {'like_data': '_0.12.3_2024-07-12-16:59:30.149263',\n",
+       "  'parent_data': {'title': 'generic',\n",
+       "   'provenance': {'sidpy': {'from_array_': '_0.12.3_2024-07-12-16:56:52.772361'}}}}}"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "new_dataset2 = dataset.like_data(np.random.random([4, 5, 10]), name='random2')\n",
+    "print(new_dataset2)\n",
+    "new_dataset2.provenance"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'sidpy': {'like_data': '_0.12.3_2024-07-12-16:57:11.387639',\n",
+       "  'parent_data': {'title': 'generic',\n",
+       "   'provenance': {'sidpy': {'from_array_': '_0.12.3_2024-07-12-16:56:52.772361'}}}},\n",
+       " 'Nothin': {'done': '_0.0_2024-07-12-16:57:33.804301'}}"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "new_dataset.add_provenance('Nothin', 'done', 0.0)\n",
+    "new_dataset.provenance"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Note that ``data_set`` is a dask array....\n",
+    "We will be improving upon the information that will be displayed when printing ``sidpy.Dataset`` objects\n",
+    "\n",
+    "Accessing data within a ``Dataset``:\n",
+    "Indexing of the dataset works like in numpy\n",
+    "Note, that we first index and then we make a numpy array for printing reasons\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[0.41955319 0.59615527 0.8109613  0.34605858]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(np.array(data_set[:,0,2]))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Slicing and dicing:\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "data_dictionary = {\"main_dataset\": data_set, \n",
+    "                   'new_dataset': data_set, \n",
+    "                   'metadata': {'atoms': blobs}, \n",
+    "                   'structure': {'SrTiO3': ase.build.SrTiO3()}}\n",
+    "\n",
+    "data_dictionary['new_dataset'].metadata = {\"origin_dataset\": 'main_dataset'}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Metadata\n",
+    "``sidpy`` automatically assigns generic top-level metadata regarding the\n",
+    "``Dataset``. Users are encouraged to capture the context regarding the dataset.\n",
+    "The attributes included in the sidpy dataset are \n",
+    "Required Attributes:\n",
+    "\n",
+    "- ``quantity``: string: Physical quantity that is contained in this dataset\n",
+    "\n",
+    "- ``units``: string: Units for this physical quantity\n",
+    "\n",
+    "- ``data_type``: string : What kind of data this is. Example - image, image stack, video, hyperspectral image, etc.\n",
+    "\n",
+    "- ``modality``: string : Experimental / simulation modality - scientific meaning of data. Example - photograph, TEM micrograph, SPM Force-Distance spectroscopy.\n",
+    "\n",
+    "- ``source``: string : Source for dataset like the kind of instrument. One could go very deep here into either the algorithmic details if this is a result from analysis or the exact configurations for the instrument that generated this dataset.\n",
+    "\n",
+    "Those attributes are set to ``generic`` originally but one would want to set them\n",
+    "for the specific dataset. The attributes ``data_type``, ``quantity`` and ``units``  will be important for plotting the data.\n",
+    "\n",
+    "Here's how one could do that, but with the wrong key word:\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [
+    {
+     "ename": "Warning",
+     "evalue": "('Supported data_types for plotting are only: ', ['UNKNOWN', 'SPECTRUM', 'LINE_PLOT', 'LINE_PLOT_FAMILY', 'IMAGE', 'IMAGE_MAP', 'IMAGE_STACK', 'SPECTRAL_IMAGE', 'IMAGE_4D'])",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mWarning\u001b[0m                                   Traceback (most recent call last)",
+      "\u001b[0;32m<ipython-input-4-6099823a7a09>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mdata_set\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdata_type\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0;34m'spectrum_image'\u001b[0m  \u001b[0;31m# not supported\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[0;32m~/Dropbox (ORNL)/Python_scripts/sidpy/sidpy/sid/dataset.py\u001b[0m in \u001b[0;36mdata_type\u001b[0;34m(self, value)\u001b[0m\n\u001b[1;32m    598\u001b[0m             \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    599\u001b[0m                 \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_data_type\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mDataType\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mUNKNOWN\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 600\u001b[0;31m                 \u001b[0;32mraise\u001b[0m \u001b[0mWarning\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'Supported data_types for plotting are only: '\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mDataType\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_member_names_\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    601\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    602\u001b[0m         \u001b[0;32melif\u001b[0m \u001b[0misinstance\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mvalue\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mDataType\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+      "\u001b[0;31mWarning\u001b[0m: ('Supported data_types for plotting are only: ', ['UNKNOWN', 'SPECTRUM', 'LINE_PLOT', 'LINE_PLOT_FAMILY', 'IMAGE', 'IMAGE_MAP', 'IMAGE_STACK', 'SPECTRAL_IMAGE', 'IMAGE_4D'])"
+     ]
+    }
+   ],
+   "source": [
+    "data_set.data_type = 'spectrum_image'  # not supported"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Here's how one could do that sucessfully:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "data_set.data_type = 'spectral_image'  # supported\n",
+    "\n",
+    "data_set.units = 'nA'\n",
+    "data_set.quantity = 'Current'"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Scientific metadata\n",
+    "These ``Dataset`` objects can also capture rich scientific metadata such as\n",
+    "acquisition parameters, etc. as well:\n",
+    "We would want to add those parameters as attributes.\n",
+    "These attributes could be lists, numpy arrays or simple dictionaries.\n",
+    "It is encouraged to add any parameters of data analysis to the datasets,\n",
+    "to keep track of input parameters. Here I made some up as an illustration:\n",
+    "\n",
+    " These ``Dataset`` objects can also capture rich scientific metadata such as acquisition parameters, etc. as well:\n",
+    "\n",
+    "We would want to add those parameters as attributes. These attributes could be lists, numpy arrays or simple dictionaries. It is encouraged to add any parameters of data analysis to the datasets, to keep track of input parameters.\n",
+    "\n",
+    "It is recommended to add any parameters to the (nested) metadata dictionary.\n",
+    "These metadata can then be viewed in dataset.view_metadata and dataset.view_original_metadata. It is encouraged to add any parameters of data analysis to the datasets, to keep track of input parameters.\n",
+    "\n",
+    "There is a size limit of 64kB for the storage of dictionaries in h5py. Therefore, large data such as reference data should be added directly as attributes. All attributes that you add to a dataset will be stored within the pyNSID file. \n",
+    " \n",
+    "Please note, that the dictionary ``original_metadata`` should not be changed so that information provided by the acquisition device stays pristine, but relevant inforamtion should be copied over to the ``metadata`` attribute/dictionary.\n",
+    "\n",
+    "Here I made up some metadata as an illustration:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[0 1 2 3 4]\n",
+      "nothing :  \n",
+      "value : 6.8\n",
+      "instrument :\n",
+      "\tmicroscope : Nion\n",
+      "\tacceleration_voltage : 60000\n",
+      "acquired : nowhere\n"
+     ]
+    }
+   ],
+   "source": [
+    "data_set.calibration = np.arange(5)\n",
+    "data_set.metadata = {'nothing': ' ', 'value': 6.8, 'instrument': {'microscope': 'Nion', 'acceleration_voltage':60000}}\n",
+    "data_set.metadata['acquired'] = 'nowhere'\n",
+    "\n",
+    "print(data_set.calibration)\n",
+    "sidpy.dict_utils.print_nested_dict(data_set.metadata)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Another set of metadata in these Datasets is the Dimension ones:\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Dimensions\n",
+    "The ``Dataset`` is automatically populated with generic information about\n",
+    "each dimension of the ``Dataset``. It is a good idea to capture context\n",
+    "regarding each of these dimensions using ``sidpy.Dimension``.\n",
+    "As a minimum we need a name and values (of the same length as the dimensions of the data).\n",
+    "One can provide as much or as little information about each dimension.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [],
+   "source": [
+    "data_set.set_dimension(0, sidpy.Dimension(np.arange(data_set.shape[0]), \n",
+    "                                          name='x', units='um', quantity='Length',\n",
+    "                                          dimension_type='spatial'))\n",
+    "data_set.set_dimension(1, sidpy.Dimension(np.linspace(-2, 2, num=data_set.shape[1], endpoint=True),\n",
+    "                                          'y', units='um', quantity='Length',\n",
+    "                                          dimension_type='spatial'))\n",
+    "data_set.set_dimension(2, sidpy.Dimension(np.sin(np.linspace(0, 2 * np.pi, num=data_set.shape[2])),\n",
+    "                                          'bias' ))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "One could also manually add information regarding specific components of\n",
+    "dimensions associated with Datasets via:\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [],
+   "source": [
+    "data_set.bias.dimension_type = 'spectral'\n",
+    "data_set.bias.units = 'V'\n",
+    "data_set.bias.quantity = 'Bias'"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let's take a look at what the dataset looks like with the additional information\n",
+    "regarding the dimensions. \n",
+    "\n",
+    "We can access a dimension by its name or by the dimension number.\n",
+    "\n",
+    "Also the print function now provides a little more information about our dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "bias:  Bias (V) of size (10,)\n",
+      "y:  Length (um) of size (5,)\n",
+      "sidpy.Dataset of type SPECTRAL_IMAGE with:\n",
+      " dask.array<random, shape=(4, 5, 10), dtype=float64, chunksize=(4, 5, 10), chunktype=numpy.ndarray>\n",
+      " data contains: Current (nA)\n",
+      " and Dimensions: \n",
+      "x:  Length (um) of size (4,)\n",
+      "y:  Length (um) of size (5,)\n",
+      "bias:  Bias (V) of size (10,)\n",
+      " with metadata: ['nothing', 'value', 'instrument', 'acquired']\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<table>\n",
+       "<tr>\n",
+       "<td>\n",
+       "<table>\n",
+       "  <thead>\n",
+       "    <tr><td> </td><th> Array </th><th> Chunk </th></tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr><th> Bytes </th><td> 1.60 kB </td> <td> 1.60 kB </td></tr>\n",
+       "    <tr><th> Shape </th><td> (4, 5, 10) </td> <td> (4, 5, 10) </td></tr>\n",
+       "    <tr><th> Count </th><td> 1 Tasks </td><td> 1 Chunks </td></tr>\n",
+       "    <tr><th> Type </th><td> float64 </td><td> numpy.ndarray </td></tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</td>\n",
+       "<td>\n",
+       "<svg width=\"208\" height=\"138\" style=\"stroke:rgb(0,0,0);stroke-width:1\" >\n",
+       "\n",
+       "  <!-- Horizontal lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"38\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"10\" y1=\"60\" x2=\"38\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Vertical lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"10\" y2=\"60\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"38\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Colored Rectangle -->\n",
+       "  <polygon points=\"10.0,0.0 38.23529411764706,28.235294117647058 38.23529411764706,88.23529411764706 10.0,60.0\" style=\"fill:#ECB172A0;stroke-width:0\"/>\n",
+       "\n",
+       "  <!-- Horizontal lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"130\" y2=\"0\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"158\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Vertical lines -->\n",
+       "  <line x1=\"10\" y1=\"0\" x2=\"38\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"130\" y1=\"0\" x2=\"158\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Colored Rectangle -->\n",
+       "  <polygon points=\"10.0,0.0 130.0,0.0 158.23529411764707,28.235294117647058 38.23529411764706,28.235294117647058\" style=\"fill:#ECB172A0;stroke-width:0\"/>\n",
+       "\n",
+       "  <!-- Horizontal lines -->\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"158\" y2=\"28\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"38\" y1=\"88\" x2=\"158\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Vertical lines -->\n",
+       "  <line x1=\"38\" y1=\"28\" x2=\"38\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "  <line x1=\"158\" y1=\"28\" x2=\"158\" y2=\"88\" style=\"stroke-width:2\" />\n",
+       "\n",
+       "  <!-- Colored Rectangle -->\n",
+       "  <polygon points=\"38.23529411764706,28.235294117647058 158.23529411764707,28.235294117647058 158.23529411764707,88.23529411764706 38.23529411764706,88.23529411764706\" style=\"fill:#ECB172A0;stroke-width:0\"/>\n",
+       "\n",
+       "  <!-- Text -->\n",
+       "  <text x=\"98.235294\" y=\"108.235294\" font-size=\"1.0rem\" font-weight=\"100\" text-anchor=\"middle\" >10</text>\n",
+       "  <text x=\"178.235294\" y=\"58.235294\" font-size=\"1.0rem\" font-weight=\"100\" text-anchor=\"middle\" transform=\"rotate(0,178.235294,58.235294)\">5</text>\n",
+       "  <text x=\"14.117647\" y=\"94.117647\" font-size=\"1.0rem\" font-weight=\"100\" text-anchor=\"middle\" transform=\"rotate(45,14.117647,94.117647)\">4</text>\n",
+       "</svg>\n",
+       "</td>\n",
+       "</tr>\n",
+       "</table>"
+      ],
+      "text/plain": [
+       "sidpy.Dataset of type SPECTRAL_IMAGE with:\n",
+       " dask.array<random, shape=(4, 5, 10), dtype=float64, chunksize=(4, 5, 10), chunktype=numpy.ndarray>\n",
+       " data contains: Current (nA)\n",
+       " and Dimensions: \n",
+       "x:  Length (um) of size (4,)\n",
+       "y:  Length (um) of size (5,)\n",
+       "bias:  Bias (V) of size (10,)\n",
+       " with metadata: ['nothing', 'value', 'instrument', 'acquired']"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "print(data_set.bias)\n",
+    "print(data_set.dim_1)\n",
+    "print(data_set)\n",
+    "data_set"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Plotting\n",
+    "The ``Dataset`` object also comes with the ability to visualize its contents\n",
+    "using the ``plot()`` function. Here we only show a simple application, but a more\n",
+    "detailed description can be found in the plotting section.\n",
+    "Here we plot a spectral image you can click in the image part of the plot on the\n",
+    "left and the spectrum on the right will update.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    },
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": "/* Put everything inside the global mpl namespace */\n/* global mpl */\nwindow.mpl = {};\n\nmpl.get_websocket_type = function () {\n    if (typeof WebSocket !== 'undefined') {\n        return WebSocket;\n    } else if (typeof MozWebSocket !== 'undefined') {\n        return MozWebSocket;\n    } else {\n        alert(\n            'Your browser does not have WebSocket support. ' +\n                'Please try Chrome, Safari or Firefox ≥ 6. ' +\n                'Firefox 4 and 5 are also supported but you ' +\n                'have to enable WebSockets in about:config.'\n        );\n    }\n};\n\nmpl.figure = function (figure_id, websocket, ondownload, parent_element) {\n    this.id = figure_id;\n\n    this.ws = websocket;\n\n    this.supports_binary = this.ws.binaryType !== undefined;\n\n    if (!this.supports_binary) {\n        var warnings = document.getElementById('mpl-warnings');\n        if (warnings) {\n            warnings.style.display = 'block';\n            warnings.textContent =\n                'This browser does not support binary websocket messages. ' +\n                'Performance may be slow.';\n        }\n    }\n\n    this.imageObj = new Image();\n\n    this.context = undefined;\n    this.message = undefined;\n    this.canvas = undefined;\n    this.rubberband_canvas = undefined;\n    this.rubberband_context = undefined;\n    this.format_dropdown = undefined;\n\n    this.image_mode = 'full';\n\n    this.root = document.createElement('div');\n    this.root.setAttribute('style', 'display: inline-block');\n    this._root_extra_style(this.root);\n\n    parent_element.appendChild(this.root);\n\n    this._init_header(this);\n    this._init_canvas(this);\n    this._init_toolbar(this);\n\n    var fig = this;\n\n    this.waiting = false;\n\n    this.ws.onopen = function () {\n        fig.send_message('supports_binary', { value: fig.supports_binary });\n        fig.send_message('send_image_mode', {});\n        if (fig.ratio !== 1) {\n            fig.send_message('set_dpi_ratio', { dpi_ratio: fig.ratio });\n        }\n        fig.send_message('refresh', {});\n    };\n\n    this.imageObj.onload = function () {\n        if (fig.image_mode === 'full') {\n            // Full images could contain transparency (where diff images\n            // almost always do), so we need to clear the canvas so that\n            // there is no ghosting.\n            fig.context.clearRect(0, 0, fig.canvas.width, fig.canvas.height);\n        }\n        fig.context.drawImage(fig.imageObj, 0, 0);\n    };\n\n    this.imageObj.onunload = function () {\n        fig.ws.close();\n    };\n\n    this.ws.onmessage = this._make_on_message_function(this);\n\n    this.ondownload = ondownload;\n};\n\nmpl.figure.prototype._init_header = function () {\n    var titlebar = document.createElement('div');\n    titlebar.classList =\n        'ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix';\n    var titletext = document.createElement('div');\n    titletext.classList = 'ui-dialog-title';\n    titletext.setAttribute(\n        'style',\n        'width: 100%; text-align: center; padding: 3px;'\n    );\n    titlebar.appendChild(titletext);\n    this.root.appendChild(titlebar);\n    this.header = titletext;\n};\n\nmpl.figure.prototype._canvas_extra_style = function (_canvas_div) {};\n\nmpl.figure.prototype._root_extra_style = function (_canvas_div) {};\n\nmpl.figure.prototype._init_canvas = function () {\n    var fig = this;\n\n    var canvas_div = (this.canvas_div = document.createElement('div'));\n    canvas_div.setAttribute(\n        'style',\n        'border: 1px solid #ddd;' +\n            'box-sizing: content-box;' +\n            'clear: both;' +\n            'min-height: 1px;' +\n            'min-width: 1px;' +\n            'outline: 0;' +\n            'overflow: hidden;' +\n            'position: relative;' +\n            'resize: both;'\n    );\n\n    function on_keyboard_event_closure(name) {\n        return function (event) {\n            return fig.key_event(event, name);\n        };\n    }\n\n    canvas_div.addEventListener(\n        'keydown',\n        on_keyboard_event_closure('key_press')\n    );\n    canvas_div.addEventListener(\n        'keyup',\n        on_keyboard_event_closure('key_release')\n    );\n\n    this._canvas_extra_style(canvas_div);\n    this.root.appendChild(canvas_div);\n\n    var canvas = (this.canvas = document.createElement('canvas'));\n    canvas.classList.add('mpl-canvas');\n    canvas.setAttribute('style', 'box-sizing: content-box;');\n\n    this.context = canvas.getContext('2d');\n\n    var backingStore =\n        this.context.backingStorePixelRatio ||\n        this.context.webkitBackingStorePixelRatio ||\n        this.context.mozBackingStorePixelRatio ||\n        this.context.msBackingStorePixelRatio ||\n        this.context.oBackingStorePixelRatio ||\n        this.context.backingStorePixelRatio ||\n        1;\n\n    this.ratio = (window.devicePixelRatio || 1) / backingStore;\n\n    var rubberband_canvas = (this.rubberband_canvas = document.createElement(\n        'canvas'\n    ));\n    rubberband_canvas.setAttribute(\n        'style',\n        'box-sizing: content-box; position: absolute; left: 0; top: 0; z-index: 1;'\n    );\n\n    // Apply a ponyfill if ResizeObserver is not implemented by browser.\n    if (this.ResizeObserver === undefined) {\n        if (window.ResizeObserver !== undefined) {\n            this.ResizeObserver = window.ResizeObserver;\n        } else {\n            var obs = _JSXTOOLS_RESIZE_OBSERVER({});\n            this.ResizeObserver = obs.ResizeObserver;\n        }\n    }\n\n    this.resizeObserverInstance = new this.ResizeObserver(function (entries) {\n        var nentries = entries.length;\n        for (var i = 0; i < nentries; i++) {\n            var entry = entries[i];\n            var width, height;\n            if (entry.contentBoxSize) {\n                if (entry.contentBoxSize instanceof Array) {\n                    // Chrome 84 implements new version of spec.\n                    width = entry.contentBoxSize[0].inlineSize;\n                    height = entry.contentBoxSize[0].blockSize;\n                } else {\n                    // Firefox implements old version of spec.\n                    width = entry.contentBoxSize.inlineSize;\n                    height = entry.contentBoxSize.blockSize;\n                }\n            } else {\n                // Chrome <84 implements even older version of spec.\n                width = entry.contentRect.width;\n                height = entry.contentRect.height;\n            }\n\n            // Keep the size of the canvas and rubber band canvas in sync with\n            // the canvas container.\n            if (entry.devicePixelContentBoxSize) {\n                // Chrome 84 implements new version of spec.\n                canvas.setAttribute(\n                    'width',\n                    entry.devicePixelContentBoxSize[0].inlineSize\n                );\n                canvas.setAttribute(\n                    'height',\n                    entry.devicePixelContentBoxSize[0].blockSize\n                );\n            } else {\n                canvas.setAttribute('width', width * fig.ratio);\n                canvas.setAttribute('height', height * fig.ratio);\n            }\n            canvas.setAttribute(\n                'style',\n                'width: ' + width + 'px; height: ' + height + 'px;'\n            );\n\n            rubberband_canvas.setAttribute('width', width);\n            rubberband_canvas.setAttribute('height', height);\n\n            // And update the size in Python. We ignore the initial 0/0 size\n            // that occurs as the element is placed into the DOM, which should\n            // otherwise not happen due to the minimum size styling.\n            if (fig.ws.readyState == 1 && width != 0 && height != 0) {\n                fig.request_resize(width, height);\n            }\n        }\n    });\n    this.resizeObserverInstance.observe(canvas_div);\n\n    function on_mouse_event_closure(name) {\n        return function (event) {\n            return fig.mouse_event(event, name);\n        };\n    }\n\n    rubberband_canvas.addEventListener(\n        'mousedown',\n        on_mouse_event_closure('button_press')\n    );\n    rubberband_canvas.addEventListener(\n        'mouseup',\n        on_mouse_event_closure('button_release')\n    );\n    // Throttle sequential mouse events to 1 every 20ms.\n    rubberband_canvas.addEventListener(\n        'mousemove',\n        on_mouse_event_closure('motion_notify')\n    );\n\n    rubberband_canvas.addEventListener(\n        'mouseenter',\n        on_mouse_event_closure('figure_enter')\n    );\n    rubberband_canvas.addEventListener(\n        'mouseleave',\n        on_mouse_event_closure('figure_leave')\n    );\n\n    canvas_div.addEventListener('wheel', function (event) {\n        if (event.deltaY < 0) {\n            event.step = 1;\n        } else {\n            event.step = -1;\n        }\n        on_mouse_event_closure('scroll')(event);\n    });\n\n    canvas_div.appendChild(canvas);\n    canvas_div.appendChild(rubberband_canvas);\n\n    this.rubberband_context = rubberband_canvas.getContext('2d');\n    this.rubberband_context.strokeStyle = '#000000';\n\n    this._resize_canvas = function (width, height, forward) {\n        if (forward) {\n            canvas_div.style.width = width + 'px';\n            canvas_div.style.height = height + 'px';\n        }\n    };\n\n    // Disable right mouse context menu.\n    this.rubberband_canvas.addEventListener('contextmenu', function (_e) {\n        event.preventDefault();\n        return false;\n    });\n\n    function set_focus() {\n        canvas.focus();\n        canvas_div.focus();\n    }\n\n    window.setTimeout(set_focus, 100);\n};\n\nmpl.figure.prototype._init_toolbar = function () {\n    var fig = this;\n\n    var toolbar = document.createElement('div');\n    toolbar.classList = 'mpl-toolbar';\n    this.root.appendChild(toolbar);\n\n    function on_click_closure(name) {\n        return function (_event) {\n            return fig.toolbar_button_onclick(name);\n        };\n    }\n\n    function on_mouseover_closure(tooltip) {\n        return function (event) {\n            if (!event.currentTarget.disabled) {\n                return fig.toolbar_button_onmouseover(tooltip);\n            }\n        };\n    }\n\n    fig.buttons = {};\n    var buttonGroup = document.createElement('div');\n    buttonGroup.classList = 'mpl-button-group';\n    for (var toolbar_ind in mpl.toolbar_items) {\n        var name = mpl.toolbar_items[toolbar_ind][0];\n        var tooltip = mpl.toolbar_items[toolbar_ind][1];\n        var image = mpl.toolbar_items[toolbar_ind][2];\n        var method_name = mpl.toolbar_items[toolbar_ind][3];\n\n        if (!name) {\n            /* Instead of a spacer, we start a new button group. */\n            if (buttonGroup.hasChildNodes()) {\n                toolbar.appendChild(buttonGroup);\n            }\n            buttonGroup = document.createElement('div');\n            buttonGroup.classList = 'mpl-button-group';\n            continue;\n        }\n\n        var button = (fig.buttons[name] = document.createElement('button'));\n        button.classList = 'mpl-widget';\n        button.setAttribute('role', 'button');\n        button.setAttribute('aria-disabled', 'false');\n        button.addEventListener('click', on_click_closure(method_name));\n        button.addEventListener('mouseover', on_mouseover_closure(tooltip));\n\n        var icon_img = document.createElement('img');\n        icon_img.src = '_images/' + image + '.png';\n        icon_img.srcset = '_images/' + image + '_large.png 2x';\n        icon_img.alt = tooltip;\n        button.appendChild(icon_img);\n\n        buttonGroup.appendChild(button);\n    }\n\n    if (buttonGroup.hasChildNodes()) {\n        toolbar.appendChild(buttonGroup);\n    }\n\n    var fmt_picker = document.createElement('select');\n    fmt_picker.classList = 'mpl-widget';\n    toolbar.appendChild(fmt_picker);\n    this.format_dropdown = fmt_picker;\n\n    for (var ind in mpl.extensions) {\n        var fmt = mpl.extensions[ind];\n        var option = document.createElement('option');\n        option.selected = fmt === mpl.default_extension;\n        option.innerHTML = fmt;\n        fmt_picker.appendChild(option);\n    }\n\n    var status_bar = document.createElement('span');\n    status_bar.classList = 'mpl-message';\n    toolbar.appendChild(status_bar);\n    this.message = status_bar;\n};\n\nmpl.figure.prototype.request_resize = function (x_pixels, y_pixels) {\n    // Request matplotlib to resize the figure. Matplotlib will then trigger a resize in the client,\n    // which will in turn request a refresh of the image.\n    this.send_message('resize', { width: x_pixels, height: y_pixels });\n};\n\nmpl.figure.prototype.send_message = function (type, properties) {\n    properties['type'] = type;\n    properties['figure_id'] = this.id;\n    this.ws.send(JSON.stringify(properties));\n};\n\nmpl.figure.prototype.send_draw_message = function () {\n    if (!this.waiting) {\n        this.waiting = true;\n        this.ws.send(JSON.stringify({ type: 'draw', figure_id: this.id }));\n    }\n};\n\nmpl.figure.prototype.handle_save = function (fig, _msg) {\n    var format_dropdown = fig.format_dropdown;\n    var format = format_dropdown.options[format_dropdown.selectedIndex].value;\n    fig.ondownload(fig, format);\n};\n\nmpl.figure.prototype.handle_resize = function (fig, msg) {\n    var size = msg['size'];\n    if (size[0] !== fig.canvas.width || size[1] !== fig.canvas.height) {\n        fig._resize_canvas(size[0], size[1], msg['forward']);\n        fig.send_message('refresh', {});\n    }\n};\n\nmpl.figure.prototype.handle_rubberband = function (fig, msg) {\n    var x0 = msg['x0'] / fig.ratio;\n    var y0 = (fig.canvas.height - msg['y0']) / fig.ratio;\n    var x1 = msg['x1'] / fig.ratio;\n    var y1 = (fig.canvas.height - msg['y1']) / fig.ratio;\n    x0 = Math.floor(x0) + 0.5;\n    y0 = Math.floor(y0) + 0.5;\n    x1 = Math.floor(x1) + 0.5;\n    y1 = Math.floor(y1) + 0.5;\n    var min_x = Math.min(x0, x1);\n    var min_y = Math.min(y0, y1);\n    var width = Math.abs(x1 - x0);\n    var height = Math.abs(y1 - y0);\n\n    fig.rubberband_context.clearRect(\n        0,\n        0,\n        fig.canvas.width / fig.ratio,\n        fig.canvas.height / fig.ratio\n    );\n\n    fig.rubberband_context.strokeRect(min_x, min_y, width, height);\n};\n\nmpl.figure.prototype.handle_figure_label = function (fig, msg) {\n    // Updates the figure title.\n    fig.header.textContent = msg['label'];\n};\n\nmpl.figure.prototype.handle_cursor = function (fig, msg) {\n    var cursor = msg['cursor'];\n    switch (cursor) {\n        case 0:\n            cursor = 'pointer';\n            break;\n        case 1:\n            cursor = 'default';\n            break;\n        case 2:\n            cursor = 'crosshair';\n            break;\n        case 3:\n            cursor = 'move';\n            break;\n    }\n    fig.rubberband_canvas.style.cursor = cursor;\n};\n\nmpl.figure.prototype.handle_message = function (fig, msg) {\n    fig.message.textContent = msg['message'];\n};\n\nmpl.figure.prototype.handle_draw = function (fig, _msg) {\n    // Request the server to send over a new figure.\n    fig.send_draw_message();\n};\n\nmpl.figure.prototype.handle_image_mode = function (fig, msg) {\n    fig.image_mode = msg['mode'];\n};\n\nmpl.figure.prototype.handle_history_buttons = function (fig, msg) {\n    for (var key in msg) {\n        if (!(key in fig.buttons)) {\n            continue;\n        }\n        fig.buttons[key].disabled = !msg[key];\n        fig.buttons[key].setAttribute('aria-disabled', !msg[key]);\n    }\n};\n\nmpl.figure.prototype.handle_navigate_mode = function (fig, msg) {\n    if (msg['mode'] === 'PAN') {\n        fig.buttons['Pan'].classList.add('active');\n        fig.buttons['Zoom'].classList.remove('active');\n    } else if (msg['mode'] === 'ZOOM') {\n        fig.buttons['Pan'].classList.remove('active');\n        fig.buttons['Zoom'].classList.add('active');\n    } else {\n        fig.buttons['Pan'].classList.remove('active');\n        fig.buttons['Zoom'].classList.remove('active');\n    }\n};\n\nmpl.figure.prototype.updated_canvas_event = function () {\n    // Called whenever the canvas gets updated.\n    this.send_message('ack', {});\n};\n\n// A function to construct a web socket function for onmessage handling.\n// Called in the figure constructor.\nmpl.figure.prototype._make_on_message_function = function (fig) {\n    return function socket_on_message(evt) {\n        if (evt.data instanceof Blob) {\n            /* FIXME: We get \"Resource interpreted as Image but\n             * transferred with MIME type text/plain:\" errors on\n             * Chrome.  But how to set the MIME type?  It doesn't seem\n             * to be part of the websocket stream */\n            evt.data.type = 'image/png';\n\n            /* Free the memory for the previous frames */\n            if (fig.imageObj.src) {\n                (window.URL || window.webkitURL).revokeObjectURL(\n                    fig.imageObj.src\n                );\n            }\n\n            fig.imageObj.src = (window.URL || window.webkitURL).createObjectURL(\n                evt.data\n            );\n            fig.updated_canvas_event();\n            fig.waiting = false;\n            return;\n        } else if (\n            typeof evt.data === 'string' &&\n            evt.data.slice(0, 21) === 'data:image/png;base64'\n        ) {\n            fig.imageObj.src = evt.data;\n            fig.updated_canvas_event();\n            fig.waiting = false;\n            return;\n        }\n\n        var msg = JSON.parse(evt.data);\n        var msg_type = msg['type'];\n\n        // Call the  \"handle_{type}\" callback, which takes\n        // the figure and JSON message as its only arguments.\n        try {\n            var callback = fig['handle_' + msg_type];\n        } catch (e) {\n            console.log(\n                \"No handler for the '\" + msg_type + \"' message type: \",\n                msg\n            );\n            return;\n        }\n\n        if (callback) {\n            try {\n                // console.log(\"Handling '\" + msg_type + \"' message: \", msg);\n                callback(fig, msg);\n            } catch (e) {\n                console.log(\n                    \"Exception inside the 'handler_\" + msg_type + \"' callback:\",\n                    e,\n                    e.stack,\n                    msg\n                );\n            }\n        }\n    };\n};\n\n// from http://stackoverflow.com/questions/1114465/getting-mouse-location-in-canvas\nmpl.findpos = function (e) {\n    //this section is from http://www.quirksmode.org/js/events_properties.html\n    var targ;\n    if (!e) {\n        e = window.event;\n    }\n    if (e.target) {\n        targ = e.target;\n    } else if (e.srcElement) {\n        targ = e.srcElement;\n    }\n    if (targ.nodeType === 3) {\n        // defeat Safari bug\n        targ = targ.parentNode;\n    }\n\n    // pageX,Y are the mouse positions relative to the document\n    var boundingRect = targ.getBoundingClientRect();\n    var x = e.pageX - (boundingRect.left + document.body.scrollLeft);\n    var y = e.pageY - (boundingRect.top + document.body.scrollTop);\n\n    return { x: x, y: y };\n};\n\n/*\n * return a copy of an object with only non-object keys\n * we need this to avoid circular references\n * http://stackoverflow.com/a/24161582/3208463\n */\nfunction simpleKeys(original) {\n    return Object.keys(original).reduce(function (obj, key) {\n        if (typeof original[key] !== 'object') {\n            obj[key] = original[key];\n        }\n        return obj;\n    }, {});\n}\n\nmpl.figure.prototype.mouse_event = function (event, name) {\n    var canvas_pos = mpl.findpos(event);\n\n    if (name === 'button_press') {\n        this.canvas.focus();\n        this.canvas_div.focus();\n    }\n\n    var x = canvas_pos.x * this.ratio;\n    var y = canvas_pos.y * this.ratio;\n\n    this.send_message(name, {\n        x: x,\n        y: y,\n        button: event.button,\n        step: event.step,\n        guiEvent: simpleKeys(event),\n    });\n\n    /* This prevents the web browser from automatically changing to\n     * the text insertion cursor when the button is pressed.  We want\n     * to control all of the cursor setting manually through the\n     * 'cursor' event from matplotlib */\n    event.preventDefault();\n    return false;\n};\n\nmpl.figure.prototype._key_event_extra = function (_event, _name) {\n    // Handle any extra behaviour associated with a key event\n};\n\nmpl.figure.prototype.key_event = function (event, name) {\n    // Prevent repeat events\n    if (name === 'key_press') {\n        if (event.which === this._key) {\n            return;\n        } else {\n            this._key = event.which;\n        }\n    }\n    if (name === 'key_release') {\n        this._key = null;\n    }\n\n    var value = '';\n    if (event.ctrlKey && event.which !== 17) {\n        value += 'ctrl+';\n    }\n    if (event.altKey && event.which !== 18) {\n        value += 'alt+';\n    }\n    if (event.shiftKey && event.which !== 16) {\n        value += 'shift+';\n    }\n\n    value += 'k';\n    value += event.which.toString();\n\n    this._key_event_extra(event, name);\n\n    this.send_message(name, { key: value, guiEvent: simpleKeys(event) });\n    return false;\n};\n\nmpl.figure.prototype.toolbar_button_onclick = function (name) {\n    if (name === 'download') {\n        this.handle_save(this, null);\n    } else {\n        this.send_message('toolbar_button', { name: name });\n    }\n};\n\nmpl.figure.prototype.toolbar_button_onmouseover = function (tooltip) {\n    this.message.textContent = tooltip;\n};\n\n///////////////// REMAINING CONTENT GENERATED BY embed_js.py /////////////////\n// prettier-ignore\nvar _JSXTOOLS_RESIZE_OBSERVER=function(A){var t,i=new WeakMap,n=new WeakMap,a=new WeakMap,r=new WeakMap,o=new Set;function s(e){if(!(this instanceof s))throw new TypeError(\"Constructor requires 'new' operator\");i.set(this,e)}function h(){throw new TypeError(\"Function is not a constructor\")}function c(e,t,i,n){e=0 in arguments?Number(arguments[0]):0,t=1 in arguments?Number(arguments[1]):0,i=2 in arguments?Number(arguments[2]):0,n=3 in arguments?Number(arguments[3]):0,this.right=(this.x=this.left=e)+(this.width=i),this.bottom=(this.y=this.top=t)+(this.height=n),Object.freeze(this)}function d(){t=requestAnimationFrame(d);var s=new WeakMap,p=new Set;o.forEach((function(t){r.get(t).forEach((function(i){var r=t instanceof window.SVGElement,o=a.get(t),d=r?0:parseFloat(o.paddingTop),f=r?0:parseFloat(o.paddingRight),l=r?0:parseFloat(o.paddingBottom),u=r?0:parseFloat(o.paddingLeft),g=r?0:parseFloat(o.borderTopWidth),m=r?0:parseFloat(o.borderRightWidth),w=r?0:parseFloat(o.borderBottomWidth),b=u+f,F=d+l,v=(r?0:parseFloat(o.borderLeftWidth))+m,W=g+w,y=r?0:t.offsetHeight-W-t.clientHeight,E=r?0:t.offsetWidth-v-t.clientWidth,R=b+v,z=F+W,M=r?t.width:parseFloat(o.width)-R-E,O=r?t.height:parseFloat(o.height)-z-y;if(n.has(t)){var k=n.get(t);if(k[0]===M&&k[1]===O)return}n.set(t,[M,O]);var S=Object.create(h.prototype);S.target=t,S.contentRect=new c(u,d,M,O),s.has(i)||(s.set(i,[]),p.add(i)),s.get(i).push(S)}))})),p.forEach((function(e){i.get(e).call(e,s.get(e),e)}))}return s.prototype.observe=function(i){if(i instanceof window.Element){r.has(i)||(r.set(i,new Set),o.add(i),a.set(i,window.getComputedStyle(i)));var n=r.get(i);n.has(this)||n.add(this),cancelAnimationFrame(t),t=requestAnimationFrame(d)}},s.prototype.unobserve=function(i){if(i instanceof window.Element&&r.has(i)){var n=r.get(i);n.has(this)&&(n.delete(this),n.size||(r.delete(i),o.delete(i))),n.size||r.delete(i),o.size||cancelAnimationFrame(t)}},A.DOMRectReadOnly=c,A.ResizeObserver=s,A.ResizeObserverEntry=h,A}; // eslint-disable-line\nmpl.toolbar_items = [[\"Home\", \"Reset original view\", \"fa fa-home icon-home\", \"home\"], [\"Back\", \"Back to previous view\", \"fa fa-arrow-left icon-arrow-left\", \"back\"], [\"Forward\", \"Forward to next view\", \"fa fa-arrow-right icon-arrow-right\", \"forward\"], [\"\", \"\", \"\", \"\"], [\"Pan\", \"Left button pans, Right button zooms\\nx/y fixes axis, CTRL fixes aspect\", \"fa fa-arrows icon-move\", \"pan\"], [\"Zoom\", \"Zoom to rectangle\\nx/y fixes axis, CTRL fixes aspect\", \"fa fa-square-o icon-check-empty\", \"zoom\"], [\"\", \"\", \"\", \"\"], [\"Download\", \"Download plot\", \"fa fa-floppy-o icon-save\", \"download\"]];\n\nmpl.extensions = [\"eps\", \"jpeg\", \"pdf\", \"png\", \"ps\", \"raw\", \"svg\", \"tif\"];\n\nmpl.default_extension = \"png\";/* global mpl */\n\nvar comm_websocket_adapter = function (comm) {\n    // Create a \"websocket\"-like object which calls the given IPython comm\n    // object with the appropriate methods. Currently this is a non binary\n    // socket, so there is still some room for performance tuning.\n    var ws = {};\n\n    ws.close = function () {\n        comm.close();\n    };\n    ws.send = function (m) {\n        //console.log('sending', m);\n        comm.send(m);\n    };\n    // Register the callback with on_msg.\n    comm.on_msg(function (msg) {\n        //console.log('receiving', msg['content']['data'], msg);\n        // Pass the mpl event to the overridden (by mpl) onmessage function.\n        ws.onmessage(msg['content']['data']);\n    });\n    return ws;\n};\n\nmpl.mpl_figure_comm = function (comm, msg) {\n    // This is the function which gets called when the mpl process\n    // starts-up an IPython Comm through the \"matplotlib\" channel.\n\n    var id = msg.content.data.id;\n    // Get hold of the div created by the display call when the Comm\n    // socket was opened in Python.\n    var element = document.getElementById(id);\n    var ws_proxy = comm_websocket_adapter(comm);\n\n    function ondownload(figure, _format) {\n        window.open(figure.canvas.toDataURL());\n    }\n\n    var fig = new mpl.figure(id, ws_proxy, ondownload, element);\n\n    // Call onopen now - mpl needs it, as it is assuming we've passed it a real\n    // web socket which is closed, not our websocket->open comm proxy.\n    ws_proxy.onopen();\n\n    fig.parent_element = element;\n    fig.cell_info = mpl.find_output_cell(\"<div id='\" + id + \"'></div>\");\n    if (!fig.cell_info) {\n        console.error('Failed to find cell for figure', id, fig);\n        return;\n    }\n    fig.cell_info[0].output_area.element.on(\n        'cleared',\n        { fig: fig },\n        fig._remove_fig_handler\n    );\n};\n\nmpl.figure.prototype.handle_close = function (fig, msg) {\n    var width = fig.canvas.width / fig.ratio;\n    fig.cell_info[0].output_area.element.off(\n        'cleared',\n        fig._remove_fig_handler\n    );\n    fig.resizeObserverInstance.unobserve(fig.canvas_div);\n\n    // Update the output cell to use the data from the current canvas.\n    fig.push_to_output();\n    var dataURL = fig.canvas.toDataURL();\n    // Re-enable the keyboard manager in IPython - without this line, in FF,\n    // the notebook keyboard shortcuts fail.\n    IPython.keyboard_manager.enable();\n    fig.parent_element.innerHTML =\n        '<img src=\"' + dataURL + '\" width=\"' + width + '\">';\n    fig.close_ws(fig, msg);\n};\n\nmpl.figure.prototype.close_ws = function (fig, msg) {\n    fig.send_message('closing', msg);\n    // fig.ws.close()\n};\n\nmpl.figure.prototype.push_to_output = function (_remove_interactive) {\n    // Turn the data on the canvas into data in the output cell.\n    var width = this.canvas.width / this.ratio;\n    var dataURL = this.canvas.toDataURL();\n    this.cell_info[1]['text/html'] =\n        '<img src=\"' + dataURL + '\" width=\"' + width + '\">';\n};\n\nmpl.figure.prototype.updated_canvas_event = function () {\n    // Tell IPython that the notebook contents must change.\n    IPython.notebook.set_dirty(true);\n    this.send_message('ack', {});\n    var fig = this;\n    // Wait a second, then push the new image to the DOM so\n    // that it is saved nicely (might be nice to debounce this).\n    setTimeout(function () {\n        fig.push_to_output();\n    }, 1000);\n};\n\nmpl.figure.prototype._init_toolbar = function () {\n    var fig = this;\n\n    var toolbar = document.createElement('div');\n    toolbar.classList = 'btn-toolbar';\n    this.root.appendChild(toolbar);\n\n    function on_click_closure(name) {\n        return function (_event) {\n            return fig.toolbar_button_onclick(name);\n        };\n    }\n\n    function on_mouseover_closure(tooltip) {\n        return function (event) {\n            if (!event.currentTarget.disabled) {\n                return fig.toolbar_button_onmouseover(tooltip);\n            }\n        };\n    }\n\n    fig.buttons = {};\n    var buttonGroup = document.createElement('div');\n    buttonGroup.classList = 'btn-group';\n    var button;\n    for (var toolbar_ind in mpl.toolbar_items) {\n        var name = mpl.toolbar_items[toolbar_ind][0];\n        var tooltip = mpl.toolbar_items[toolbar_ind][1];\n        var image = mpl.toolbar_items[toolbar_ind][2];\n        var method_name = mpl.toolbar_items[toolbar_ind][3];\n\n        if (!name) {\n            /* Instead of a spacer, we start a new button group. */\n            if (buttonGroup.hasChildNodes()) {\n                toolbar.appendChild(buttonGroup);\n            }\n            buttonGroup = document.createElement('div');\n            buttonGroup.classList = 'btn-group';\n            continue;\n        }\n\n        button = fig.buttons[name] = document.createElement('button');\n        button.classList = 'btn btn-default';\n        button.href = '#';\n        button.title = name;\n        button.innerHTML = '<i class=\"fa ' + image + ' fa-lg\"></i>';\n        button.addEventListener('click', on_click_closure(method_name));\n        button.addEventListener('mouseover', on_mouseover_closure(tooltip));\n        buttonGroup.appendChild(button);\n    }\n\n    if (buttonGroup.hasChildNodes()) {\n        toolbar.appendChild(buttonGroup);\n    }\n\n    // Add the status bar.\n    var status_bar = document.createElement('span');\n    status_bar.classList = 'mpl-message pull-right';\n    toolbar.appendChild(status_bar);\n    this.message = status_bar;\n\n    // Add the close button to the window.\n    var buttongrp = document.createElement('div');\n    buttongrp.classList = 'btn-group inline pull-right';\n    button = document.createElement('button');\n    button.classList = 'btn btn-mini btn-primary';\n    button.href = '#';\n    button.title = 'Stop Interaction';\n    button.innerHTML = '<i class=\"fa fa-power-off icon-remove icon-large\"></i>';\n    button.addEventListener('click', function (_evt) {\n        fig.handle_close(fig, {});\n    });\n    button.addEventListener(\n        'mouseover',\n        on_mouseover_closure('Stop Interaction')\n    );\n    buttongrp.appendChild(button);\n    var titlebar = this.root.querySelector('.ui-dialog-titlebar');\n    titlebar.insertBefore(buttongrp, titlebar.firstChild);\n};\n\nmpl.figure.prototype._remove_fig_handler = function (event) {\n    var fig = event.data.fig;\n    if (event.target !== this) {\n        // Ignore bubbled events from children.\n        return;\n    }\n    fig.close_ws(fig, {});\n};\n\nmpl.figure.prototype._root_extra_style = function (el) {\n    el.style.boxSizing = 'content-box'; // override notebook setting of border-box.\n};\n\nmpl.figure.prototype._canvas_extra_style = function (el) {\n    // this is important to make the div 'focusable\n    el.setAttribute('tabindex', 0);\n    // reach out to IPython and tell the keyboard manager to turn it's self\n    // off when our div gets focus\n\n    // location in version 3\n    if (IPython.notebook.keyboard_manager) {\n        IPython.notebook.keyboard_manager.register_events(el);\n    } else {\n        // location in version 2\n        IPython.keyboard_manager.register_events(el);\n    }\n};\n\nmpl.figure.prototype._key_event_extra = function (event, _name) {\n    var manager = IPython.notebook.keyboard_manager;\n    if (!manager) {\n        manager = IPython.keyboard_manager;\n    }\n\n    // Check for shift+enter\n    if (event.shiftKey && event.which === 13) {\n        this.canvas_div.blur();\n        // select the cell after this one\n        var index = IPython.notebook.find_cell_index(this.cell_info[0]);\n        IPython.notebook.select(index + 1);\n    }\n};\n\nmpl.figure.prototype.handle_save = function (fig, _msg) {\n    fig.ondownload(fig, null);\n};\n\nmpl.find_output_cell = function (html_output) {\n    // Return the cell and output element which can be found *uniquely* in the notebook.\n    // Note - this is a bit hacky, but it is done because the \"notebook_saving.Notebook\"\n    // IPython event is triggered only after the cells have been serialised, which for\n    // our purposes (turning an active figure into a static one), is too late.\n    var cells = IPython.notebook.get_cells();\n    var ncells = cells.length;\n    for (var i = 0; i < ncells; i++) {\n        var cell = cells[i];\n        if (cell.cell_type === 'code') {\n            for (var j = 0; j < cell.output_area.outputs.length; j++) {\n                var data = cell.output_area.outputs[j];\n                if (data.data) {\n                    // IPython >= 3 moved mimebundle to data attribute of output\n                    data = data.data;\n                }\n                if (data['text/html'] === html_output) {\n                    return [cell, data, j];\n                }\n            }\n        }\n    }\n};\n\n// Register the function which deals with the matplotlib target/channel.\n// The kernel may be null if the page has been refreshed.\nif (IPython.notebook.kernel !== null) {\n    IPython.notebook.kernel.comm_manager.register_target(\n        'matplotlib',\n        mpl.mpl_figure_comm\n    );\n}\n",
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAj0AAAGtCAYAAAD9H8XfAAAgAElEQVR4nOydd3wU5faHNypcr4gG0eu9CgxVLChC7F577wWxX712JfgTy3WSEAIBqRpUmlQRBAQFQZz0UEIgEAihhoQkpAIhpIe0bfP9/THZhUgCO7sz+747e57P5/zBZvd9D4KzDzPnPccEgiAIgiAIP8DEOgGCIAiCIAhvQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBEIRfQNJDEARBcMutt96KN998k3UaZ2X69Ono27cvOnbsiL59+2LGjBlcrEW0hqSHIAiC4BZXpaepqUn/ZNph1qxZOO+88zBjxgxkZ2dj+vTpOPfcczF37lymaxGnQ9JDEARBtGLz5s246667cNFFF+GCCy5A//79MX/+fOfPBUHAZ599hhEjRqBr167o1KkTXnrpJVRWVrZaZ9++fXj66acRGBiIiy66CHfddRdSUlJavaexsRGiKKJnz57o0KED/vWvf+Gtt94CANxzzz0wmUytYuHChc4cPv/8c3z55Zf45z//ifPPP9/5mZdeeqnVHrGxsTCZTCgoKAAAFBQUwGQyYdGiRXj++efRqVMn/POf/8SMGTNgsVjwv//9D5dddhkuueQSBAcHw2KxtPvfSpZldO/eHR999FGr199//30IguDyf3Ot1yLahqSHIAiCcGKz2dClSxcMHz4c2dnZyMvLQ2xsLFavXu18jyAIuOiiixAcHIwDBw4gPj4egiDgySefdL4nJycHF110EUaMGIE9e/YgJycHY8aMQYcOHbB3717n+x588EFcccUV+OWXX5CXl4cdO3Zg8uTJAIDKykoMHjwYL774IkpLS1FaWorGxkZnDp07d8Ynn3yCzMxM7N69G4A66bnyyivx888/Izc3F2FhYTCZTHj88ccRHh6OgwcP4rfffsN5552HWbNmtfvfy7GWJEmtXl+7di1MJhMKCwtd/m+v5VpE25D0EARBEE6qqqpgMpmwYcOGdt8jCAIGDBgAWZadr/35558wmUzIzMwEALz99tt47LHHTvvsvffei/feew8AsH79ephMJqxbt67dvdp7vCUIAoKCgk57XY30jBkzxvkeq9WKv//977j33ntbffahhx7Cs88+225+qampMJlM2LlzZ6vX09PTYTKZkJqa2u5n9VyLaBuSHoIgCKIVH3zwATp27IiHH34YX331FTIyMlr9XBAEfPjhh61eq66uhslkwq+//goAuO6669ChQwd06tSpVZx33nm4++67AQBTpkzB3/72N9jt9nZzOZP0DB8+/LTX1UjP2rVrW72vR48e+Oyzz1q99sYbb+D2229vN78tW7a0KSo7duyAyWTC1q1b2/2snmsRbUPSQxAEQZxGVlYWZsyYgSFDhqBDhw743//+5/xZW9JTU1PTSnquueYavPzyy8jNzT0tSkpKAACTJ0/G+eef77b0iKJ42uv33XcfXnzxxVav/fHHH21KT2xs7FnXfPPNN3Hrrbe2m197j6Qcd760eLzlzlpE25D0EARBEGdk4sSJOP/8852PswRBwPXXX9/qPZIktXq89eabb+Lqq68+YxGw4/HWmR6l3XXXXXj99ddPe7096Xn55Zdx5513tnotIiJCN+lxFB8HBwe3ev3DDz90u5BZi7WItiHpIQiCIJzk5ubiiy++QHJyMgoKCpCeno677roLN954o/M9jiLijz/+GFlZWUhISECvXr1OK2QODAzEk08+iU2bNqGgoACpqamYMGECVqxYAUD5kr///vvRrVs3rFixAocOHUJ6ejqmTJniXOe///0vrrnmGuTm5qK8vBzNzc3OHNqSnoULFyIgIAA//vgj8vLy8OOPP+KKK67QTXoA5Zh5hw4dMGvWLGRnZ2PmzJk477zz3D6yrtVaxOmQ9BAEQRBOjh49iueffx7du3dHx44d8Y9//ANDhw5Ffn6+8z2OI+sff/wxLrnkElxwwQV48cUXUVFR0WqtnJwcvPTSS7j00kvRoUMHXHnllXj22Wexfft253saGhrw+eefo1u3bujQoQOuuOIKvPPOO63WuOuuu3DhhReedmS9Lemx2Wz48ssv8a9//QudOnXC888/j8WLF+sqPQAwbdo09O7dGx06dECfPn0wffr0095jMpkwevRoTdYi3IOkhyAIglBFe8JBtE9eXh4CAgKwefNm1qn4NSQ9BEEQhCpIetQzdepUnxinYXRIegiCIAhVkPQQvgpJD0EQBEEQfgFJD0EQBEEQfgFJD0EQBEEQfgFJD0EQBEEQfgFJD0EQBEEQ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\" width=\"639.85\">"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "data_set.plot()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The plotting depends on the data_type of the dataset and the dimension_types\n",
+    "of it's dimension datasets. Above, we set the first two dimension_type types to\n",
+    "``spatial`` and the third one to ``spectral``.\n",
+    "\n",
+    "The data_type was ``spectral_image``.\n",
+    "So the spatial dimensions are recognized as relevant for an image and the third dimension is recognized as a spectrum, conducive to plotting as shown above.\n",
+    "If we change the data_type to image, the default plotting behavoir is to plot the first slice in the dataset (i.e. data_set[:,:,0]).\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "collapsed": false,
+    "jupyter": {
+     "outputs_hidden": false
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": "/* Put everything inside the global mpl namespace */\n/* global mpl */\nwindow.mpl = {};\n\nmpl.get_websocket_type = function () {\n    if (typeof WebSocket !== 'undefined') {\n        return WebSocket;\n    } else if (typeof MozWebSocket !== 'undefined') {\n        return MozWebSocket;\n    } else {\n        alert(\n            'Your browser does not have WebSocket support. ' +\n                'Please try Chrome, Safari or Firefox ≥ 6. ' +\n                'Firefox 4 and 5 are also supported but you ' +\n                'have to enable WebSockets in about:config.'\n        );\n    }\n};\n\nmpl.figure = function (figure_id, websocket, ondownload, parent_element) {\n    this.id = figure_id;\n\n    this.ws = websocket;\n\n    this.supports_binary = this.ws.binaryType !== undefined;\n\n    if (!this.supports_binary) {\n        var warnings = document.getElementById('mpl-warnings');\n        if (warnings) {\n            warnings.style.display = 'block';\n            warnings.textContent =\n                'This browser does not support binary websocket messages. ' +\n                'Performance may be slow.';\n        }\n    }\n\n    this.imageObj = new Image();\n\n    this.context = undefined;\n    this.message = undefined;\n    this.canvas = undefined;\n    this.rubberband_canvas = undefined;\n    this.rubberband_context = undefined;\n    this.format_dropdown = undefined;\n\n    this.image_mode = 'full';\n\n    this.root = document.createElement('div');\n    this.root.setAttribute('style', 'display: inline-block');\n    this._root_extra_style(this.root);\n\n    parent_element.appendChild(this.root);\n\n    this._init_header(this);\n    this._init_canvas(this);\n    this._init_toolbar(this);\n\n    var fig = this;\n\n    this.waiting = false;\n\n    this.ws.onopen = function () {\n        fig.send_message('supports_binary', { value: fig.supports_binary });\n        fig.send_message('send_image_mode', {});\n        if (fig.ratio !== 1) {\n            fig.send_message('set_dpi_ratio', { dpi_ratio: fig.ratio });\n        }\n        fig.send_message('refresh', {});\n    };\n\n    this.imageObj.onload = function () {\n        if (fig.image_mode === 'full') {\n            // Full images could contain transparency (where diff images\n            // almost always do), so we need to clear the canvas so that\n            // there is no ghosting.\n            fig.context.clearRect(0, 0, fig.canvas.width, fig.canvas.height);\n        }\n        fig.context.drawImage(fig.imageObj, 0, 0);\n    };\n\n    this.imageObj.onunload = function () {\n        fig.ws.close();\n    };\n\n    this.ws.onmessage = this._make_on_message_function(this);\n\n    this.ondownload = ondownload;\n};\n\nmpl.figure.prototype._init_header = function () {\n    var titlebar = document.createElement('div');\n    titlebar.classList =\n        'ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix';\n    var titletext = document.createElement('div');\n    titletext.classList = 'ui-dialog-title';\n    titletext.setAttribute(\n        'style',\n        'width: 100%; text-align: center; padding: 3px;'\n    );\n    titlebar.appendChild(titletext);\n    this.root.appendChild(titlebar);\n    this.header = titletext;\n};\n\nmpl.figure.prototype._canvas_extra_style = function (_canvas_div) {};\n\nmpl.figure.prototype._root_extra_style = function (_canvas_div) {};\n\nmpl.figure.prototype._init_canvas = function () {\n    var fig = this;\n\n    var canvas_div = (this.canvas_div = document.createElement('div'));\n    canvas_div.setAttribute(\n        'style',\n        'border: 1px solid #ddd;' +\n            'box-sizing: content-box;' +\n            'clear: both;' +\n            'min-height: 1px;' +\n            'min-width: 1px;' +\n            'outline: 0;' +\n            'overflow: hidden;' +\n            'position: relative;' +\n            'resize: both;'\n    );\n\n    function on_keyboard_event_closure(name) {\n        return function (event) {\n            return fig.key_event(event, name);\n        };\n    }\n\n    canvas_div.addEventListener(\n        'keydown',\n        on_keyboard_event_closure('key_press')\n    );\n    canvas_div.addEventListener(\n        'keyup',\n        on_keyboard_event_closure('key_release')\n    );\n\n    this._canvas_extra_style(canvas_div);\n    this.root.appendChild(canvas_div);\n\n    var canvas = (this.canvas = document.createElement('canvas'));\n    canvas.classList.add('mpl-canvas');\n    canvas.setAttribute('style', 'box-sizing: content-box;');\n\n    this.context = canvas.getContext('2d');\n\n    var backingStore =\n        this.context.backingStorePixelRatio ||\n        this.context.webkitBackingStorePixelRatio ||\n        this.context.mozBackingStorePixelRatio ||\n        this.context.msBackingStorePixelRatio ||\n        this.context.oBackingStorePixelRatio ||\n        this.context.backingStorePixelRatio ||\n        1;\n\n    this.ratio = (window.devicePixelRatio || 1) / backingStore;\n\n    var rubberband_canvas = (this.rubberband_canvas = document.createElement(\n        'canvas'\n    ));\n    rubberband_canvas.setAttribute(\n        'style',\n        'box-sizing: content-box; position: absolute; left: 0; top: 0; z-index: 1;'\n    );\n\n    // Apply a ponyfill if ResizeObserver is not implemented by browser.\n    if (this.ResizeObserver === undefined) {\n        if (window.ResizeObserver !== undefined) {\n            this.ResizeObserver = window.ResizeObserver;\n        } else {\n            var obs = _JSXTOOLS_RESIZE_OBSERVER({});\n            this.ResizeObserver = obs.ResizeObserver;\n        }\n    }\n\n    this.resizeObserverInstance = new this.ResizeObserver(function (entries) {\n        var nentries = entries.length;\n        for (var i = 0; i < nentries; i++) {\n            var entry = entries[i];\n            var width, height;\n            if (entry.contentBoxSize) {\n                if (entry.contentBoxSize instanceof Array) {\n                    // Chrome 84 implements new version of spec.\n                    width = entry.contentBoxSize[0].inlineSize;\n                    height = entry.contentBoxSize[0].blockSize;\n                } else {\n                    // Firefox implements old version of spec.\n                    width = entry.contentBoxSize.inlineSize;\n                    height = entry.contentBoxSize.blockSize;\n                }\n            } else {\n                // Chrome <84 implements even older version of spec.\n                width = entry.contentRect.width;\n                height = entry.contentRect.height;\n            }\n\n            // Keep the size of the canvas and rubber band canvas in sync with\n            // the canvas container.\n            if (entry.devicePixelContentBoxSize) {\n                // Chrome 84 implements new version of spec.\n                canvas.setAttribute(\n                    'width',\n                    entry.devicePixelContentBoxSize[0].inlineSize\n                );\n                canvas.setAttribute(\n                    'height',\n                    entry.devicePixelContentBoxSize[0].blockSize\n                );\n            } else {\n                canvas.setAttribute('width', width * fig.ratio);\n                canvas.setAttribute('height', height * fig.ratio);\n            }\n            canvas.setAttribute(\n                'style',\n                'width: ' + width + 'px; height: ' + height + 'px;'\n            );\n\n            rubberband_canvas.setAttribute('width', width);\n            rubberband_canvas.setAttribute('height', height);\n\n            // And update the size in Python. We ignore the initial 0/0 size\n            // that occurs as the element is placed into the DOM, which should\n            // otherwise not happen due to the minimum size styling.\n            if (fig.ws.readyState == 1 && width != 0 && height != 0) {\n                fig.request_resize(width, height);\n            }\n        }\n    });\n    this.resizeObserverInstance.observe(canvas_div);\n\n    function on_mouse_event_closure(name) {\n        return function (event) {\n            return fig.mouse_event(event, name);\n        };\n    }\n\n    rubberband_canvas.addEventListener(\n        'mousedown',\n        on_mouse_event_closure('button_press')\n    );\n    rubberband_canvas.addEventListener(\n        'mouseup',\n        on_mouse_event_closure('button_release')\n    );\n    // Throttle sequential mouse events to 1 every 20ms.\n    rubberband_canvas.addEventListener(\n        'mousemove',\n        on_mouse_event_closure('motion_notify')\n    );\n\n    rubberband_canvas.addEventListener(\n        'mouseenter',\n        on_mouse_event_closure('figure_enter')\n    );\n    rubberband_canvas.addEventListener(\n        'mouseleave',\n        on_mouse_event_closure('figure_leave')\n    );\n\n    canvas_div.addEventListener('wheel', function (event) {\n        if (event.deltaY < 0) {\n            event.step = 1;\n        } else {\n            event.step = -1;\n        }\n        on_mouse_event_closure('scroll')(event);\n    });\n\n    canvas_div.appendChild(canvas);\n    canvas_div.appendChild(rubberband_canvas);\n\n    this.rubberband_context = rubberband_canvas.getContext('2d');\n    this.rubberband_context.strokeStyle = '#000000';\n\n    this._resize_canvas = function (width, height, forward) {\n        if (forward) {\n            canvas_div.style.width = width + 'px';\n            canvas_div.style.height = height + 'px';\n        }\n    };\n\n    // Disable right mouse context menu.\n    this.rubberband_canvas.addEventListener('contextmenu', function (_e) {\n        event.preventDefault();\n        return false;\n    });\n\n    function set_focus() {\n        canvas.focus();\n        canvas_div.focus();\n    }\n\n    window.setTimeout(set_focus, 100);\n};\n\nmpl.figure.prototype._init_toolbar = function () {\n    var fig = this;\n\n    var toolbar = document.createElement('div');\n    toolbar.classList = 'mpl-toolbar';\n    this.root.appendChild(toolbar);\n\n    function on_click_closure(name) {\n        return function (_event) {\n            return fig.toolbar_button_onclick(name);\n        };\n    }\n\n    function on_mouseover_closure(tooltip) {\n        return function (event) {\n            if (!event.currentTarget.disabled) {\n                return fig.toolbar_button_onmouseover(tooltip);\n            }\n        };\n    }\n\n    fig.buttons = {};\n    var buttonGroup = document.createElement('div');\n    buttonGroup.classList = 'mpl-button-group';\n    for (var toolbar_ind in mpl.toolbar_items) {\n        var name = mpl.toolbar_items[toolbar_ind][0];\n        var tooltip = mpl.toolbar_items[toolbar_ind][1];\n        var image = mpl.toolbar_items[toolbar_ind][2];\n        var method_name = mpl.toolbar_items[toolbar_ind][3];\n\n        if (!name) {\n            /* Instead of a spacer, we start a new button group. */\n            if (buttonGroup.hasChildNodes()) {\n                toolbar.appendChild(buttonGroup);\n            }\n            buttonGroup = document.createElement('div');\n            buttonGroup.classList = 'mpl-button-group';\n            continue;\n        }\n\n        var button = (fig.buttons[name] = document.createElement('button'));\n        button.classList = 'mpl-widget';\n        button.setAttribute('role', 'button');\n        button.setAttribute('aria-disabled', 'false');\n        button.addEventListener('click', on_click_closure(method_name));\n        button.addEventListener('mouseover', on_mouseover_closure(tooltip));\n\n        var icon_img = document.createElement('img');\n        icon_img.src = '_images/' + image + '.png';\n        icon_img.srcset = '_images/' + image + '_large.png 2x';\n        icon_img.alt = tooltip;\n        button.appendChild(icon_img);\n\n        buttonGroup.appendChild(button);\n    }\n\n    if (buttonGroup.hasChildNodes()) {\n        toolbar.appendChild(buttonGroup);\n    }\n\n    var fmt_picker = document.createElement('select');\n    fmt_picker.classList = 'mpl-widget';\n    toolbar.appendChild(fmt_picker);\n    this.format_dropdown = fmt_picker;\n\n    for (var ind in mpl.extensions) {\n        var fmt = mpl.extensions[ind];\n        var option = document.createElement('option');\n        option.selected = fmt === mpl.default_extension;\n        option.innerHTML = fmt;\n        fmt_picker.appendChild(option);\n    }\n\n    var status_bar = document.createElement('span');\n    status_bar.classList = 'mpl-message';\n    toolbar.appendChild(status_bar);\n    this.message = status_bar;\n};\n\nmpl.figure.prototype.request_resize = function (x_pixels, y_pixels) {\n    // Request matplotlib to resize the figure. Matplotlib will then trigger a resize in the client,\n    // which will in turn request a refresh of the image.\n    this.send_message('resize', { width: x_pixels, height: y_pixels });\n};\n\nmpl.figure.prototype.send_message = function (type, properties) {\n    properties['type'] = type;\n    properties['figure_id'] = this.id;\n    this.ws.send(JSON.stringify(properties));\n};\n\nmpl.figure.prototype.send_draw_message = function () {\n    if (!this.waiting) {\n        this.waiting = true;\n        this.ws.send(JSON.stringify({ type: 'draw', figure_id: this.id }));\n    }\n};\n\nmpl.figure.prototype.handle_save = function (fig, _msg) {\n    var format_dropdown = fig.format_dropdown;\n    var format = format_dropdown.options[format_dropdown.selectedIndex].value;\n    fig.ondownload(fig, format);\n};\n\nmpl.figure.prototype.handle_resize = function (fig, msg) {\n    var size = msg['size'];\n    if (size[0] !== fig.canvas.width || size[1] !== fig.canvas.height) {\n        fig._resize_canvas(size[0], size[1], msg['forward']);\n        fig.send_message('refresh', {});\n    }\n};\n\nmpl.figure.prototype.handle_rubberband = function (fig, msg) {\n    var x0 = msg['x0'] / fig.ratio;\n    var y0 = (fig.canvas.height - msg['y0']) / fig.ratio;\n    var x1 = msg['x1'] / fig.ratio;\n    var y1 = (fig.canvas.height - msg['y1']) / fig.ratio;\n    x0 = Math.floor(x0) + 0.5;\n    y0 = Math.floor(y0) + 0.5;\n    x1 = Math.floor(x1) + 0.5;\n    y1 = Math.floor(y1) + 0.5;\n    var min_x = Math.min(x0, x1);\n    var min_y = Math.min(y0, y1);\n    var width = Math.abs(x1 - x0);\n    var height = Math.abs(y1 - y0);\n\n    fig.rubberband_context.clearRect(\n        0,\n        0,\n        fig.canvas.width / fig.ratio,\n        fig.canvas.height / fig.ratio\n    );\n\n    fig.rubberband_context.strokeRect(min_x, min_y, width, height);\n};\n\nmpl.figure.prototype.handle_figure_label = function (fig, msg) {\n    // Updates the figure title.\n    fig.header.textContent = msg['label'];\n};\n\nmpl.figure.prototype.handle_cursor = function (fig, msg) {\n    var cursor = msg['cursor'];\n    switch (cursor) {\n        case 0:\n            cursor = 'pointer';\n            break;\n        case 1:\n            cursor = 'default';\n            break;\n        case 2:\n            cursor = 'crosshair';\n            break;\n        case 3:\n            cursor = 'move';\n            break;\n    }\n    fig.rubberband_canvas.style.cursor = cursor;\n};\n\nmpl.figure.prototype.handle_message = function (fig, msg) {\n    fig.message.textContent = msg['message'];\n};\n\nmpl.figure.prototype.handle_draw = function (fig, _msg) {\n    // Request the server to send over a new figure.\n    fig.send_draw_message();\n};\n\nmpl.figure.prototype.handle_image_mode = function (fig, msg) {\n    fig.image_mode = msg['mode'];\n};\n\nmpl.figure.prototype.handle_history_buttons = function (fig, msg) {\n    for (var key in msg) {\n        if (!(key in fig.buttons)) {\n            continue;\n        }\n        fig.buttons[key].disabled = !msg[key];\n        fig.buttons[key].setAttribute('aria-disabled', !msg[key]);\n    }\n};\n\nmpl.figure.prototype.handle_navigate_mode = function (fig, msg) {\n    if (msg['mode'] === 'PAN') {\n        fig.buttons['Pan'].classList.add('active');\n        fig.buttons['Zoom'].classList.remove('active');\n    } else if (msg['mode'] === 'ZOOM') {\n        fig.buttons['Pan'].classList.remove('active');\n        fig.buttons['Zoom'].classList.add('active');\n    } else {\n        fig.buttons['Pan'].classList.remove('active');\n        fig.buttons['Zoom'].classList.remove('active');\n    }\n};\n\nmpl.figure.prototype.updated_canvas_event = function () {\n    // Called whenever the canvas gets updated.\n    this.send_message('ack', {});\n};\n\n// A function to construct a web socket function for onmessage handling.\n// Called in the figure constructor.\nmpl.figure.prototype._make_on_message_function = function (fig) {\n    return function socket_on_message(evt) {\n        if (evt.data instanceof Blob) {\n            /* FIXME: We get \"Resource interpreted as Image but\n             * transferred with MIME type text/plain:\" errors on\n             * Chrome.  But how to set the MIME type?  It doesn't seem\n             * to be part of the websocket stream */\n            evt.data.type = 'image/png';\n\n            /* Free the memory for the previous frames */\n            if (fig.imageObj.src) {\n                (window.URL || window.webkitURL).revokeObjectURL(\n                    fig.imageObj.src\n                );\n            }\n\n            fig.imageObj.src = (window.URL || window.webkitURL).createObjectURL(\n                evt.data\n            );\n            fig.updated_canvas_event();\n            fig.waiting = false;\n            return;\n        } else if (\n            typeof evt.data === 'string' &&\n            evt.data.slice(0, 21) === 'data:image/png;base64'\n        ) {\n            fig.imageObj.src = evt.data;\n            fig.updated_canvas_event();\n            fig.waiting = false;\n            return;\n        }\n\n        var msg = JSON.parse(evt.data);\n        var msg_type = msg['type'];\n\n        // Call the  \"handle_{type}\" callback, which takes\n        // the figure and JSON message as its only arguments.\n        try {\n            var callback = fig['handle_' + msg_type];\n        } catch (e) {\n            console.log(\n                \"No handler for the '\" + msg_type + \"' message type: \",\n                msg\n            );\n            return;\n        }\n\n        if (callback) {\n            try {\n                // console.log(\"Handling '\" + msg_type + \"' message: \", msg);\n                callback(fig, msg);\n            } catch (e) {\n                console.log(\n                    \"Exception inside the 'handler_\" + msg_type + \"' callback:\",\n                    e,\n                    e.stack,\n                    msg\n                );\n            }\n        }\n    };\n};\n\n// from http://stackoverflow.com/questions/1114465/getting-mouse-location-in-canvas\nmpl.findpos = function (e) {\n    //this section is from http://www.quirksmode.org/js/events_properties.html\n    var targ;\n    if (!e) {\n        e = window.event;\n    }\n    if (e.target) {\n        targ = e.target;\n    } else if (e.srcElement) {\n        targ = e.srcElement;\n    }\n    if (targ.nodeType === 3) {\n        // defeat Safari bug\n        targ = targ.parentNode;\n    }\n\n    // pageX,Y are the mouse positions relative to the document\n    var boundingRect = targ.getBoundingClientRect();\n    var x = e.pageX - (boundingRect.left + document.body.scrollLeft);\n    var y = e.pageY - (boundingRect.top + document.body.scrollTop);\n\n    return { x: x, y: y };\n};\n\n/*\n * return a copy of an object with only non-object keys\n * we need this to avoid circular references\n * http://stackoverflow.com/a/24161582/3208463\n */\nfunction simpleKeys(original) {\n    return Object.keys(original).reduce(function (obj, key) {\n        if (typeof original[key] !== 'object') {\n            obj[key] = original[key];\n        }\n        return obj;\n    }, {});\n}\n\nmpl.figure.prototype.mouse_event = function (event, name) {\n    var canvas_pos = mpl.findpos(event);\n\n    if (name === 'button_press') {\n        this.canvas.focus();\n        this.canvas_div.focus();\n    }\n\n    var x = canvas_pos.x * this.ratio;\n    var y = canvas_pos.y * this.ratio;\n\n    this.send_message(name, {\n        x: x,\n        y: y,\n        button: event.button,\n        step: event.step,\n        guiEvent: simpleKeys(event),\n    });\n\n    /* This prevents the web browser from automatically changing to\n     * the text insertion cursor when the button is pressed.  We want\n     * to control all of the cursor setting manually through the\n     * 'cursor' event from matplotlib */\n    event.preventDefault();\n    return false;\n};\n\nmpl.figure.prototype._key_event_extra = function (_event, _name) {\n    // Handle any extra behaviour associated with a key event\n};\n\nmpl.figure.prototype.key_event = function (event, name) {\n    // Prevent repeat events\n    if (name === 'key_press') {\n        if (event.which === this._key) {\n            return;\n        } else {\n            this._key = event.which;\n        }\n    }\n    if (name === 'key_release') {\n        this._key = null;\n    }\n\n    var value = '';\n    if (event.ctrlKey && event.which !== 17) {\n        value += 'ctrl+';\n    }\n    if (event.altKey && event.which !== 18) {\n        value += 'alt+';\n    }\n    if (event.shiftKey && event.which !== 16) {\n        value += 'shift+';\n    }\n\n    value += 'k';\n    value += event.which.toString();\n\n    this._key_event_extra(event, name);\n\n    this.send_message(name, { key: value, guiEvent: simpleKeys(event) });\n    return false;\n};\n\nmpl.figure.prototype.toolbar_button_onclick = function (name) {\n    if (name === 'download') {\n        this.handle_save(this, null);\n    } else {\n        this.send_message('toolbar_button', { name: name });\n    }\n};\n\nmpl.figure.prototype.toolbar_button_onmouseover = function (tooltip) {\n    this.message.textContent = tooltip;\n};\n\n///////////////// REMAINING CONTENT GENERATED BY embed_js.py /////////////////\n// prettier-ignore\nvar _JSXTOOLS_RESIZE_OBSERVER=function(A){var t,i=new WeakMap,n=new WeakMap,a=new WeakMap,r=new WeakMap,o=new Set;function s(e){if(!(this instanceof s))throw new TypeError(\"Constructor requires 'new' operator\");i.set(this,e)}function h(){throw new TypeError(\"Function is not a constructor\")}function c(e,t,i,n){e=0 in arguments?Number(arguments[0]):0,t=1 in arguments?Number(arguments[1]):0,i=2 in arguments?Number(arguments[2]):0,n=3 in arguments?Number(arguments[3]):0,this.right=(this.x=this.left=e)+(this.width=i),this.bottom=(this.y=this.top=t)+(this.height=n),Object.freeze(this)}function d(){t=requestAnimationFrame(d);var s=new WeakMap,p=new Set;o.forEach((function(t){r.get(t).forEach((function(i){var r=t instanceof window.SVGElement,o=a.get(t),d=r?0:parseFloat(o.paddingTop),f=r?0:parseFloat(o.paddingRight),l=r?0:parseFloat(o.paddingBottom),u=r?0:parseFloat(o.paddingLeft),g=r?0:parseFloat(o.borderTopWidth),m=r?0:parseFloat(o.borderRightWidth),w=r?0:parseFloat(o.borderBottomWidth),b=u+f,F=d+l,v=(r?0:parseFloat(o.borderLeftWidth))+m,W=g+w,y=r?0:t.offsetHeight-W-t.clientHeight,E=r?0:t.offsetWidth-v-t.clientWidth,R=b+v,z=F+W,M=r?t.width:parseFloat(o.width)-R-E,O=r?t.height:parseFloat(o.height)-z-y;if(n.has(t)){var k=n.get(t);if(k[0]===M&&k[1]===O)return}n.set(t,[M,O]);var S=Object.create(h.prototype);S.target=t,S.contentRect=new c(u,d,M,O),s.has(i)||(s.set(i,[]),p.add(i)),s.get(i).push(S)}))})),p.forEach((function(e){i.get(e).call(e,s.get(e),e)}))}return s.prototype.observe=function(i){if(i instanceof window.Element){r.has(i)||(r.set(i,new Set),o.add(i),a.set(i,window.getComputedStyle(i)));var n=r.get(i);n.has(this)||n.add(this),cancelAnimationFrame(t),t=requestAnimationFrame(d)}},s.prototype.unobserve=function(i){if(i instanceof window.Element&&r.has(i)){var n=r.get(i);n.has(this)&&(n.delete(this),n.size||(r.delete(i),o.delete(i))),n.size||r.delete(i),o.size||cancelAnimationFrame(t)}},A.DOMRectReadOnly=c,A.ResizeObserver=s,A.ResizeObserverEntry=h,A}; // eslint-disable-line\nmpl.toolbar_items = [[\"Home\", \"Reset original view\", \"fa fa-home icon-home\", \"home\"], [\"Back\", \"Back to previous view\", \"fa fa-arrow-left icon-arrow-left\", \"back\"], [\"Forward\", \"Forward to next view\", \"fa fa-arrow-right icon-arrow-right\", \"forward\"], [\"\", \"\", \"\", \"\"], [\"Pan\", \"Left button pans, Right button zooms\\nx/y fixes axis, CTRL fixes aspect\", \"fa fa-arrows icon-move\", \"pan\"], [\"Zoom\", \"Zoom to rectangle\\nx/y fixes axis, CTRL fixes aspect\", \"fa fa-square-o icon-check-empty\", \"zoom\"], [\"\", \"\", \"\", \"\"], [\"Download\", \"Download plot\", \"fa fa-floppy-o icon-save\", \"download\"]];\n\nmpl.extensions = [\"eps\", \"jpeg\", \"pdf\", \"png\", \"ps\", \"raw\", \"svg\", \"tif\"];\n\nmpl.default_extension = \"png\";/* global mpl */\n\nvar comm_websocket_adapter = function (comm) {\n    // Create a \"websocket\"-like object which calls the given IPython comm\n    // object with the appropriate methods. Currently this is a non binary\n    // socket, so there is still some room for performance tuning.\n    var ws = {};\n\n    ws.close = function () {\n        comm.close();\n    };\n    ws.send = function (m) {\n        //console.log('sending', m);\n        comm.send(m);\n    };\n    // Register the callback with on_msg.\n    comm.on_msg(function (msg) {\n        //console.log('receiving', msg['content']['data'], msg);\n        // Pass the mpl event to the overridden (by mpl) onmessage function.\n        ws.onmessage(msg['content']['data']);\n    });\n    return ws;\n};\n\nmpl.mpl_figure_comm = function (comm, msg) {\n    // This is the function which gets called when the mpl process\n    // starts-up an IPython Comm through the \"matplotlib\" channel.\n\n    var id = msg.content.data.id;\n    // Get hold of the div created by the display call when the Comm\n    // socket was opened in Python.\n    var element = document.getElementById(id);\n    var ws_proxy = comm_websocket_adapter(comm);\n\n    function ondownload(figure, _format) {\n        window.open(figure.canvas.toDataURL());\n    }\n\n    var fig = new mpl.figure(id, ws_proxy, ondownload, element);\n\n    // Call onopen now - mpl needs it, as it is assuming we've passed it a real\n    // web socket which is closed, not our websocket->open comm proxy.\n    ws_proxy.onopen();\n\n    fig.parent_element = element;\n    fig.cell_info = mpl.find_output_cell(\"<div id='\" + id + \"'></div>\");\n    if (!fig.cell_info) {\n        console.error('Failed to find cell for figure', id, fig);\n        return;\n    }\n    fig.cell_info[0].output_area.element.on(\n        'cleared',\n        { fig: fig },\n        fig._remove_fig_handler\n    );\n};\n\nmpl.figure.prototype.handle_close = function (fig, msg) {\n    var width = fig.canvas.width / fig.ratio;\n    fig.cell_info[0].output_area.element.off(\n        'cleared',\n        fig._remove_fig_handler\n    );\n    fig.resizeObserverInstance.unobserve(fig.canvas_div);\n\n    // Update the output cell to use the data from the current canvas.\n    fig.push_to_output();\n    var dataURL = fig.canvas.toDataURL();\n    // Re-enable the keyboard manager in IPython - without this line, in FF,\n    // the notebook keyboard shortcuts fail.\n    IPython.keyboard_manager.enable();\n    fig.parent_element.innerHTML =\n        '<img src=\"' + dataURL + '\" width=\"' + width + '\">';\n    fig.close_ws(fig, msg);\n};\n\nmpl.figure.prototype.close_ws = function (fig, msg) {\n    fig.send_message('closing', msg);\n    // fig.ws.close()\n};\n\nmpl.figure.prototype.push_to_output = function (_remove_interactive) {\n    // Turn the data on the canvas into data in the output cell.\n    var width = this.canvas.width / this.ratio;\n    var dataURL = this.canvas.toDataURL();\n    this.cell_info[1]['text/html'] =\n        '<img src=\"' + dataURL + '\" width=\"' + width + '\">';\n};\n\nmpl.figure.prototype.updated_canvas_event = function () {\n    // Tell IPython that the notebook contents must change.\n    IPython.notebook.set_dirty(true);\n    this.send_message('ack', {});\n    var fig = this;\n    // Wait a second, then push the new image to the DOM so\n    // that it is saved nicely (might be nice to debounce this).\n    setTimeout(function () {\n        fig.push_to_output();\n    }, 1000);\n};\n\nmpl.figure.prototype._init_toolbar = function () {\n    var fig = this;\n\n    var toolbar = document.createElement('div');\n    toolbar.classList = 'btn-toolbar';\n    this.root.appendChild(toolbar);\n\n    function on_click_closure(name) {\n        return function (_event) {\n            return fig.toolbar_button_onclick(name);\n        };\n    }\n\n    function on_mouseover_closure(tooltip) {\n        return function (event) {\n            if (!event.currentTarget.disabled) {\n                return fig.toolbar_button_onmouseover(tooltip);\n            }\n        };\n    }\n\n    fig.buttons = {};\n    var buttonGroup = document.createElement('div');\n    buttonGroup.classList = 'btn-group';\n    var button;\n    for (var toolbar_ind in mpl.toolbar_items) {\n        var name = mpl.toolbar_items[toolbar_ind][0];\n        var tooltip = mpl.toolbar_items[toolbar_ind][1];\n        var image = mpl.toolbar_items[toolbar_ind][2];\n        var method_name = mpl.toolbar_items[toolbar_ind][3];\n\n        if (!name) {\n            /* Instead of a spacer, we start a new button group. */\n            if (buttonGroup.hasChildNodes()) {\n                toolbar.appendChild(buttonGroup);\n            }\n            buttonGroup = document.createElement('div');\n            buttonGroup.classList = 'btn-group';\n            continue;\n        }\n\n        button = fig.buttons[name] = document.createElement('button');\n        button.classList = 'btn btn-default';\n        button.href = '#';\n        button.title = name;\n        button.innerHTML = '<i class=\"fa ' + image + ' fa-lg\"></i>';\n        button.addEventListener('click', on_click_closure(method_name));\n        button.addEventListener('mouseover', on_mouseover_closure(tooltip));\n        buttonGroup.appendChild(button);\n    }\n\n    if (buttonGroup.hasChildNodes()) {\n        toolbar.appendChild(buttonGroup);\n    }\n\n    // Add the status bar.\n    var status_bar = document.createElement('span');\n    status_bar.classList = 'mpl-message pull-right';\n    toolbar.appendChild(status_bar);\n    this.message = status_bar;\n\n    // Add the close button to the window.\n    var buttongrp = document.createElement('div');\n    buttongrp.classList = 'btn-group inline pull-right';\n    button = document.createElement('button');\n    button.classList = 'btn btn-mini btn-primary';\n    button.href = '#';\n    button.title = 'Stop Interaction';\n    button.innerHTML = '<i class=\"fa fa-power-off icon-remove icon-large\"></i>';\n    button.addEventListener('click', function (_evt) {\n        fig.handle_close(fig, {});\n    });\n    button.addEventListener(\n        'mouseover',\n        on_mouseover_closure('Stop Interaction')\n    );\n    buttongrp.appendChild(button);\n    var titlebar = this.root.querySelector('.ui-dialog-titlebar');\n    titlebar.insertBefore(buttongrp, titlebar.firstChild);\n};\n\nmpl.figure.prototype._remove_fig_handler = function (event) {\n    var fig = event.data.fig;\n    if (event.target !== this) {\n        // Ignore bubbled events from children.\n        return;\n    }\n    fig.close_ws(fig, {});\n};\n\nmpl.figure.prototype._root_extra_style = function (el) {\n    el.style.boxSizing = 'content-box'; // override notebook setting of border-box.\n};\n\nmpl.figure.prototype._canvas_extra_style = function (el) {\n    // this is important to make the div 'focusable\n    el.setAttribute('tabindex', 0);\n    // reach out to IPython and tell the keyboard manager to turn it's self\n    // off when our div gets focus\n\n    // location in version 3\n    if (IPython.notebook.keyboard_manager) {\n        IPython.notebook.keyboard_manager.register_events(el);\n    } else {\n        // location in version 2\n        IPython.keyboard_manager.register_events(el);\n    }\n};\n\nmpl.figure.prototype._key_event_extra = function (event, _name) {\n    var manager = IPython.notebook.keyboard_manager;\n    if (!manager) {\n        manager = IPython.keyboard_manager;\n    }\n\n    // Check for shift+enter\n    if (event.shiftKey && event.which === 13) {\n        this.canvas_div.blur();\n        // select the cell after this one\n        var index = IPython.notebook.find_cell_index(this.cell_info[0]);\n        IPython.notebook.select(index + 1);\n    }\n};\n\nmpl.figure.prototype.handle_save = function (fig, _msg) {\n    fig.ondownload(fig, null);\n};\n\nmpl.find_output_cell = function (html_output) {\n    // Return the cell and output element which can be found *uniquely* in the notebook.\n    // Note - this is a bit hacky, but it is done because the \"notebook_saving.Notebook\"\n    // IPython event is triggered only after the cells have been serialised, which for\n    // our purposes (turning an active figure into a static one), is too late.\n    var cells = IPython.notebook.get_cells();\n    var ncells = cells.length;\n    for (var i = 0; i < ncells; i++) {\n        var cell = cells[i];\n        if (cell.cell_type === 'code') {\n            for (var j = 0; j < cell.output_area.outputs.length; j++) {\n                var data = cell.output_area.outputs[j];\n                if (data.data) {\n                    // IPython >= 3 moved mimebundle to data attribute of output\n                    data = data.data;\n                }\n                if (data['text/html'] === html_output) {\n                    return [cell, data, j];\n                }\n            }\n        }\n    }\n};\n\n// Register the function which deals with the matplotlib target/channel.\n// The kernel may be null if the page has been refreshed.\nif (IPython.notebook.kernel !== null) {\n    IPython.notebook.kernel.comm_manager.register_target(\n        'matplotlib',\n        mpl.mpl_figure_comm\n    );\n}\n",
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAj0AAAGtCAYAAAD9H8XfAAAgAElEQVR4nO3daXRUZcLu/Z2ITJkqEIlKgIgKiAqGREU5NjgwCaKI4tigggwJTjgrIYmKgJA40toOLc95n9MOHR4Qh6MCMtge5dgg3YoySTABog0miEAmkuv94GE/FEmgam/I3rf1/691fUilKrmrVi/8dSVVsUREREQUAVleH4CIiIioKQI9REREFBGBHiIiIoqIQA8RERFFRKCHiIiIIiLQQ0RERBER6CEiIqKICPQQERFRRAR6iIiIKCICPURERBQRgR4iIiKKiEAPER2zXnzxRVmWf/6ZsSxLL774otfHICKP8s+/RkT0u8tv6CktLdW+ffu8PsZRa8mSJTr33HPVokULtWvXTnfeeefv6v4RHe38868RETVZ+/fvV3V19TH/Pn5Dz++pNWvWqHnz5po4caK++eYbvffee0pOTtaNN97o9dGIfBv/GhFFQKNHj9b555+vuXPnqkuXLjruuOP0+eefa8uWLbr22muVkpKili1b6tRTT9UjjzyiiooK+7ZLly6VZVn64IMPNHDgQLVq1UodO3bU7Nmzg75HZWWlsrKylJiYqLi4OI0ePVpPPfVUPfR89dVX6t+/v2JiYtS6dWv1799fa9asCbqOZVmaPXu2xowZo4SEBCUmJmrKlCmqq6vTzJkzlZKSovj4eF1//fXavXt3yI/DoT/e6tSpk+677z7df//9SkpKUlxcnMaNG6eqqiq9/vrrOu200xQTE6NBgwZp+/bt9u1Cedyk356J6dGjh5o3b65u3bppwYIFSk5OVk5OTtD1XnvtNfXo0UMtWrRQSkqKxo4dq507dx72vtx8883q3r170GV//etfZVmWvv/++5AfE6JICvQQRUCjR49WbGysLr30Uq1cuVIbNmxQeXm5vvnmGxUUFGj16tXavHmz3n77bbVt21YPPfSQfdsD6OnSpYsKCwu1adMm5eXlybIsffLJJ/b17r77biUkJOiNN97Q+vXr9fjjjyshISEIPTt27FCbNm00ZMgQrVq1SqtWrdLgwYPVpk2boP/IW5alNm3a6LnnntPGjRv1wgsvyLIsDRkyRGPHjtXatWu1aNEiBQIBPfDAAyE/Dg2hJz4+XtnZ2Vq/fr3+9re/qVmzZrr88ss1bNgwrVmzRl988YVSU1M1cuRI+3ahPG5bt25Vq1atdMMNN+jrr7/Wp59+qoyMDLVo0SIIPTNmzFC7du30n//5n9q0aZM+//xzXXTRRbrwwgtVW1vb6H05ALaD+/XXX2VZlubOnRvyY0IUSYEeogho9OjRatmypXbs2HHE686YMUMdOnSwPz6Antdff92+rK6uTieffLIefvhhSdKePXvUokULzZo1K+hrDRkyJAg9OTk5atu2rfbs2WNftnv3brVp0yYIApZl6ZZbbgn6WqeffrpOPfXUIAjcfvvtOuecc454nw7+uoeip1+/fkHX6d+/v+Li4vTrr7/al02bNk2BQOCwX/vQx+2RRx5Ru3btVFlZaV/2j3/8Q5Zl2fd13759iomJ0VtvvRX0tbZs2SLLsvTZZ581+v2aN2+u/Pz8epfHxsbqySefPOxZiSI10EMUAY0ePVpnnXVWvcsrKyuVm5urnj17KikpSTExMWrRooWioqJUU1Mj6b/R869//Svotuedd55uvfVWSdI///lPWZalL774Iug606dPD0LP1VdfrYEDB9Y7x4ABAzRixAj7Y8uy9NxzzwVd5w9/+IOuvvrqoMumTp2qk046KZSHwP66h6Jn8uTJQdcZNWqUevXqFXTZX/7yF1mWpaqqKkmhPW5XXXWVBg0aVO8MrVq1stHz5ZdfyrIstW7dWjExMUGzLEt/+ctfGr0vjaEnJiZG06dPD+0BIYqwQA9RBHTgd3oO7c4771RSUpLmzp2r1atXa+PGjXrsscdkWZb9+ykH0PPdd98F3fb888/X6NGjJf32S7WhoqchCDSEnkNfWt63b19dd911QZfl5OQoOTk5hEeg4a/bqVMnPfjgg0HXaeixev3114Mek1Aet6uuukqDBw+ud4aWLVva6Fm5cqUsy9Lbb7+tjRs31tsvv/zS6H3hx1tE4Qd6iCKgxtBz1llnaeLEiUGXjRo1Kmz0HPjx1qHPPAwdOrTej7eSkpK0d+9e+7Jff/1Vbdu2VW5urn2Z39ETyuP2yCOPKDk52X52SJJWr14d9OOtPXv2qHXr1nr88cdDvg8Huvnmm3XmmWcGXfbmm2/yi8xEhwn0EEVAjaHn2muvVadOnbRixQpt2LBBTz75pBITE8NGj/TbLzIHAgG99dZb9tdq7BeZhw0bpq+++kqrV6/W0KFDG/xFZj+jJ5TH7cAvMt9000365ptv9Pe//13nnXeeWrRoEQS8WbNmqWXLlpo+fbq+/vprbdiwQe+//75uu+02lZeXN3pfDrxkPTMzU2vXrtX777+vE088kZesEx0m0EMUATWGnm3btmno0KGKjY1VYmKibr31Vj377LOO0FNZWanMzEwFAgHFxsbqpptu0syZMxt9yXrr1q3tl6x/9dVXQdfxO3pCedwkafHixerRo4eOP/54devWTQsXLlR8fLxmzJgR9PXfeOMNnX/++WrVqpViYmJ0xhln6I477qj3EvhDW7x4sTIyMtS8eXOdcMIJmjRpEm9OSHSYQA8RURO1fv16WZal//qv//L6KEQRGeghIjpGvfTSS1qxYoWKioq0ePFipaWlqWPHjkd8BoeIjk2gh4h+Fx36ku+D19ArxpqiqVOnqlOnTmrRooVOPvlkjRw5UsXFxZ6chYhADxH9TmroJd8HtnXrVq+PR0Q+CPQQERFRRAR6iIiIKCICPURERBQRgR4iIiKKiEAPGZllWazeotihi2INzvP/rfpvTVlqh2aKirJcLTU1tUnP/HsJ9JCRWZaly6KuYQftkn7T2CHrPCufNbBBKXeyg9bU6ImKslRberqrRUVFNemZfy+BHjIy0AN6QA/oMRk9NaWnuhrocRboISMDPaAH9IAek9FTuf0UVwM9zgI9ZGSgB/SAHtBjMnr2bU91NdDjLNBDRgZ6QA/oAT2gh8IN9JCRgR7QA3pAj8no2bO9o6uBHmeBHjIy0AN6QA/oMRk9v2zr4Gqgx1mgh4wM9IAe0AN6TEZP+bYUVwM9zgI9ZGSgB/SAHtADeijcQA8ZGegBPaAH9JiMnp3b2rsa6HEW6CEjAz2gB/SAHpPR8+9tJ7sa6HEW6CEjAz2gB/SAHpPRU7r1JFcDPc4CPWRkoAf0gB7QA3oo3EAPGRnoAT2gB/SYjJ5tW09yNdDjLNBDRgZ6QA/oAT0mo6d464muBnqcBXrIyEAP6AE9oAf0ULiBHjIy0AN6QA/oMRk9RSUnuhrocRboISMDPaAH9IAek9HzfcmJrgZ6nAV6yMhAD+gBPaDHZPRsKDnJ1UCPs0APGRnoAT2gB/SAHgo30ENGBnpAD+gBPSajZ13xSa4GepwFesjIQA/oAT2gx2T0rC0+2dVAj7NADxkZ6AE9oAf0mIyefxW3dzXQ4yzQQ0YGekAP6AE9oIfCDfSQkYEe0AN6QI/J6FnzQ4qrgR5ngR4yMtADekAP6DEZPat+6OBqoMdZoIeMDPSAHtADekxGz//9oZOrgR5ngR4yMtADekAP6AE9FG6gh4wM9IAe0AN6TEbPF1tSXQ30OAv0UJM3d+5cnXvuuYqPj9eJJ56o2267TeXl5WF9DdADekAP6DEZPZ9tOcXVQI+zQA81eXPmzNHSpUtVUVGhn3/+WYMHD9bNN98c1tcAPaAH9IAek9GzouhUVwM9zgI95HnvvPOOUlNTw7oN6AE9oAf0gB4KN9BDnjd58mQNHTo0rNuAHtADekCPyehZVnS6q4EeZ4EeOqpVV1eroqKi0dXV1QVd/4MPPlB8fLz+9a9/Hfbr5ubmKioqyh7oAT2gB/SYjJ4lRV1cDfQ4C/TQUe26666TZVmNrqioyL7ukiVL1KZNGy1evDjs7wN6QA/oAT0mo+fjzd1cDfQ4C/SQJ33yySdKTEzUhx9+6Oj2oAf0gB7QA3oo3EAPNXlLly5VIBDQe++95/hrgB7QA3pAj8no+XDzGa4GepwFeqjJ69evn6KjoxUTExO0cAI9oAf0gB6T0fP+5jNdDfQ4C/SQkYEe0AN6QI/J6Fn4/dmuBnqcBXrIyEAP6AE9oAf0ULiBHjIy0AN6QA/oMRk9C77v6Wqgx1mgh4wM9IAe0AN6TEbPvE3nuBrocRboISMDPaAH9IAe0EPhBnrIyEAP6AE9oMdk9Ly9qZergR5ngR4yMtADekAP6DEZPW9uzHA10OMs0ENGBnpAD+gBPSaj539tPM/VQI+zQA8ZGegBPaAH9IAeCjfQQ0YGekAP6AE9JqPnf24439VAj7NADxkZ6AE9oAf0mIyeuRsucDXQ4yzQQ0YGekAP6AE9JqPntfV9XA30OAv0kJGBHtADekAP6Amt6upqZWVlKTExUYmJiZo0aZJqamoavO7atWt1ySWXKBAIKDk5Wbfffrv27t17tO6654EeMjLQA3pAD+gxGT2vrP8frhYOeqZOnapevXqptLRU27dvV8+ePZWXl9fgdXv27Kk77rhDVVVV2rFjh3r37q2HHnroaN11zwM9ZGSgB/SAHtBjMnpeWvcHVwsHPSkpKZo/f779cWFhoTp27NjgdePi4rRy5Ur74xkzZmjIkCHO76zPAj1kZKAH9IAe0GMyeuas6+dqoaKnrKxMlmWpqKjIvmzz5s2yLEu7du2qd/28vDxlZmaqoqJCpaWlOu+88/SnP/3paN11zwM9ZGSgB/SAHtATyeixLEtRUVH2cnNzG/xexcXFsixL5eXl9mUHIFRSUlLv+itXrlT37t113HHHybIsXXXVVaqtrT1mj0VTB3rIyEAP6AE9oMdk9Dz/3cWuFu4zPVu2bLEva+yZnrKyMsXHx+uFF15QdXW1duzYoSuvvFITJ048qvffy0APGRnoAT2gB/SYjJ5nvrvU1cL9nZ4FCxbYH8+bN08dOnSod70vv/xSLVq0CLps4cKF6tSpk+P76rdADxkZ6AE9oAf0mIyegm/7u1o46MnOzlZ6erpKS0tVWlqqtLS0Bl+9tXv3bgUCAb300kvav3+/ysvLNXz4cA0bNuxo3n1PAz1kZKAH9IAe0AN6Qqu6ulqZmZkKBAIKBALKysqy36dn0KBBmjZtmn3d5cuXq3fv3kpISFBSUpJGjBihbdu2HfXHwKtADxkZ6AE9oAf0mIyeWd8OcDXekdlZoIeMDPSAHtADekxGz8y1g1wN9DgL9JCRgR7QA3pAj8noeXLtYFcDPc4CPWRkoAf0gB7QA3oo3EAPGRnoAT2gB/SYjJ4nvhniaqDHWaCHjAz0gB7QA3pMRk/e11e4GuhxFughIwM9oAf0gB7QQ+EGesjIQA/oAT2gx1T0WFGWcr4e5mqgx1mgh4zMsqLUdWoBO2jV2zuzQzbw9PtZA+sz/Cl20CyraQFhRVma8q+rXA30OAv0kJGBHtADekCPyeh55J/DXQ30OAv0kJGBHtADekAP6KFwAz1kZKAH9IAe0GMyeh785whXAz3OAj1kZKAH9IAe0GMyeu5fc42rgR5ngR4yMtADekAP6DEZPfeuGelqoMdZoIeMDPSAHtADekAPhRvoISMDPaAH9IAek9Fz91fXuRrocRboISMDPaAH9IAek9Fz5+rrXQ30OAv0kJGBHtADekCPyeiZtOpGVwM9zgI9ZGSgB/SAHtADeijcQA8ZGegBPaAH9JiMnomrbnI10OMs0ENGBnpAD+gBPSajZ/w/bnY10OMs0ENGBnpAD+gBPSaj5/YvR7ka6HEW6CEjAz2gB/SAHtBD4QZ6yMhAD+gBPaDHZPSM+XK0q4EeZ4EeMjLQA3pAD+gxGT23/N9bXA30OAv0kJGBHtADekCPyegZtfI2VwM9zgI9ZGSgB/SAHtADeijcQA8ZGegBPaAH9JiMnpu/GONqoMdZoIeMDPSAHtADekxGz41fjHU10OMs0ENGBnpAD+gBPSaj5/rPb3c10OMs0ENGBnpAD+gBPaCHwg30kJGBHtADekCPyegZ+X/GuxrocRboISMDPaAH9IAek9FzzWcTXA30OAv0kJGBHtADekAP6KFwAz1kZKAH9IAe0GMyeq7+bKKrgR5ngR4yMtADekAP6DEZPVf9PdPVQI+zQA8ZGegBPaAH9JiMnmGfZrka6HEW6CEjAz2gB/SAHtBD4QZ6yMhAD+gBPaDHZPQMXTHJ1UCPs0APGRnoAT2gB/SYjJ7Ll9/haqDHWaCHmryvv/5aAwYMUNu2bWVZln799dewvwboAT2gB/SYjJ5By+90NdDjLNBDTd66dev06quv6t133wU9oAf0gB7PB3oiJ9BDnlVUVAR6QA/oAT2ezwv0DFh2l6uBHmeBHvIs0AN6QA/o8cO8QM9lS+92NdDjLNBDR7Xq6mpVVFQ0urq6Ovu64aAnNzdXUVFR9izL8hwZfpvXwPDjvMaFX+c1Mvw2L9BzySf3uBrocRbooaPaddddJ8uyGl1RUZF9XZ7pAT2gB/T4YaAncgI95FmgB/SAHtDjh3mBnn5LJrsa6HEW6KEmr66uThUVFVq3bp0sy9LOnTvr/ejrSIEe0AN6QI/J6Om7+F5XAz3OAj3U5B14hudwP/o6UqAH9IAe0GMyei5afJ+rgR5ngR4yMtADekAP6AE9FG6gh4wM9IAe0AN6TEZPn0X3uxrocRboISMDPaAH9IAek9Fz4ccPuBrocRboISMDPaAH9IAek9HT+6MHXQ30OAv0kJGBHtADekAP6KFwAz1kZKAH9IAe0GMyes7/8CFXAz3OAj1kZKAH9IAe0GMyes793w+7GuhxFughIwM9oAf0gB7QQ+EGesjIQA/oAT2gx2T0ZHzwsKuBHmeBHjIy0AN6QA/oMRk9vT54xNVAj7NADxkZ6AE9oAf0mIyetPcfdTXQ4yzQQ0YGekAP6AE9oIfCDfSQkYEe0AN6QI/J6On53hRXAz3OAj1kZKAH9IAe0GMyenq8O8XVQI+zQA8ZGegBPaAH9JiMnrMXZrsa6HEW6CEjAz2gB/SAHtATWtXV1crKylJiYqISExM1adIk1dTUNHr9V155RV26dFHr1q3VqVMnLViw4GjcbV8EesjIQA/oAT2gx2T0nPXOVFcLBz1Tp05Vr169VFpaqu3bt6tnz57Ky8tr8Lp//vOf1a1bN61evVp1dXX68ccf9f333x+tu+55oIeMDPSAHtADekxGT/cFOa4WDnpSUlI0f/58++PCwkJ17Nix3vX279+v5ORkffTRR0flfvox0ENGBnpAD+gBPSaj54z5Oa4WKnrKyspkWZaKiorsyzZv3izLsrRr166g665du1aWZemFF15Qamqq2rdvr3Hjxmn37t1H8+57GughIwM9oAf0gJ5IRo9lWYqKirKXm5vb4PcqLi6WZVkqLy+3LzsAoZKSkqDrfvrpp7IsS5dddpl27NihHTt26NJLL9XYsWOP6ePRlIEeMjLQA3pAD+gxGT3d/ivX1cJ9pmfLli32ZY090/PVV1/JsiwtXrzYvmzp0qU64YQTjs4d90Ggh4wM9IAe0AN6zEVPlLrOy3O1cH+n5+BXYM2bN08dOnSod719+/apZcuWWrJkiX0Z6CHyQaAH9IAe0GMyerrMy3O1cNCTnZ2t9PR0lZaWqrS0VGlpaY2+emvs2LHq37+/ysrKVF5ergEDBvDjLSKvAz2gB/SAHtATWtXV1crMzFQgEFAgEFBWVpb9Pj2DBg3StGnT7Ovu2bNHt9xyixISEtSuXTuNHTuWX2Qm8jrQA3pAD+gxGT2nFz7marwjs7NADxkZ6AE9oAf0GI2evz3maqDHWaCHjAz0gB7QA3pMRs9pbz/uaqDHWaCH7DZt2qTCwkK98sorKiws1KZNm7w+UqOBHtADekAP6PG+lStXasqUKRo6dKj69OmjoUOHasqUKfriiy+8PlqDgZ4Ir7q6Ws8++6y6deumVq1a6eyzz1afPn109tlnq1WrVurWrZueffZZVVVVeX3UoEAP6AE9oMdk9Jz61uOu5jV6Pv74Y6Wlpalz584aM2aM8vPz9corryg/P19jxoxR586dlZaWpo8//tjTcx4a6InwunbtqjFjxmjZsmX1/upuTU2NVqxYobFjx6pbt24enbDhoqIsLS06jR00t+/w+ntc/6V3sQZWW3oaO2hRUU37n0IrKkqd33zC1bxGz6BBg7RixYrDXufTTz/V4MGDm+hEoQV6Irzi4uKQrnfo25V7HegBPaAH9IAeCjfQQ0YGekAP6AE9RqPnjWmu5mf01NTUaN68eRoyZIjXR6kX6KGg3n33XeXl5en+++8Pmt8CPaAH9IAek9Fzyl+nuZof0fPNN9/onnvuUbt27RQbG6uJEyd6faR6gR6yu/3225WcnKyRI0fqlltuCZrfAj2gB/SAHqPR87+muZpf0PPLL7/opZde0nnnnafo6GhlZGQoJibGt6/+BT1kFwgEtG3bNq+PEVKgB/SAHtADerztj3/8o1q3bq2UlBQ9+OCD+vbbbyVJJ554on766SePT9dwoIfszjzzTJWXl3t9jJACPaAH9IAek9GT+p9Pupof0BMVFaW2bdvqxRdf1K5du+zLQQ8Z0YoVKzRy5Eh98sknWrt2bdD8FugBPaAH9BiNnv/vSVfzA3o2b96sKVOmqEOHDmrVqpVGjhyphQsXKjk5GfSQ/3vrrbeUmJioqKiooEVHR3t9tHqBHtADekCPyejp9D+nu5of0HOg2tpavf/++7rmmmvUvHlzRUdHa/LkySG/JUpTBnrI7qSTTtIrr7yiffv2eX2UIwZ6QA/oAT2gx3/9+9//Vn5+vs4++2wdf/zxXh+nXqCH7JKSklRbW+v1MUIK9IAe0AN6jEbPf0x3Nb+i5+BWrlzp9RHqBXrIburUqZozZ47Xxwgp0AN6QA/oMRs9M1zNb+hZvny5CgoKlJeXFzS/BXrILiMjQ8cff7w6duyoc889N2h+C/SAHtADeoxGz9wZruYn9DzwwAOKi4vT4MGDdc0119i79tprvT5avUAP2c2dO7fR+S3QA3pAD+gBPf4oKSlJ69at8/oYIQV6yMhAD+gBPaDHaPS8PsPV/ISeDh06qLq62utjhBToIbv/+I//aHR+C/SAHtADeoxGz19mupqf0PPyyy/r7rvvVlVVlddHOWKgh+wyMjKClpKSouOPP57f6TFkXgPDj/MaF36d18jw27xAT8fXZrqan9CTlJSkZs2a6fjjj9cJJ5wQNL8FeuiwzZ49W48//rjXx6gX6AE9oAf0gB5/tGzZskbnt0APHbb9+/erXbt2Xh+jXqAH9IAe0GM0el6d6Wp+Qo9JgR46bH//+9+VnJzs9THqBXpAD+gBPUaj55WnXM1r9Lz66qtHfDPb2tpavfrqq010otACPWSXkZER9N483bt3V/PmzfX00097fbR6gR7QA3pAj8no6fTyU67mNXrGjRun1NRUPfzww1q0aJFKSkr0yy+/qKSkRIsWLdIjjzyiU045RRMmTPD0nIcGesju0PfmKSws1KZNm7w+VoOBHtADekAP6PG2devW6e6779Zpp51m/3Hq6Ohode3aVffee682bNjg9RHrBXrIyEAP6AE9oMdo9Pz5KVfzA3oObu/evdq2bZvv/2A16InwTP25LOgBPaAH9BiNnpdmuZrf0GNKoCfCM/XnsqAH9IAe0GM0el6c5Wqgx1mgh4z8uSzoAT2gB/SAHgo30ENBmfJzWdADekAP6DEaPX+a5Wqgx1mgh4wM9IAe0AN6jEbPnFmu5if0zJo1q8HL8/Pzm/gkRw70kJGBHtADekAP6PFHcXFxDV6emJjYxCc5cqCHjAz0gB7QA3qMRs8Ls13ND+hZu3at1q5dq5iYGH377bf2x2vXrtWCBQt08skne33EeoEeMjLQA3pAD+gxGT2pz892NT+g58ALX6KiooIWHR2tk08+2XdvdSKBHvKw6upqZWVlKTExUYmJiZo0aZJqampCui3oAT2gB/QYjZ7nZruaH9BzoAsvvNDrI4Qc6CG73bt3Ky8vT8OGDdPFF18ctGPR1KlT1atXL5WWlmr79u3q2bOn8vLyQrot6AE9oAf0gB4KN9BDdldeeaUyMjI0c+ZMvfDCC0E7FqWkpGj+/Pn2x4WFherYsWNItwU9oAf0gB7Q44+2bt2qW2+9VT169NApp5wSNL8FesguISFBu3fvbpLvVVZWJsuyVFRUZF+2efNmWZalXbt2HfH2oAf0gB7QYzJ6Tnl2tqv5CT39+vXTFVdcobfeekvvvfde0PwW6CG7s846Szt27GiS71VcXCzLslReXm5fdgBCJSUl9a6fm5sb9ItylgV6QA/oAT0Go+eZfFfzE3ri4uJUVVXl9TFCCvREeAe/xPCVV17RJZdcoiVLlgRdvnbt2qP+fQ8AZ8uWLfZlPNMDekAP6AE95qGnd+/eQf+W+znQE+E19pLDQ19+eCxKSUnRggUL7I/nzZunDh06hHhu0AN6QA/oMRg9T+e7mp/Qk5+frx49eui1117T+++/HzS/BXrIs7Kzs5Wenq7S0lKVlpYqLS2NV2+BHtADeiIDPQX5ruYn9KSmpjY4fpGZfN0dd9zR4OV33XXXMfl+1dXVyszMVCAQUCAQUFZWFu/TA3pAD+iJCPR0zs93NT+hx6RAD9k19vdT2rRp08QnOXKgB/SAHtADevzVd999p0WLFkmSamtrVVdX5/GJ6gd6yP7Za+vWrfXBBx8E/Tz2mWee8eVTlKAH9IAe0GM0embnu5qf0FNUVKS0tDTFxcUpJiZG0m/vuzZq1CiPT1Y/0EP2z1+jo6ODfh7buXNnXXDBBXr33Xe9PmK9QA/oAT2gx2j0zMp3NT+hZ9CgQXriiSdUW1urQCAgSdq1a1fIbzbblIEesrvhhj7doR0AABvBSURBVBu8PkLIgR7QA3pAj8noOfWpfFfzE3ratGmj2tpaSVJiYqJ9eXx8vFdHajTQQ0YGekAP6AE9oMcfdenSxX6fngPo2bhxo8444wwvj9VgoIfsDrzE8NB169ZNAwYM0KuvvuqbX0wDPaAH9IAeo9Ezs8DV/ISe/Px8paWl6b333lNCQoKWLFmiCy644Jj93UY3gR6ymzFjhk4//XQ9/fTTmjdvngoKCtS1a1c98cQTeuqpp5SSkqLHHnvM62NKAj2gB/SAHsPRM6PA1fyEHkl67rnn1L17d7Vu3VpnnHGGnn32Wa+P1GCgh+zS09O1cePGoMs2btyo9PR0SdKqVat880ou0AN6QA/oMRk9p00vcDW/oKempkY33nijKioqvD5KSIEesouPj6/3R+MqKiqCfhntwMsRvQ70gB7QA3pAjz9KTk4O+Y1lvQ70kN2AAQM0btw4+w9+7tq1SxMmTNBll10mSVq3bh3P9Ph4XgPDj/MaF36d18jw2zxBz5MFruYn9EyZMkUzZ870+hghBXrIbuvWrbrooosUHR2t+Ph4RUdH66KLLlJJSYkkafXq1froo488PuVvgR7QA3pAj8noOX1agav5CT0ZGRlq1qyZkpOTlZ6ernPPPdee3wI9VK/i4mKtXLnSxo4fAz2gB/SAHtDjj+bOndvo/BbooXqVlZXphx9+CJrfAj2gB/SAHqPR80SBq/kFPTU1NerTpw+/yEzmtWzZMvvPUURFRdmLjo72+mj1Aj2gB/SAHqPR83iBq/kFPZLUoUMHVVZWen2MkAI9ZNetWzdNnz5dP/30k/bs2RM0vwV6QA/oAT0mo6fLYwWu5if0vPDCC5o0aZL27t3r9VGOGOghu7i4ON+84/KRAj2gB/SAHtDjj5KSknTcccfpuOOOU9u2bXXCCSfY81ugh+yuv/56LVu2zOtjhBToAT2gB/SAHn+0bNmyRue3QA/ZTZgwQfHx8br55pt1//33B81vgR7QA3pAj9HoyStwNT+hx6RAD9ndcsstjc5vgR7QA3pAj7HosaLUNbfA1fyEnry8vEbnt0APGRnoAT2gB/SAntCqrq5WVlaWEhMTlZiYqEmTJh3xz0Z89913at68uUaMGHHEr3/NNdcErU+fPmrevLmuvvrqkM/YVIEeCmr79u168cUXNXXqVEnSli1b9P3333t8qvqBHtADekCP0ejJKXC1cNAzdepU9erVS6Wlpdq+fbt69ux52Gdh6urq9Ic//EF9+/YNCT0N9dZbb2nSpEmObnssAz1kt3jxYiUkJGjIkCGKjY2VJK1YsUKXX365xyerH+gBPaAH9BiNnqkFrhYOelJSUjR//nz748LCQnXs2LHR67/00ksaNWqUcnJyHKOntrZWiYmJjm57LAM9ZJeWlqZFixZJkgKBgKTf/sp6u3btvDxWg4Ee0AN6QI/J6OmWXeBqoaKnrKxMlmWpqKjIvmzz5s2yLMv+49IHt337dnXu3Fn//ve/XaHnjTfeOCysvAr0kN0B6Eiyhe5XrYMe0AN6QE8ko8eyrKB3zs/NzW3wexUXF8uyLJWXl9uXHYBQQ39fccSIEXr55ZclKWT0JCUlBb03T0xMjOLi4vTmm286fISOXaCH7DIyMvTpp59K+m/0LF++XBdccIGXx2ow0AN6QA/oMRo9UwpcLdxnerZs2WJf1tgzPQsXLtSFF15ov0ltqOg59L15/vGPf2j37t1hPCJNF+ghuw8//FBt2rTRfffdp5iYGGVnZ+ukk07S4sWLvT5avUAP6AE9oMdk9JzxaIGrhfs7PQsWLLA/njdvnjp06FDvenfddZdiYmLUtm1btW3bVq1atVLz5s3Vvn37Br9uXV2dfvnllwY/98svv/jyHf5BDwW1Zs0aZWZm6vLLL9eECRO0evVqr4/UYKAH9IAe0GM0eh4pcLVw0JOdna309HSVlpaqtLRUaWlpDb56a9euXSopKbF3zz336PLLL9fWrVsb/LrPPPOMrrvuugY/d8MNN+i5554L+YxNFeihw1ZdXa0zzjjD62PUC/SAHtADekBPaFVXVyszM1OBQECBQEBZWVn2+/QMGjRI06ZNa/B2R/rxVnp6utauXdvg57799lv16tUr5DM2VaCHDltlZaWv3vnzQKAH9IAe0GM0eh4ucDU//Lvcpk0bV5/3ItBDh62yslLR0dFeH6NeVlSUTn88nx20yy54jB2y82+YzRrYwITb2EGzrKZHT/eHClzND+gJBAIqKytr8HNlZWVKSEho4hMdOdBDhw30mDOvgeHHeY0Lv85rZPhtnqDnwQJX8wN6Bg4cqDlz5jT4uRdffFEDBgxo4hMdOdBDmjNnTqN79tlnQY8h8xoYfpzXuPDrvEaG3wZ6nLVixQrFxcVpxowZKioqUlVVlYqKijRjxgwlJCTYb4Hip0APqV+/fkec3wI9oAf0gB6j0fNAgav5AT2S9O6776pz586Kjo6217lzZ7333nteH63BQA8ZGegBPaAH9JiMnjPvL3A1v6DnQBs2bNBnn32m9evXe32UwwZ6yMhAD+gBPaDHaPTcV+BqfkOPKYEeMjLQA3pAD+gBPRRuoIeMDPSAHtADekxGz1n3Frga6HEW6CEjAz2gB/SAHqPRM7nA1UCPs0APGRnoAT2gB/SAHgo30ENGBnpAD+gBPUaj554CVwM9zgI9ZGSgB/SAHtBjMnrOvqfA1UCPs0APGRnoAT2gB/QYjZ67C1wN9DgL9JCRgR7QA3pAD+ihcAM9ZGSgB/SAHtBjMnp63FXgaqDHWaCHjAz0gB7QA3qMRs+dBa4GepwFesjIQA/oAT2gx2j03FHgaqDHWaCHjAz0gB7QA3pAD4Ub6CEjAz2gB/SAHpPR03NSgauBHmeBHjIy0AN6QA/oMRo9WQWuBnqcBXrIyEAP6AE9oMdk9JyTWeBqoMdZoIeMDPSAHtADekAPhRvoISMDPaAH9IAeo9EzscDVQI+zQA8ZGegBPaAH9JiMnrQJBa4GepwFesjIQA/oAT2gx2j0jC9wNdDjLNBDRgZ6QA/oAT2gh8IN9JCRgR7QA3pAj9HoGVfgaqDHWaCHjAz0gB7QA3pMRk+v2wtcDfQ4C/SQkYEe0AN6QI/R6Blb4Gqgx1mgh4wM9IAe0AN6QA+FG+ghIwM9oAf0gB6T0ZM+Jt/VQI+zQA950vPPP6/09HQ1b95cI0aMCPv2oAf0gB7QYzR6bst3NdDjLNBDnjRv3jzNnz9fWVlZoAf0gB7QA3pAT5MEesjTcnJyQA/oAT2gJ+LQk3FrvquBHmeBHvI00AN6QA/o8XqeoOeWfFcDPc4CPeRpoaInNzdXUVFR9izL8hwZfpvXwPDjvMaFX+c1Mvw2L9Bz7uh8VwM9zgI95Gk80wN6QA/o8XqgJ3ICPeRpoAf0gB7Q4/U8Qc+ofFcDPc4CPeRJNTU1qqio0KOPPqrhw4eroqJCVVVVId8e9IAe0AN6TEbPeX/MdzXQ4yzQQ56Uk5Mjy7KC1rdv35BvD3pAD+gBPUaj5+Z8VwM9zgI9ZGSgB/SAHtADeijcQA8ZGegBPaAH9JiMnvNvync10OMs0ENGBnpAD+gBPUaj58bZrgZ6nAV6yMhAD+gBPaDHZPT0vmG2q4EeZ4EeMjLQA3pAD+gBPRRuoIeMDPSAHtADeoxGz/WzXQ30OAv0kJGBHtADekCPyei5YORsVwM9zgI9ZGSgB/SAHtBjNHqune1qoMdZoIeMDPSAHtADekAPhRvoISMDPaAH9IAek9Fz4TWzXQ30OAv0kJGBHtADekCP0egZMcvVQI+zQA8ZGegBPaAH9JiMnj5Xz3I10OMs0ENGBnpAD+gBPaCHwg30kJGBHtADekCP0egZPsvVQI+zQA8ZGegBPaAH9JiMnv9x1SxXAz3OAj1kZKAH9IAe0AN6KNxADxkZ6AE9oAf0GI2eK59yNdDjLNBDRgZ6QA/oAT0mo+eiYU+5GuhxFughIwM9oAf0gB6j0XPFU64GepwFesjIQA/oAT2gB/RQuIEeMjLQA3pAD+gxGT1/GPqUq4EeZ4EeMjLQA3pAD+gxGj2Xz3Q10OMs0ENGBnpAD+gBPUajZ/BMVwM9zgI9ZGSgB/SAHtADekKrurpaWVlZSkxMVGJioiZNmqSampp61/vpp5904403qn379oqLi9M555yjd95552jedc8DPWRkoAf0gB7QYzJ6+g6a6WrhoGfq1Knq1auXSktLtX37dvXs2VN5eXn1rvf9999r1qxZKikpUW1trRYuXKjWrVvru+++O5p339NADxkZ6AE9oAf0GI2egTNcLRz0pKSkaP78+fbHhYWF6tixY0i3TUtL09y5c8O+j34N9JCRgR7QA3pAj8no6TdghquFip6ysjJZlqWioiL7ss2bN8uyLO3ateuwt/3pp5/UsmVLffnll27urq8CPWRkoAf0gB7QE8nosSxLUVFR9nJzcxv8XsXFxbIsS+Xl5fZlByBUUlLS6BkrKyt18cUXa9SoUUf9/nsZ6CEjAz2gB/SAHqPR03+Gq4X7TM+WLVvsy470TE9VVZWuuOIKDRkyRFVVVUflPvsl0ENGZkVZmvzVteyg9c/IYYfswhGzWAPrNSafHTTLatqXf1tWlC6+bLqrhfs7PQsWLLA/njdvnjp06NDgdauqqjRs2DANHDhQlZWVru+r3wI9ZGSgB/SAHtBjNHoume5q4aAnOztb6enpKi0tVWlpqdLS0hp89VZ1dbWuvPJKXXrppaqoqDiad9k3gR4yMtADekAP6AE9oVVdXa3MzEwFAgEFAgFlZWXZ79MzaNAgTZs2TZK0bNkyWZalli1bKiYmxt6Bz/8eAj1kZKAH9IAe0GMyei65+ElX4x2ZnQV6yMhAD+gBPaDHaPT0e9LVQI+zQA8ZGegBPaAH9BiNnr7TXA30OAv0kJGBHtADekAP6KFwAz1kZKAH9IAe0GMyei79wzRXAz3OAj1kZKAH9IAe0GM0ei56wtVAj7NADxkZ6AE9oAf0mIyey/o84Wqgx1mgh4wM9IAe0AN6QA+FG+ghIwM9oAf0gB6j0XPh464GepwFesjIQA/oAT2gx2j0XPC4q4EeZ4EeMjLQA3pAD+gBPRRuoIeMDPSAHtADekxGT//ej7ka6HEW6CEjAz2gB/SAHqPRc36eq4EeZ4EeMjLQA3pAD+gxGj3n5rka6HEW6CEjAz2gB/SAHtBD4QZ6yMhAD+gBPaDHXPRYGpCR62qgx1mgh4wM9IAe0AN6jEZPeo6rgR5ngR4yMtADekAP6DEaPb2muhrocRboISMDPaAH9IAe0EPhBnrIyEAP6AE9oMdo9Jwz1dVAj7NADxkZ6AE9oAf0mIyegT2zXQ30OAv0kJGBHtADekCP0ejpMcXVQI+zQA8ZGegBPaAH9IAeCjfQQ0YGekAP6AE9RqPn7EddDfQ4C/SQkYEe0AN6QI/R6DnrEVcDPc4CPWRkoAf0gB7QYzR6uj/iaqDHWaCHjAz0gB7QA3pAD4Ub6CEjAz2gB/SAHpPRM+iMh10N9DgL9JAnVVZWauzYsUpNTVVsbKy6du2q1157LeTbgx7QA3pAj9Ho6faQq4EeZ4Ee8qQ9e/YoOztbmzZtUl1dnT7//HMFAgEtWrQopNuDHtADekCP0ejp8qCrgR5ngR7yTcOHD1dubm5I1wU9oAf0gB7QQ+EGesgXVVRUqH379iosLAzp+qAH9IAe0GM0ek5/wNVAj7NAD3leXV2dbrrpJvXr10+1tbUNXic3N1dRUVH2LAv0gB7QA3oMRs9p97sa6HEW6CFPq6ur0/jx45WRkaFdu3aFfDue6QE9oAf0gB4KN9BDnlVXV6eJEycqLS1NZWVlYd0W9IAe0AN6jEbPqfe5GuhxFughz8rMzFSPHj20c+fOsG8LekAP6AE9RqPnlHtdDfQ4C/SQJ23ZskWWZalFixaKiYmxN378+JBuD3pAD+gBPUajJ/UeVwM9zgI9ZGSgB/SAHtADeijcQA8ZGegBPaAH9BiNnk53uxrocRboISMDPaAH9IAeo9HT4S5XAz3OAj1kZKAH9IAe0GM0elLudDXQ4yzQQ0YGekAP6AE9oIfCDfSQkYEe0AN6QI/R6Gl/h6uBHmeBHjIy0AN6QA/oMRo9J09yNdDjLNBDRgZ6QA/oAT1Go+fETFcDPc4CPWRkoAf0gB7QA3oo3EAPGRnoAT2gB/QYjZ7kia4GepwFesjIQA/oAT2gx2j0tJvgaqDHWaCHjAz0gB7QA3qMRk/SeFcDPc4CPWRkoAf0gB7QA3oo3EAPGRnoAT2gB/SYjJ6BbW93NdDjLNBDRgZ6QA/oAT1GoydxrKuBHmeBHjIy0AN6QA/oMRo9gTGuBnqcBXrIyEAP6AE9oAf0ULiBHjIy0AN6QA/oMRo98be6GuhxFughIwM9oAf0gB6j0RN3i6uBHmeBHjIy0AN6QA/oMRk9A2JGuRrocRboISMDPaAH9IAe0EPhBnrIyEAP6AE9oMdo9LT+o6uBHmeBHjIy0AN6QA/oMRo9LW92NdDjLNBDRgZ6QA/oAT2gh8IN9JCRgR7QA3pAj9HoaXGjq4EeZ4EeMjLQA3pAD+gxGT39j7/B1UCPs0APGRnoAT2gB/QYjZ5m17ka6HEW6CEjAz2gB/SAHtBD4QZ6yMhAD+gBPaDHZPRcFj3S1UCPs0APGRnoAT2gB/QYjZ6oa1wN9DgL9JCRWZalqKgoz+eXc/hpPCY8LqY9JpbVtP8pTE1NdX3m1NTUJj3z7yXQQ+SiqCj+39ah8Zg0HI9L/XhMqKkDPUQu4h/t+vGYNByPS/14TKipAz1ELuIf7frxmDQcj0v9eEyoqQM9RC7Kzc31+gi+i8ek4Xhc6sdjQk0d6CEiIqKICPQQERFRRAR6iIiIKCICPURERBQRgR4iIiKKiEAPkYOqq6uVlZWlxMREJSYmatKkSaqpqfH6WJ72/PPPKz09Xc2bN9eIESO8Po4vqqys1NixY5WamqrY2Fh17dpVr732mtfH8rSHH35YHTt2VFxcnE466STdddddqqqq8vpYFCGBHiIHTZ06Vb169VJpaam2b9+unj17Ki8vz+tjedq8efM0f/58ZWVlgZ7/1549e5Sdna1Nmzaprq5On3/+uQKBgBYtWuT10Txr3bp12r17tyRpx44d6tevn6ZNm+bxqShSAj1EDkpJSdH8+fPtjwsLC9WxY0cPT+SfcnJyQM9hGj58OO9P8//asWOHLrnkEt12221eH4UiJNBDFGZlZWWyLEtFRUX2ZZs3b5ZlWdq1a5d3B/NJoKfxKioq1L59exUWFnp9FE/705/+pNjYWFmWpbZt22rVqlVeH4kiJNBDFGbFxcWyLEvl5eX2ZQcgVFJS4uHJ/BHoabi6ujrddNNN6tevn2pra70+ji9at26dsrOztW3bNq+PQhES6CEKswPA2bJli30Zz/T8d6CnfnV1dRo/frwyMjL438ghvf322xo4cKDXx6AICfQQOSglJUULFiywP543b546dOjg4Yn8E+gJrq6uThMnTlRaWprKysq8Po7v+utf/6rOnTt7fQyKkEAPkYOys7OVnp6u0tJSlZaWKi0tLeJfvVVTU6OKigo9+uijGj58uCoqKngpsqTMzEz16NFDO3fu9PoovmjOnDn6+eefVVdXp2+++UZnnnmmJkyY4PWxKEICPUQOqq6uVmZmpgKBgAKBgLKysiL+fXpycnJkWVbQ+vbt6/WxPG3Lli2yLEstWrRQTEyMvfHjx3t9NM8aPHiw2rZtq9atWys1NVX33nuv9u7d6/WxKEICPURERBQRgR4iIiKKiEAPERERRUSgh4iIiCIi0ENEREQREeghIiKiiAj0EBERUUQEeojod5dlWfr666/Dus3tt9+ul19++Zic54cfflCXLl1UWVl5TL4+EYUW6CGio1Lfvn31/PPPN/n37dSpk959992gy8JFz7p169SxY8dj+gaTt956q5555plj9vWJ6MiBHiI6KpmMnrvuuksPPvjg0T5aUEuXLlXXrl2P6fcgosMHeojoqHQ49Hz44YdKT09XQkKCevbsqUWLFtmfGz16tMaPH6/rrrtOsbGx6tKli5YuXWp/vqSkRP3791dcXJzS0tI0ffp0derUSZJ0/fXXKyoqSi1btlRMTIyysrIk/Yael19+WWeeeabi4uJ0xRVXHPavm5966qn66KOP7I9ff/11paenB10nPT1dr7/+etDns7Oz1bZtWyUnJ+vNN9/U8uXL1b17d8XHx2vs2LGqra21b19dXa2WLVtqw4YNIT2eRHT0Az1EdFRqDD1r1qxRYmKili1bptraWn300UeKj4/X1q1bJf2GntjYWC1ZskT79+/Xk08+aaNGki666CKNGTNG+/bt0/r163XaaacFfb6xZ3r69eunH3/8Ubt27VJ6erpycnIaPPeePXtkWZZ++OEH+7JQ0NOsWTM999xzqqmp0csvv6xAIKBrrrlGO3fu1NatW9WuXTu98847QV/jrLPO0ttvv32kh5KIjlGgh4iOSo2hZ+LEiZo8eXLQZZdffrnmzJkj6Tf03HjjjfbnfvzxR1mWpZ07d6q4uFiWZennn3+2P19QUBASej7++GP74xkzZmjo0KENnnvr1q2yLEvl5eX2ZaGgJyUlxf7c3r17ZVlW0DNY1157bT1oXXjhhfrzn//c4DmI6NgHeojoqNQYegYPHqxWrVopISHBXuvWrfXoo49K+g099957r339X3/9VZZlqaioSF988YViY2ODvl5hYWFI6Dn4d3qef/75Rv/i+wGwhPtMz6GfP/R7Hnq/JJ7pIfI60ENER6XG0DN+/HgbOA11OPQceKanrKzM/vyhz/SccsoprtAjSaeffnrQ7/T87W9/U7du3YKu0759e1fo4Xd6iLwP9BDRUalv3756+umnVVFRYa+qqkqrVq1ScnKyli1bpv3796uiokLLly/X5s2bJR0ePZLUp08fjRs3Tvv27dPGjRvVpUuXIPT07t1bBQUFQWcJFz2TJ0/WQw89ZH+8ceNGNWvWTCtWrFBNTY1mz56tZs2auULP8uXL1aVLl8M/iER0TAM9RHRU6tu3ryzLCtqBl2h//PHH6t27twKBgJKSkjRo0CBt3LhR0pHR88MPP+jSSy+1X7312GOPBeFh4cKFSk1NVSAQ0B133CEpfPSsX79enTp1Cnqfnvz8fLVr105JSUnKy8tz/eOtMWPG6Omnnw7loSSiYxToISKjmjlzpi677LKj/nXHjRt3zN6Rubi4WF26dFFFRcUx+fpEFFqgh4h83apVq/Tdd9+prq5Oq1atUvv27XkFFBE5CvQQka/78MMPlZqaqlatWqlTp07KycnR/v37vT4WERkY6CEiIqKICPQQERFRRAR6iIiIKCICPURERBQRgR4iIiKKiEAPERERRUSgh4iIiCIi0ENEREQREeghIiKiiAj0EBERUUQEeoiIiCgiAj1EREQUEYEeIiIiioj+fxASVQGJjligAAAAAElFTkSuQmCC\" width=\"639.85\">"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "data_set.data_type = 'image'\n",
+    "data_set.plot()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Saving\n",
+    "\n",
+    "These ``Dataset`` objects will be deleted from memory once the python script\n",
+    "completes or when a notebook is closed. The information collected in a\n",
+    "``Dataset`` can reliably be stored to files using functions in sister\n",
+    "packages - ``pyUSID`` and ``pyNSID`` that write the dataset according to the\n",
+    "**Universal Spectroscopy and Imaging Data (USID)** or **N-dimensional\n",
+    "Spectrocsopy and Imaging Data (NSID)** formats.\n",
+    "Here are links to how one could save such Datasets for each package:\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.9"
+  },
+  "toc": {
+   "base_numbering": 1,
+   "nav_menu": {},
+   "number_sections": true,
+   "sideBar": true,
+   "skip_h1_title": false,
+   "title_cell": "Table of Contents",
+   "title_sidebar": "Contents",
+   "toc_cell": false,
+   "toc_position": {},
+   "toc_section_display": true,
+   "toc_window_display": false
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

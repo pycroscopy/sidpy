@@ -1,0 +1,6 @@
+sidpy.base.num\_utils.to\_ranges
+================================
+
+.. currentmodule:: sidpy.base.num_utils
+
+.. autofunction:: to_ranges

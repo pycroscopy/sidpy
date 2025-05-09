@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.h5\_group\_to\_dict
+========================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: h5_group_to_dict
