@@ -1,0 +1,30 @@
+sidpy.sid.dimension.DimensionType
+=================================
+
+.. currentmodule:: sidpy.sid.dimension
+
+.. autoclass:: DimensionType
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DimensionType.UNKNOWN
+      ~DimensionType.SPATIAL
+      ~DimensionType.RECIPROCAL
+      ~DimensionType.SPECTRAL
+      ~DimensionType.TEMPORAL
+      ~DimensionType.CHANNEL
+      ~DimensionType.POINT_CLOUD
+   
+   

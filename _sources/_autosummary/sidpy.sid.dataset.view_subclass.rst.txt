@@ -1,0 +1,6 @@
+sidpy.sid.dataset.view\_subclass
+================================
+
+.. currentmodule:: sidpy.sid.dataset
+
+.. autofunction:: view_subclass

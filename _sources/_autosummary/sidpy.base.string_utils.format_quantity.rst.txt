@@ -1,0 +1,6 @@
+sidpy.base.string\_utils.format\_quantity
+=========================================
+
+.. currentmodule:: sidpy.base.string_utils
+
+.. autofunction:: format_quantity
