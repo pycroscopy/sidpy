@@ -15,7 +15,7 @@ requirements = ['numpy>=1.10',
                 'toolz',  # dask installation failing without this
                 'cytoolz',  # dask installation failing without this
                 'dask',
-                'distributed',
+                'distrubted',
                 'h5py>=2.6.0',
                 'matplotlib>=2.0.0',
                 'six',
@@ -68,8 +68,6 @@ setup(
     include_package_data=True,
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-dependencies
     extras_require={
-        'MPI': ["mpi4py"],
-        'ipykernel': ["ipykernel"],
     },
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
