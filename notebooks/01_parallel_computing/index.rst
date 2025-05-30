@@ -9,4 +9,3 @@ Parallel computing
    :maxdepth: 1
    :hidden:
    
-   parallel_compute.ipynb
