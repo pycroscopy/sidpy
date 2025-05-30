@@ -103,8 +103,10 @@ class SidFitter:
         self._complex_data = False  # if data is complex. Will be checked during guess/fit as needed.
 
         if ind_dims is not None:
+            print('Setting Ind_dims from given values from user')
             self.ind_dims = tuple(ind_dims)  # Tuple: containing indices of independent dimensions
         else:
+            print('Setting Ind_dims auotmatically based on available spectral dimensions')
             # All the dimensions that are not spectral will be considered as independent dimensions
             ind_dims = []
             for i, dim in self.dataset._axes.items():
@@ -113,8 +115,10 @@ class SidFitter:
             self.ind_dims = tuple(ind_dims)
 
         # Make sure there is at least one spectral dimension
-        if len(self.ind_dims) == len(self.dataset.shape):
-            raise NotImplementedError('No Spectral (dependent) dimensions found to fit')
+        #This is not good - sometimes we want to fit spatial dimensions too. Hence, commenting out.
+
+        #if len(self.ind_dims) == len(self.dataset.shape):
+        #    raise NotImplementedError('No Spectral (dependent) dimensions found to fit')
 
         # Let's get the dependent dims here
         dep_dims = []  # Tuple: contains all the dependent dimensions. ind_dims+dep_dims = all_dims
