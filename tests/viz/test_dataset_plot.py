@@ -16,9 +16,13 @@ mpl.use('Agg')
 import numpy as np
 sys.path.insert(0, "../../sidpy/")
 import sidpy
-from sidpy.proc.fitter import SidFitter
 
-
+fitter_resent = True
+try: 
+    from sidpy.proc.fitter import SidFitter
+except:
+    fitter_present = False
+    
 def get_fit_dataset(dset_shape=(5,5,32)):
     #Define the function we want each spectrum to
 
@@ -58,7 +62,10 @@ def get_fit_dataset(dset_shape=(5,5,32)):
                            km_guess=False,num_fit_parms = 2)
     output = fitter.do_fit()
     return data_set, output[0], output[1]
+ 
+    
 
+ 
 def get_spectrum(dtype=float):
     x = np.array(np.random.normal(3, 2.5, size=1024), dtype=dtype)
 
@@ -520,24 +527,27 @@ class Test4DImageStackPlot(unittest.TestCase):
         self.assertEqual(len(view.axes), 3)
 
 
+
 class TestSpectralImageFitVisualizer(unittest.TestCase):
 
-    def test_plot_with_fit_parms(self):
-        original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
-        view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fit_parameters)
-        self.assertEqual(len(view.axes), 2)
+    def test_plot_with_fit_parms(self): 
+        if fitter_present:           
+             original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
+             view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fit_parameters)
+             self.assertEqual(len(view.axes), 2)
 
     def test_plot_with_fitted_dataset(self):
-        original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
-        view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fitted_dataset)
-        self.assertEqual(len(view.axes), 2)
-
+        if fitter_present: 
+            original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
+            view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fitted_dataset)
+            self.assertEqual(len(view.axes), 2)
+        
     def test_plot_with_custom_xvec(self):
-        original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
-        xvec = np.linspace(-1,2,32)
-        view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fit_parameters, xvec = xvec)
-        self.assertEqual(len(view.axes), 2)
+        if fitter_present: 
+            original_dataset, fit_parameters, fitted_dataset = get_fit_dataset()
+            xvec = np.linspace(-1,2,32)
+            view = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(original_dataset, fit_parameters, xvec = xvec)
+            self.assertEqual(len(view.axes), 2)
     
-
 if __name__ == '__main__':
     unittest.main()

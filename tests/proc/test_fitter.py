@@ -4,7 +4,12 @@ import numpy as np
 
 sys.path.insert(0, "../../sidpy/")
 
-from sidpy.proc.fitter import SidFitter
+fitter_resent = True
+try: 
+    from sidpy.proc.fitter import SidFitter
+except:
+    fitter_present = False
+    
 from sidpy import Dataset, Dimension, DataType
 import sidpy as sid
 from ..sid.test_dataset import validate_dataset_properties
@@ -13,6 +18,8 @@ import inspect
 
 class Test_3Ddset_1Dfit(unittest.TestCase):
     def setUp(self):
+        if not fitter_present:
+            return
         self.data_set_3D, self.xvec = make_3D_dataset(shape=(3, 4, 7))
         fitter = SidFitter(self.data_set_3D, xvec=self.xvec,
                            fit_fn=return_quad, guess_fn=guess_quad, num_workers=3,
@@ -31,9 +38,13 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
         self.metadata['fit_parms_dict'] = fit_parms_dict
 
     def test_num_fitter_outputs(self):
+        if not fitter_present:
+            return
         self.assertEqual(len(self.fit_results), 4)  # add assertion here
 
     def test_fit_parms_dset(self):
+        if not fitter_present:
+            return
         # First dataset would be the fitting parameters dataset
         self.assertEqual(self.fit_results[0].shape, (3, 4, 3))
         ## Getting the dimension dict
@@ -50,6 +61,8 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_cov_dset(self):
+        if not fitter_present:
+            return
         # Second dataset is the covariance dataset
         self.assertEqual(self.fit_results[1].shape, (3, 4, 3, 3))
         ## Getting the dim_dict
@@ -71,6 +84,8 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_std_dev_dset(self):
+        if not fitter_present:
+            return
         # Third dataset is the std_dev dataset
         self.assertEqual(self.fit_results[2].shape, (3, 4, 3))
         ## Getting the dim_dict
@@ -86,6 +101,8 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_fitted_dset(self):
+        if not fitter_present:
+            return
         # Fourth dataset is the fitted dataset
         self.assertEqual(self.fit_results[3].shape, self.data_set_3D.shape)
         validate_dataset_properties(self, self.fit_results[3], np.array(self.fit_results[3]),
@@ -99,6 +116,8 @@ class Test_3Ddset_1Dfit(unittest.TestCase):
 
 class Test_4Ddset_2Dfit(unittest.TestCase):
     def setUp(self):
+        if not fitter_present:
+            return
         self.data_set_4D, self.xyvec = make_4D_dataset(shape=(3, 5, 9, 13))
         # Here we don't provide the xyvec as the input, we let the class figure it
         fitter = SidFitter(self.data_set_4D, fit_fn=gauss_2D, num_workers=8, num_fit_parms=5,
@@ -117,9 +136,13 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
         self.metadata['fit_parms_dict'] = fit_parms_dict
 
     def test_num_fitter_outputs(self):
+        if not fitter_present:
+            return
         self.assertEqual(len(self.fit_results), 3)  # add assertion here
 
     def test_fit_parms_dset(self):
+        if not fitter_present:
+            return
         # First dataset would be the fitting parameters dataset
         self.assertEqual(self.fit_results[0].shape, (3, 5, 5))
         ## Getting the dimension dict
@@ -136,6 +159,8 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_std_dev_dset(self):
+        if not fitter_present:
+            return
         # Third dataset is the std_dev dataset
         self.assertEqual(self.fit_results[1].shape, (3, 5, 5))
         ## Getting the dim_dict
@@ -151,6 +176,8 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_fitted_dset(self):
+        if not fitter_present:
+            return
         # Fourth dataset is the fitted dataset
         self.assertEqual(self.fit_results[2].shape, self.data_set_4D.shape)
         validate_dataset_properties(self, self.fit_results[2], np.array(self.fit_results[2]),
@@ -164,6 +191,8 @@ class Test_4Ddset_2Dfit(unittest.TestCase):
 
 class Test_4Ddset_1Dfit(unittest.TestCase):
     def setUp(self):
+        if not fitter_present:
+            return
         self.data_set_cycles, self.xvec = make_3D_dataset(shape=(2, 2, 16), cycles=3)
         fitter = SidFitter(self.data_set_cycles, xvec=self.xvec,
                            fit_fn=return_quad, guess_fn=guess_quad, num_workers=8,
@@ -182,9 +211,13 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
         self.metadata['fit_parms_dict'] = fit_parms_dict
 
     def test_num_fitter_outputs(self):
+        if not fitter_present:
+            return
         self.assertEqual(len(self.fit_results), 4)  # add assertion here
 
     def test_fit_parms_dset(self):
+        if not fitter_present:
+            return
         # First dataset would be the fitting parameters dataset
         self.assertEqual(self.fit_results[0].shape, (2, 2, 3, 3))
         ## Getting the dimension dict
@@ -202,6 +235,8 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_cov_dset(self):
+        if not fitter_present:
+            return
         # Second dataset is the covariance dataset
         self.assertEqual(self.fit_results[1].shape, (2, 2, 3, 3, 3))
         ## Getting the dim_dict
@@ -224,6 +259,8 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_std_dev_dset(self):
+        if not fitter_present:
+            return
         # Third dataset is the std_dev dataset
         self.assertEqual(self.fit_results[2].shape, (2, 2, 3, 3))
         ## Getting the dim_dict
@@ -240,6 +277,8 @@ class Test_4Ddset_1Dfit(unittest.TestCase):
                                     metadata=self.metadata)
 
     def test_fitted_dset(self):
+        if not fitter_present:
+            return
         # Fourth dataset is the fitted dataset
         shape = [self.data_set_cycles.shape[i] for i in [0, 1, 3, 2]]
         self.assertEqual(self.fit_results[3].shape, self.data_set_cycles.shape)
