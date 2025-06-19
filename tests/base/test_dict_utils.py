@@ -8,7 +8,7 @@ from __future__ import division, print_function, unicode_literals, \
     absolute_import
 import unittest
 import sys
-sys.path.append("../../sidpy/")
+sys.path.append("..//..//")
 from sidpy.base.dict_utils import *
 
 if sys.version_info.major == 3:
