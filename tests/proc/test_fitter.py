@@ -4,7 +4,7 @@ import numpy as np
 
 sys.path.insert(0, "../../sidpy/")
 
-fitter_resent = True
+fitter_present = True
 try: 
     from sidpy.proc.fitter import SidFitter
 except:
