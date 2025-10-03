@@ -1733,6 +1733,97 @@ class PointCloudVisualizer(PointCloudVisualizerBase):
                 self.axes[0].set_xlabel('{}'.format(_quantity[0]))
                 self.axes[0].set_ylabel('{}'.format(_quantity[1]))
 
+
+
+class DP_PointCloudVisualizer(PointCloudVisualizerBase):
+    """
+    Interactive DP point cloud visualization
+    """
+    def __init__(self, dset, base_image=None, figure=None, horizontal=True, **kwargs):
+        super().__init__(dset, base_image, figure, horizontal, **kwargs)
+
+        scale_bar = kwargs.pop('scale_bar', False)
+        amp_phase = kwargs.pop('amp_phase', False)
+        if amp_phase:
+            amp_phase_val = 'Amplitude and Phase'
+        else:
+            amp_phase_val = 'Real and Imaginary'
+
+
+        #from here
+        buttons = []
+        if self.ri_ap is not None:
+            self.button0 = ipywidgets.Dropdown(options=['Real and Imaginary', 'Amplitude and Phase'],
+                                               value=amp_phase_val,
+                                               tooltip='How to plot complex data')
+            self.button0.observe(self._ri_ap, 'value')  # real/imag or amp/phase
+            buttons.append(self.button0)
+
+        if scale_bar == False:
+            self.button = ipywidgets.widgets.Dropdown( options=[('Pixel Wise', 1), ('Units Wise', 2)],
+                                value=1,
+                                descrption='Image',
+                                tooltip='How to plot spatial data: Pixel Wise (by px), Units wise (in given units)')
+            self.button.observe(self._pw_uw, 'value') #pixel or unit wise
+            buttons.append(self.button)
+            #self.fig.canvas.draw_idle()
+
+        if len(buttons) > 0:
+            widg = ipywidgets.HBox(buttons)
+            display(widg)
+
+    def _pw_uw(self, event):
+        pw_uw = event.new
+        self._update_image(pw_uw)
+
+    def _ri_ap(self, event):
+        self.ri_ap = event.new
+        self._update_spectrum()
+
+    def _update_image(self, event_value):
+        # pixel wise or unit wise listener
+        if 'spacial_units' in self.dset.point_cloud:
+            _sp_units = self.dset.point_cloud['spacial_units']
+            if isinstance(_sp_units, str):
+                _sp_units = (_sp_units, _sp_units)
+            elif not (isinstance(_sp_units, list) or isinstance(_sp_units, tuple)):
+                raise ValueError('Spacial units in Dataset.point_cloud should be str or list, or tuple.')
+
+        if 'quantity' in self.dset.point_cloud:
+            _quantity = self.dset.point_cloud['quantity']
+            if isinstance(_quantity, str):
+                _quantity = (_quantity, _quantity)
+            elif not (isinstance(_quantity, list) or isinstance(_quantity, tuple)):
+                raise ValueError('Quantity in Dataset.point_cloud should be str or list, or tuple.')
+        else:
+            _quantity = ('distance', 'distance')
+
+        if event_value == 1:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.extent[0], self.extent[1], 5), 1))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.extent[2], self.extent[3], 5), 1))
+
+            self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], 'px'))
+            self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], 'px'))
+        else:
+            self.axes[0].set_xticks(np.linspace(self.extent[0], self.extent[1], 5),)
+            self.axes[0].set_xticklabels(np.round(np.linspace(self.real_extent[0], self.real_extent[1], 5), 2))
+
+            self.axes[0].set_yticks(np.linspace(self.extent[2], self.extent[3], 5),)
+            self.axes[0].set_yticklabels(np.round(np.linspace(self.real_extent[2], self.real_extent[3], 5), 2))
+
+            if 'spacial_units' in self.dset.point_cloud:
+                self.axes[0].set_xlabel('{} [{}]'.format(_quantity[0], _sp_units[0]))
+                self.axes[0].set_ylabel('{} [{}]'.format(_quantity[1], _sp_units[1]))
+            else:
+                self.axes[0].set_xlabel('{}'.format(_quantity[0]))
+                self.axes[0].set_ylabel('{}'.format(_quantity[1]))
+
+
+
+
 class FourDimImageVisualizer(object):
 
     """

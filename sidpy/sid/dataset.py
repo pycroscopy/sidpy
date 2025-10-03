@@ -63,6 +63,7 @@ class DataType(Enum):
     SPECTRAL_IMAGE = 7
     IMAGE_4D = 8
     POINT_CLOUD = 9
+    DP_POINT_CLOUD = 10
 
 
 def view_subclass(dask_array, cls):
@@ -281,7 +282,7 @@ class Dataset(da.Array):
 
         sid_dataset._axes = {}
 
-        if sid_dataset.data_type == DataType.POINT_CLOUD and coordinates is None:
+        if sid_dataset.data_type in [DataType.POINT_CLOUD, DataType.DP_POINT_CLOUD] and coordinates is None:
             raise ValueError("coordinates must be specified for a point cloud dataset")
 
         for dim in range(sid_dataset.ndim):
@@ -291,6 +292,13 @@ class Dataset(da.Array):
                     0: 'point_cloud',
                     1: 'spectral',
                     2: 'channel'
+                }
+                dimension_type = dimension_map.get(dim, None)
+            elif datatype == "dp_point_cloud":
+                dimension_map = {
+                    0: 'point_cloud',
+                    1: 'reciprocal',
+                    2: 'reciprocal'
                 }
                 dimension_type = dimension_map.get(dim, None)
             else:
@@ -694,6 +702,7 @@ class Dataset(da.Array):
                 self.view = CurveVisualizer(self, figure=figure, **kwargs)
             elif self.data_type == DataType.POINT_CLOUD:
                 self.view = PointCloudVisualizer(self, figure=figure, **kwargs)
+            
             elif self.data_type == DataType.SPECTRAL_IMAGE:
                 print('sp')
                 self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
@@ -704,6 +713,9 @@ class Dataset(da.Array):
                 print('3D dataset:', self.data_type)
             if self.data_type == DataType.IMAGE:
                 self.view = ImageVisualizer(self, figure=figure, **kwargs)
+            elif self.data_type == DataType.DP_POINT_CLOUD:
+                # TODO: add DP_PointCloudVisualizer
+                pass
             elif self.data_type == DataType.IMAGE_MAP:
                 pass
             elif self.data_type == DataType.IMAGE_STACK:
