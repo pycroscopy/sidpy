@@ -60,7 +60,7 @@ setup(
     author_email='pycroscopy@gmail.com',
     install_requires=requirements,
     
-    tests_require=['pytest'],
+    tests_require=['pytest', 'SciFiReaders'],
     platforms=['Linux', 'Mac OSX', 'Windows 11/10'],
     # package_data={'sample':['dataset_1.dat']}
     test_suite='pytest',
