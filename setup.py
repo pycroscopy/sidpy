@@ -15,6 +15,7 @@ requirements = ['numpy>=1.10',
                 'toolz',  # dask installation failing without this
                 'cytoolz',  # dask installation failing without this
                 'dask',
+                'dask-ml',
                 'h5py>=2.6.0',
                 'matplotlib>=2.0.0',
                 'distributed>=2.0.0',
@@ -60,7 +61,7 @@ setup(
     author_email='pycroscopy@gmail.com',
     install_requires=requirements,
     
-    tests_require=['pytest'],
+    tests_require=['pytest', 'SciFiReaders'],
     platforms=['Linux', 'Mac OSX', 'Windows 11/10'],
     # package_data={'sample':['dataset_1.dat']}
     test_suite='pytest',
@@ -69,7 +70,7 @@ setup(
     include_package_data=True,
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-dependencies
     extras_require={
-        'MPI': ["mpi4py"]
+        'MPI': ["mpi4py"], 'test': ["pytest", "pytest-cov", "SciFiReaders"]
     },
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
