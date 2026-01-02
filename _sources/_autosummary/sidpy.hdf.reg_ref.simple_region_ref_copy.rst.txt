@@ -1,0 +1,6 @@
+sidpy.hdf.reg\_ref.simple\_region\_ref\_copy
+============================================
+
+.. currentmodule:: sidpy.hdf.reg_ref
+
+.. autofunction:: simple_region_ref_copy

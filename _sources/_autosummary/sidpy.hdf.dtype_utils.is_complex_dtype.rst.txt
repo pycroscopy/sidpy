@@ -1,0 +1,6 @@
+sidpy.hdf.dtype\_utils.is\_complex\_dtype
+=========================================
+
+.. currentmodule:: sidpy.hdf.dtype_utils
+
+.. autofunction:: is_complex_dtype
