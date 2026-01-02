@@ -123,14 +123,14 @@ class SidpyFitterRefactor:
         flat_data = data.reshape(-1, np.prod(data.shape[-n_ind:]))
         return flat_data, spatial_shape
 
-    def _fit_logic(self, y_vec, x_in, initial_guess, loss='linear', f_scale=1.0):
+    def _fit_logic(self, y_vec, x_in, initial_guess, loss='linear', f_scale=1.0, return_cov=False):
         """
         Core optimization logic for a single pixel.
-        Can handle robust fitting via least_squares method as well.
         """
         y_vec = np.squeeze(np.asarray(y_vec))
         initial_guess = np.asarray(initial_guess).ravel()
         
+        # Prepare data for least_squares (handle complex)
         if self.is_complex:
             y_input = np.hstack([y_vec.real, y_vec.imag])
             def residuals(p, x, y_s):
@@ -138,17 +138,42 @@ class SidpyFitterRefactor:
                 if fit.size != y_s.size:
                     fit = np.hstack([fit.real, fit.imag])
                 return y_s - fit
-            # Robust args passed here
-            res = least_squares(residuals, initial_guess, args=(x_in, y_input),
-                                loss=loss, f_scale=f_scale)
         else:
+            y_input = y_vec
             def residuals(p, x, y):
                 fit = np.ravel(self.model_func(x, *p))
                 return y - fit
-            # Robust args passed here
-            res = least_squares(residuals, initial_guess, args=(x_in, y_vec),
-                                loss=loss, f_scale=f_scale)
-        return res.x
+        
+        # Run Fit
+        res = least_squares(residuals, initial_guess, args=(x_in, y_input),
+                            loss=loss, f_scale=f_scale)
+        
+        if not return_cov:
+            return res.x
+
+        # --- Covariance Calculation ---
+        # 1. Get Jacobian (J) at the solution
+        J = res.jac
+        
+        # 2. Approximate Hessian (J.T @ J)
+        # Note: If J is rank-deficient, this inversion can be unstable. 
+        # We use pseudo-inverse (pinv) for safety.
+        H = J.T @ J
+        cov_unscaled = np.linalg.pinv(H)
+
+        # 3. Calculate Residual Variance (Reduced Chi-Squared)
+        # dof = num_data_points - num_parameters
+        dof = y_input.size - res.x.size
+        if dof > 0:
+            var_residuals = np.sum(res.fun**2) / dof
+        else:
+            var_residuals = np.nan # Perfect fit or underdetermined
+
+        # 4. Scale Covariance
+        cov_matrix = cov_unscaled * var_residuals
+        
+        # Return flattened parameters followed by flattened covariance
+        return np.hstack([res.x, cov_matrix.ravel()])
 
     def do_kmeans_guess(self, n_clusters=10):
         """
@@ -321,9 +346,9 @@ class SidpyFitterRefactor:
         return self.guess_result.compute() #this is still a dask array only, we won't return sidpy arrays at this intermediate stage.
 
     def do_fit(self, guesses=None, use_kmeans=False, n_clusters=10, 
-               fit_parameter_labels=None, loss='linear', f_scale=1.0):
+               fit_parameter_labels=None, loss='linear', f_scale=1.0, return_cov=False):
         """
-        Executes the parallel fit across the dataset.
+        Executes the parallel fit.
 
         Parameters
         ----------
@@ -334,48 +359,61 @@ class SidpyFitterRefactor:
         n_clusters : int, optional
             Number of clusters if use_kmeans is True. Default is 10.
         fit_parameter_labels : list of str, optional
-            List of string labels for the fit parameters (e.g. ['Amp', 'Phase']).
+            List of string labels for the fit parameters (e.g. ['Amp', 'Phase']). These are simply saved in metadata.
         loss : str, optional
             Loss function for least_squares (e.g., 'linear', 'soft_l1', 'huber', 'cauchy', 'arctan').
         f_scale : float, optional
-             Value of soft margin between inlier and outlier residuals.
+             Value of soft margin between inlier and outlier residuals. Default is 1.0.
+        return_cov : bool, optional
+            If True, returns a tuple (fit_dataset, cov_dataset). 
+            The cov_dataset contains the covariance matrix for the fit parameters.
+            CAUTION: This significantly increases memory usage.
 
         Returns
         -------
-        dask.array.Array
-            Dask array containing the optimized fit parameters.
+        sidpy.Dataset or tuple(sidpy.Dataset, sidpy.Dataset)
+            If return_cov is False: returns the Fit Parameter dataset.
+            If return_cov is True: returns (Fit Parameter dataset, Covariance Matrix dataset).
         """
-        # Store labels for transform step
-        self.fit_parameter_labels = fit_parameter_labels
 
-        # Update metadata for the current run
-        self.metadata["fit_parameters"]["use_kmeans"] = use_kmeans
-        self.metadata["fit_parameters"]["n_clusters"] = n_clusters if use_kmeans else None
-        self.metadata["fit_parameters"]["loss"] = loss
-        self.metadata["fit_parameters"]["f_scale"] = f_scale
+        self.fit_parameter_labels = fit_parameter_labels
+        
+        # Update metadata
+        self.metadata["fit_parameters"].update({
+            "use_kmeans": use_kmeans,
+            "n_clusters": n_clusters if use_kmeans else None,
+            "loss": loss,
+            "f_scale": f_scale,
+            "return_cov": return_cov
+        })
 
         if guesses is None:
             guesses = self.do_kmeans_guess(n_clusters) if use_kmeans else self.do_guess()
 
-        # Capture loss/f_scale in the closure
+        # Determine output size
+        # If returning covariance, output is: [Params (N)] + [Covariance (N*N)]
+        out_dim = self.num_params + (self.num_params**2 if return_cov else 0)
+
         def fit_worker(data_block, guess_block, x_in, ind_dims, num_params):
             data_block, guess_block = np.asarray(data_block), np.asarray(guess_block)
             flat_data, spat_shape = self._prepare_block(data_block, ind_dims)
             flat_guess = guess_block.reshape(-1, guess_block.shape[-1])
             
-            out_flat = np.zeros((flat_data.shape[0], num_params))
+            out_flat = np.zeros((flat_data.shape[0], out_dim))
             for i in range(flat_data.shape[0]):
                 if flat_data[i].size == 0: continue
-                # Pass robust args here
+                # Pass return_cov to logic
                 out_flat[i] = self._fit_logic(flat_data[i], x_in, flat_guess[i],
-                                              loss=loss, f_scale=f_scale)
-            return out_flat.reshape(spat_shape + (num_params,))
+                                              loss=loss, f_scale=f_scale, 
+                                              return_cov=return_cov)
+            return out_flat.reshape(spat_shape + (out_dim,))
 
+        # Blockwise setup
         data_ind = tuple(range(self.ndim))
-        guess_ind = tuple(self.spat_dims + [self.ndim])
+        guess_ind = tuple(self.spat_dims + [self.ndim]) # Guess has same spatial dims + param dim
 
-        self.fit_result =  da.blockwise(
-            fit_worker, guess_ind,
+        self.fit_result = da.blockwise(
+            fit_worker, guess_ind, # We map output to same structure as guess
             self.dask_data, data_ind,
             guesses, guess_ind,
             self.x_axis, None,
@@ -385,72 +423,82 @@ class SidpyFitterRefactor:
         )
 
         computed_result = self.fit_result.compute()
-        self.sidpy_result = self.transform_to_sidpy(computed_result)
-
-        return self.sidpy_result
+        
+        # Transform handles splitting if return_cov was used
+        return self.transform_to_sidpy(computed_result)
 
     def transform_to_sidpy(self, fit_dask_array):
         """
-        Convert the dask array of fit results into a sidpy.Dataset.
-
-        The returned dataset will have the original spatial dimensions (those
-        that were not used as independent/spectral dims for fitting) and a
-        final spectral-like dimension that indexes the fit parameters. The
-        fit-parameter axis will be given a generic name and marked as a
-        spectral dimension.
-
-        Parameters
-        ----------
-        fit_dask_array : dask.array.Array
-            Dask array produced by the fitting routine. Expected shape is
-            spatial_shape + (num_params,)
-
-        Returns
-        -------
-        sidpy.Dataset
-            Dataset view of the fit results. Also stored on the instance as
-            `self.fit_dataset`.
+        Convert the fit results into sidpy.Dataset(s).
+        Handles splitting parameters and covariance if present.
         """
-
-        # Create a sidpy Dataset from the dask array (preserves lazy compute)
-        sid_dset = sid.Dataset.from_array(fit_dask_array, title=f"{self.dataset.title}_fit",
-                                       chunks='auto')
-
-        # Recreate spatial dimensions in the same order as self.spat_dims
-        for i, orig_dim in enumerate(self.spat_dims):
-            try:
-                orig_axis = self.dataset._axes[orig_dim].copy()
-            except Exception:
-                # Fallback: create a generic axis of appropriate length
-                orig_axis = sid.Dimension(np.arange(self.dataset.shape[orig_dim]),
-                                      name=f"dim_{orig_dim}", dimension_type='spatial')
-            sid_dset.set_dimension(i, orig_axis)
-
-        # Add fit-parameter axis as a spectral-like dimension
-        # Check for custom labels provided in do_fit
-        custom_labels = getattr(self, 'fit_parameter_labels', None)
+        total_channels = fit_dask_array.shape[-1]
         
-        # Determine values for the parameter axis
-        if custom_labels is not None and len(custom_labels) == fit_dask_array.shape[-1]:
-            param_values = np.array(custom_labels)
-            quantity = 'Label'
-        else:
-            param_values = np.arange(self.num_params if self.num_params is not None else fit_dask_array.shape[-1])
-            quantity = 'index'
+        # Check if we have covariance data attached
+        # If shape is exactly num_params, we only have params.
+        # If shape is num_params + num_params^2, we have covariance.
+        has_cov = total_channels > self.num_params
+        
+        # --- 1. Extract Parameters ---
+        params_array = fit_dask_array[..., :self.num_params]
+        sid_params = sid.Dataset.from_array(params_array, title=f"{self.dataset.title}_fit_params")
+        
+        # Helper to set spatial dimensions (reused for both datasets)
+        def set_spatial_dims(dset):
+            for i, orig_dim in enumerate(self.spat_dims):
+                try:
+                    orig_axis = self.dataset._axes[orig_dim].copy()
+                except Exception:
+                    orig_axis = sid.Dimension(np.arange(self.dataset.shape[orig_dim]),
+                                          name=f"dim_{orig_dim}", dimension_type='spatial')
+                dset.set_dimension(i, orig_axis)
+        
+        set_spatial_dims(sid_params)
 
-        param_axis = sid.Dimension(param_values, name='fit_parameters', quantity=quantity,
-                               units='a.u.', dimension_type='spectral')
-        sid_dset.set_dimension(len(self.spat_dims), param_axis)
+        # Set Spectral Dimension for Params
+        custom_labels = getattr(self, 'fit_parameter_labels', None)
+        if custom_labels is not None and len(custom_labels) == self.num_params:
+            p_qty = 'Label'
+            self.metadata["fit_parameters"].update({"fit_parameter_labels": custom_labels })
+        else: 
+            p_qty = 'index'
+        
+        p_vals = np.arange(self.num_params)  
+        sid_params.set_dimension(len(self.spat_dims), 
+                                 sid.Dimension(p_vals, name='fit_parameters', 
+                                               quantity=p_qty, dimension_type='spectral'))
+        
+        # Attach Metadata
+        sid_params.metadata = dict(self.metadata).copy()
+        sid_params.provenance = {'sidpy': {'generated_from': self.dataset.title}}
+        sid_params.data_type = 'image_stack' # Usually a stack of parameter maps
 
-        # Attach provenance and metadata about the fit
-        sid_dset.metadata = dict(self.metadata).copy()
-        # link back to parent
-        sid_dset.provenance = {'sidpy': {'generated_from': self.dataset.title}}
-        sid_dset.add_provenance('sidpy.proc.SidpyFitterRefactor', 'transform_to_sidpy', version=1,
-                          linked_data={'parent': self.dataset.title})
-        sid_dset.data_type = self.dataset.data_type
+        if not has_cov:
+            return sid_params
 
-        return sid_dset
+        # --- 2. Extract Covariance (If present) ---
+        cov_flat = fit_dask_array[..., self.num_params:]
+        # Reshape: (Spatial..., Params, Params)
+        cov_shape = fit_dask_array.shape[:-1] + (self.num_params, self.num_params)
+        cov_array = cov_flat.reshape(cov_shape)
+        
+        sid_cov = sid.Dataset.from_array(cov_array, title=f"{self.dataset.title}_fit_covariance")
+        set_spatial_dims(sid_cov)
+        
+        # Covariance has TWO spectral dimensions: Params x Params
+        # Dim 1: Rows (Params)
+        sid_cov.set_dimension(len(self.spat_dims), 
+                              sid.Dimension(p_vals, name='parameter_row', 
+                                            quantity=p_qty, dimension_type='spectral'))
+        # Dim 2: Cols (Params)
+        sid_cov.set_dimension(len(self.spat_dims)+1, 
+                              sid.Dimension(p_vals, name='parameter_col', 
+                                            quantity=p_qty, dimension_type='spectral'))
+        
+        sid_cov.metadata = dict(self.metadata).copy()
+        sid_cov.provenance = {'sidpy': {'generated_from': self.dataset.title, 'parent_fit': sid_params.title}}
+        
+        return sid_params, sid_cov
     
 
     

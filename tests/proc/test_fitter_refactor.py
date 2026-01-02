@@ -336,9 +336,9 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             result_beps = fitter.do_fit(use_kmeans=False, n_clusters=12)
             
 
-            log.info("Testing Fitting with K-Means in test_beps_fit")
+            log.info("Testing Fitting with K-Means in test_beps_fit, with covariance and huber loss")
             # Option 2: K-Means Prior Fitting (Better for noisy data)
-            result_beps = fitter.do_fit(use_kmeans=True, n_clusters=12)
+            result_beps = fitter.do_fit(use_kmeans=True, n_clusters=6, return_cov=True, loss='huber')
             
             #Check to see that the results metadata is beign written correctly
             model_source = result_beps.metadata['source_code']['model_function']
