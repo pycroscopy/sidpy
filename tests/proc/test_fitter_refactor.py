@@ -333,14 +333,29 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             #option 1: No Prior Fitting (Better for clean data)
             log.info('Testing Fitting without K-Means in test_beps_fit')
             result_beps = fitter.do_fit(use_kmeans=False, n_clusters=12)
-            result_beps.compute()
+            
 
             log.info("Testing Fitting with K-Means in test_beps_fit")
             # Option 2: K-Means Prior Fitting (Better for noisy data)
             result_beps = fitter.do_fit(use_kmeans=True, n_clusters=12)
-            result_beps.compute()
+            
+            #Check to see that the results metadata is beign written correctly
+            import numpy as np
+            model_source = result_beps.metadata['source_code']['model_function']
 
-        
+            from scipy.special import erf
+            context = {'erf': erf}
+            #Reload the model, see how the fits shake up
+            reloaded_model = fitter.reconstruct_function(model_source, context=context)
+            
+            vdc = data_loop_cropped._axes[2].values #vdc vector
+            #See how the fits shake up
+            pix_x = 3
+            pix_y = 4
+
+            raw_loop = data_loop_cropped[pix_y, pix_x,:]
+            fit_loop = reloaded_model(vdc, *np.array(data_loop_cropped[pix_y, pix_x,:]))
+            assert np.isfinite((fit_loop-raw_loop).mean()) #ensure that the fit is valid, and we are reading the fit function correctly
 
     def test_sho_fit(self):
         with tempfile.TemporaryDirectory() as d:
@@ -366,15 +381,15 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             fitter_sho = SidpyFitterRefactor(data_sho_cropped, SHO_fit_flattened, sho_guess_fn, ind_dims=(2,))
             fitter_sho.setup_calc()
             log.info('Testing the Guess function in test_sho_fit')
-            guess_results = fitter_sho.do_guess().compute()
+            guess_results = fitter_sho.do_guess()
 
             log.info('Testing the Fit function without Kmeans in test_sho_fit')
             parameters_dask = fitter_sho.do_fit(use_kmeans=False)
-            fit_results_sho = parameters_dask.compute()
+            fit_results_sho = parameters_dask
 
             log.info('Testing the Fit function with Kmeans in test_sho_fit')
             parameters_dask = fitter_sho.do_fit(use_kmeans=True, n_clusters=10)
-            fit_results_sho = parameters_dask.compute()
+            fit_results_sho = parameters_dask
 
 
 
