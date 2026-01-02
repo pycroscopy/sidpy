@@ -123,9 +123,10 @@ class SidpyFitterRefactor:
         flat_data = data.reshape(-1, np.prod(data.shape[-n_ind:]))
         return flat_data, spatial_shape
 
-    def _fit_logic(self, y_vec, x_in, initial_guess):
+    def _fit_logic(self, y_vec, x_in, initial_guess, loss='linear', f_scale=1.0):
         """
         Core optimization logic for a single pixel.
+        Can handle robust fitting via least_squares method as well.
         """
         y_vec = np.squeeze(np.asarray(y_vec))
         initial_guess = np.asarray(initial_guess).ravel()
@@ -137,12 +138,16 @@ class SidpyFitterRefactor:
                 if fit.size != y_s.size:
                     fit = np.hstack([fit.real, fit.imag])
                 return y_s - fit
-            res = least_squares(residuals, initial_guess, args=(x_in, y_input))
+            # Robust args passed here
+            res = least_squares(residuals, initial_guess, args=(x_in, y_input),
+                                loss=loss, f_scale=f_scale)
         else:
             def residuals(p, x, y):
                 fit = np.ravel(self.model_func(x, *p))
                 return y - fit
-            res = least_squares(residuals, initial_guess, args=(x_in, y_vec))
+            # Robust args passed here
+            res = least_squares(residuals, initial_guess, args=(x_in, y_vec),
+                                loss=loss, f_scale=f_scale)
         return res.x
 
     def do_kmeans_guess(self, n_clusters=10):
@@ -315,7 +320,8 @@ class SidpyFitterRefactor:
 
         return self.guess_result.compute() #this is still a dask array only, we won't return sidpy arrays at this intermediate stage.
 
-    def do_fit(self, guesses=None, use_kmeans=False, n_clusters=10):
+    def do_fit(self, guesses=None, use_kmeans=False, n_clusters=10, 
+               fit_parameter_labels=None, loss='linear', f_scale=1.0):
         """
         Executes the parallel fit across the dataset.
 
@@ -327,19 +333,31 @@ class SidpyFitterRefactor:
             Whether to use K-means priors. Default is False.
         n_clusters : int, optional
             Number of clusters if use_kmeans is True. Default is 10.
+        fit_parameter_labels : list of str, optional
+            List of string labels for the fit parameters (e.g. ['Amp', 'Phase']).
+        loss : str, optional
+            Loss function for least_squares (e.g., 'linear', 'soft_l1', 'huber', 'cauchy', 'arctan').
+        f_scale : float, optional
+             Value of soft margin between inlier and outlier residuals.
 
         Returns
         -------
         dask.array.Array
             Dask array containing the optimized fit parameters.
         """
+        # Store labels for transform step
+        self.fit_parameter_labels = fit_parameter_labels
+
         # Update metadata for the current run
         self.metadata["fit_parameters"]["use_kmeans"] = use_kmeans
         self.metadata["fit_parameters"]["n_clusters"] = n_clusters if use_kmeans else None
+        self.metadata["fit_parameters"]["loss"] = loss
+        self.metadata["fit_parameters"]["f_scale"] = f_scale
 
         if guesses is None:
             guesses = self.do_kmeans_guess(n_clusters) if use_kmeans else self.do_guess()
 
+        # Capture loss/f_scale in the closure
         def fit_worker(data_block, guess_block, x_in, ind_dims, num_params):
             data_block, guess_block = np.asarray(data_block), np.asarray(guess_block)
             flat_data, spat_shape = self._prepare_block(data_block, ind_dims)
@@ -348,7 +366,9 @@ class SidpyFitterRefactor:
             out_flat = np.zeros((flat_data.shape[0], num_params))
             for i in range(flat_data.shape[0]):
                 if flat_data[i].size == 0: continue
-                out_flat[i] = self._fit_logic(flat_data[i], x_in, flat_guess[i])
+                # Pass robust args here
+                out_flat[i] = self._fit_logic(flat_data[i], x_in, flat_guess[i],
+                                              loss=loss, f_scale=f_scale)
             return out_flat.reshape(spat_shape + (num_params,))
 
         data_ind = tuple(range(self.ndim))
@@ -407,8 +427,18 @@ class SidpyFitterRefactor:
             sid_dset.set_dimension(i, orig_axis)
 
         # Add fit-parameter axis as a spectral-like dimension
-        param_values = np.arange(self.num_params if self.num_params is not None else fit_dask_array.shape[-1])
-        param_axis = sid.Dimension(param_values, name='fit_parameters', quantity='index',
+        # Check for custom labels provided in do_fit
+        custom_labels = getattr(self, 'fit_parameter_labels', None)
+        
+        # Determine values for the parameter axis
+        if custom_labels is not None and len(custom_labels) == fit_dask_array.shape[-1]:
+            param_values = np.array(custom_labels)
+            quantity = 'Label'
+        else:
+            param_values = np.arange(self.num_params if self.num_params is not None else fit_dask_array.shape[-1])
+            quantity = 'index'
+
+        param_axis = sid.Dimension(param_values, name='fit_parameters', quantity=quantity,
                                units='a.u.', dimension_type='spectral')
         sid_dset.set_dimension(len(self.spat_dims), param_axis)
 
