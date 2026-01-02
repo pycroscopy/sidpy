@@ -15,6 +15,7 @@ requirements = ['numpy>=1.10',
                 'toolz',  # dask installation failing without this
                 'cytoolz',  # dask installation failing without this
                 'dask',
+                'dask-ml',
                 'h5py>=2.6.0',
                 'matplotlib>=2.0.0',
                 'distributed>=2.0.0',
