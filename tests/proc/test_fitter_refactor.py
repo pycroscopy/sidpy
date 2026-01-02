@@ -341,7 +341,7 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             result_beps = fitter.do_fit(use_kmeans=True, n_clusters=6, return_cov=True, loss='huber')
             
             #Check to see that the results metadata is beign written correctly
-            model_source = result_beps.metadata['source_code']['model_function']
+            model_source = result_beps[0].metadata['source_code']['model_function']
 
             from scipy.special import erf
             context = {'erf': erf}
