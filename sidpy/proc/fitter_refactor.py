@@ -29,7 +29,7 @@ class SidpyFitterRefactor:
         A dictionary containing fit parameters, model source code, and configuration.
     """
 
-    def __init__(self, dataset, model_function, guess_function, ind_dims=None):
+    def __init__(self, dataset, model_function, guess_function, ind_dims=None, num_params=None):
         """
         Initializes the SidpyFitterKMeans.
 
@@ -43,6 +43,8 @@ class SidpyFitterRefactor:
             The function to generate initial parameters for the model.
         ind_dims : int or tuple of int, optional
             The indices of the dimensions to fit over. Default is whatever are the spectral dimensions
+        num_params: int, optional but required in case of 2D or higher fitting
+            The number of parameters the fitting function expects.
         """
         import sidpy
         if not isinstance(dataset, sidpy.Dataset):
@@ -63,7 +65,7 @@ class SidpyFitterRefactor:
         self.x_axis = np.array([self.dataset._axes[d].values for d in self.ind_dims]).squeeze()
         
         self.is_complex = np.iscomplexobj(self.dataset)
-        self.num_params = None
+        self.num_params = num_params
 
         # --- Reproducibility Metadata ---
         self.metadata = {
