@@ -299,6 +299,7 @@ class TestSidpyFitterRefactor(unittest.TestCase):
 
             from sidpy.proc.fitter_refactor import SidpyFitterRefactor
             import SciFiReaders as sr
+            import numpy as np
 
             from urllib.request import urlretrieve
 
@@ -328,7 +329,7 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             fitter.setup_calc()
 
             log.info("Testing Guess Function in test_beps_fit")
-            beps_guess = fitter.do_guess().compute()
+            beps_guess = fitter.do_guess()
             
             #option 1: No Prior Fitting (Better for clean data)
             log.info('Testing Fitting without K-Means in test_beps_fit')
@@ -340,7 +341,6 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             result_beps = fitter.do_fit(use_kmeans=True, n_clusters=12)
             
             #Check to see that the results metadata is beign written correctly
-            import numpy as np
             model_source = result_beps.metadata['source_code']['model_function']
 
             from scipy.special import erf
