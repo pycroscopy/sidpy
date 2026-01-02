@@ -1,8 +1,14 @@
 import numpy as np
 import dask.array as da
 from scipy.optimize import least_squares
-from sklearn.cluster import KMeans
+#from sklearn.cluster import KMeans
+# Try importing dask_ml, warn if missing
+try:
+    from dask_ml.cluster import KMeans as DaskKMeans
+except ImportError:
+    raise ImportError("The 'dask-ml' library is required for scalable K-Means. Install via 'pip install dask-ml'.")
 import inspect
+import sidpy as sid
 
 class SidpyFitterRefactor:
     """
@@ -23,7 +29,7 @@ class SidpyFitterRefactor:
         A dictionary containing fit parameters, model source code, and configuration.
     """
 
-    def __init__(self, dataset, model_function, guess_function, ind_dims=(2,)):
+    def __init__(self, dataset, model_function, guess_function, ind_dims=None):
         """
         Initializes the SidpyFitterKMeans.
 
@@ -36,8 +42,7 @@ class SidpyFitterRefactor:
         guess_function : callable
             The function to generate initial parameters for the model.
         ind_dims : int or tuple of int, optional
-            The indices of the dimensions to fit over. Default is (2,).
-            #TODO: Change the default to be over the existing spectral dimension
+            The indices of the dimensions to fit over. Default is whatever are the spectral dimensions
         """
         import sidpy
         if not isinstance(dataset, sidpy.Dataset):
@@ -49,7 +54,9 @@ class SidpyFitterRefactor:
         self.guess_func = guess_function
         
         self.ndim = self.dataset.ndim
-        self.ind_dims = tuple(ind_dims) if isinstance(ind_dims, int) else ind_dims
+        self.spectral_dims = tuple(self.dataset.get_spectral_dims())
+
+        self.ind_dims = tuple(self.spectral_dims ) if ind_dims is None else ind_dims
         self.spat_dims = [d for d in range(self.ndim) if d not in self.ind_dims]
         
         # Standardize x_axis (coordinate values)
@@ -77,11 +84,12 @@ class SidpyFitterRefactor:
         }
 
     def _get_source(self, func):
-        """Extracts source code from a function for metadata storage."""
+        """Extracts source code and splits into lines for readable metadata."""
         try:
-            return inspect.getsource(func)
+            raw_source = inspect.getsource(func)
+            return raw_source.splitlines()  # Returns list of strings
         except (TypeError, OSError):
-            return "Source code not available (function might be defined in a shell or compiled)."
+            return ["Source code not available (function might be defined in a shell or compiled)."]
 
     def setup_calc(self, chunks='auto'):
         """
@@ -140,6 +148,7 @@ class SidpyFitterRefactor:
     def do_kmeans_guess(self, n_clusters=10):
         """
         Performs K-Means clustering to find representative spectra for prior fitting.
+        We use Dask-ML Kmeans to do this in a scalable fashion.
 
         Parameters
         ----------
@@ -151,41 +160,143 @@ class SidpyFitterRefactor:
         dask.array.Array
             A dask array containing the initial guesses for every pixel.
         """
-        print(f"Starting K-Means Guess with {n_clusters} clusters...")
+        print(f"Starting Dask K-Means Guess with {n_clusters} clusters...")
         
-        # Cast to base Dask Array to bypass sidpy overrides
-        pure_dask = da.Array(self.dataset.dask, self.dataset.name, 
-                             self.dataset.chunks, self.dataset.dtype)
+        # 1. Prepare Data as Flat Dask Array (Pixels, Features)
+        # We use the internal self.dask_data which might be rechunked already
+        # Move spectral dims to the end
+        data_move = da.moveaxis(self.dask_data, self.ind_dims, range(-len(self.ind_dims), 0))
         
         n_spectral = np.prod([self.dataset.shape[d] for d in self.ind_dims])
-        total_pixels = self.dataset.size // n_spectral
+        # Reshape to (Pixels, Spectrum)
+        flat_data = data_move.reshape((-1, int(n_spectral)))
         
-        data_move = da.moveaxis(pure_dask, self.ind_dims, -1)
-        flat_data = data_move.reshape((int(total_pixels), int(n_spectral))).compute()
+        # 2. Normalize (Lazy Dask Operations)
+        clustering_data = da.absolute(flat_data) if self.is_complex else flat_data
         
-        clustering_data = np.abs(flat_data) if self.is_complex else flat_data
-        denom = (clustering_data.max(axis=1, keepdims=True) - 
-                 clustering_data.min(axis=1, keepdims=True) + 1e-12)
-        norm_data = (clustering_data - clustering_data.min(axis=1, keepdims=True)) / denom
+        # Compute min/max per pixel (axis 1) keeping dims for broadcasting
+        d_min = clustering_data.min(axis=1, keepdims=True)
+        d_max = clustering_data.max(axis=1, keepdims=True)
+        denom = (d_max - d_min)
+        # Avoid divide by zero
+        denom = da.where(denom == 0, 1.0, denom)
+        
+        norm_data = (clustering_data - d_min) / denom
+       
+        #print("Norm data shape is {}".format(norm_data.shape))
+        # 3. Fit K-Means using Dask-ML
+        # init='k-means||' is the scalable version of k-means++
+        km = DaskKMeans(n_clusters=n_clusters, init='k-means||', random_state=42)
+        km.fit(norm_data.squeeze()) # This triggers computation for centroids
+        
+        labels = km.labels_ # This is a dask array of shape (Pixels,)
 
-        km = KMeans(n_clusters=n_clusters, n_init=10, random_state=42)
-        labels = km.fit_predict(norm_data)
+        print("Calculating cluster means and fitting priors...")
 
-        print("Fitting cluster means...")
-        priors_per_cluster = np.zeros((n_clusters, self.num_params))
+        # 4. Compute Mean Spectra for each cluster (Original Data)
+        # We need the mean of the *original* flat_data based on the labels.
+        # We construct a list of lazy mean computations and compute them in one pass.
+        lazy_means = []
         for i in range(n_clusters):
             mask = (labels == i)
-            if not np.any(mask): continue
-            mean_spec = flat_data[mask].mean(axis=0)
+            # Dask boolean indexing -> Mean. 
+            # Note: Boolean indexing creates unknown chunk sizes, but mean collapses them.
+            # We add a check for empty clusters to avoid NaNs.
+            cluster_mean = flat_data[mask].mean(axis=0)
+            lazy_means.append(cluster_mean.squeeze())
+        
+        # Compute all means simultaneously to read data once
+        computed_means = da.compute(*lazy_means)
+        
+        # 5. Fit the priors (runs locally as n_clusters is small)
+        priors_per_cluster = np.zeros((n_clusters, self.num_params))
+        
+        for i, mean_spec in enumerate(computed_means):
+            # Handle empty clusters (NaNs)
+            if np.any(np.isnan(mean_spec)):
+                priors_per_cluster[i] = np.zeros(self.num_params) 
+                continue
+
             init_p = self.guess_func(self.x_axis, mean_spec)
             priors_per_cluster[i] = self._fit_logic(mean_spec, self.x_axis, init_p)
         
-        full_prior_flat = priors_per_cluster[labels]
-        spatial_shape = [self.dataset.shape[d] for d in self.spat_dims]
-        full_prior_map = full_prior_flat.reshape(spatial_shape + [self.num_params])
+        # 6. Map priors back to full spatial shape
+        # labels is a dask array, we can index the numpy priors array with it
+        # We need to map_blocks this look-up because 'priors_per_cluster' is numpy
+        # and 'labels' is dask.
         
-        return da.from_array(full_prior_map, chunks='auto')
+        def map_priors(label_block, priors_lookup):
+            return priors_lookup[label_block]
 
+        full_prior_flat = labels.map_blocks(
+            map_priors, 
+            priors_lookup=priors_per_cluster, 
+            dtype=priors_per_cluster.dtype,
+            chunks=labels.chunks + (self.num_params,),
+            new_axis=1 # Adding the parameter axis
+        )
+
+        # Reshape back to (Spatial..., Params)
+        spatial_shape = [self.dataset.shape[d] for d in self.spat_dims]
+        full_prior_map = full_prior_flat.reshape(tuple(spatial_shape) + (self.num_params,))
+        
+        return full_prior_map
+
+    @staticmethod
+    def reconstruct_function(source_code_input, context=None):
+        """
+        Reconstructs a python function from source code stored in metadata.
+        Robustly handles lists, strings, and indentation issues.
+        """
+        import textwrap
+        import numpy as np
+        # 1. STANDARDIZE INPUT TO STRING
+        # The input might be a list of strings (new format), a single string (old format), 
+        # or a numpy array of strings (from some HDF5 loaders).
+        
+        if isinstance(source_code_input, str):
+            # It's already a string
+            source_code = source_code_input
+        elif isinstance(source_code_input, (list, tuple, np.ndarray)):
+            # It's a sequence: join it into a single block
+            # map(str, ...) handles cases where data might be numpy objects
+            source_code = "\n".join(map(str, source_code_input))
+        else:
+            raise TypeError(f"Source code must be a string or list of strings, not {type(source_code_input)}")
+
+        # 2. FIX INDENTATION
+        # textwrap.dedent ONLY works on strings, which is why we joined above.
+        # This removes the common leading whitespace (e.g. if defined inside a class).
+        source_code = textwrap.dedent(source_code)
+
+        # 3. SETUP CONTEXT (Imports)
+        local_scope = {}
+        global_scope = context if context is not None else {}
+        
+        # Ensure numpy is available by default as 'np'
+        if 'np' not in global_scope:
+            global_scope['np'] = np
+
+        # 4. EXECUTE
+        try:
+            exec(source_code, global_scope, local_scope)
+        except Exception as e:
+            print(f"--- SOURCE CODE ERROR ---")
+            print(source_code)
+            print(f"-------------------------")
+            raise RuntimeError(f"Failed to execute source code. Error: {e}")
+
+        # 5. EXTRACT CALLABLE
+        # Find the function definition in the local scope
+        callables = {k: v for k, v in local_scope.items() 
+                     if callable(v) and k != '__builtins__'}
+        
+        if not callables:
+            raise ValueError("No function was defined in the provided source code.")
+        
+        # Return the last defined function (most likely the target)
+        return list(callables.values())[-1]
+        
     def do_guess(self):
         """Parallelized guess logic across all pixels."""
         def guess_worker(block, x_in, ind_dims, num_params):
@@ -197,10 +308,12 @@ class SidpyFitterRefactor:
                 out_flat[i] = np.asarray(res).ravel()
             return out_flat.reshape(spat_shape + (num_params,))
 
-        return self.dask_data.map_blocks(
+        self.guess_result =  self.dask_data.map_blocks(
             guess_worker, self.x_axis, self.ind_dims, self.num_params,
             dtype=np.float32, drop_axis=self.ind_dims, new_axis=[self.ndim]
         )
+
+        return self.guess_result.compute() #this is still a dask array only, we won't return sidpy arrays at this intermediate stage.
 
     def do_fit(self, guesses=None, use_kmeans=False, n_clusters=10):
         """
@@ -241,7 +354,7 @@ class SidpyFitterRefactor:
         data_ind = tuple(range(self.ndim))
         guess_ind = tuple(self.spat_dims + [self.ndim])
 
-        return da.blockwise(
+        self.fit_result =  da.blockwise(
             fit_worker, guess_ind,
             self.dask_data, data_ind,
             guesses, guess_ind,
@@ -250,3 +363,65 @@ class SidpyFitterRefactor:
             self.num_params, None,
             dtype=np.float32, align_arrays=True, concatenate=True
         )
+
+        computed_result = self.fit_result.compute()
+        self.sidpy_result = self.transform_to_sidpy(computed_result)
+
+        return self.sidpy_result
+
+    def transform_to_sidpy(self, fit_dask_array):
+        """
+        Convert the dask array of fit results into a sidpy.Dataset.
+
+        The returned dataset will have the original spatial dimensions (those
+        that were not used as independent/spectral dims for fitting) and a
+        final spectral-like dimension that indexes the fit parameters. The
+        fit-parameter axis will be given a generic name and marked as a
+        spectral dimension.
+
+        Parameters
+        ----------
+        fit_dask_array : dask.array.Array
+            Dask array produced by the fitting routine. Expected shape is
+            spatial_shape + (num_params,)
+
+        Returns
+        -------
+        sidpy.Dataset
+            Dataset view of the fit results. Also stored on the instance as
+            `self.fit_dataset`.
+        """
+
+        # Create a sidpy Dataset from the dask array (preserves lazy compute)
+        sid_dset = sid.Dataset.from_array(fit_dask_array, title=f"{self.dataset.title}_fit",
+                                       chunks='auto')
+
+        # Recreate spatial dimensions in the same order as self.spat_dims
+        for i, orig_dim in enumerate(self.spat_dims):
+            try:
+                orig_axis = self.dataset._axes[orig_dim].copy()
+            except Exception:
+                # Fallback: create a generic axis of appropriate length
+                orig_axis = sid.Dimension(np.arange(self.dataset.shape[orig_dim]),
+                                      name=f"dim_{orig_dim}", dimension_type='spatial')
+            sid_dset.set_dimension(i, orig_axis)
+
+        # Add fit-parameter axis as a spectral-like dimension
+        param_values = np.arange(self.num_params if self.num_params is not None else fit_dask_array.shape[-1])
+        param_axis = sid.Dimension(param_values, name='fit_parameters', quantity='index',
+                               units='a.u.', dimension_type='spectral')
+        sid_dset.set_dimension(len(self.spat_dims), param_axis)
+
+        # Attach provenance and metadata about the fit
+        sid_dset.metadata = dict(self.metadata).copy()
+        # link back to parent
+        sid_dset.provenance = {'sidpy': {'generated_from': self.dataset.title}}
+        sid_dset.add_provenance('sidpy.proc.SidpyFitterRefactor', 'transform_to_sidpy', version=1,
+                          linked_data={'parent': self.dataset.title})
+        sid_dset.data_type = self.dataset.data_type
+
+        return sid_dset
+    
+
+    
+    
