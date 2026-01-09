@@ -51,7 +51,7 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             fitter.setup_calc()
 
             log.info("Testing Guess Function in test_beps_fit")
-            beps_guess = fitter.do_guess()
+            beps_guess = fitter.do_guess().compute()
             
             #option 1: No Prior Fitting (Better for clean data)
             log.info('Testing Fitting without K-Means in test_beps_fit')
@@ -103,7 +103,7 @@ class TestSidpyFitterRefactor(unittest.TestCase):
             fitter_sho = SidpyFitterRefactor(data_sho_cropped, SHO_fit_flattened, sho_guess_fn, ind_dims=(2,))
             fitter_sho.setup_calc()
             log.info('Testing the Guess function in test_sho_fit')
-            guess_results = fitter_sho.do_guess()
+            guess_results = fitter_sho.do_guess().compute()
 
             log.info('Testing the Fit function without Kmeans in test_sho_fit')
             parameters_dask = fitter_sho.do_fit(use_kmeans=False)
@@ -227,4 +227,232 @@ class TestSidpyFitter2D(unittest.TestCase):
         diag = np.diag(cov_matrix)
         self.assertTrue(np.all(diag >= 0), "Covariance diagonal elements must be non-negative")
 
+    def test_cov_mode_diag_returns_param_length_per_pixel(self):
+        """
+        cov_mode='diag' should return params + diag(cov) where diag has length num_params.
+        For 2D Gaussian case in this file: num_params=6.
+        """
+        # Create a small synthetic 4D dataset: (X, Y, kx, ky)
+        nx, ny = 4, 3
+        nkx, nky = 16, 16
+
+        x_vec = np.linspace(-10, 10, nkx)
+        y_vec = np.linspace(-10, 10, nky)
+        X, Y = np.meshgrid(x_vec, y_vec, indexing='ij')
+
+        # Parameters: amp, x0, y0, sx, sy, offset
+        true_p = np.array([1.5, 1.0, -2.0, 2.5, 1.5, 0.1], dtype=float)
+
+        # Use gaussian_2d from fitter_function_utils.py if it exists in your test file imports
+        # gaussian_2d expects (axes_dims, *params) or (x_in, *params) depending on your setup;
+        # Here we follow your existing TestSidpyFitter2D pattern: model_function=gaussian_2d
+        data_2d = gaussian_2d((x_vec, y_vec), *true_p)  # returns 2D array (nkx, nky)
+        data_4d = np.tile(data_2d, (nx, ny, 1, 1))
+
+        dset = sid.Dataset.from_array(data_4d, title="gaussian_2d_test")
+        dset.set_dimension(0, sid.Dimension(np.arange(nx), name='X', dimension_type='spatial'))
+        dset.set_dimension(1, sid.Dimension(np.arange(ny), name='Y', dimension_type='spatial'))
+        dset.set_dimension(2, sid.Dimension(x_vec, name='kx', dimension_type='spectral'))
+        dset.set_dimension(3, sid.Dimension(y_vec, name='ky', dimension_type='spectral'))
+
+        fitter = SidpyFitterRefactor(
+            dataset=dset,
+            model_function=gaussian_2d,
+            guess_function=gaussian_2d_guess,
+            ind_dims=(2, 3),
+            num_params=6
+        )
+        fitter.setup_calc()
+
+        res_params, res_cov_diag = fitter.do_fit(
+            use_kmeans=False,
+            cov_mode='diag',
+            loss='linear'
+        )
+
+        # Params should be (nx, ny, 6)
+        assert res_params.shape == (nx, ny, 6)
+
+        # Diagonal covariance should be (nx, ny, 6)
+        assert res_cov_diag.shape == (nx, ny, 6)
+
+        # Basic sanity: diagonal variances should be finite at least somewhere
+        arr = np.asarray(res_cov_diag)
+        assert np.isfinite(arr).any()
+
+
+    def test_cov_mode_stderr_nonnegative_and_shape(self):
+        """
+        cov_mode='stderr' should return params + stderr where stderr has length num_params
+        and is non-negative (sqrt of diag(cov), clipped).
+        """
+        nx, ny = 4, 3
+        nkx, nky = 16, 16
+
+        x_vec = np.linspace(-10, 10, nkx)
+        y_vec = np.linspace(-10, 10, nky)
+        true_p = np.array([2.0, -1.5, 1.0, 3.0, 2.0, 0.2], dtype=float)
+
+        data_2d = gaussian_2d((x_vec, y_vec), *true_p)
+        data_4d = np.tile(data_2d, (nx, ny, 1, 1))
+
+        dset = sid.Dataset.from_array(data_4d, title="gaussian_2d_test_stderr")
+        dset.set_dimension(0, sid.Dimension(np.arange(nx), name='X', dimension_type='spatial'))
+        dset.set_dimension(1, sid.Dimension(np.arange(ny), name='Y', dimension_type='spatial'))
+        dset.set_dimension(2, sid.Dimension(x_vec, name='kx', dimension_type='spectral'))
+        dset.set_dimension(3, sid.Dimension(y_vec, name='ky', dimension_type='spectral'))
+
+        fitter = SidpyFitterRefactor(
+            dataset=dset,
+            model_function=gaussian_2d,
+            guess_function=gaussian_2d_guess,
+            ind_dims=(2, 3),
+            num_params=6
+        )
+        fitter.setup_calc()
+
+        res_params, res_stderr = fitter.do_fit(
+            use_kmeans=False,
+            cov_mode='stderr',
+            loss='linear'
+        )
+
+        assert res_params.shape == (nx, ny, 6)
+        assert res_stderr.shape == (nx, ny, 6)
+
+        stderr = np.asarray(res_stderr)
+        # stderr is sqrt(max(diag, 0.0)) so it should be >= 0 and finite at least somewhere
+        assert (stderr >= 0).all() or np.isnan(stderr).all()  # allow NaNs if dof <= 0 everywhere
+        assert np.isfinite(stderr).any() or np.isnan(stderr).all()
+
+
+class TestSidpyFitterMetrics(unittest.TestCase):
+
+    def test_metrics_perfect_fit_r2_one_rmse_zero(self):
+       
+        nx, ny = 3, 2
+        nkx, nky = 20, 20
+        x_vec = np.linspace(-10, 10, nkx)
+        y_vec = np.linspace(-10, 10, nky)
+
+        true_p = np.array([1.7, 1.2, -1.5, 2.2, 1.6, 0.05], dtype=float)
+        data_2d = gaussian_2d((x_vec, y_vec), *true_p)
+        data_4d = np.tile(data_2d, (nx, ny, 1, 1))
+
+        dset = sid.Dataset.from_array(data_4d, title="gaussian_2d_metrics_perfect")
+        dset.set_dimension(0, sid.Dimension(np.arange(nx), name='X', dimension_type='spatial'))
+        dset.set_dimension(1, sid.Dimension(np.arange(ny), name='Y', dimension_type='spatial'))
+        dset.set_dimension(2, sid.Dimension(x_vec, name='kx', dimension_type='spectral'))
+        dset.set_dimension(3, sid.Dimension(y_vec, name='ky', dimension_type='spectral'))
+
+        fitter = SidpyFitterRefactor(
+            dataset=dset,
+            model_function=gaussian_2d,
+            guess_function=gaussian_2d_guess,
+            ind_dims=(2, 3),
+            num_params=6
+        )
+        fitter.setup_calc()
+
+        res_params, res_metrics = fitter.do_fit(use_kmeans=False, loss='linear', return_metrics=True)
+
+        assert res_params.shape == (nx, ny, 6)
+        assert res_metrics.shape == (nx, ny, 2)
+
+        m = np.asarray(res_metrics)
+        r2 = m[..., 0]
+        rmse = m[..., 1]
+
+        assert np.nanmin(r2) > 0.999
+        assert np.nanmax(rmse) < 1e-6
+
+
+    def test_metrics_noisy_fit_lower_r2_higher_rmse_than_clean(self):
+
+        rng = np.random.default_rng(0)
+
+        nx, ny = 3, 2
+        nkx, nky = 20, 20
+        x_vec = np.linspace(-10, 10, nkx)
+        y_vec = np.linspace(-10, 10, nky)
+
+        true_p = np.array([1.7, 1.2, -1.5, 2.2, 1.6, 0.05], dtype=float)
+        data_2d = gaussian_2d((x_vec, y_vec), *true_p)
+        data_4d_clean = np.tile(data_2d, (nx, ny, 1, 1))
+
+        noise_sigma = 0.01 * np.max(np.abs(data_2d))
+        data_4d_noisy = data_4d_clean + rng.normal(0.0, noise_sigma, size=data_4d_clean.shape)
+
+        def make_dataset(arr, title):
+            d = sid.Dataset.from_array(arr, title=title)
+            d.set_dimension(0, sid.Dimension(np.arange(nx), name='X', dimension_type='spatial'))
+            d.set_dimension(1, sid.Dimension(np.arange(ny), name='Y', dimension_type='spatial'))
+            d.set_dimension(2, sid.Dimension(x_vec, name='kx', dimension_type='spectral'))
+            d.set_dimension(3, sid.Dimension(y_vec, name='ky', dimension_type='spectral'))
+            return d
+
+        dset_clean = make_dataset(data_4d_clean, "gaussian_2d_metrics_clean")
+        dset_noisy = make_dataset(data_4d_noisy, "gaussian_2d_metrics_noisy")
+
+        def run_metrics(dset):
+            fitter = SidpyFitterRefactor(
+                dataset=dset,
+                model_function=gaussian_2d,
+                guess_function=gaussian_2d_guess,
+                ind_dims=(2, 3),
+                num_params=6
+            )
+            fitter.setup_calc()
+            _, met = fitter.do_fit(use_kmeans=False, loss='linear', return_metrics=True)
+            m = np.asarray(met)
             
+            return m[..., 0], m[..., 1]  # r2, rmse
+
+        r2_clean, rmse_clean = run_metrics(dset_clean)
+        r2_noisy, rmse_noisy = run_metrics(dset_noisy)
+
+        assert np.nanmedian(r2_noisy) < np.nanmedian(r2_clean)
+        assert np.nanmedian(rmse_noisy) > np.nanmedian(rmse_clean)
+
+    def test_default_do_fit_returns_params_and_metrics_only(self):
+        rng = np.random.default_rng(0)
+
+        nx, ny = 3, 2
+        nkx, nky = 20, 20
+        x_vec = np.linspace(-10, 10, nkx)
+        y_vec = np.linspace(-10, 10, nky)
+
+        true_p = np.array([1.7, 1.2, -1.5, 2.2, 1.6, 0.05], dtype=float)
+        data_2d = gaussian_2d((x_vec, y_vec), *true_p)
+        data_4d_clean = np.tile(data_2d, (nx, ny, 1, 1))
+
+        noise_sigma = 0.01 * np.max(np.abs(data_2d))
+        data_4d_noisy = data_4d_clean + rng.normal(0.0, noise_sigma, size=data_4d_clean.shape)
+
+        def make_dataset(arr, title):
+            d = sid.Dataset.from_array(arr, title=title)
+            d.set_dimension(0, sid.Dimension(np.arange(nx), name='X', dimension_type='spatial'))
+            d.set_dimension(1, sid.Dimension(np.arange(ny), name='Y', dimension_type='spatial'))
+            d.set_dimension(2, sid.Dimension(x_vec, name='kx', dimension_type='spectral'))
+            d.set_dimension(3, sid.Dimension(y_vec, name='ky', dimension_type='spectral'))
+            return d
+
+        dset_noisy = make_dataset(data_4d_noisy, "gaussian_2d_metrics_noisy")
+        fitter = SidpyFitterRefactor(
+                dataset=dset_noisy,
+                model_function=gaussian_2d,
+                guess_function=gaussian_2d_guess,
+                ind_dims=(2, 3),
+                num_params=6
+            )
+        fitter.setup_calc()
+        params, metrics = fitter.do_fit()
+        assert metrics.shape[-1] == 2
+
+       
+
+
+
+    
+        
+
