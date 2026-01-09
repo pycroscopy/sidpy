@@ -181,7 +181,7 @@ class SidpyFitterRefactor:
                     raise ValueError(f"Unknown cov_mode={cov_mode!r}.")
 
             if return_metrics:
-                out_parts.append(np.array([np.nan, np.nan], dtype=np.float64))
+                out_parts.append(np.array([np.nan, np.nan, np.nan, np.nan], dtype=np.float64))
 
             return np.hstack(out_parts) if len(out_parts) > 1 else params
 
@@ -199,6 +199,8 @@ class SidpyFitterRefactor:
 
         # --- Metrics (default) appending ---
         if return_metrics:
+            n = int(y_input.size)
+            k = int(params.size)
             sse = float(np.sum(res.fun ** 2))
             rmse = float(np.sqrt(sse / y_input.size)) if y_input.size > 0 else np.nan
             y_mean = float(np.mean(y_input))
@@ -208,7 +210,17 @@ class SidpyFitterRefactor:
             else:
                 r2 = 1.0 - (sse / sst)
 
-            out_parts.append(np.array([r2, rmse], dtype=np.float64))
+            # AIC/BIC (up to an additive constant)
+            if n > 0 and sse > 0.0:
+                ll_term = n * np.log(sse / n)
+                aic = float(ll_term + 2.0 * k)
+                bic = float(ll_term + k * np.log(n))
+            else:
+                aic = np.nan
+                bic = np.nan
+                
+            # Order: [r2, rmse, aic, bic]
+            out_parts.append(np.array([r2, rmse, aic, bic], dtype=np.float64))
 
         # --- Covariance (optional) appending ---
         if cov_mode is not None:
@@ -504,7 +516,7 @@ class SidpyFitterRefactor:
         else:
             raise ValueError(f"Unknown cov_mode={cov_mode!r}. Use None, 'full', 'diag', or 'stderr'.")
 
-        metrics_size = 2 if return_metrics else 0
+        metrics_size = 4 if return_metrics else 0
         out_dim = self.num_params + cov_size + metrics_size
 
 
@@ -627,18 +639,20 @@ class SidpyFitterRefactor:
 
         # --- 2) Metrics dataset ---
         if return_metrics:
-            metrics_payload = fit_dask_array[..., cursor:cursor + 2]
+            metrics_payload = fit_dask_array[..., cursor:cursor + 4]
+            cursor += 4
 
             sid_metrics = sid.Dataset.from_array(metrics_payload, title=f"{self.dataset.title}_fit_metrics")
             set_spatial_dims(sid_metrics)
             sid_metrics.set_dimension(
                 len(self.spat_dims),
-                sid.Dimension(np.arange(2), name='metrics', quantity='index', dimension_type='spectral')
+                sid.Dimension(np.arange(4), name='metrics', quantity='index', dimension_type='spectral')
             )
             sid_metrics.metadata = dict(self.metadata).copy()
-            sid_metrics.metadata.setdefault("fit_parameters", {}).update({"metrics": ["r2", "rmse"]})
+            sid_metrics.metadata.setdefault("fit_parameters", {}).update({"metrics": ["r2", "rmse", "aic", "bic"]})
             sid_metrics.provenance = {'sidpy': {'generated_from': self.dataset.title, 'parent_fit': sid_params.title}}
             out.append(sid_metrics)
+
 
         # --- 3) Covariance dataset (optional) ---
         if cov_size > 0:

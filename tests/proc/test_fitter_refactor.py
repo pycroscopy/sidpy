@@ -357,14 +357,51 @@ class TestSidpyFitterMetrics(unittest.TestCase):
         res_params, res_metrics = fitter.do_fit(use_kmeans=False, loss='linear', return_metrics=True)
 
         assert res_params.shape == (nx, ny, 6)
-        assert res_metrics.shape == (nx, ny, 2)
+        assert res_metrics.shape == (nx, ny, 4)
 
         m = np.asarray(res_metrics)
         r2 = m[..., 0]
         rmse = m[..., 1]
-
+        assert np.isfinite(m[..., 2]).any()  # AIC
+        assert np.isfinite(m[..., 3]).any()  # BIC
         assert np.nanmin(r2) > 0.999
         assert np.nanmax(rmse) < 1e-6
+
+    def test_aic_bic_increase_with_noise_on_same_model():
+        import sidpy as sid
+        rng = np.random.default_rng(0)
+
+        nx, ny = 2, 2
+        nkx, nky = 16, 16
+        x_vec = np.linspace(-10, 10, nkx)
+        y_vec = np.linspace(-10, 10, nky)
+        true_p = np.array([1.8, 1.0, -1.0, 2.4, 1.7, 0.05], dtype=float)
+
+        clean2d = gaussian_2d((x_vec, y_vec), *true_p)
+        clean = np.tile(clean2d, (nx, ny, 1, 1))
+        sigma = 0.02 * np.max(np.abs(clean2d))
+        noisy = clean + rng.normal(0.0, sigma, size=clean.shape)
+
+        def mk(arr, title):
+            d = sid.Dataset.from_array(arr, title=title)
+            d.set_dimension(0, sid.Dimension(np.arange(nx), name='X', dimension_type='spatial'))
+            d.set_dimension(1, sid.Dimension(np.arange(ny), name='Y', dimension_type='spatial'))
+            d.set_dimension(2, sid.Dimension(x_vec, name='kx', dimension_type='spectral'))
+            d.set_dimension(3, sid.Dimension(y_vec, name='ky', dimension_type='spectral'))
+            return d
+
+        def run(arr):
+            fitter = SidpyFitterRefactor(mk(arr, "tmp"), gaussian_2d, gaussian_2d_guess, ind_dims=(2, 3), num_params=6)
+            fitter.setup_calc()
+            _, met = fitter.do_fit(use_kmeans=False, loss='linear')
+            m = np.asarray(met)
+            return np.nanmedian(m[..., 2]), np.nanmedian(m[..., 3])  # AIC, BIC
+
+        aic_clean, bic_clean = run(clean)
+        aic_noisy, bic_noisy = run(noisy)
+
+        assert aic_noisy > aic_clean
+        assert bic_noisy > bic_clean
 
 
     def test_metrics_noisy_fit_lower_r2_higher_rmse_than_clean(self):
