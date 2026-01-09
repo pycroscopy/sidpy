@@ -190,7 +190,8 @@ class TestSidpyFitter2D(unittest.TestCase):
             use_kmeans=False, 
             fit_parameter_labels=self.param_labels,
             return_cov=True,
-            loss='linear'
+            loss='linear',
+            return_metrics=False
         )
         
         # --- Assertions ---
@@ -267,7 +268,8 @@ class TestSidpyFitter2D(unittest.TestCase):
         res_params, res_cov_diag = fitter.do_fit(
             use_kmeans=False,
             cov_mode='diag',
-            loss='linear'
+            loss='linear',
+            return_metrics=False
         )
 
         # Params should be (nx, ny, 6)
@@ -314,7 +316,8 @@ class TestSidpyFitter2D(unittest.TestCase):
         res_params, res_stderr = fitter.do_fit(
             use_kmeans=False,
             cov_mode='stderr',
-            loss='linear'
+            loss='linear',
+            return_metrics=False
         )
 
         assert res_params.shape == (nx, ny, 6)
@@ -367,7 +370,7 @@ class TestSidpyFitterMetrics(unittest.TestCase):
         assert np.nanmin(r2) > 0.999
         assert np.nanmax(rmse) < 1e-6
 
-    def test_aic_bic_increase_with_noise_on_same_model():
+    def test_aic_bic_increase_with_noise_on_same_model(self):
         import sidpy as sid
         rng = np.random.default_rng(0)
 
@@ -484,7 +487,7 @@ class TestSidpyFitterMetrics(unittest.TestCase):
             )
         fitter.setup_calc()
         params, metrics = fitter.do_fit()
-        assert metrics.shape[-1] == 2
+        assert metrics.shape[-1] == 4
 
        
 

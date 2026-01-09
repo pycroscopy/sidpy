@@ -561,7 +561,6 @@ class SidpyFitterRefactor:
        
         return self.transform_to_sidpy(computed_result)
 
-
     def transform_to_sidpy(self, fit_dask_array):
         """
         Convert the fit results into sidpy.Dataset(s).
@@ -593,7 +592,7 @@ class SidpyFitterRefactor:
         else:
             raise ValueError(f"Unknown cov_mode={cov_mode!r}. Use None, 'full', 'diag', or 'stderr'.")
 
-        metrics_size = 2 if return_metrics else 0
+        metrics_size = 4 if return_metrics else 0
         expected = self.num_params + cov_size + metrics_size
 
         if total_channels != expected:
