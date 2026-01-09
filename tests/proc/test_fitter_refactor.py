@@ -190,6 +190,7 @@ class TestSidpyFitter2D(unittest.TestCase):
             use_kmeans=False, 
             fit_parameter_labels=self.param_labels,
             return_cov=True,
+            cov_mode='full',
             loss='linear',
             return_metrics=False
         )
