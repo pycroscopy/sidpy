@@ -38,7 +38,7 @@ from ..base.num_utils import get_slope
 from ..base.dict_utils import print_nested_dict
 from ..viz.dataset_viz import CurveVisualizer, ImageVisualizer, ImageStackVisualizer
 from ..viz.dataset_viz import SpectralImageVisualizer, FourDimImageVisualizer, ComplexSpectralImageVisualizer
-from ..viz.dataset_viz import PointCloudVisualizer, DictionaryVisualizer
+from ..viz.dataset_viz import PointCloudVisualizer, DictionaryVisualizer, DP_PointCloudVisualizer
 # from ..hdf.hdf_utils import is_editable_h5
 from .dimension import DimensionType
 from copy import deepcopy, copy
@@ -46,23 +46,15 @@ from sidpy.base.string_utils import validate_single_string_arg
 import logging
 from ..__version__ import version
 
+from .datatype import DataType
+
 def is_simple_list(lst):
     if isinstance(lst, list):
         return any(hasattr(item, '__getitem__') for item in lst)
     return False
 
 
-class DataType(Enum):
-    UNKNOWN = -1
-    SPECTRUM = 1
-    LINE_PLOT = 2
-    LINE_PLOT_FAMILY = 3
-    IMAGE = 4
-    IMAGE_MAP = 5
-    IMAGE_STACK = 6  # 3d
-    SPECTRAL_IMAGE = 7
-    IMAGE_4D = 8
-    POINT_CLOUD = 9
+
 
 
 def view_subclass(dask_array, cls):
@@ -281,7 +273,7 @@ class Dataset(da.Array):
 
         sid_dataset._axes = {}
 
-        if sid_dataset.data_type == DataType.POINT_CLOUD and coordinates is None:
+        if sid_dataset.data_type in [DataType.POINT_CLOUD, DataType.DP_POINT_CLOUD] and coordinates is None:
             raise ValueError("coordinates must be specified for a point cloud dataset")
 
         for dim in range(sid_dataset.ndim):
@@ -291,6 +283,13 @@ class Dataset(da.Array):
                     0: 'point_cloud',
                     1: 'spectral',
                     2: 'channel'
+                }
+                dimension_type = dimension_map.get(dim, None)
+            elif datatype == "dp_point_cloud":
+                dimension_map = {
+                    0: 'point_cloud',
+                    1: 'reciprocal',
+                    2: 'reciprocal'
                 }
                 dimension_type = dimension_map.get(dim, None)
             else:
@@ -309,6 +308,8 @@ class Dataset(da.Array):
             sid_dataset.point_cloud = {'coordinates': coordinates}
         else:
             sid_dataset.point_cloud = None
+        
+            
         return sid_dataset
 
     def like_data(self, data, title=None, chunks='auto', lock=False,
@@ -667,7 +668,7 @@ class Dataset(da.Array):
         self.view.fig: matplotlib figure reference
 
         """
-
+ 
         if verbose:
             print('Shape of dataset is: ', self.shape)
 
@@ -692,8 +693,9 @@ class Dataset(da.Array):
             elif self.data_type.value <= DataType['LINE_PLOT'].value:
                 # self.data_type in ['spectrum_family', 'line_family', 'line_plot_family', 'spectra']:
                 self.view = CurveVisualizer(self, figure=figure, **kwargs)
-            elif self.data_type == DataType.POINT_CLOUD:
+            elif self.data_type in [DataType.POINT_CLOUD, DataType.DP_POINT_CLOUD]:
                 self.view = PointCloudVisualizer(self, figure=figure, **kwargs)
+            
             elif self.data_type == DataType.SPECTRAL_IMAGE:
                 print('sp')
                 self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
@@ -721,6 +723,10 @@ class Dataset(da.Array):
                     self.view = SpectralImageVisualizer(self, figure=figure, **kwargs)
             elif self.data_type == DataType.POINT_CLOUD:
                 self.view = PointCloudVisualizer(self, figure=figure, **kwargs)
+            elif self.data_type == DataType.DP_POINT_CLOUD:
+                
+                self.view = DP_PointCloudVisualizer(self, figure=figure, **kwargs)
+                
             else:
                 raise NotImplementedError('Datasets with data_type {} cannot be plotted, yet.'.format(self.data_type))
         elif len(self.shape) == 4:
