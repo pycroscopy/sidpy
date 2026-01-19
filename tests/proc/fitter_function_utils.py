@@ -2,6 +2,8 @@ import numpy as np
 from scipy.spatial import ConvexHull
 from scipy.special import erf
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from sklearn.metrics import r2_score
 
 def gaussian_2d(axes_dims, amp, x0, y0, sigma_x, sigma_y, offset):
     """
