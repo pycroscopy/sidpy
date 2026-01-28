@@ -57,7 +57,9 @@ jobs:
         pytest --cov=./ --cov-report=xml
         
     - name: Upload coverage to Codecov
-      if: ${{ matrix.python-version == env.PYTHON_MAIN_VERSION }}
+      # if: ${{ matrix.python-version == env.PYTHON_MAIN_VERSION }}
+      if: ${{ github.repository == 'pycroscopy/sidpy' && github.event_name == 'push'
+           && matrix.python-version == env.PYTHON_MAIN_VERSION }}
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
