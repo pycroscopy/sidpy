@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
 from sklearn.gaussian_process.kernels import Matern
+from sklearn.gaussian_process import GaussianProcessRegressor
+import pyswarms as ps
 
 def gaussian_2d(axes_dims, amp, x0, y0, sigma_x, sigma_y, offset):
     """

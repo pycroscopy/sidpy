@@ -28,7 +28,8 @@ requirements = ['numpy>=1.10',
                 'scipy',
                 'ase',
                 'ipympl',
-                'dill'
+                'dill',
+                'pyswarms>=1.3.0'
                 ]
 
 setup(
