@@ -1,3 +1,4 @@
+from xmlrpc import client
 import numpy as np
 import dask.array as da
 from scipy.optimize import least_squares
@@ -92,6 +93,36 @@ class SidpyFitterRefactor:
             return raw_source.splitlines()  # Returns list of strings
         except (TypeError, OSError):
             return ["Source code not available (function might be defined in a shell or compiled)."]
+        
+    @staticmethod
+    def make_local_client(n_workers=4, threads_per_worker=1, processes=True, **kwargs):
+        """
+        Convenience helper to create a local Dask distributed Client.
+
+        Parameters
+        ----------
+        n_workers : int
+            Number of worker processes.
+        threads_per_worker : int
+            Threads per worker.
+        processes : bool
+            Whether to use processes (recommended for NumPy/SciPy-heavy workloads).
+        **kwargs :
+            Passed to distributed.LocalCluster (e.g., memory_limit, dashboard_address).
+
+        Returns
+        -------
+        distributed.Client
+        """
+        from distributed import Client, LocalCluster
+        cluster = LocalCluster(
+            n_workers=n_workers,
+            threads_per_worker=threads_per_worker,
+            processes=processes,
+            **kwargs
+        )
+        return Client(cluster)
+
 
     def setup_calc(self, chunks='auto'):
         """
@@ -252,7 +283,7 @@ class SidpyFitterRefactor:
         return np.hstack(out_parts) if len(out_parts) > 1 else params
 
 
-    def do_kmeans_guess(self, n_clusters=10):
+    def do_kmeans_guess(self, n_clusters=10, client = None):
         """
         Performs K-Means clustering to find representative spectra for prior fitting.
         We use Dask-ML Kmeans to do this in a scalable fashion.
@@ -313,8 +344,12 @@ class SidpyFitterRefactor:
             lazy_means.append(cluster_mean.squeeze())
         
         # Compute all means simultaneously to read data once
-        computed_means = da.compute(*lazy_means)
-        
+        if client is not None:
+            # returns a Future for the whole collection; .result() gives the tuple of results
+            computed_means = client.compute(lazy_means).result()
+        else:
+            computed_means = da.compute(*lazy_means)
+
         # 5. Fit the priors (runs locally as n_clusters is small)
         priors_per_cluster = np.zeros((n_clusters, self.num_params))
         
@@ -461,7 +496,7 @@ class SidpyFitterRefactor:
         return self.guess_result
 
 
-    def do_fit(self, guesses=None, use_kmeans=False, n_clusters=10,
+    def do_fit(self, client = None, guesses=None, use_kmeans=False, n_clusters=10,
            fit_parameter_labels=None, loss='linear', f_scale=1.0,
            return_cov=False, cov_mode=None, return_metrics=True):
 
@@ -502,7 +537,8 @@ class SidpyFitterRefactor:
 
         # Ensure guesses are available (lazy dask is fine)
         if guesses is None:
-            guesses = self.do_kmeans_guess(n_clusters) if use_kmeans else self.do_guess()
+            guesses = self.do_kmeans_guess(n_clusters, client=client) if use_kmeans else self.do_guess()
+
 
         # Determine output size
         # Params (N) + optional covariance payload + optional metrics (2)
@@ -557,8 +593,11 @@ class SidpyFitterRefactor:
             dtype=np.float64, align_arrays=True, concatenate=True
         )
 
-        computed_result = self.fit_result.compute()
-       
+        if client is not None:
+            computed_result = client.compute(self.fit_result).result()
+        else:
+            computed_result = self.fit_result.compute()
+
         return self.transform_to_sidpy(computed_result)
 
     def transform_to_sidpy(self, fit_dask_array):
