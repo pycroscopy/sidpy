@@ -24,7 +24,7 @@ requirements = ['numpy>=1.10',
                 'ipywidgets',
                 'ipykernel',
                 'ipython',  # Beginning with IPython 6.0, Python 3.3 and above is required.
-                'scikit-learn',
+                'scikit-learn>=1.0.0,<1.6.0',
                 'scipy',
                 'ase',
                 'ipympl',
