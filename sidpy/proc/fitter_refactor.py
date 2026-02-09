@@ -334,19 +334,30 @@ class SidpyFitterRefactor:
         # 4. Compute Mean Spectra for each cluster (Original Data)
         # We need the mean of the *original* flat_data based on the labels.
         # We construct a list of lazy mean computations and compute them in one pass.
+        labels_da = da.asarray(labels, chunks=(flat_data.chunks[0],))
+
         lazy_means = []
         for i in range(n_clusters):
-            mask = (labels == i)
-            # Dask boolean indexing -> Mean. 
-            # Note: Boolean indexing creates unknown chunk sizes, but mean collapses them.
-            # We add a check for empty clusters to avoid NaNs.
-            cluster_mean = flat_data[mask].mean(axis=0)
-            lazy_means.append(cluster_mean.squeeze())
+            m = (labels_da == i)        # (N,)
+            count = m.sum()             # scalar
+
+            # Broadcast mask to (N, 1) to match flat_data (N, spec_len)
+            m_b = m[:, None]
+
+            summed = da.where(m_b, flat_data, 0).sum(axis=0)  # (spec_len,)
+
+            # Avoid empty clusters: if count==0 -> zeros with correct shape
+            mean = da.where(count > 0, summed / count, da.zeros((spec_len,), dtype=flat_data.dtype))
+
+            lazy_means.append(mean)
+
         
         # Compute all means simultaneously to read data once
+        import dask
+
         if client is not None:
-            # returns a Future for the whole collection; .result() gives the tuple of results
-            computed_means = client.compute(lazy_means).result()
+            with client.as_current():
+                computed_means = dask.compute(*lazy_means)
         else:
             computed_means = da.compute(*lazy_means)
 
