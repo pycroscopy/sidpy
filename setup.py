@@ -15,7 +15,7 @@ requirements = ['numpy>=1.10',
                 'toolz',  # dask installation failing without this
                 'cytoolz',  # dask installation failing without this
                 'dask',
-                'dask-ml==2024.4.4',
+                'dask-ml>=2025.1.0',
                 'h5py>=2.6.0',
                 'matplotlib>=2.0.0',
                 'distributed>=2.0.0',
@@ -24,7 +24,7 @@ requirements = ['numpy>=1.10',
                 'ipywidgets',
                 'ipykernel',
                 'ipython',  # Beginning with IPython 6.0, Python 3.3 and above is required.
-                'scikit-learn>=1.0.0',
+                'scikit-learn>=1.6.1',
                 'scipy',
                 'ase',
                 'ipympl',
