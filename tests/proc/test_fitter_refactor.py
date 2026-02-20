@@ -1,7 +1,7 @@
 #Define the guess and fit functions required to test the SidpyFitterRefactor
 
 import numpy as np
-from .fitter_function_utils import gaussian_2d, gaussian_2d_guess, loop_fit_function, generate_guess, SHO_fit_flattened, sho_guess_fn
+from .fitter_function_utils import gaussian_2d, gaussian_2d_guess, loop_fit_function, generate_guess, generate_deep_guess, SHO_fit_flattened, sho_guess_fn
 import tempfile
 from pathlib import Path
 import unittest

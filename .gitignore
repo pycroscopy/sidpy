@@ -110,3 +110,4 @@ test_scripts/
 /docs/source/_autosummary/
 /docs/source/notebooks/
 tests/test.h5
+tests/proc/inputs/
