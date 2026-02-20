@@ -1,0 +1,588 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.base.string_utils &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.base.string_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.base.string_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utilities for formatting strings and other input / output methods</span>
+
+<span class="sd">Created on Tue Nov  3 21:14:25 2015</span>
+
+<span class="sd">@author: Suhas Somnath, Chris Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">strftime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+
+
+<div class="viewcode-block" id="format_quantity">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.format_quantity.html#sidpy.base.string_utils.format_quantity">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit_names</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Formats the provided quantity such as time or size to appropriate strings</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : number</span>
+<span class="sd">        value in some base units. For example - time in seconds</span>
+<span class="sd">    unit_names : array-like</span>
+<span class="sd">        List of names of units for each scale of the value</span>
+<span class="sd">    factors : array-like</span>
+<span class="sd">        List of scaling factors for each scale of the value</span>
+<span class="sd">    decimals : uint, optional. default = 2</span>
+<span class="sd">        Number of decimal places to which the value needs to be formatted</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        String with value formatted correctly</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt; # If ``sidpy.string_utils.format_time()`` were not available, we could</span>
+<span class="sd">    &gt;&gt; # get the same functionality via:</span>
+<span class="sd">    &gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt; units = [&#39;msec&#39;, &#39;sec&#39;, &#39;mins&#39;, &#39;hours&#39;]</span>
+<span class="sd">    &gt;&gt; factors = [0.001, 1, 60, 3600]</span>
+<span class="sd">    &gt;&gt; time_value = 14497.34</span>
+<span class="sd">    &gt;&gt; str_form = sidpy.string_utils.format_quantity(time_value,units,factors)</span>
+<span class="sd">    &gt;&gt; print(&#39;{} seconds = {}&#39;.format(14497.34, str_form))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    sidpy.string_utils.format_size</span>
+<span class="sd">    sidpy.string_utils.format_time</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># assert isinstance(value, (int, float))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit_names</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;unit_names must an Iterable&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factors</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;factors must be an Iterable&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">factors</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unit_names and factors must be of the same length&#39;</span><span class="p">)</span>
+    <span class="n">unit_names</span> <span class="o">=</span> <span class="n">validate_list_of_strings</span><span class="p">(</span><span class="n">unit_names</span><span class="p">,</span> <span class="s1">&#39;unit_names&#39;</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">factors</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">val</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">break</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>  <span class="c1"># handles sub msec</span>
+
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">value</span> <span class="o">/</span> <span class="n">factors</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">decimals</span><span class="p">),</span>
+                          <span class="n">unit_names</span><span class="p">[</span><span class="n">index</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="format_time">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.format_time.html#sidpy.base.string_utils.format_time">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_time</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Formats the provided time in seconds into seconds, minutes, or hours</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time_in_seconds : number</span>
+<span class="sd">        Time in seconds</span>
+<span class="sd">    decimals : uint, optional. default = 2</span>
+<span class="sd">        Number of decimal places to which the time needs to be formatted</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        String with time formatted correctly</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt;&gt; num_secs = 14497.34</span>
+<span class="sd">    &gt;&gt;&gt; time_form = sidpy.string_utils.format_time(num_secs)</span>
+<span class="sd">    &gt;&gt;&gt; print(&#39;{} seconds = {}&#39;.format(num_secs, time_form))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;msec&#39;</span><span class="p">,</span> <span class="s1">&#39;sec&#39;</span><span class="p">,</span> <span class="s1">&#39;mins&#39;</span><span class="p">,</span> <span class="s1">&#39;hours&#39;</span><span class="p">]</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">3600</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">format_quantity</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="format_size">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.format_size.html#sidpy.base.string_utils.format_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_size</span><span class="p">(</span><span class="n">size_in_bytes</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Formats the provided size in bytes to kB, MB, GB, TB etc.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    size_in_bytes : number</span>
+<span class="sd">        size in bytes</span>
+<span class="sd">    decimals : uint, optional. default = 2</span>
+<span class="sd">        Number of decimal places to which the size needs to be formatted</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        String with size formatted correctly</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; # using the function to print available memory / RAM in system:</span>
+<span class="sd">    &gt;&gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt;&gt; mem_in_bytes = sidpy.comp_utils.get_available_memory()</span>
+<span class="sd">    &gt;&gt;&gt; print(&#39;Available memory in this machine: {}&#39;</span>
+<span class="sd">    &gt;&gt;&gt;       &#39;&#39;.format(sidpy.string_utils.format_size(mem_in_bytes)))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    sidpy.comp_utils.get_available_memory</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;bytes&#39;</span><span class="p">,</span> <span class="s1">&#39;kB&#39;</span><span class="p">,</span> <span class="s1">&#39;MB&#39;</span><span class="p">,</span> <span class="s1">&#39;GB&#39;</span><span class="p">,</span> <span class="s1">&#39;TB&#39;</span><span class="p">]</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="mi">1024</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">format_quantity</span><span class="p">(</span><span class="n">size_in_bytes</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="formatted_str_to_number">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.formatted_str_to_number.html#sidpy.base.string_utils.formatted_str_to_number">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">formatted_str_to_number</span><span class="p">(</span><span class="n">str_val</span><span class="p">,</span> <span class="n">magnitude_names</span><span class="p">,</span> <span class="n">magnitude_values</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes a formatted string like &#39;4.32 MHz&#39; to 4.32 E+6.</span>
+<span class="sd">    This function provides the inverse functionality of</span>
+<span class="sd">    ``sidpy.string_utils.format_quantity``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    str_val : str / unicode</span>
+<span class="sd">        String value of the quantity. Example &#39;4.32 MHz&#39;</span>
+<span class="sd">    magnitude_names : Iterable</span>
+<span class="sd">        List of names of units like [&#39;seconds&#39;, &#39;minutes&#39;, &#39;hours&#39;]</span>
+<span class="sd">    magnitude_values : Iterable</span>
+<span class="sd">        List of values (corresponding to magnitude_names) that scale the</span>
+<span class="sd">        numeric value. Example [1, 60, 3600]</span>
+<span class="sd">    separator : str / unicode, optional. Default = &#39; &#39; (space)</span>
+<span class="sd">        The text that separates the numeric value and the units.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    number</span>
+<span class="sd">        Numeric value of the string</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt;&gt; unit_names = [&quot;MHz&quot;, &quot;kHz&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; unit_magnitudes = [1E+6, 1E+3]</span>
+<span class="sd">    &gt;&gt;&gt; str_value = &quot;4.32 MHz&quot;</span>
+<span class="sd">    &gt;&gt;&gt; num_value = sidpy.string_utils.formatted_str_to_number(str_value,</span>
+<span class="sd">    &gt;&gt;&gt;                                                       unit_names,</span>
+<span class="sd">    &gt;&gt;&gt;                                                       unit_magnitudes,</span>
+<span class="sd">    &gt;&gt;&gt;                                                       separator=&#39; &#39;)</span>
+<span class="sd">    &gt;&gt;&gt; print(&#39;formatted_str_to_number: {} = {}&#39;.format(str_value, num_value))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    sidpy.string_utils.format_quantity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">[</span><span class="n">str_val</span><span class="p">]</span> <span class="o">=</span> <span class="n">validate_string_args</span><span class="p">(</span><span class="n">str_val</span><span class="p">,</span> <span class="s1">&#39;str_val&#39;</span><span class="p">)</span>
+    <span class="n">magnitude_names</span> <span class="o">=</span> <span class="n">validate_list_of_strings</span><span class="p">(</span><span class="n">magnitude_names</span><span class="p">,</span>
+                                               <span class="s1">&#39;magnitude_names&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">separator</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;separator must be a string&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">magnitude_values</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;magnitude_values must be an Iterable&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">magnitude_values</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;magnitude_values should contain numbers&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">magnitude_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">magnitude_values</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;magnitude_names and magnitude_values should be of &#39;</span>
+                         <span class="s1">&#39;the same length&#39;</span><span class="p">)</span>
+
+    <span class="n">components</span> <span class="o">=</span> <span class="n">str_val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;String value should be of format &#39;</span>
+                         <span class="s1">&#39;&quot;123.45&lt;separator&gt;Unit&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">unit_name</span><span class="p">,</span> <span class="n">scaling</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">magnitude_names</span><span class="p">,</span> <span class="n">magnitude_values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">unit_name</span> <span class="o">==</span> <span class="n">components</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># Let it raise an exception. Don&#39;t catch</span>
+            <span class="k">return</span> <span class="n">scaling</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="validate_single_string_arg">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.validate_single_string_arg.html#sidpy.base.string_utils.validate_single_string_arg">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_single_string_arg</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function is to be used when validating a SINGLE string parameter for a</span>
+<span class="sd">    function. Trims the provided value.</span>
+<span class="sd">    Errors in the string will result in Exceptions</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : str</span>
+<span class="sd">        Value of the parameter</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the parameter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Cleaned string value of the parameter</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; should be a string&#39;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; should not be an empty string&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="validate_list_of_strings">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.validate_list_of_strings.html#sidpy.base.string_utils.validate_list_of_strings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_list_of_strings</span><span class="p">(</span><span class="n">str_list</span><span class="p">,</span> <span class="n">parm_name</span><span class="o">=</span><span class="s1">&#39;parameter&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function is to be used when validating and cleaning a list of strings.</span>
+<span class="sd">    Trims the provided strings. Errors in the strings will result in Exceptions</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    str_list : array-like</span>
+<span class="sd">        list or tuple of strings</span>
+<span class="sd">    parm_name : str, Optional. Default = &#39;parameter&#39;</span>
+<span class="sd">        Name of the parameter corresponding to this string list that will be</span>
+<span class="sd">        reported in the raised Errors</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array-like</span>
+<span class="sd">        List of trimmed and validated strings when ALL objects within the list</span>
+<span class="sd">        are found to be valid strings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">str_list</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">str_list</span><span class="p">,</span> <span class="n">parm_name</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">str_list</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">parm_name</span> <span class="o">+</span> <span class="s1">&#39; should be a string or list / tuple of &#39;</span>
+                                    <span class="s1">&#39;strings&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">parm_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">str_list</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="validate_string_args">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.validate_string_args.html#sidpy.base.string_utils.validate_string_args">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_string_args</span><span class="p">(</span><span class="n">arg_list</span><span class="p">,</span> <span class="n">arg_names</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function is to be used when validating string parameters for a</span>
+<span class="sd">    function. Trims the provided strings.</span>
+<span class="sd">    Errors in the strings will result in Exceptions</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arg_list : array-like</span>
+<span class="sd">        List of str objects that signify the value for a position argument in</span>
+<span class="sd">        a function</span>
+<span class="sd">    arg_names : array-like</span>
+<span class="sd">        List of str objects with the names of the corresponding parameters in</span>
+<span class="sd">        the function</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array-like</span>
+<span class="sd">        List of str objects that signify the value for a position argument in a</span>
+<span class="sd">        function with spaces on ends removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_list</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg_list</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="n">arg_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg_names</span><span class="p">]</span>
+    <span class="n">cleaned_args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_list</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;arg_list should be a tuple or a list or a string&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;arg_names should be a tuple or a list or a string&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">arg_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arg_list</span><span class="p">,</span> <span class="n">arg_names</span><span class="p">):</span>
+        <span class="n">cleaned_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">arg_name</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">cleaned_args</span></div>
+
+
+
+<div class="viewcode-block" id="clean_string_att">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.clean_string_att.html#sidpy.base.string_utils.clean_string_att">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_string_att</span><span class="p">(</span><span class="n">att_val</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replaces any unicode objects within lists with their string counterparts to</span>
+<span class="sd">    ensure compatibility with python 3. If the attribute is indeed a list of</span>
+<span class="sd">    unicodes, the changes will be made in-place</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    att_val : object</span>
+<span class="sd">        Attribute object</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    att_val : object</span>
+<span class="sd">        Attribute object</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The ``h5py`` package used for reading and manipulating HDF5 files has</span>
+<span class="sd">    issues which necessitate the encoding of attributes whose values are lists</span>
+<span class="sd">    of strings. This method encodes lists of strings correctly so that they can</span>
+<span class="sd">    directly be written to HDF5 without causing any errors. All other kinds of</span>
+<span class="sd">    simple attributes - single strings, numbers, lists of numbers are</span>
+<span class="sd">    unmodified by this function.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt;&gt; expected = [&#39;a&#39;, &#39;bc&#39;, &#39;def&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; returned = sidpy.string_utils.clean_string_att(expected)</span>
+<span class="sd">    &gt;&gt;&gt; print(&#39;List of strings value: {} encoded to: {}&#39;.format(expected, returned))</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; expected = [1, 2, 3.456]</span>
+<span class="sd">    &gt;&gt;&gt; returned = sidpy.string_utils.clean_string_att(expected)</span>
+<span class="sd">    &gt;&gt;&gt; print(&#39;List of numbers value: {} returned as is: {}&#39;.format(expected, returned))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">att_val</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">att_val</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">unicode</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">att_val</span>
+            <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">([</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">att_val</span><span class="p">]):</span>
+                <span class="n">new_atts</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">att_val</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">==</span><span class="nb">str</span><span class="p">:</span>
+                        <span class="n">new_str</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                        <span class="n">new_atts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_str</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">new_atts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_atts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;S&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">att_val</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="c1"># Not sure how to do this elegantly,</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">att_val</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">,</span>
+                                             <span class="n">Number</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Provided object was a list or tuple &#39;</span>
+                                        <span class="s1">&#39;whose element was not a string or &#39;</span>
+                                        <span class="s1">&#39;number but was of type: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">att_val</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">str_</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">att_val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">att_val</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Failed to clean: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">att_val</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="get_time_stamp">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.get_time_stamp.html#sidpy.base.string_utils.get_time_stamp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_time_stamp</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the current date and time as a string formatted as:</span>
+<span class="sd">    Year_Month_Day-Hour_Minute_Second</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt;&gt; stamp = sidpy.string_utils.get_time_stamp()</span>
+<span class="sd">    &gt;&gt;&gt; print(&#39;Current time is: {}&#39;.format(stamp))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y_%m_</span><span class="si">%d</span><span class="s1">-%H_%M_%S&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="str_to_other">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.str_to_other.html#sidpy.base.string_utils.str_to_other">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">str_to_other</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Casts a single value encoded in a string to the appropriate python object.</span>
+<span class="sd">    Useful when parsing numbers, boolean, etc. in text files</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : str / unicode</span>
+<span class="sd">        String to be cast into other appropriate python object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expected object of type str. Provided object was: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expected a string without spaces. Got: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;true&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;false&#39;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="remove_extra_delimiters">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.base.string_utils.remove_extra_delimiters.html#sidpy.base.string_utils.remove_extra_delimiters">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_extra_delimiters</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Removes extra spaces (or other delimiters) between words in a line.</span>
+<span class="sd">    Useful when parsing parameters (written by hand)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    line : str / unicode</span>
+<span class="sd">        Line to be cleaned</span>
+<span class="sd">    separator : str / unicode, Optional. Default = &#39; &#39;</span>
+<span class="sd">        Separator between tokens</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    line : str</span>
+<span class="sd">        Line with extra separators removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;line should be a string&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">separator</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;separator should be a string&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;separator should not be empty&#39;</span><span class="p">)</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">real</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">separator</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">real</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">line</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

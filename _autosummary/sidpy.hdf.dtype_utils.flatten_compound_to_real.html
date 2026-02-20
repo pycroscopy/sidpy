@@ -1,0 +1,170 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.hdf.dtype_utils.flatten_compound_to_real &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">sidpy.hdf.dtype_utils.flatten_compound_to_real</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/sidpy.hdf.dtype_utils.flatten_compound_to_real.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sidpy-hdf-dtype-utils-flatten-compound-to-real">
+<h1>sidpy.hdf.dtype_utils.flatten_compound_to_real<a class="headerlink" href="#sidpy-hdf-dtype-utils-flatten-compound-to-real" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="sidpy.hdf.dtype_utils.flatten_compound_to_real">
+<span class="sig-prename descclassname"><span class="pre">sidpy.hdf.dtype_utils.</span></span><span class="sig-name descname"><span class="pre">flatten_compound_to_real</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lazy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/hdf/dtype_utils.html#flatten_compound_to_real"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.hdf.dtype_utils.flatten_compound_to_real" title="Link to this definition">¶</a></dt>
+<dd><p>Flattens the individual components in a structured array or compound valued hdf5 dataset along the last axis to form
+a real valued array. Thus a compound h5py.Dataset or structured numpy matrix of shape (2, 3, 5) having 3 components
+will turn into a real valued matrix of shape (2, 3, 15), assuming that all the sub-dtypes of the matrix are real
+valued. ie - this function does not handle structured dtypes having complex values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, or <a class="reference external" href="https://docs.h5py.org/en/latest/high/dataset.html#h5py.Dataset" title="(in h5py v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.Dataset</span></code></a>, or <a class="reference external" href="https://docs.dask.org/en/latest/generated/dask.array.Array.html#dask.array.Array" title="(in Dask)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask.array.core.Array</span></code></a>) – Numpy array that is a structured array or a <a class="reference external" href="https://docs.h5py.org/en/latest/high/dataset.html#h5py.Dataset" title="(in h5py v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">h5py.Dataset</span></code></a> of compound dtype</p></li>
+<li><p><strong>lazy</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional. Default = False</em>) – If set to True, will use lazy Dask arrays instead of in-memory numpy arrays</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>retval</strong> – real valued dataset</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, or <a class="reference external" href="https://docs.dask.org/en/latest/generated/dask.array.Array.html#dask.array.Array" title="(in Dask)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask.array.core.Array</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">num_elems</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">struct_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">({</span><span class="s1">&#39;names&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>                         <span class="s1">&#39;formats&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">structured_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">num_elems</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">struct_dtype</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">structured_array</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">num_elems</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1024</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">structured_array</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">num_elems</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">structured_array</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">num_elems</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1024</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Structured array is of shape </span><span class="si">{}</span><span class="s1"> and have values:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">structured_array</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">structured_array</span><span class="p">)</span>
+<span class="go">Structured array is of shape (5,) and have values:</span>
+<span class="go">[(859.62445,  54, 1012.22256219) (959.5565 , 678,  296.19788769)</span>
+<span class="go"> (383.20737, 689,  192.45427816) (201.56635, 889,  939.01082338)</span>
+<span class="go"> (334.22015, 467,  980.9081472 )]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real_array</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">dtype_utils</span><span class="o">.</span><span class="n">flatten_compound_to_real</span><span class="p">(</span><span class="n">structured_array</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This array converted to regular scalar matrix has shape: </span><span class="si">{}</span><span class="s2"> and values:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">real_array</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">real_array</span><span class="p">)</span>
+<span class="go">This array converted to regular scalar matrix has shape: (15,) and values:</span>
+<span class="go">[ 859.62445068  959.55651855  383.20736694  201.56634521  334.22015381</span>
+<span class="go">   54.          678.          689.          889.          467.</span>
+<span class="go"> 1012.22256219  296.19788769  192.45427816  939.01082338  980.9081472 ]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.proc.fitter.SidFitter &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">sidpy.proc.fitter.SidFitter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/sidpy.proc.fitter.SidFitter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sidpy-proc-fitter-sidfitter">
+<h1>sidpy.proc.fitter.SidFitter<a class="headerlink" href="#sidpy-proc-fitter-sidfitter" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="sidpy.proc.fitter.SidFitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sidpy.proc.fitter.</span></span><span class="sig-name descname"><span class="pre">SidFitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sidpy_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xvec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guess_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_fit_parms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">km_guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_clus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_parameter_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter.html#SidFitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter.SidFitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sidpy_dataset</strong> (<em>(</em><em>sidpy.Dataset</em><em>) </em><em>Sidpy dataset object to be fit</em>)</p></li>
+<li><p><strong>fit_fn</strong> (<em>(</em><em>function</em><em>) </em><em>Function used for fitting.</em>)</p></li>
+<li><p><strong>arguments.</strong> (<em>Should take xvec as the first argument and parameters as the rest</em><em> of </em><em>the</em>)</p></li>
+<li><p><strong>xvec</strong> (<em>(</em><em>numpy ndarray</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em> of </em><em>numpy ndarrays</em><em>) </em><em>(</em><em>Optional</em><em>)</em>)</p></li>
+<li><p><strong>xvec</strong></p></li>
+<li><p><strong>array</strong> (<em>Independent variable for fitting. Should be an</em>)</p></li>
+<li><p><strong>provided</strong> (<em>If the guess_fn is NOT</em>)</p></li>
+<li><p><strong>xvecs</strong> (<em>the dimension arrays are assumed to be</em>)</p></li>
+<li><p><strong>ind_dims</strong> (<em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>) </em><em>(</em><em>Optional</em><em>) </em><em>Tuple with integer entries</em><em> of </em><em>the dimensions</em>) – over which to parallelize. These should be the independent variable for the fitting.
+If NOT provided, it is assumed that all the non-spectral dimensions are independent dimensions.</p></li>
+<li><p><strong>guess_fn</strong> (<em>(</em><em>function</em><em>) </em><em>(</em><em>optional</em><em>) </em><em>This optional function should be utilized to generate priors for the full fit</em>)</p></li>
+<li><p><strong>(</strong><strong>xvec</strong> (<em>It takes</em>)</p></li>
+<li><p><strong>parameters.</strong> (<em>yvec</em><em>) </em><em>as inputs and should return the fit</em>)</p></li>
+<li><p><strong>provided</strong></p></li>
+<li><p><strong>num_fit_parms.</strong> (<em>then the user MUST input the</em>)</p></li>
+<li><p><strong>num_fit_parms</strong> (<em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>) </em><em>Number</em><em> of </em><em>fitting parameters. This is needed IF the guess function is not provided to set</em>)</p></li>
+<li><p><strong>function.</strong> (<em>the priors for the parameters for the curve_fit</em>)</p></li>
+<li><p><strong>km_guess</strong> (<em>(</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>) </em><em>(</em><em>default False</em><em>) </em><em>When set to True: Divides the spectra into clusters using</em>)</p></li>
+<li><p><strong>sklearn.optimize.kMeans</strong></p></li>
+<li><p><strong>centers</strong> (<em>applies the fitting function on the cluster</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<p>:param :
+:param uses the results as priors to each spectrum of the cluster.:
+:param n_clus:
+:type n_clus: (int) (default None) Used only when km_guess is set to True. Determines the number of clusters to be
+:param formed for sklearn.optimize.kmeans. If not provided then n_clus = self.num_computations/100:
+:param return_std:
+:type return_std: (bool) (default False) Returns the dataset with estimated standard deviation of the parameter
+:param values. Square roots of the diagonal of the covariance matrix.:
+:param return_cov:
+:type return_cov: (bool) (default False) Returns the estimated covariance of fitting parameters. Confer
+:param scipy.optimize.curve_fit for further details:
+:param return_fit: when set to true
+:type return_fit: (bool) (default False) Returns the fitted sidpy dataset using the optimal parameters
+:param fit_parameter_labels:
+:type fit_parameter_labels: (list) (default None) List of parameter labels
+:param num_workers:
+:type num_workers: (int) (default =2) Number of workers to use when setting up Dask client
+:param threads:
+:type threads: (int) (default =2) Number of threads to use when setting up Dask client
+:param Returns:
+:param ——-:
+:param sidpy.dataset:
+:type sidpy.dataset: if return_cov and return_fit are both set to False
+:param List:
+:type List: containing sidpy.dataset objects, if either of return_cov or return fit is set to True
+:param If multiple datasets are expected:
+:param the order of the returned datasets is:
+:param [sidpy.dataset with mean parameter values:
+:param :
+:param sidpy.dataset with estimated covariances of the fitting parameters:
+:param :
+:param sidpy.dataset that is fit with the parameters obtained after fitting]:</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_curve_fit</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#sidpy.proc.fitter.SidFitter.do_fit" title="sidpy.proc.fitter.SidFitter.do_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_fit</span></code></a></p></td>
+<td><p>Perform the fit. <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: extra parameters passed to scipy.optimize.curve_fit, e.g. bounds, type of lsq algorithm, etc.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#sidpy.proc.fitter.SidFitter.do_guess" title="sidpy.proc.fitter.SidFitter.do_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_guess</span></code></a></p></td>
+<td><p>If a guess_fn is provided: Applies the guess_fn to get priors for the fitting parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#sidpy.proc.fitter.SidFitter.get_fitted_dataset" title="sidpy.proc.fitter.SidFitter.get_fitted_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fitted_dataset</span></code></a></p></td>
+<td><p>This method returns the fitted dataset using the parameters generated by the fit function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_km_priors</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#sidpy.proc.fitter.SidFitter.visualize_fit_results" title="sidpy.proc.fitter.SidFitter.visualize_fit_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">visualize_fit_results</span></code></a></p></td>
+<td><p>Calls the interactive visualizer for comparing raw and fit datasets.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter.SidFitter.do_fit">
+<span class="sig-name descname"><span class="pre">do_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter.html#SidFitter.do_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter.SidFitter.do_fit" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the fit.
+<a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: extra parameters passed to scipy.optimize.curve_fit, e.g. bounds, type of lsq algorithm, etc.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter.SidFitter.do_guess">
+<span class="sig-name descname"><span class="pre">do_guess</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter.html#SidFitter.do_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter.SidFitter.do_guess" title="Link to this definition">¶</a></dt>
+<dd><p>If a guess_fn is provided: Applies the guess_fn to get priors for the fitting parameters.
+self.prior is set as the output of guess function at each of the ind_dims</p>
+<p>Returns:
+None
+——-</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter.SidFitter.get_fitted_dataset">
+<span class="sig-name descname"><span class="pre">get_fitted_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter.html#SidFitter.get_fitted_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter.SidFitter.get_fitted_dataset" title="Link to this definition">¶</a></dt>
+<dd><p>This method returns the fitted dataset using the parameters generated by the fit function</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter.SidFitter.visualize_fit_results">
+<span class="sig-name descname"><span class="pre">visualize_fit_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">horizontal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter.html#SidFitter.visualize_fit_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter.SidFitter.visualize_fit_results" title="Link to this definition">¶</a></dt>
+<dd><p>Calls the interactive visualizer for comparing raw and fit datasets.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><ul class="simple">
+<li><p>figure: (Optional, default None) - handle to existing figure</p></li>
+<li><p>horiziontal: (Optional, default True) - whether spectrum should be plotted horizontally</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

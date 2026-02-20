@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.misc.set\_tick\_font\_size
+================================================
+
+.. currentmodule:: sidpy.viz.plot_utils.misc
+
+.. autofunction:: set_tick_font_size

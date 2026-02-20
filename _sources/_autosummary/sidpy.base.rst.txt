@@ -1,0 +1,32 @@
+sidpy.base
+==========
+
+.. automodule:: sidpy.base
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   dict_utils
+   num_utils
+   string_utils
+

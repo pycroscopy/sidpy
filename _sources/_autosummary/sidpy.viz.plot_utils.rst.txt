@@ -1,0 +1,33 @@
+sidpy.viz.plot\_utils
+=====================
+
+.. automodule:: sidpy.viz.plot_utils
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   cmap
+   curve
+   image
+   misc
+

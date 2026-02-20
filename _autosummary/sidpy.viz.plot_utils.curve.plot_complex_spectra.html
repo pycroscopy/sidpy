@@ -1,0 +1,145 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.viz.plot_utils.curve.plot_complex_spectra &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">sidpy.viz.plot_utils.curve.plot_complex_spectra</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/sidpy.viz.plot_utils.curve.plot_complex_spectra.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sidpy-viz-plot-utils-curve-plot-complex-spectra">
+<h1>sidpy.viz.plot_utils.curve.plot_complex_spectra<a class="headerlink" href="#sidpy-viz-plot-utils-curve-plot-complex-spectra" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="sidpy.viz.plot_utils.curve.plot_complex_spectra">
+<span class="sig-prename descclassname"><span class="pre">sidpy.viz.plot_utils.curve.</span></span><span class="sig-name descname"><span class="pre">plot_complex_spectra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">map_stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_comps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evenly_spaced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtitle_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Component'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stdevs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/viz/plot_utils/curve.html#plot_complex_spectra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.viz.plot_utils.curve.plot_complex_spectra" title="Link to this definition">¶</a></dt>
+<dd><p>Plots the amplitude and phase components of the provided stack of complex valued spectrograms (2D images)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>map_stack</strong> (<em>2D</em><em> or </em><em>3D numpy complex matrices</em>) – stack of complex valued 1D spectra arranged as [component, spectra] or
+2D images arranged as - [component, row, col]</p></li>
+<li><p><strong>x_vec</strong> (<em>1D array-like</em><em>, </em><em>optional</em><em>, </em><em>default=None</em>) – If the data are spectra (1D) instead of spectrograms (2D), x_vec is the reference array against which</p></li>
+<li><p><strong>num_comps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of images to plot</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Title to plot above everything else</p></li>
+<li><p><strong>x_label</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Label for x axis</p></li>
+<li><p><strong>y_label</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Label for y axis</p></li>
+<li><p><strong>evenly_spaced</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional. Default = True</em>) – If True, images will be sampled evenly over the given dataset. Else, the first num_comps images will be plotted</p></li>
+<li><p><strong>subtitle_prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Prefix for the title over each image</p></li>
+<li><p><strong>amp_units</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Units for amplitude</p></li>
+<li><p><strong>stdevs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of standard deviations to consider for plotting</p></li>
+<li><p><strong>pyplot.plot</strong><strong>(</strong><strong>)</strong> (<em>**kwargs will be passed on either to plot_map</em><em>(</em><em>) </em><em>or</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>fig, axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

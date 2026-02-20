@@ -1,0 +1,6 @@
+sidpy.hdf.dtype\_utils.get\_compound\_sub\_dtypes
+=================================================
+
+.. currentmodule:: sidpy.hdf.dtype_utils
+
+.. autofunction:: get_compound_sub_dtypes
