@@ -227,4 +227,147 @@ class TestSidpyFitter2D(unittest.TestCase):
         diag = np.diag(cov_matrix)
         self.assertTrue(np.all(diag >= 0), "Covariance diagonal elements must be non-negative")
 
-            
+class TestSidpyFitterWithBounds(unittest.TestCase):
+
+    def setUp(self):
+        """
+        Synthetic 3x3 spatial x 50-point spectral 1D Gaussian dataset.
+        Fast, self-contained, no network required.
+        """
+        self.n_x, self.n_y, self.n_spec = 3, 3, 50
+        x_axis = np.linspace(-10, 10, self.n_spec)
+        self.true_params = np.array([3.0, 0.0, 2.0, 0.5])  # amp, center, sigma, offset
+
+        raw = np.zeros((self.n_x, self.n_y, self.n_spec))
+        for i in range(self.n_x):
+            for j in range(self.n_y):
+                amp, cen, sig, off = self.true_params
+                cen_ij = cen + 0.5 * (i - 1)
+                raw[i, j] = (amp * np.exp(-0.5 * ((x_axis - cen_ij) / sig) ** 2)
+                             + off
+                             + np.random.default_rng(i * 10 + j).normal(0, 0.05, self.n_spec))
+
+        self.dataset = sid.Dataset.from_array(raw, name='Synthetic_1D_Gauss')
+        self.dataset.set_dimension(0, sid.Dimension(np.arange(self.n_x), 'x',
+                                                    dimension_type='spatial'))
+        self.dataset.set_dimension(1, sid.Dimension(np.arange(self.n_y), 'y',
+                                                    dimension_type='spatial'))
+        self.dataset.set_dimension(2, sid.Dimension(x_axis, 'spectrum',
+                                                    dimension_type='spectral'))
+
+        def _gaussian(x, amp, cen, sig, off):
+            return amp * np.exp(-0.5 * ((x - cen) / sig) ** 2) + off
+
+        def _gaussian_guess(x, y):
+            off = np.percentile(y, 10)
+            amp = float(y.max()) - off
+            cen = float(x[np.argmax(y)])
+            sig = (x[-1] - x[0]) / 6.0
+            return [amp, cen, sig, off]
+
+        self.model_func = _gaussian
+        self.guess_func = _gaussian_guess
+
+    def _make_fitter(self, lower_bounds=None, upper_bounds=None):
+        """Helper: build and setup a fitter with optional bounds."""
+        fitter = SidpyFitterRefactor(
+            self.dataset, self.model_func, self.guess_func,
+            lower_bounds=lower_bounds, upper_bounds=upper_bounds,
+        )
+        fitter.setup_calc()
+        return fitter
+
+    def test_unbounded_unchanged(self):
+        """Unbounded fit must return a valid sidpy.Dataset with finite params."""
+        result, _ = self._make_fitter().do_fit()
+        self.assertIsInstance(result, sid.Dataset)
+        self.assertTrue(np.all(np.isfinite(np.array(result))))
+
+    def test_scalar_lower_bound(self):
+        """Scalar lower_bounds=0 — all returned params must be >= 0."""
+        result, _ = self._make_fitter(lower_bounds=0.0).do_fit()
+        params = np.array(result)
+        self.assertTrue(np.all(params >= -1e-6),
+                        msg=f"Some params violated lower_bound=0: min={params.min()}")
+
+    def test_scalar_upper_bound(self):
+        """Scalar upper_bounds=1e6 — all returned params must be <= 1e6."""
+        upper = 1e6
+        result, _ = self._make_fitter(upper_bounds=upper).do_fit()
+        params = np.array(result)
+        self.assertTrue(np.all(params <= upper + 1e-6),
+                        msg=f"Some params violated upper_bound={upper}: max={params.max()}")
+
+    def test_per_param_bounds_respected(self):
+        """Per-parameter array bounds — each param stays within its own [lb, ub]."""
+        n = self._make_fitter().num_params
+        lb = np.zeros(n)
+        ub = np.full(n, 1e6)
+        result, _ = self._make_fitter(lower_bounds=lb, upper_bounds=ub).do_fit()
+        params = np.array(result)
+        for i in range(n):
+            p = params[..., i]
+            self.assertTrue(np.all(p >= lb[i] - 1e-6),
+                            msg=f"Param {i} violated lower bound {lb[i]}: min={p.min()}")
+            self.assertTrue(np.all(p <= ub[i] + 1e-6),
+                            msg=f"Param {i} violated upper bound {ub[i]}: max={p.max()}")
+
+    def test_guess_outside_bounds_no_crash(self):
+        """Guess outside bounds must be clipped silently, not crash."""
+        n = self._make_fitter().num_params
+        fitter = self._make_fitter(lower_bounds=np.full(n, -1e-10),
+                                   upper_bounds=np.full(n,  1e-10))
+        try:
+            fitter.do_fit()
+        except Exception as e:
+            self.fail(f"do_fit raised unexpectedly with out-of-bounds guess: {e}")
+
+    def test_bounds_length_mismatch_raises(self):
+        """Bound array with wrong length must raise ValueError."""
+        n = self._make_fitter().num_params
+        fitter = self._make_fitter(lower_bounds=np.zeros(n + 3))
+        with self.assertRaises(ValueError):
+            fitter.do_fit()
+
+    def test_lb_greater_than_ub_raises(self):
+        """lower_bounds > upper_bounds must raise ValueError."""
+        n = self._make_fitter().num_params
+        fitter = self._make_fitter(lower_bounds=np.full(n, 10.0),
+                                   upper_bounds=np.full(n,  1.0))
+        with self.assertRaises(ValueError):
+            fitter.do_fit()
+
+    def test_bounds_stored_in_metadata(self):
+        """Bounds must appear correctly in result metadata."""
+        n = self._make_fitter().num_params
+        lb = list(np.zeros(n))
+        ub = list(np.ones(n) * 1e6)
+        result, _ = self._make_fitter(lower_bounds=lb, upper_bounds=ub).do_fit()
+        meta = result.metadata["fit_parameters"]
+        self.assertIn("lower_bounds", meta)
+        self.assertIn("upper_bounds", meta)
+        self.assertEqual(meta["lower_bounds"], lb)
+        self.assertEqual(meta["upper_bounds"], ub)
+
+    def test_none_bounds_metadata_is_none(self):
+        """When no bounds are passed, metadata entries must be None."""
+        result, _ = self._make_fitter().do_fit()
+        meta = result.metadata["fit_parameters"]
+        self.assertIsNone(meta.get("lower_bounds"))
+        self.assertIsNone(meta.get("upper_bounds"))
+
+    def test_bounds_with_nonlinear_loss(self):
+        """Bounds + non-linear loss must not raise (both require method='trf')."""
+        fitter = self._make_fitter(lower_bounds=0.0)
+        try:
+            result, _ = fitter.do_fit(loss='soft_l1')
+        except Exception as e:
+            self.fail(f"do_fit raised with bounds + non-linear loss: {e}")
+        self.assertIsInstance(result, sid.Dataset)
+
+    def test_bounds_with_return_cov(self):
+        """Bounds must be compatible with return_cov=True; covariance shape check."""
+        n = self._make_fitter().num_params
+        params, cov = self._make_fitter(lower_bounds=0.0).do_fit(return_cov=True)
+        self.assertEqual(cov.shape[-2:], (n, n),
+                         msg=f"Covariance shape {cov.shape} does not end in ({n},{n})")
