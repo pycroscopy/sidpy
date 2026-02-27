@@ -29,7 +29,8 @@ class SidpyFitterRefactor:
         A dictionary containing fit parameters, model source code, and configuration.
     """
 
-    def __init__(self, dataset, model_function, guess_function, ind_dims=None, num_params=None):
+    def __init__(self, dataset, model_function, guess_function, ind_dims=None, num_params=None,
+                 lower_bounds=None, upper_bounds=None):
         """
         Initializes the SidpyFitterKMeans.
 
@@ -45,6 +46,15 @@ class SidpyFitterRefactor:
             The indices of the dimensions to fit over. Default is whatever are the spectral dimensions
         num_params: int, optional but required in case of 2D or higher fitting
             The number of parameters the fitting function expects.
+        lower_bounds : None, float, or array-like, optional
+            Lower bounds for the fit parameters. Can be:
+              - None (default): no lower bound (-inf) on any parameter.
+              - scalar float: the same lower bound applied to every parameter.
+              - array-like of length num_params: per-parameter lower bounds.
+            Must satisfy lower_bounds <= upper_bounds element-wise.
+        upper_bounds : None, float, or array-like, optional
+            Upper bounds for the fit parameters. Same rules as lower_bounds.
+            Must satisfy upper_bounds >= lower_bounds element-wise.
         """
         import sidpy
         if not isinstance(dataset, sidpy.Dataset):
@@ -54,7 +64,11 @@ class SidpyFitterRefactor:
         self.dask_data = dataset
         self.model_func = model_function
         self.guess_func = guess_function
-        
+
+        # Store bounds early so _fit_logic and do_kmeans_guess always see them.
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+
         self.ndim = self.dataset.ndim
         self.spectral_dims = tuple(self.dataset.get_spectral_dims())
 
@@ -73,7 +87,13 @@ class SidpyFitterRefactor:
                 "ind_dims": self.ind_dims,
                 "is_complex": self.is_complex,
                 "use_kmeans": False,  # Updated during do_fit
-                "n_clusters": None     # Updated during do_fit
+                "n_clusters": None,   # Updated during do_fit
+                "lower_bounds": (lower_bounds.tolist()
+                                 if isinstance(lower_bounds, np.ndarray)
+                                 else lower_bounds),
+                "upper_bounds": (upper_bounds.tolist()
+                                 if isinstance(upper_bounds, np.ndarray)
+                                 else upper_bounds),
             },
             "source_code": {
                 "model_function": self._get_source(model_function),
@@ -131,7 +151,41 @@ class SidpyFitterRefactor:
         """
         y_vec = np.squeeze(np.asarray(y_vec))
         initial_guess = np.asarray(initial_guess).ravel()
-        
+        n = initial_guess.size
+
+        # --- Resolve bounds --------------------------------------------
+        def _resolve_bound(b, n_params, fill_value):
+            """Return a float64 array of length n_params from a flexible input."""
+            if b is None:
+                return np.full(n_params, fill_value, dtype=np.float64)
+            arr = np.asarray(b, dtype=np.float64).ravel()
+            if arr.size == 1:
+                return np.full(n_params, arr[0], dtype=np.float64)
+            if arr.size != n_params:
+                raise ValueError(
+                    f"Bound array length ({arr.size}) does not match "
+                    f"num_params ({n_params}). Provide a scalar or an "
+                    f"array-like of length {n_params}."
+                )
+            return arr
+
+        lb = _resolve_bound(self.lower_bounds, n, -np.inf)
+        ub = _resolve_bound(self.upper_bounds, n,  np.inf)
+
+        if np.any(lb > ub):
+            raise ValueError(
+                "lower_bounds must be <= upper_bounds for every parameter. "
+                f"Violations at indices: {np.where(lb > ub)[0].tolist()}"
+            )
+
+        # Clip guess into bounds so least_squares doesn't raise immediately.
+        initial_guess = np.clip(initial_guess, lb, ub)
+
+        # 'lm' only supports linear loss and no bounds; use 'trf' otherwise.
+        has_finite_bounds = np.any(np.isfinite(lb)) or np.any(np.isfinite(ub))
+        method = 'trf' if (has_finite_bounds or loss != 'linear') else 'lm'
+        # ---------------------------------------------------------------
+
         # Prepare data for least_squares (handle complex)
         if self.is_complex:
             y_input = np.hstack([y_vec.real, y_vec.imag])
@@ -148,6 +202,7 @@ class SidpyFitterRefactor:
         
         # Run Fit
         res = least_squares(residuals, initial_guess, args=(x_in, y_input),
+                            bounds=(lb, ub), method=method,
                             loss=loss, f_scale=f_scale)
         
         if not return_cov:
@@ -386,7 +441,13 @@ class SidpyFitterRefactor:
             "n_clusters": n_clusters if use_kmeans else None,
             "loss": loss,
             "f_scale": f_scale,
-            "return_cov": return_cov
+            "return_cov": return_cov,
+            "lower_bounds": (self.lower_bounds.tolist()
+                             if isinstance(self.lower_bounds, np.ndarray)
+                             else self.lower_bounds),
+            "upper_bounds": (self.upper_bounds.tolist()
+                             if isinstance(self.upper_bounds, np.ndarray)
+                             else self.upper_bounds),
         })
 
         if guesses is None:
