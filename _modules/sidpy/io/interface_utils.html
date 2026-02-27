@@ -1,0 +1,661 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.io.interface_utils &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.io.interface_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.io.interface_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utilities for user interfaces</span>
+
+<span class="sd">Created on Tue Aug  3 21:14:25 2020</span>
+
+<span class="sd">@author: Gerd Duscher, Suhas Somnath, Chris Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">widgets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="ne">ModuleNotFoundError</span> <span class="o">=</span> <span class="ne">ValueError</span>
+
+<div class="viewcode-block" id="add_to_dict">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.add_to_dict.html#sidpy.io.interface_utils.add_to_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_to_dict</span><span class="p">(</span><span class="n">file_dict</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">full_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;directory&#39;</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">basename</span><span class="p">,</span> <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">full_name</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="o">-</span><span class="mi">20</span>
+    <span class="n">display_name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extension</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">display_file_list</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39; </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">  - </span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> MB&#39;</span>
+    <span class="k">elif</span> <span class="n">extension</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;hf5&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">extension</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.hf5&#39;</span><span class="p">]:</span>
+            <span class="n">display_file_list</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">  - </span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span>
+    <span class="k">elif</span> <span class="n">extension</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;.ndata&#39;</span><span class="p">]:</span>
+       <span class="n">display_file_list</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">  - </span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">display_file_list</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39; </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">  - </span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> MB&#39;</span>
+    <span class="n">file_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;display_string&#39;</span><span class="p">:</span> <span class="n">display_file_list</span><span class="p">,</span> <span class="s1">&#39;basename&#39;</span><span class="p">:</span> <span class="n">basename</span><span class="p">,</span> <span class="s1">&#39;extension&#39;</span><span class="p">:</span> <span class="n">extension</span><span class="p">,</span>
+                       <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span> <span class="s1">&#39;display_name&#39;</span><span class="p">:</span> <span class="n">display_name</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="FileWidget">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.FileWidget.html#sidpy.io.interface_utils.FileWidget">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FileWidget</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Widget to select directories or widgets from a list</span>
+
+<span class="sd">    Works in google colab.</span>
+<span class="sd">    The widget converts the name of the nion file to the one in Nion&#39;s swift software,</span>
+<span class="sd">    because it is otherwise incomprehensible</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dir_name: str</span>
+<span class="sd">        name of starting directory</span>
+<span class="sd">    extension: list of str</span>
+<span class="sd">        extensions of files to be listed  in widget</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    get_directory</span>
+<span class="sd">    set_options</span>
+<span class="sd">    get_file_name</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;from google.colab import drive</span>
+<span class="sd">    &gt;&gt;drive.mount(&quot;/content/drive&quot;)</span>
+<span class="sd">    &gt;&gt;file_list = pyTEMlib.file_tools.FileWidget()</span>
+<span class="sd">    next code cell:</span>
+<span class="sd">    &gt;&gt;dataset = pyTEMlib.file_tools.open_file(file_list.file_name)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_name</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="n">sum_frames</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_path</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_dictionary</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sum_frames</span> <span class="o">=</span> <span class="n">sum_frames</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span> <span class="o">=</span> <span class="n">dir_name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extensions</span> <span class="o">=</span> <span class="n">extension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_files</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Select</span><span class="p">(</span>
+            <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Select file:&#39;</span><span class="p">,</span>
+            <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">rows</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">layout</span><span class="o">=</span><span class="n">widgets</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s1">&#39;70%&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_choice</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">],</span>
+                                            <span class="n">value</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">,</span>
+                                            <span class="n">description</span><span class="o">=</span><span class="s1">&#39;directory:&#39;</span><span class="p">,</span>
+                                            <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                            <span class="n">layout</span><span class="o">=</span><span class="n">widgets</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="s1">&#39;90%&#39;</span><span class="p">))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_options</span><span class="p">()</span>
+        <span class="n">ui</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">VBox</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">path_choice</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="p">])</span>
+        <span class="n">display</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_choice</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">set_dir</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FileWidget.get_directory">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.FileWidget.html#sidpy.io.interface_utils.FileWidget.get_directory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span> <span class="o">=</span> <span class="n">directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_dictionary</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_choice</span><span class="o">.</span><span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_options</span><span class="p">()</span>
+
+<div class="viewcode-block" id="FileWidget.set_options">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.FileWidget.html#sidpy.io.interface_utils.FileWidget.set_options">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="o">.</span><span class="n">index</span><span class="p">]))</span>
+        <span class="n">dir_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">)</span>
+        <span class="n">file_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_directory_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">)</span>
+
+        <span class="n">sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;directory_list&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">sort</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; * </span><span class="si">{</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;directory_list&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;directory_list&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+        <span class="n">sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;display_file_list&#39;</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sort</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;--&#39;</span> <span class="ow">in</span> <span class="n">dir_list</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">display_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">3</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;display_file_list&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">display_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">3</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;display_file_list&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;file_list&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir_label</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_list</span>
+        
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span>
+        <span class="n">old_path</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+        <span class="n">path_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="n">path</span> <span class="o">!=</span> <span class="n">old_path</span><span class="p">:</span>
+            <span class="n">path_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">old_path</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_choice</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">path_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_choice</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">path_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="FileWidget.get_file_name">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.FileWidget.html#sidpy.io.interface_utils.FileWidget.get_file_name">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="o">.</span><span class="n">index</span><span class="p">])):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_options</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="o">.</span><span class="n">index</span><span class="p">])):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dir_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">select_files</span><span class="o">.</span><span class="n">index</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="FileWidget.update_directory_list">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.FileWidget.html#sidpy.io.interface_utils.FileWidget.update_directory_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_directory_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the list of files in the current directory</span>
+<span class="sd">        Cam be overwritten in child class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">update_directory_list</span><span class="p">(</span><span class="n">directory_name</span><span class="p">)</span></div>
+</div>
+
+
+<span class="n">open_file_dialog</span> <span class="o">=</span> <span class="n">FileWidget</span>
+
+<div class="viewcode-block" id="update_directory_list">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.update_directory_list.html#sidpy.io.interface_utils.update_directory_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_directory_list</span><span class="p">(</span><span class="n">directory_name</span><span class="p">):</span>
+    <span class="n">dir_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">directory_name</span><span class="p">)</span>
+
+    <span class="n">file_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;directory&#39;</span><span class="p">:</span> <span class="n">directory_name</span><span class="p">}</span>
+
+    <span class="c1"># add new files</span>
+    <span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;file_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;display_file_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;directory_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">dir_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;directory&#39;</span><span class="p">],</span> <span class="n">name</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_dict</span><span class="p">:</span>
+                <span class="n">add_to_dict</span><span class="p">(</span><span class="n">file_dict</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;file_list&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;display_file_list&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;display_string&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file_dict</span><span class="p">[</span><span class="s1">&#39;directory_list&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">file_dict</span></div>
+
+
+
+<div class="viewcode-block" id="ChooseDataset">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.ChooseDataset.html#sidpy.io.interface_utils.ChooseDataset">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ChooseDataset</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Widget to select dataset object &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_object</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_dialog</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_object</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_object</span><span class="o">.</span><span class="n">h5_dataset</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">current_channel</span> <span class="o">=</span> <span class="n">input_object</span><span class="o">.</span><span class="n">h5_dataset</span><span class="o">.</span><span class="n">parent</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_object</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="n">input_object</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Need dictionary of sidpy.Datasets to determine data choices&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span> <span class="o">=</span> <span class="n">data_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_dataset_list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_dataset</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Dropdown</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_list</span><span class="p">,</span>
+                                             <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                             <span class="n">description</span><span class="o">=</span><span class="s1">&#39;select dataset:&#39;</span><span class="p">,</span>
+                                             <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                             <span class="n">button_style</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">show_dialog</span><span class="p">:</span>
+            <span class="n">display</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">select_dataset</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_dataset</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">select_dataset</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_names</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ChooseDataset.get_dataset_list">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.ChooseDataset.html#sidpy.io.interface_utils.ChooseDataset.get_dataset_list">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Get by Log number sorted list of datasets&quot;&quot;&quot;</span>
+        <span class="n">dataset_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">dataset_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">dataset_list</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">dset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s1">&#39;Log&#39;</span> <span class="ow">in</span> <span class="n">title</span><span class="p">:</span>
+                        <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">keys</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">keys</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span><span class="o">.</span><span class="n">title</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_dataset</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_names</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_names</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+    
+
+<div class="viewcode-block" id="check_ssh">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.check_ssh.html#sidpy.io.interface_utils.check_ssh">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_ssh</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks whether or not the python kernel is running locally (False) or remotely (True)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    output : bool</span>
+<span class="sd">        Whether or not the kernel is running over SSH (remote machine)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When developing workflows that need to work on remote or virtual machines</span>
+<span class="sd">    in addition to one&#39;s own personal computer such as a laptop, this function</span>
+<span class="sd">    is handy at letting the developer know where the code is being executed</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt;&gt; mode = sidpy.interface_utils.check_ssh()</span>
+<span class="sd">    &gt;&gt;&gt; print(&#39;Running on remote machine: {}&#39;.format(mode))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;SSH_CLIENT&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">or</span> <span class="s1">&#39;SSH_TTY&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span></div>
+
+
+
+<div class="viewcode-block" id="get_QT_app">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.get_QT_app.html#sidpy.io.interface_utils.get_QT_app">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_QT_app</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Starts pyQT app if not running</span>
+
+<span class="sd">    Returns: QApplication</span>
+<span class="sd">    -------</span>
+<span class="sd">    instance : ``QApplication.instance``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">PyQt5.Qt</span><span class="w"> </span><span class="kn">import</span> <span class="n">QApplication</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Required package PyQt5 not available&#39;</span><span class="p">)</span>
+
+    <span class="c1"># start qt event loop</span>
+    <span class="n">_instance</span> <span class="o">=</span> <span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_instance</span><span class="p">:</span>
+        <span class="c1"># print(&#39;not_instance&#39;)</span>
+        <span class="n">_instance</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="k">return</span> <span class="n">_instance</span></div>
+
+
+<div class="viewcode-block" id="openfile_dialog_qt">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.openfile_dialog_qt.html#sidpy.io.interface_utils.openfile_dialog_qt">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">openfile_dialog_qt</span><span class="p">(</span><span class="n">file_types</span><span class="o">=</span><span class="s2">&quot;All files (*)&quot;</span><span class="p">,</span> <span class="n">multiple_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">file_path</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Select a file...&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Opens a File dialog which is used in open_file() function</span>
+<span class="sd">    This function uses pyQt5.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_types : str, optional. Default = all</span>
+<span class="sd">        types of files accepted</span>
+<span class="sd">    multiple_files : bool, optional. Default = False</span>
+<span class="sd">        Whether or not multiple files can be selected</span>
+<span class="sd">    file_path: str, optional. Default = &#39;.&#39;</span>
+<span class="sd">        path to starting or root directory</span>
+<span class="sd">    caption: str, optional. Default = &quot;Select a file...&quot;</span>
+<span class="sd">        caption of the open file dialog</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        full filename with absolute path and extension</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In jupyter notebooks use ``%gui Qt`` early in the notebook.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt; import sidpy as sid</span>
+<span class="sd">    &gt;&gt; filename = sid.io.openfile_dialog()</span>
+<span class="sd">    &gt;&gt; print(filename)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check whether QT is available</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">PyQt5</span><span class="w"> </span><span class="kn">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Required package PyQt5 not available&#39;</span><span class="p">)</span>
+
+    <span class="c1"># try to find a parent the file dialog can appear on top</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">get_QT_app</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="p">[</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_types</span><span class="p">,</span> <span class="n">caption</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;param must be a string&#39;</span><span class="p">)</span>
+
+    <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">multiple_files</span><span class="p">:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileNames</span>
+        <span class="n">fnames</span><span class="p">,</span> <span class="n">file_filter</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">caption</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span>
+                                   <span class="nb">filter</span><span class="o">=</span><span class="n">file_types</span><span class="p">)</span>
+                                   
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fnames</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="n">fnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span>
+        <span class="n">fname</span><span class="p">,</span> <span class="n">file_filter</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">caption</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span>
+                                  <span class="nb">filter</span><span class="o">=</span><span class="n">file_types</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">multiple_files</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fnames</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="savefile_dialog_qt">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.savefile_dialog_qt.html#sidpy.io.interface_utils.savefile_dialog_qt">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">savefile_dialog_qt</span><span class="p">(</span><span class="n">initial_file</span><span class="o">=</span><span class="s1">&#39;*.hf5&#39;</span><span class="p">,</span> <span class="n">file_path</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+                    <span class="n">file_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="o">=</span><span class="s2">&quot;Save file as ...&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a window / dialog to allow users to specify the location and name</span>
+<span class="sd">    of a file to save to.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    initial_file : str, optional. Default = ``*.hf5``</span>
+<span class="sd">        File extension? @gduscher to clarify</span>
+<span class="sd">    file_path : str, optional. Default = &#39;.&#39;</span>
+<span class="sd">        path to starting or root directory</span>
+<span class="sd">    file_types :  str, optional. Default = None</span>
+<span class="sd">        Filters for kinds of files to display in the window</span>
+<span class="sd">    caption: str, optional. Default = &quot;Save file as...&quot;</span>
+<span class="sd">        caption of the save file dialog</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        path to desired file</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    In jupyter notebooks use ``%gui Qt`` early in the notebook.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check whether QT is available</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">PyQt5</span><span class="w"> </span><span class="kn">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Required package PyQt5 not available&#39;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="p">[</span><span class="n">file_path</span><span class="p">,</span> <span class="n">initial_file</span><span class="p">,</span> <span class="n">caption</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;param must be a string&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">file_types</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">file_types</span> <span class="o">=</span> <span class="s2">&quot;All files (*)&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">get_QT_app</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">func</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span>
+        <span class="n">fname</span><span class="p">,</span> <span class="n">file_filter</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">caption</span><span class="p">,</span>
+                                  <span class="n">file_path</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">initial_file</span><span class="p">,</span>
+                                  <span class="nb">filter</span><span class="o">=</span><span class="n">file_types</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fname</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1"># Compatibility, should be depreciated</span>
+<span class="n">openfile_dialog_QT</span> <span class="o">=</span> <span class="n">openfile_dialog_qt</span>
+<span class="n">savefile_dialog</span> <span class="o">=</span> <span class="n">savefile_dialog_qt</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">PyQt5</span><span class="w"> </span><span class="kn">import</span> <span class="n">QtWidgets</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">ProgressDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simple dialog that consists of a Progress Bar and a Button.</span>
+<span class="sd">        Clicking on the button results in the start of a timer and</span>
+<span class="sd">        updates the progress bar.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initUI</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">initUI</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s1">&#39;Progress Bar: &#39;</span> <span class="o">+</span> <span class="n">title</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">progress</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QProgressBar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">set_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="progress_bar">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.interface_utils.progress_bar.html#sidpy.io.interface_utils.progress_bar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">progress_bar</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Progress&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Opens a progress bar window</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    title: str, optional. Default = &#39;Progress&#39;</span>
+<span class="sd">        Title for the progress window</span>
+<span class="sd">    start: int, optional. Default = 0</span>
+<span class="sd">        Start value</span>
+<span class="sd">    stop: int, optional. Default = 100</span>
+<span class="sd">        End value</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    progress : QtWidgets.QProgressDialog</span>
+<span class="sd">        Progress dialog</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import sidpy</span>
+<span class="sd">    &gt;&gt;&gt; progress = sidpy.interface_utils.progress_bar(&#39;progress&#39;, 1,50)</span>
+<span class="sd">    &gt;&gt;&gt; for count in range(50):</span>
+<span class="sd">    &gt;&gt;&gt;      progress.setValue(count)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check whether QT is available</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;progress_bar() is deprecated; use tqdm package instead&quot;</span><span class="p">,</span> <span class="n">warnings</span><span class="o">.</span><span class="n">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">PyQt5</span><span class="w"> </span><span class="kn">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtWidgets</span><span class="p">,</span> <span class="n">QtCore</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Required package PyQt5 not available&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">get_QT_app</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="n">progress</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QProgressDialog</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="s2">&quot;Abort&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">progress</span><span class="o">.</span><span class="n">setWindowFlags</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">WindowStaysOnTopHint</span><span class="p">)</span>
+    <span class="n">progress</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">progress</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

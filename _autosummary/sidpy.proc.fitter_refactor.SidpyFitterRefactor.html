@@ -1,0 +1,310 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.proc.fitter_refactor.SidpyFitterRefactor &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">sidpy.proc.fitter_refactor.SidpyFitterRefactor</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sidpy-proc-fitter-refactor-sidpyfitterrefactor">
+<h1>sidpy.proc.fitter_refactor.SidpyFitterRefactor<a class="headerlink" href="#sidpy-proc-fitter-refactor-sidpyfitterrefactor" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">sidpy.proc.fitter_refactor.</span></span><span class="sig-name descname"><span class="pre">SidpyFitterRefactor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guess_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter_refactor.html#SidpyFitterRefactor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A parallelized fitter for sidpy.Datasets that supports K-Means-based
+initial guesses for improved convergence on large datasets.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.dataset" title="Link to this definition">¶</a></dt>
+<dd><p>The original sidpy dataset containing data and metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sidpy.Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.dask_data">
+<span class="sig-name descname"><span class="pre">dask_data</span></span><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.dask_data" title="Link to this definition">¶</a></dt>
+<dd><p>The underlying dask array used for parallel computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.dask.org/en/latest/generated/dask.array.Array.html#dask.array.Array" title="(in Dask)">dask.array.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.model_func">
+<span class="sig-name descname"><span class="pre">model_func</span></span><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.model_func" title="Link to this definition">¶</a></dt>
+<dd><p>The function to fit. Expected signature: f(x_axis, <a href="#id1"><span class="problematic" id="id2">*</span></a>params).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.guess_func">
+<span class="sig-name descname"><span class="pre">guess_func</span></span><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.guess_func" title="Link to this definition">¶</a></dt>
+<dd><p>The function to generate initial guesses. Expected signature: f(x_axis, y_data).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.metadata" title="Link to this definition">¶</a></dt>
+<dd><p>A dictionary containing fit parameters, model source code, and configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initializes the SidpyFitterKMeans.</p>
+<section id="inputs">
+<h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h2>
+<dl>
+<dt>dataset<span class="classifier">sidpy.Dataset</span></dt><dd><p>Dataset to be fitted.</p>
+</dd>
+<dt>model_function<span class="classifier">callable</span></dt><dd><p>The model function to use for fitting.</p>
+</dd>
+<dt>guess_function<span class="classifier">callable</span></dt><dd><p>The function to generate initial parameters for the model.</p>
+</dd>
+<dt>ind_dims<span class="classifier">int or tuple of int, optional</span></dt><dd><p>The indices of the dimensions to fit over. Default is whatever are the spectral dimensions</p>
+</dd>
+<dt>num_params: int, optional but required in case of 2D or higher fitting</dt><dd><p>The number of parameters the fitting function expects.</p>
+</dd>
+<dt>lower_bounds<span class="classifier">None, float, or array-like, optional</span></dt><dd><dl class="simple">
+<dt>Lower bounds for the fit parameters. Can be:</dt><dd><ul class="simple">
+<li><p>None (default): no lower bound (-inf) on any parameter.</p></li>
+<li><p>scalar float: the same lower bound applied to every parameter.</p></li>
+<li><p>array-like of length num_params: per-parameter lower bounds.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Must satisfy lower_bounds &lt;= upper_bounds element-wise.</p>
+</dd>
+<dt>upper_bounds<span class="classifier">None, float, or array-like, optional</span></dt><dd><p>Upper bounds for the fit parameters. Same rules as lower_bounds.
+Must satisfy upper_bounds &gt;= lower_bounds element-wise.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_fit" title="sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_fit</span></code></a></p></td>
+<td><p>Executes the parallel fit.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_guess" title="sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_guess</span></code></a></p></td>
+<td><p>Parallelized guess logic across all pixels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_kmeans_guess" title="sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_kmeans_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">do_kmeans_guess</span></code></a></p></td>
+<td><p>Performs K-Means clustering to find representative spectra for prior fitting.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.reconstruct_function" title="sidpy.proc.fitter_refactor.SidpyFitterRefactor.reconstruct_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reconstruct_function</span></code></a></p></td>
+<td><p>Reconstructs a python function from source code stored in metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.setup_calc" title="sidpy.proc.fitter_refactor.SidpyFitterRefactor.setup_calc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_calc</span></code></a></p></td>
+<td><p>Prepares the calculation by rechunking and determining the parameter count.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.transform_to_sidpy" title="sidpy.proc.fitter_refactor.SidpyFitterRefactor.transform_to_sidpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform_to_sidpy</span></code></a></p></td>
+<td><p>Convert the fit results into sidpy.Dataset(s).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_fit">
+<span class="sig-name descname"><span class="pre">do_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">guesses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_kmeans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_parameter_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter_refactor.html#SidpyFitterRefactor.do_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_fit" title="Link to this definition">¶</a></dt>
+<dd><p>Executes the parallel fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>guesses</strong> (<a class="reference external" href="https://docs.dask.org/en/latest/generated/dask.array.Array.html#dask.array.Array" title="(in Dask)"><em>dask.array.Array</em></a><em>, </em><em>optional</em>) – Initial guesses. If None, generated automatically.</p></li>
+<li><p><strong>use_kmeans</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to use K-means priors. Default is False.</p></li>
+<li><p><strong>n_clusters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Number of clusters if use_kmeans is True. Default is 10.</p></li>
+<li><p><strong>fit_parameter_labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – List of string labels for the fit parameters (e.g. [‘Amp’, ‘Phase’]). These are simply saved in metadata.</p></li>
+<li><p><strong>loss</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Loss function for least_squares (e.g., ‘linear’, ‘soft_l1’, ‘huber’, ‘cauchy’, ‘arctan’).</p></li>
+<li><p><strong>f_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>optional</em>) – Value of soft margin between inlier and outlier residuals. Default is 1.0.</p></li>
+<li><p><strong>return_cov</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, returns a tuple (fit_dataset, cov_dataset).
+The cov_dataset contains the covariance matrix for the fit parameters.
+CAUTION: This significantly increases memory usage.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If return_cov is False: returns the Fit Parameter dataset.
+If return_cov is True: returns (Fit Parameter dataset, Covariance Matrix dataset).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sidpy.Dataset or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>(sidpy.Dataset, sidpy.Dataset)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_guess">
+<span class="sig-name descname"><span class="pre">do_guess</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter_refactor.html#SidpyFitterRefactor.do_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_guess" title="Link to this definition">¶</a></dt>
+<dd><p>Parallelized guess logic across all pixels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_kmeans_guess">
+<span class="sig-name descname"><span class="pre">do_kmeans_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter_refactor.html#SidpyFitterRefactor.do_kmeans_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_kmeans_guess" title="Link to this definition">¶</a></dt>
+<dd><p>Performs K-Means clustering to find representative spectra for prior fitting.
+We use Dask-ML Kmeans to do this in a scalable fashion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_clusters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Number of clusters to use for K-Means. Default is 10.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dask array containing the initial guesses for every pixel.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.dask.org/en/latest/generated/dask.array.Array.html#dask.array.Array" title="(in Dask)">dask.array.Array</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.reconstruct_function">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reconstruct_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_code_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter_refactor.html#SidpyFitterRefactor.reconstruct_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.reconstruct_function" title="Link to this definition">¶</a></dt>
+<dd><p>Reconstructs a python function from source code stored in metadata.
+Robustly handles lists, strings, and indentation issues.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.setup_calc">
+<span class="sig-name descname"><span class="pre">setup_calc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter_refactor.html#SidpyFitterRefactor.setup_calc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.setup_calc" title="Link to this definition">¶</a></dt>
+<dd><p>Prepares the calculation by rechunking and determining the parameter count.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>chunks</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>, </em><em>optional</em>) – The chunk size for the dask array. Default is ‘auto’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="sidpy.proc.fitter_refactor.SidpyFitterRefactor.transform_to_sidpy">
+<span class="sig-name descname"><span class="pre">transform_to_sidpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fit_dask_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/sidpy/proc/fitter_refactor.html#SidpyFitterRefactor.transform_to_sidpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#sidpy.proc.fitter_refactor.SidpyFitterRefactor.transform_to_sidpy" title="Link to this definition">¶</a></dt>
+<dd><p>Convert the fit results into sidpy.Dataset(s).
+Handles splitting parameters and covariance if present.</p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

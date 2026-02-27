@@ -1,0 +1,6 @@
+sidpy.base.string\_utils.remove\_extra\_delimiters
+==================================================
+
+.. currentmodule:: sidpy.base.string_utils
+
+.. autofunction:: remove_extra_delimiters

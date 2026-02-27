@@ -1,0 +1,228 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guidelines for Contribution &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/documentation_options.js?v=425f82fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Upgrading from Matlab" href="matlab.html" />
+    <link rel="prev" title="Tutorials on Basics" href="external_guides.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Guidelines for Contribution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#before-you-begin">Before you begin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structuring-code">Structuring code</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#general-guidelines">General guidelines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sidpy-specific-guidelines">sidpy-specific guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#contributing-code">Contributing code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-tests">Writing tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-examples">Writing examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Guidelines for Contribution</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/contribute.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="guidelines-for-contribution">
+<h1>Guidelines for Contribution<a class="headerlink" href="#guidelines-for-contribution" title="Link to this heading">¶</a></h1>
+<p>We would like to thank you and several others who have offered / are willing to contribute their code.
+We are more than happy to add your code to this project.
+Just as we strive to ensure that you get the best possible software from us, we ask that you do the same for others.
+We do <strong>NOT</strong> ask that your code be as efficient as possible. Instead, we have some simpler and easier requests.
+We have compiled a list of best practices below with links to additional information.
+If you are confused or need more help, please feel free to <a class="reference external" href="./contact.html">contact us</a>.</p>
+<section id="before-you-begin">
+<h2>Before you begin<a class="headerlink" href="#before-you-begin" title="Link to this heading">¶</a></h2>
+<p>Please consider familiarizing yourself with the <a class="reference external" href="./auto_examples/index.html">examples</a> and <a class="reference external" href="./api.html">documentation</a>
+on functionality available in sidpy so that you can use the available functionality to simplify your code
+in addition to avoiding the development of duplicate code.</p>
+</section>
+<section id="structuring-code">
+<h2>Structuring code<a class="headerlink" href="#structuring-code" title="Link to this heading">¶</a></h2>
+<section id="general-guidelines">
+<h3>General guidelines<a class="headerlink" href="#general-guidelines" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Encapsulate independent sections of your code into functions that can be used individually if required.</p></li>
+<li><p>Ensure that your code (functions) is well documented (<a class="reference external" href="https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt">numpy format</a>)
+- expected inputs and outputs, examples, notes, purpose of functions</p></li>
+<li><p>Please avoid very short names for variables like <code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">k</span></code>. This makes it challenging to follow code, find and fix bugs.</p></li>
+<li><p>Please consider using packages that are easy to install on Windows, Mac, and Linux.
+It is quite likely that packages included within Anaconda
+(which has a comprehensive list packages for science and data analysis + visualization) can handle most needs.
+If this is not possible, try to use packages that are easy to to install (pip install).
+If even this is not possible, try to use packages that at least have conda installers.</p></li>
+<li><p>Follow best practices for <a class="reference external" href="https://www.datacamp.com/community/tutorials/pep8-tutorial-python-code">PEP8 compatibility</a>.
+The easiest way to ensure compatibility is to set it up in your code editor.
+<a class="reference external" href="https://blog.jetbrains.com/pycharm/2013/02/long-awaited-pep-8-checks-on-the-fly-improved-doctest-support-and-more-in-pycharm-2-7/">PyCharm</a> does this by default.
+So, as long as PyCharm does not raise many warning, your code is beautiful!</p></li>
+</ul>
+</section>
+<section id="sidpy-specific-guidelines">
+<h3>sidpy-specific guidelines<a class="headerlink" href="#sidpy-specific-guidelines" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p>Recall that sidpy is a general collection of tools that can help store, analyze, visualize, and process spectroscopy and imaging data.
+Any code specific to the Universal Spectroscopic and Imaging Data (USID) or
+N-Dimensional Spectroscopic and Imaging Data (NSID) should go into pyUSID or pyNSID respectively.
+Code that provides scientific functionality goes into pycroscopy.</p></li>
+<li><p>Please ensure that your code files fit into our package structure (<code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">hdf</span></code>, <code class="docutils literal notranslate"><span class="pre">io</span></code>, <code class="docutils literal notranslate"><span class="pre">proc</span></code>, <code class="docutils literal notranslate"><span class="pre">sid</span></code> and <code class="docutils literal notranslate"><span class="pre">viz</span></code>)</p></li>
+<li><p>Once you decide where your code will sit, please use relative import statements instead of absolute / external paths.
+For example, if you are contributing code for a new submodule within <code class="docutils literal notranslate"><span class="pre">sidpy.hdf</span></code>, you will need to turn your import statements and code from something like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+<span class="o">...</span>
+<span class="n">sidpy</span><span class="o">.</span><span class="n">hdf</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">hdf_file_handle</span><span class="p">)</span>
+<span class="n">x_dim</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">sid</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sidpy.hdf.hdf_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sidpy.sid</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dimension</span>
+<span class="o">...</span>
+<span class="n">print_tree</span><span class="p">(</span><span class="n">hdf_file_handle</span><span class="p">)</span>
+<span class="n">x_dim</span> <span class="o">=</span> <span class="n">Dimension</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>You can look at our code in our <a class="reference external" href="https://github.com/pycroscopy/sidpy">GitHub project</a> to get an idea of how we organize, document, and submit our code.</p>
+</section>
+</section>
+<section id="contributing-code">
+<h2>Contributing code<a class="headerlink" href="#contributing-code" title="Link to this heading">¶</a></h2>
+<p>Please read this <a class="reference external" href="https://github.com/firstcontributions/first-contributions">beginner’s guide to contributing</a> to open source projects.</p>
+<p>We recommend that you follow the steps below. Again, if you are ever need help, please contact us:</p>
+<ol class="arabic simple">
+<li><p>Learn <code class="docutils literal notranslate"><span class="pre">git</span></code> if you are not already familiar with it. See our compilation of tutorials and guides,
+especially <a class="reference external" href="https://github.com/pycroscopy/sidpy/blob/master/docs/Using%20PyCharm%20to%20manage%20repository.pdf">this one</a>.</p></li>
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">fork</span></code> of sidpy - this creates a separate copy of the entire sidpy repository under your user ID.
+For more information see <a class="reference external" href="https://help.github.com/articles/fork-a-repo/">instructions here</a>.</p></li>
+<li><p>Once inside your own fork, you can either work directly off <code class="docutils literal notranslate"><span class="pre">master</span></code> or create a new branch.</p></li>
+<li><p>Add / modify code</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Commit</span></code> your changes (equivalent to saving locally on your laptop). Do this regularly.</p></li>
+<li><p>Repeat steps 4-5.</p></li>
+<li><p>After you reach a certain milestone, <code class="docutils literal notranslate"><span class="pre">push</span></code> your commits to your <code class="docutils literal notranslate"><span class="pre">remote</span> <span class="pre">branch</span></code>.
+This synchronizes your changes with the GitHub website and is similar to the Dropbox website /service making note of changes in your documents.
+To avoid losing work due to problems with your computer, consider <code class="docutils literal notranslate"><span class="pre">pushing</span> <span class="pre">commits</span></code> once at least every day / every few days.</p></li>
+<li><p>Repeat steps 4-7 till you are ready to have your code added to the parent sidpy repository.
+At this point, <a class="reference external" href="https://help.github.com/articles/creating-a-pull-request-from-a-fork/">create a pull request</a>.
+Someone on the development team will review your <code class="docutils literal notranslate"><span class="pre">pull</span> <span class="pre">request</span></code>. If any changes are req and then <code class="docutils literal notranslate"><span class="pre">merge</span></code> these changes to <code class="docutils literal notranslate"><span class="pre">master</span></code>.</p></li>
+</ol>
+</section>
+<section id="writing-tests">
+<h2>Writing tests<a class="headerlink" href="#writing-tests" title="Link to this heading">¶</a></h2>
+<p>Software can become complicated very quickly through a complex interconnected web of dependencies, etc.
+Adding or modifying code at one location may break some use case or code in a different location.
+Unit tests are short functions that test to see if functions / classes respond in the expected way given some known inputs.
+Unit tests are a good start for ensuring that you spend more time using code than fixing it. New functions / classes must be accompanied with unit tests.</p>
+</section>
+<section id="writing-examples">
+<h2>Writing examples<a class="headerlink" href="#writing-examples" title="Link to this heading">¶</a></h2>
+<p>Additionally, examples on how to use the new code must also be added so others are aware about how to use the code.
+You can now do it by simply adding a Jupyter notebook with your tutorial/example to the <a class="reference external" href="https://github.com/pycroscopy/sidpy/tree/master/notebooks">notebooks</a> folder.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="external_guides.html" class="btn btn-neutral float-left" title="Tutorials on Basics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="matlab.html" class="btn btn-neutral float-right" title="Upgrading from Matlab" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

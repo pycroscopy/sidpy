@@ -1,0 +1,6 @@
+sidpy.hdf.reg\_ref.clean\_reg\_ref
+==================================
+
+.. currentmodule:: sidpy.hdf.reg_ref
+
+.. autofunction:: clean_reg_ref

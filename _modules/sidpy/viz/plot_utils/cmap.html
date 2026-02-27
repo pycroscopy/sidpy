@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.viz.plot_utils.cmap &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.viz.plot_utils.cmap</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.viz.plot_utils.cmap</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utilities for generating static image and line plots of near-publishable quality</span>
+
+<span class="sd">Created on Thu May 05 13:29:12 2016</span>
+
+<span class="sd">@author: Suhas Somnath, Chris R. Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dask</span><span class="w"> </span><span class="kn">import</span> <span class="n">array</span> <span class="k">as</span> <span class="n">da</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="n">default_cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">viridis</span>
+
+
+<div class="viewcode-block" id="get_cmap_object">
+<a class="viewcode-back" href="../../../../_autosummary/sidpy.viz.plot_utils.cmap.get_cmap_object.html#sidpy.viz.plot_utils.cmap.get_cmap_object">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cmap_object</span><span class="p">(</span><span class="n">cmap</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the matplotlib.colors.LinearSegmentedColormap object regardless of the input</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cmap : String, or matplotlib.colors.LinearSegmentedColormap object (Optional)</span>
+<span class="sd">        Requested color map</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cmap : matplotlib.colors.LinearSegmentedColormap object</span>
+<span class="sd">        Requested / Default colormap object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default_cmap</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmap</span><span class="p">,</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Colormap</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;cmap should either be a matplotlib.colors.Colormap object or a string&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cmap</span></div>
+
+
+
+<div class="viewcode-block" id="cmap_jet_white_center">
+<a class="viewcode-back" href="../../../../_autosummary/sidpy.viz.plot_utils.cmap.cmap_jet_white_center.html#sidpy.viz.plot_utils.cmap.cmap_jet_white_center">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cmap_jet_white_center</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates the jet colormap with a white center</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    white_jet : matplotlib.colors.LinearSegmentedColormap object</span>
+<span class="sd">        color map object that can be used in place of the default colormap</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># For red - central column is like brightness</span>
+    <span class="c1"># For blue - last column is like brightness</span>
+    <span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;red&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                     <span class="p">(</span><span class="mf">0.30</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                     <span class="p">(</span><span class="mf">0.50</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                     <span class="p">(</span><span class="mf">0.90</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                     <span class="p">(</span><span class="mf">1.00</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+             <span class="s1">&#39;green&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.10</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.42</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.58</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.90</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+             <span class="s1">&#39;blue&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+                      <span class="p">(</span><span class="mf">0.10</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                      <span class="p">(</span><span class="mf">0.50</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                      <span class="p">(</span><span class="mf">0.70</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                      <span class="p">(</span><span class="mf">1.00</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+             <span class="p">}</span>
+    <span class="k">return</span> <span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s1">&#39;white_jet&#39;</span><span class="p">,</span> <span class="n">cdict</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cmap_from_rgba">
+<a class="viewcode-back" href="../../../../_autosummary/sidpy.viz.plot_utils.cmap.cmap_from_rgba.html#sidpy.viz.plot_utils.cmap.cmap_from_rgba">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cmap_from_rgba</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">interp_vals</span><span class="p">,</span> <span class="n">normalization_val</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a colormap given a matlab-style interpolation table</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : String / Unicode</span>
+<span class="sd">        Name of the desired colormap</span>
+<span class="sd">    interp_vals : List of tuples</span>
+<span class="sd">        Interpolation table that describes the desired color map. Each entry in the table should be described as:</span>
+<span class="sd">        (position in the colorbar, (red, green, blue, alpha))</span>
+<span class="sd">        The position in the color bar, red, green, blue, and alpha vary from 0 to the normalization value</span>
+<span class="sd">    normalization_val : number</span>
+<span class="sd">        The common maximum value for the position in the color bar, red, green, blue, and alpha</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_cmap : matplotlib.colors.LinearSegmentedColormap object</span>
+<span class="sd">        desired color map</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;name should be a string&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">interp_vals</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;interp_vals must be a list of tuples&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normalization_val</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;normalization_val must be a number&#39;</span><span class="p">)</span>
+
+    <span class="n">normalization_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">normalization_val</span><span class="p">)</span>
+
+    <span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;red&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">([(</span><span class="n">dist</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">)</span>
+                           <span class="k">for</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">colors</span><span class="p">)</span> <span class="ow">in</span> <span class="n">interp_vals</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+             <span class="s1">&#39;green&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">([(</span><span class="n">dist</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">colors</span><span class="p">)</span> <span class="ow">in</span> <span class="n">interp_vals</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+             <span class="s1">&#39;blue&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">([(</span><span class="n">dist</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">colors</span><span class="p">)</span> <span class="ow">in</span> <span class="n">interp_vals</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+             <span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">([(</span><span class="n">dist</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">colors</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">/</span> <span class="n">normalization_val</span><span class="p">)</span>
+                             <span class="k">for</span> <span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="n">colors</span><span class="p">)</span> <span class="ow">in</span> <span class="n">interp_vals</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">])}</span>
+
+    <span class="k">return</span> <span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cdict</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="make_linear_alpha_cmap">
+<a class="viewcode-back" href="../../../../_autosummary/sidpy.viz.plot_utils.cmap.make_linear_alpha_cmap.html#sidpy.viz.plot_utils.cmap.make_linear_alpha_cmap">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_linear_alpha_cmap</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">solid_color</span><span class="p">,</span> <span class="n">normalization_val</span><span class="p">,</span> <span class="n">min_alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a transparent to opaque color map based on a single solid color</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : String / Unicode</span>
+<span class="sd">        Name of the desired colormap</span>
+<span class="sd">    solid_color : List of numbers</span>
+<span class="sd">        red, green, blue, and alpha values for a specific color</span>
+<span class="sd">    normalization_val : number</span>
+<span class="sd">        The common maximum value for the red, green, blue, and alpha values. This is 1 in matplotlib</span>
+<span class="sd">    min_alpha : float (optional. Default = 0 : ie- transparent)</span>
+<span class="sd">        Lowest alpha value for the bottom of the color bar</span>
+<span class="sd">    max_alpha : float (optional. Default = 1 : ie- opaque)</span>
+<span class="sd">        Highest alpha value for the top of the color bar</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_cmap : matplotlib.colors.LinearSegmentedColormap object</span>
+<span class="sd">        transparent to opaque color map based on the provided color</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;name should be a string&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solid_color</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Array</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;solid_color must be a list of numbers&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">solid_color</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;solid-color should have fourth values&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">solid_color</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;solid_color should have three numbers for red, green, blue&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normalization_val</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;normalization_val must be a number&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">min_alpha</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;min_alpha should be a Number&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_alpha</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;max_alpha should be a Number&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">min_alpha</span> <span class="o">&gt;=</span> <span class="n">max_alpha</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;min_alpha must be less than max_alpha&#39;</span><span class="p">)</span>
+
+    <span class="n">solid_color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">solid_color</span><span class="p">)</span> <span class="o">/</span> <span class="n">normalization_val</span> <span class="o">*</span> <span class="mf">1.0</span>
+    <span class="n">interp_table</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">solid_color</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">solid_color</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">solid_color</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">max_alpha</span><span class="p">)),</span>
+                    <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">solid_color</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">solid_color</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">solid_color</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">min_alpha</span><span class="p">))]</span>
+    <span class="k">return</span> <span class="n">cmap_from_rgba</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">interp_table</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cmap_hot_desaturated">
+<a class="viewcode-back" href="../../../../_autosummary/sidpy.viz.plot_utils.cmap.cmap_hot_desaturated.html#sidpy.viz.plot_utils.cmap.cmap_hot_desaturated">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cmap_hot_desaturated</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a desaturated color map based on the hot colormap</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_cmap : matplotlib.colors.LinearSegmentedColormap object</span>
+<span class="sd">        Desaturated version of the hot color map</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hot_desaturated</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">255.0</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">76</span><span class="p">,</span> <span class="mi">76</span><span class="p">,</span> <span class="mi">255</span><span class="p">)),</span>
+                       <span class="p">(</span><span class="mf">218.5</span><span class="p">,</span> <span class="p">(</span><span class="mi">107</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)),</span>
+                       <span class="p">(</span><span class="mf">182.1</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)),</span>
+                       <span class="p">(</span><span class="mf">145.6</span><span class="p">,</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)),</span>
+                       <span class="p">(</span><span class="mf">109.4</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)),</span>
+                       <span class="p">(</span><span class="mf">72.675</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)),</span>
+                       <span class="p">(</span><span class="mf">36.5</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">91</span><span class="p">,</span> <span class="mi">255</span><span class="p">)),</span>
+                       <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">71</span><span class="p">,</span> <span class="mi">219</span><span class="p">,</span> <span class="mi">255</span><span class="p">))]</span>
+
+    <span class="k">return</span> <span class="n">cmap_from_rgba</span><span class="p">(</span><span class="s1">&#39;hot_desaturated&#39;</span><span class="p">,</span> <span class="n">hot_desaturated</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="discrete_cmap">
+<a class="viewcode-back" href="../../../../_autosummary/sidpy.viz.plot_utils.cmap.discrete_cmap.html#sidpy.viz.plot_utils.cmap.discrete_cmap">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">discrete_cmap</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an N-bin discrete colormap from the specified input map specified</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    num_bins : unsigned int</span>
+<span class="sd">        Number of discrete bins</span>
+<span class="sd">    cmap : matplotlib.colors.Colormap object</span>
+<span class="sd">        Base color map to discretize</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_cmap : matplotlib.colors.LinearSegmentedColormap object</span>
+<span class="sd">        Discretized color map</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Jake VanderPlas License: BSD-style</span>
+<span class="sd">    https://gist.github.com/jakevdp/91077b0cae40f8f8244a</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">default_cmap</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmap</span><span class="p">,</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Colormap</span><span class="p">):</span>
+        <span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cmap</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;cmap should be a string or a matplotlib.colors.Colormap object&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;num_bins must be an unsigned integer&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cmap</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

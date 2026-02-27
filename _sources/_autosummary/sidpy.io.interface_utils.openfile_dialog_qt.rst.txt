@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.openfile\_dialog\_qt
+==============================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: openfile_dialog_qt

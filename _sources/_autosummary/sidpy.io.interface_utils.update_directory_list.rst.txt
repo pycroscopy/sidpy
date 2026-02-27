@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.update\_directory\_list
+=================================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: update_directory_list

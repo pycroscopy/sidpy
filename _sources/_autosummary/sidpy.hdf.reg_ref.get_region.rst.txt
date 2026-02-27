@@ -1,0 +1,6 @@
+sidpy.hdf.reg\_ref.get\_region
+==============================
+
+.. currentmodule:: sidpy.hdf.reg_ref
+
+.. autofunction:: get_region

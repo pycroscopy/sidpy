@@ -1,0 +1,6 @@
+sidpy.hdf.dtype\_utils.flatten\_complex\_to\_real
+=================================================
+
+.. currentmodule:: sidpy.hdf.dtype_utils
+
+.. autofunction:: flatten_complex_to_real

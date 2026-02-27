@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.validate\_h5\_objs\_in\_same\_h5\_file
+===========================================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: validate_h5_objs_in_same_h5_file

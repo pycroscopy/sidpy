@@ -1,0 +1,32 @@
+sidpy.proc.fitter
+=================
+
+.. automodule:: sidpy.proc.fitter
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      SidFitter
+   
+   
+
+   
+   
+   
+
+
+

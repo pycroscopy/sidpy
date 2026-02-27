@@ -1,0 +1,32 @@
+sidpy.proc
+==========
+
+.. automodule:: sidpy.proc
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   comp_utils
+   fitter
+   fitter_refactor
+

@@ -1,0 +1,6 @@
+sidpy.hdf.reg\_ref.attempt\_reg\_ref\_build
+===========================================
+
+.. currentmodule:: sidpy.hdf.reg_ref
+
+.. autofunction:: attempt_reg_ref_build

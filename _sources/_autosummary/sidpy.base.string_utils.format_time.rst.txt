@@ -1,0 +1,6 @@
+sidpy.base.string\_utils.format\_time
+=====================================
+
+.. currentmodule:: sidpy.base.string_utils
+
+.. autofunction:: format_time

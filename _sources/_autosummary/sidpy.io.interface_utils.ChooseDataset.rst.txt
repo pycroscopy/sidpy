@@ -1,0 +1,26 @@
+sidpy.io.interface\_utils.ChooseDataset
+=======================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autoclass:: ChooseDataset
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ChooseDataset.get_dataset_list
+      ~ChooseDataset.set_dataset
+   
+   
+
+   
+   
+   

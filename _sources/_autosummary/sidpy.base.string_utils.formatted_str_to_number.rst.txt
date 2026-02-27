@@ -1,0 +1,6 @@
+sidpy.base.string\_utils.formatted\_str\_to\_number
+===================================================
+
+.. currentmodule:: sidpy.base.string_utils
+
+.. autofunction:: formatted_str_to_number

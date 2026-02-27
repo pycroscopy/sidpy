@@ -1,0 +1,750 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sidpy Complex Fitter &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Sidpy Complex Fitter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/01_parallel_computing/Sidpy_Fitter_Complex.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Sidpy-Complex-Fitter">
+<h1>Sidpy Complex Fitter<a class="headerlink" href="#Sidpy-Complex-Fitter" title="Link to this heading">¶</a></h1>
+<p>Here we are testing the sidpy Fitter class for SHO Fits, these are using complex data and also fancier priors.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>SciFiReaders<span class="w"> </span>pyNSID<span class="w"> </span>pyUSID<span class="w"> </span>wget<span class="w"> </span>sidpy
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/
+Collecting git+https://github.com/pycroscopy/sidpy.git@rama_dev
+  Cloning https://github.com/pycroscopy/sidpy.git (to revision rama_dev) to /tmp/pip-req-build-r1f16rav
+  Running command git clone --filter=blob:none --quiet https://github.com/pycroscopy/sidpy.git /tmp/pip-req-build-r1f16rav
+  Running command git checkout -b rama_dev --track origin/rama_dev
+  Switched to a new branch &#39;rama_dev&#39;
+  Branch &#39;rama_dev&#39; set up to track remote branch &#39;rama_dev&#39; from &#39;origin&#39;.
+  Resolved https://github.com/pycroscopy/sidpy.git to commit 0da33043426bd42e0df51336aea55a37b0fb63f9
+  Preparing metadata (setup.py) ... done
+Requirement already satisfied: numpy&gt;=1.10 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (1.22.4)
+Requirement already satisfied: toolz in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (0.12.0)
+Collecting cytoolz (from sidpy==0.11.3)
+  Downloading cytoolz-0.12.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.8 MB)
+     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">1.8/1.8 MB</span> <span class="ansi-red-fg">9.5 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
+Requirement already satisfied: dask&gt;=0.10 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (2022.12.1)
+Requirement already satisfied: h5py&gt;=2.6.0 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (3.8.0)
+Requirement already satisfied: matplotlib&gt;=2.0.0 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (3.7.1)
+Requirement already satisfied: distributed&gt;=2.0.0 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (2022.12.1)
+Requirement already satisfied: psutil in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (5.9.5)
+Requirement already satisfied: six in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (1.16.0)
+Requirement already satisfied: joblib&gt;=0.11.0 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (1.2.0)
+Requirement already satisfied: ipywidgets&gt;=5.2.2 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (7.7.1)
+Requirement already satisfied: ipykernel in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (5.5.6)
+Requirement already satisfied: scikit-learn in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (1.2.2)
+Requirement already satisfied: scipy in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (1.10.1)
+Collecting ase (from sidpy==0.11.3)
+  Downloading ase-3.22.1-py3-none-any.whl (2.2 MB)
+     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">2.2/2.2 MB</span> <span class="ansi-red-fg">16.8 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
+Requirement already satisfied: ipython&gt;=6.0 in /usr/local/lib/python3.10/dist-packages (from sidpy==0.11.3) (7.34.0)
+Requirement already satisfied: click&gt;=7.0 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=0.10-&gt;sidpy==0.11.3) (8.1.3)
+Requirement already satisfied: cloudpickle&gt;=1.1.1 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=0.10-&gt;sidpy==0.11.3) (2.2.1)
+Requirement already satisfied: fsspec&gt;=0.6.0 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=0.10-&gt;sidpy==0.11.3) (2023.4.0)
+Requirement already satisfied: packaging&gt;=20.0 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=0.10-&gt;sidpy==0.11.3) (23.1)
+Requirement already satisfied: partd&gt;=0.3.10 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=0.10-&gt;sidpy==0.11.3) (1.4.0)
+Requirement already satisfied: pyyaml&gt;=5.3.1 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=0.10-&gt;sidpy==0.11.3) (6.0)
+Requirement already satisfied: jinja2 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (3.1.2)
+Requirement already satisfied: locket&gt;=1.0.0 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (1.0.0)
+Requirement already satisfied: msgpack&gt;=0.6.0 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (1.0.5)
+Requirement already satisfied: sortedcontainers!=2.0.0,!=2.0.1 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (2.4.0)
+Requirement already satisfied: tblib&gt;=1.6.0 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (1.7.0)
+Requirement already satisfied: tornado&gt;=6.0.3 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (6.3.1)
+Requirement already satisfied: urllib3 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (1.26.15)
+Requirement already satisfied: zict&gt;=0.1.3 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (3.0.0)
+Requirement already satisfied: setuptools&gt;=18.5 in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (67.7.2)
+Collecting jedi&gt;=0.16 (from ipython&gt;=6.0-&gt;sidpy==0.11.3)
+  Downloading jedi-0.18.2-py2.py3-none-any.whl (1.6 MB)
+     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">1.6/1.6 MB</span> <span class="ansi-red-fg">20.0 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
+Requirement already satisfied: decorator in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (4.4.2)
+Requirement already satisfied: pickleshare in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (0.7.5)
+Requirement already satisfied: traitlets&gt;=4.2 in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (5.7.1)
+Requirement already satisfied: prompt-toolkit!=3.0.0,!=3.0.1,&lt;3.1.0,&gt;=2.0.0 in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (3.0.38)
+Requirement already satisfied: pygments in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (2.14.0)
+Requirement already satisfied: backcall in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (0.2.0)
+Requirement already satisfied: matplotlib-inline in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (0.1.6)
+Requirement already satisfied: pexpect&gt;4.3 in /usr/local/lib/python3.10/dist-packages (from ipython&gt;=6.0-&gt;sidpy==0.11.3) (4.8.0)
+Requirement already satisfied: ipython-genutils~=0.2.0 in /usr/local/lib/python3.10/dist-packages (from ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.2.0)
+Requirement already satisfied: widgetsnbextension~=3.6.0 in /usr/local/lib/python3.10/dist-packages (from ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (3.6.4)
+Requirement already satisfied: jupyterlab-widgets&gt;=1.0.0 in /usr/local/lib/python3.10/dist-packages (from ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (3.0.7)
+Requirement already satisfied: jupyter-client in /usr/local/lib/python3.10/dist-packages (from ipykernel-&gt;sidpy==0.11.3) (6.1.12)
+Requirement already satisfied: contourpy&gt;=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy==0.11.3) (1.0.7)
+Requirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy==0.11.3) (0.11.0)
+Requirement already satisfied: fonttools&gt;=4.22.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy==0.11.3) (4.39.3)
+Requirement already satisfied: kiwisolver&gt;=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy==0.11.3) (1.4.4)
+Requirement already satisfied: pillow&gt;=6.2.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy==0.11.3) (8.4.0)
+Requirement already satisfied: pyparsing&gt;=2.3.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy==0.11.3) (3.0.9)
+Requirement already satisfied: python-dateutil&gt;=2.7 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy==0.11.3) (2.8.2)
+Requirement already satisfied: threadpoolctl&gt;=2.0.0 in /usr/local/lib/python3.10/dist-packages (from scikit-learn-&gt;sidpy==0.11.3) (3.1.0)
+Requirement already satisfied: parso&lt;0.9.0,&gt;=0.8.0 in /usr/local/lib/python3.10/dist-packages (from jedi&gt;=0.16-&gt;ipython&gt;=6.0-&gt;sidpy==0.11.3) (0.8.3)
+Requirement already satisfied: ptyprocess&gt;=0.5 in /usr/local/lib/python3.10/dist-packages (from pexpect&gt;4.3-&gt;ipython&gt;=6.0-&gt;sidpy==0.11.3) (0.7.0)
+Requirement already satisfied: wcwidth in /usr/local/lib/python3.10/dist-packages (from prompt-toolkit!=3.0.0,!=3.0.1,&lt;3.1.0,&gt;=2.0.0-&gt;ipython&gt;=6.0-&gt;sidpy==0.11.3) (0.2.6)
+Requirement already satisfied: notebook&gt;=4.4.1 in /usr/local/lib/python3.10/dist-packages (from widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (6.4.8)
+Requirement already satisfied: MarkupSafe&gt;=2.0 in /usr/local/lib/python3.10/dist-packages (from jinja2-&gt;distributed&gt;=2.0.0-&gt;sidpy==0.11.3) (2.1.2)
+Requirement already satisfied: jupyter-core&gt;=4.6.0 in /usr/local/lib/python3.10/dist-packages (from jupyter-client-&gt;ipykernel-&gt;sidpy==0.11.3) (5.3.0)
+Requirement already satisfied: pyzmq&gt;=13 in /usr/local/lib/python3.10/dist-packages (from jupyter-client-&gt;ipykernel-&gt;sidpy==0.11.3) (23.2.1)
+Requirement already satisfied: platformdirs&gt;=2.5 in /usr/local/lib/python3.10/dist-packages (from jupyter-core&gt;=4.6.0-&gt;jupyter-client-&gt;ipykernel-&gt;sidpy==0.11.3) (3.3.0)
+Requirement already satisfied: argon2-cffi in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (21.3.0)
+Requirement already satisfied: nbformat in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (5.8.0)
+Requirement already satisfied: nbconvert in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (6.5.4)
+Requirement already satisfied: nest-asyncio&gt;=1.5 in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (1.5.6)
+Requirement already satisfied: Send2Trash&gt;=1.8.0 in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (1.8.0)
+Requirement already satisfied: terminado&gt;=0.8.3 in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.17.1)
+Requirement already satisfied: prometheus-client in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.16.0)
+Requirement already satisfied: argon2-cffi-bindings in /usr/local/lib/python3.10/dist-packages (from argon2-cffi-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (21.2.0)
+Requirement already satisfied: lxml in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (4.9.2)
+Requirement already satisfied: beautifulsoup4 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (4.11.2)
+Requirement already satisfied: bleach in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (6.0.0)
+Requirement already satisfied: defusedxml in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.7.1)
+Requirement already satisfied: entrypoints&gt;=0.2.2 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.4)
+Requirement already satisfied: jupyterlab-pygments in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.2.2)
+Requirement already satisfied: mistune&lt;2,&gt;=0.8.1 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.8.4)
+Requirement already satisfied: nbclient&gt;=0.5.0 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.7.4)
+Requirement already satisfied: pandocfilters&gt;=1.4.1 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (1.5.0)
+Requirement already satisfied: tinycss2 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (1.2.1)
+Requirement already satisfied: fastjsonschema in /usr/local/lib/python3.10/dist-packages (from nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (2.16.3)
+Requirement already satisfied: jsonschema&gt;=2.6 in /usr/local/lib/python3.10/dist-packages (from nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (4.3.3)
+Requirement already satisfied: attrs&gt;=17.4.0 in /usr/local/lib/python3.10/dist-packages (from jsonschema&gt;=2.6-&gt;nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (23.1.0)
+Requirement already satisfied: pyrsistent!=0.17.0,!=0.17.1,!=0.17.2,&gt;=0.14.0 in /usr/local/lib/python3.10/dist-packages (from jsonschema&gt;=2.6-&gt;nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.19.3)
+Requirement already satisfied: cffi&gt;=1.0.1 in /usr/local/lib/python3.10/dist-packages (from argon2-cffi-bindings-&gt;argon2-cffi-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (1.15.1)
+Requirement already satisfied: soupsieve&gt;1.2 in /usr/local/lib/python3.10/dist-packages (from beautifulsoup4-&gt;nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (2.4.1)
+Requirement already satisfied: webencodings in /usr/local/lib/python3.10/dist-packages (from bleach-&gt;nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (0.5.1)
+Requirement already satisfied: pycparser in /usr/local/lib/python3.10/dist-packages (from cffi&gt;=1.0.1-&gt;argon2-cffi-bindings-&gt;argon2-cffi-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy==0.11.3) (2.21)
+Building wheels for collected packages: sidpy
+  Building wheel for sidpy (setup.py) ... done
+  Created wheel for sidpy: filename=sidpy-0.11.3-py2.py3-none-any.whl size=97762 sha256=f5149fbcb80137adba30ca3ba7d8837386be4119d465dd2e53c0733e0d198077
+  Stored in directory: /tmp/pip-ephem-wheel-cache-on_hk5mf/wheels/52/49/e3/29dcea3e06dd77904f151f41b2c694445cda5744592c024baf
+Successfully built sidpy
+Installing collected packages: jedi, cytoolz, ase, sidpy
+Successfully installed ase-3.22.1 cytoolz-0.12.1 jedi-0.18.2 sidpy-0.11.3
+Looking in indexes: https://pypi.org/simple, https://us-python.pkg.dev/colab-wheels/public/simple/
+Collecting SciFiReaders
+  Downloading SciFiReaders-0.0.9-py2.py3-none-any.whl (63 kB)
+     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">63.5/63.5 kB</span> <span class="ansi-red-fg">742.5 kB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
+Collecting pyNSID
+  Downloading pyNSID-0.0.7-py2.py3-none-any.whl (12 kB)
+Collecting pyUSID
+  Downloading pyUSID-0.0.10.post2-py2.py3-none-any.whl (66 kB)
+     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">66.1/66.1 kB</span> <span class="ansi-red-fg">8.0 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
+Collecting wget
+  Downloading wget-3.2.zip (10 kB)
+  Preparing metadata (setup.py) ... done
+Requirement already satisfied: numpy&gt;=1.10 in /usr/local/lib/python3.10/dist-packages (from SciFiReaders) (1.22.4)
+Requirement already satisfied: toolz in /usr/local/lib/python3.10/dist-packages (from SciFiReaders) (0.12.0)
+Requirement already satisfied: cytoolz in /usr/local/lib/python3.10/dist-packages (from SciFiReaders) (0.12.1)
+Requirement already satisfied: dask&gt;=2.20.0 in /usr/local/lib/python3.10/dist-packages (from SciFiReaders) (2022.12.1)
+Requirement already satisfied: sidpy&gt;=0.11.2 in /usr/local/lib/python3.10/dist-packages (from SciFiReaders) (0.11.3)
+Requirement already satisfied: numba in /usr/local/lib/python3.10/dist-packages (from SciFiReaders) (0.56.4)
+Collecting ipython==7.1.0 (from SciFiReaders)
+  Downloading ipython-7.1.0-py3-none-any.whl (764 kB)
+     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">764.0/764.0 kB</span> <span class="ansi-red-fg">20.8 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
+Requirement already satisfied: setuptools&gt;=18.5 in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (67.7.2)
+Requirement already satisfied: jedi&gt;=0.10 in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (0.18.2)
+Requirement already satisfied: decorator in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (4.4.2)
+Requirement already satisfied: pickleshare in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (0.7.5)
+Requirement already satisfied: traitlets&gt;=4.2 in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (5.7.1)
+Collecting prompt-toolkit&lt;2.1.0,&gt;=2.0.0 (from ipython==7.1.0-&gt;SciFiReaders)
+  Downloading prompt_toolkit-2.0.10-py3-none-any.whl (340 kB)
+     <span class="ansi-black-intense-fg">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span> <span class="ansi-green-fg">340.0/340.0 kB</span> <span class="ansi-red-fg">31.1 MB/s</span> eta <span class="ansi-cyan-fg">0:00:00</span>
+Requirement already satisfied: pygments in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (2.14.0)
+Requirement already satisfied: backcall in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (0.2.0)
+Requirement already satisfied: pexpect in /usr/local/lib/python3.10/dist-packages (from ipython==7.1.0-&gt;SciFiReaders) (4.8.0)
+Requirement already satisfied: h5py&gt;=2.6.0 in /usr/local/lib/python3.10/dist-packages (from pyNSID) (3.8.0)
+Requirement already satisfied: six in /usr/local/lib/python3.10/dist-packages (from pyNSID) (1.16.0)
+Requirement already satisfied: ase in /usr/local/lib/python3.10/dist-packages (from pyNSID) (3.22.1)
+Requirement already satisfied: pillow in /usr/local/lib/python3.10/dist-packages (from pyUSID) (8.4.0)
+Requirement already satisfied: psutil in /usr/local/lib/python3.10/dist-packages (from pyUSID) (5.9.5)
+Requirement already satisfied: click&gt;=7.0 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=2.20.0-&gt;SciFiReaders) (8.1.3)
+Requirement already satisfied: cloudpickle&gt;=1.1.1 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=2.20.0-&gt;SciFiReaders) (2.2.1)
+Requirement already satisfied: fsspec&gt;=0.6.0 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=2.20.0-&gt;SciFiReaders) (2023.4.0)
+Requirement already satisfied: packaging&gt;=20.0 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=2.20.0-&gt;SciFiReaders) (23.1)
+Requirement already satisfied: partd&gt;=0.3.10 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=2.20.0-&gt;SciFiReaders) (1.4.0)
+Requirement already satisfied: pyyaml&gt;=5.3.1 in /usr/local/lib/python3.10/dist-packages (from dask&gt;=2.20.0-&gt;SciFiReaders) (6.0)
+Requirement already satisfied: matplotlib&gt;=2.0.0 in /usr/local/lib/python3.10/dist-packages (from sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.7.1)
+Requirement already satisfied: distributed&gt;=2.0.0 in /usr/local/lib/python3.10/dist-packages (from sidpy&gt;=0.11.2-&gt;SciFiReaders) (2022.12.1)
+Requirement already satisfied: joblib&gt;=0.11.0 in /usr/local/lib/python3.10/dist-packages (from sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.2.0)
+Requirement already satisfied: ipywidgets&gt;=5.2.2 in /usr/local/lib/python3.10/dist-packages (from sidpy&gt;=0.11.2-&gt;SciFiReaders) (7.7.1)
+Requirement already satisfied: ipykernel in /usr/local/lib/python3.10/dist-packages (from sidpy&gt;=0.11.2-&gt;SciFiReaders) (5.5.6)
+Requirement already satisfied: scikit-learn in /usr/local/lib/python3.10/dist-packages (from sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.2.2)
+Requirement already satisfied: scipy in /usr/local/lib/python3.10/dist-packages (from sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.10.1)
+Requirement already satisfied: llvmlite&lt;0.40,&gt;=0.39.0dev0 in /usr/local/lib/python3.10/dist-packages (from numba-&gt;SciFiReaders) (0.39.1)
+Requirement already satisfied: jinja2 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.1.2)
+Requirement already satisfied: locket&gt;=1.0.0 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.0.0)
+Requirement already satisfied: msgpack&gt;=0.6.0 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.0.5)
+Requirement already satisfied: sortedcontainers!=2.0.0,!=2.0.1 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (2.4.0)
+Requirement already satisfied: tblib&gt;=1.6.0 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.7.0)
+Requirement already satisfied: tornado&gt;=6.0.3 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (6.3.1)
+Requirement already satisfied: urllib3 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.26.15)
+Requirement already satisfied: zict&gt;=0.1.3 in /usr/local/lib/python3.10/dist-packages (from distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.0.0)
+Requirement already satisfied: ipython-genutils~=0.2.0 in /usr/local/lib/python3.10/dist-packages (from ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.2.0)
+Requirement already satisfied: widgetsnbextension~=3.6.0 in /usr/local/lib/python3.10/dist-packages (from ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.6.4)
+Requirement already satisfied: jupyterlab-widgets&gt;=1.0.0 in /usr/local/lib/python3.10/dist-packages (from ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.0.7)
+Requirement already satisfied: jupyter-client in /usr/local/lib/python3.10/dist-packages (from ipykernel-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (6.1.12)
+Requirement already satisfied: parso&lt;0.9.0,&gt;=0.8.0 in /usr/local/lib/python3.10/dist-packages (from jedi&gt;=0.10-&gt;ipython==7.1.0-&gt;SciFiReaders) (0.8.3)
+Requirement already satisfied: contourpy&gt;=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.0.7)
+Requirement already satisfied: cycler&gt;=0.10 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.11.0)
+Requirement already satisfied: fonttools&gt;=4.22.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (4.39.3)
+Requirement already satisfied: kiwisolver&gt;=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.4.4)
+Requirement already satisfied: pyparsing&gt;=2.3.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.0.9)
+Requirement already satisfied: python-dateutil&gt;=2.7 in /usr/local/lib/python3.10/dist-packages (from matplotlib&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (2.8.2)
+Requirement already satisfied: wcwidth in /usr/local/lib/python3.10/dist-packages (from prompt-toolkit&lt;2.1.0,&gt;=2.0.0-&gt;ipython==7.1.0-&gt;SciFiReaders) (0.2.6)
+Requirement already satisfied: ptyprocess&gt;=0.5 in /usr/local/lib/python3.10/dist-packages (from pexpect-&gt;ipython==7.1.0-&gt;SciFiReaders) (0.7.0)
+Requirement already satisfied: threadpoolctl&gt;=2.0.0 in /usr/local/lib/python3.10/dist-packages (from scikit-learn-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.1.0)
+Requirement already satisfied: notebook&gt;=4.4.1 in /usr/local/lib/python3.10/dist-packages (from widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (6.4.8)
+Requirement already satisfied: MarkupSafe&gt;=2.0 in /usr/local/lib/python3.10/dist-packages (from jinja2-&gt;distributed&gt;=2.0.0-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (2.1.2)
+Requirement already satisfied: jupyter-core&gt;=4.6.0 in /usr/local/lib/python3.10/dist-packages (from jupyter-client-&gt;ipykernel-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (5.3.0)
+Requirement already satisfied: pyzmq&gt;=13 in /usr/local/lib/python3.10/dist-packages (from jupyter-client-&gt;ipykernel-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (23.2.1)
+Requirement already satisfied: platformdirs&gt;=2.5 in /usr/local/lib/python3.10/dist-packages (from jupyter-core&gt;=4.6.0-&gt;jupyter-client-&gt;ipykernel-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (3.3.0)
+Requirement already satisfied: argon2-cffi in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (21.3.0)
+Requirement already satisfied: nbformat in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (5.8.0)
+Requirement already satisfied: nbconvert in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (6.5.4)
+Requirement already satisfied: nest-asyncio&gt;=1.5 in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.5.6)
+Requirement already satisfied: Send2Trash&gt;=1.8.0 in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.8.0)
+Requirement already satisfied: terminado&gt;=0.8.3 in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.17.1)
+Requirement already satisfied: prometheus-client in /usr/local/lib/python3.10/dist-packages (from notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.16.0)
+Requirement already satisfied: argon2-cffi-bindings in /usr/local/lib/python3.10/dist-packages (from argon2-cffi-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (21.2.0)
+Requirement already satisfied: lxml in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (4.9.2)
+Requirement already satisfied: beautifulsoup4 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (4.11.2)
+Requirement already satisfied: bleach in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (6.0.0)
+Requirement already satisfied: defusedxml in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.7.1)
+Requirement already satisfied: entrypoints&gt;=0.2.2 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.4)
+Requirement already satisfied: jupyterlab-pygments in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.2.2)
+Requirement already satisfied: mistune&lt;2,&gt;=0.8.1 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.8.4)
+Requirement already satisfied: nbclient&gt;=0.5.0 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.7.4)
+Requirement already satisfied: pandocfilters&gt;=1.4.1 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.5.0)
+Requirement already satisfied: tinycss2 in /usr/local/lib/python3.10/dist-packages (from nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.2.1)
+Requirement already satisfied: fastjsonschema in /usr/local/lib/python3.10/dist-packages (from nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (2.16.3)
+Requirement already satisfied: jsonschema&gt;=2.6 in /usr/local/lib/python3.10/dist-packages (from nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (4.3.3)
+Requirement already satisfied: attrs&gt;=17.4.0 in /usr/local/lib/python3.10/dist-packages (from jsonschema&gt;=2.6-&gt;nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (23.1.0)
+Requirement already satisfied: pyrsistent!=0.17.0,!=0.17.1,!=0.17.2,&gt;=0.14.0 in /usr/local/lib/python3.10/dist-packages (from jsonschema&gt;=2.6-&gt;nbformat-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.19.3)
+Requirement already satisfied: cffi&gt;=1.0.1 in /usr/local/lib/python3.10/dist-packages (from argon2-cffi-bindings-&gt;argon2-cffi-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (1.15.1)
+Requirement already satisfied: soupsieve&gt;1.2 in /usr/local/lib/python3.10/dist-packages (from beautifulsoup4-&gt;nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (2.4.1)
+Requirement already satisfied: webencodings in /usr/local/lib/python3.10/dist-packages (from bleach-&gt;nbconvert-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (0.5.1)
+Requirement already satisfied: pycparser in /usr/local/lib/python3.10/dist-packages (from cffi&gt;=1.0.1-&gt;argon2-cffi-bindings-&gt;argon2-cffi-&gt;notebook&gt;=4.4.1-&gt;widgetsnbextension~=3.6.0-&gt;ipywidgets&gt;=5.2.2-&gt;sidpy&gt;=0.11.2-&gt;SciFiReaders) (2.21)
+<span class="ansi-yellow-fg">WARNING: The candidate selected for download or install is a yanked version: &#39;ipython&#39; candidate (version 7.1.0 at https://files.pythonhosted.org/packages/ea/56/d75d25b30936bff3f6b4d7b80cfd399b703e2162f31afee926f66ff77b13/ipython-7.1.0-py3-none-any.whl (from https://pypi.org/simple/ipython/) (requires-python:&gt;=3.5))
+Reason for being yanked: &lt;none given&gt;</span><span class="ansi-yellow-fg">
+</span>Building wheels for collected packages: wget
+  Building wheel for wget (setup.py) ... done
+  Created wheel for wget: filename=wget-3.2-py3-none-any.whl size=9657 sha256=3b7836a4d0cc5e12c6148c376ea4c0596421020651b4c97f6558553447fe2d4c
+  Stored in directory: /root/.cache/pip/wheels/8b/f1/7f/5c94f0a7a505ca1c81cd1d9208ae2064675d97582078e6c769
+Successfully built wget
+Installing collected packages: wget, prompt-toolkit, ipython, SciFiReaders, pyUSID, pyNSID
+  Attempting uninstall: prompt-toolkit
+    Found existing installation: prompt-toolkit 3.0.38
+    Uninstalling prompt-toolkit-3.0.38:
+      Successfully uninstalled prompt-toolkit-3.0.38
+  Attempting uninstall: ipython
+    Found existing installation: ipython 7.34.0
+    Uninstalling ipython-7.34.0:
+      Successfully uninstalled ipython-7.34.0
+<span class="ansi-red-fg">ERROR: pip&#39;s dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+google-colab 1.0.0 requires ipython~=7.34.0, but you have ipython 7.1.0 which is incompatible.</span><span class="ansi-red-fg">
+</span>Successfully installed SciFiReaders-0.0.9 ipython-7.1.0 prompt-toolkit-2.0.10 pyNSID-0.0.7 pyUSID-0.0.10.post2 wget-3.2
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="admonition warning">
+<p>Data type cannot be displayed: application/vnd.colab-display-data+json</p>
+</div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyNSID</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numba</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+<span class="c1">#Let&#39;s open up a sample dataset and see...</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">SciFiReaders</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">curve_fit</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ModuleNotFoundError</span>                       Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-1-659131e2b1c8&gt;</span> in <span class="ansi-cyan-fg">&lt;cell line: 8&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">      6</span> <span class="ansi-green-fg">import</span> h5py
+<span class="ansi-green-intense-fg ansi-bold">      7</span>
+<span class="ansi-green-fg">----&gt; 8</span><span class="ansi-red-fg"> </span><span class="ansi-green-fg">import</span> pyNSID
+<span class="ansi-green-intense-fg ansi-bold">      9</span> <span class="ansi-green-fg">import</span> matplotlib<span class="ansi-blue-fg">.</span>pyplot <span class="ansi-green-fg">as</span> plt
+<span class="ansi-green-intense-fg ansi-bold">     10</span> <span class="ansi-green-fg">import</span> numba
+
+<span class="ansi-red-fg">ModuleNotFoundError</span>: No module named &#39;pyNSID&#39;
+
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span><span class="ansi-green-fg">
+NOTE: If your import is failing due to a missing package, you can
+manually install dependencies using either !pip or !apt.
+
+To view examples of installing some common dependencies, click the
+&#34;Open Examples&#34; button below.
+</span><span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">wget</span>
+<span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;https://www.dropbox.com/s/6jwi0bzdepjidf5/PTO_60x60_3rdarea_0003.h5?dl=1&#39;</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="s1">&#39;beps_file.h5&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;beps_file.h5&#39;
+</pre></div></div>
+</div>
+</section>
+<section id="Download-the-data">
+<h1>Download the data<a class="headerlink" href="#Download-the-data" title="Link to this heading">¶</a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">beps_path</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;beps_file.h5&#39;</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">sr</span><span class="o">.</span><span class="n">Usid_reader</span><span class="p">(</span><span class="n">beps_path</span><span class="p">)</span>
+<span class="n">data_beps</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="c1">#read the data</span>
+<span class="n">beps_raw</span> <span class="o">=</span> <span class="n">data_beps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#take the main sidpy dataset</span>
+<span class="n">freq_axis</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Frequency (Hz)&#39;</span><span class="p">)</span> <span class="c1">#grab the frequency axis</span>
+<span class="n">freq_vec</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">freq_axis</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Define-Functions">
+<h1>Define Functions<a class="headerlink" href="#Define-Functions" title="Link to this heading">¶</a></h1>
+<p>Note that the guess function is critical here! It needs to be tuned carefully for the equation you are fitting.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">SHO_fit_flattened</span><span class="p">(</span><span class="n">wvec</span><span class="p">,</span><span class="o">*</span><span class="n">p</span><span class="p">):</span>
+    <span class="n">Amp</span><span class="p">,</span> <span class="n">w_0</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">p</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">Amp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">1.</span><span class="n">j</span> <span class="o">*</span> <span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">w_0</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">wvec</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">wvec</span> <span class="o">*</span> <span class="n">w_0</span> <span class="o">/</span> <span class="n">Q</span> <span class="o">-</span> <span class="n">w_0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">func</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">func</span><span class="p">)])</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">my_guess_fn</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span><span class="n">ydata</span><span class="p">):</span>
+    <span class="n">ydata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ydata</span><span class="p">)</span>
+    <span class="n">amp_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))]</span>
+    <span class="n">Q_guess</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">max_min_ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))</span>
+    <span class="n">phi_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">ydata</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))]</span>
+    <span class="n">w_guess</span> <span class="o">=</span> <span class="n">freq_vec</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))]</span>
+
+    <span class="c1">#Let&#39;s just run some Q values to find the closest one</span>
+    <span class="n">Q_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">500</span><span class="p">]</span>
+    <span class="n">err_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">q_val</span> <span class="ow">in</span> <span class="n">Q_values</span><span class="p">:</span>
+        <span class="n">p_test</span> <span class="o">=</span> <span class="p">[</span><span class="n">amp_guess</span><span class="o">/</span><span class="n">q_val</span><span class="p">,</span> <span class="n">w_guess</span><span class="p">,</span> <span class="n">q_val</span><span class="p">,</span> <span class="n">phi_guess</span><span class="p">]</span>
+        <span class="n">func_out</span> <span class="o">=</span> <span class="n">SHO_fit_flattened</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span><span class="o">*</span><span class="n">p_test</span><span class="p">)</span>
+        <span class="n">complex_output</span> <span class="o">=</span> <span class="n">func_out</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">func_out</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">func_out</span><span class="p">[(</span><span class="nb">len</span><span class="p">(</span><span class="n">func_out</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">):]</span>
+        <span class="n">amp_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">amp_output</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">err_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="n">Q_guess</span> <span class="o">=</span> <span class="n">Q_values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">err_vals</span><span class="p">)]</span>
+    <span class="n">p0</span> <span class="o">=</span> <span class="p">[</span><span class="n">amp_guess</span><span class="o">/</span><span class="n">Q_guess</span><span class="p">,</span> <span class="n">w_guess</span><span class="p">,</span> <span class="n">Q_guess</span><span class="p">,</span> <span class="n">phi_guess</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">p0</span>
+<br/></pre></div>
+</div>
+</div>
+<section id="Load-the-data,-take-a-small-slice-of-it,-and-plot-it">
+<h2>Load the data, take a small slice of it, and plot it<a class="headerlink" href="#Load-the-data,-take-a-small-slice-of-it,-and-plot-it" title="Link to this heading">¶</a></h2>
+<p>Here we will only consider a subset of the data. Then take a single curve fromit and then see how well our guess function performs The guess function returns the fitting parameters that the optimization starts from, given the data. So it is important to make sure it is somewhat close to modeling the data.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">beps_small</span> <span class="o">=</span> <span class="n">beps_raw</span><span class="p">[:</span><span class="mi">5</span><span class="p">,:</span><span class="mi">5</span><span class="p">,:,</span><span class="mi">5</span><span class="p">:</span><span class="mi">15</span><span class="p">,:]</span>
+
+<span class="n">ydata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">beps_small</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,:,</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">p0</span> <span class="o">=</span> <span class="n">my_guess_fn</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">ydata</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+<span class="n">ydata_guess</span> <span class="o">=</span> <span class="n">SHO_fit_flattened</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="o">*</span><span class="n">p0</span><span class="p">)</span>
+<span class="n">complex_output</span> <span class="o">=</span> <span class="n">ydata_guess</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">ydata_guess</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">ydata_guess</span><span class="p">[(</span><span class="nb">len</span><span class="p">(</span><span class="n">ydata_guess</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">):]</span>
+<span class="n">amp_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+<span class="n">phase_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">amp_output</span><span class="p">,</span> <span class="s1">&#39;b-&#39;</span><span class="p">)</span>
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span> <span class="s1">&#39;yo&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">phase_output</span><span class="p">,</span> <span class="s1">&#39;y-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Amplitude and Phase, with iniital guess plotted&#39;</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+using generic parameters for dimension  3
+[1.8177233869209886e-05, 376059.875, 200, -2.5212026]
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Amplitude and Phase, with iniital guess plotted&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_01_parallel_computing_Sidpy_Fitter_Complex_9_2.png" src="../../_images/notebooks_01_parallel_computing_Sidpy_Fitter_Complex_9_2.png" />
+</div>
+</div>
+</section>
+<section id="Based-on-the-initial-guess-above,-perform-optimization-and-plot">
+<h2>Based on the initial guess above, perform optimization and plot<a class="headerlink" href="#Based-on-the-initial-guess-above,-perform-optimization-and-plot" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ydata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ydata</span><span class="p">)</span>
+<span class="n">pg</span> <span class="o">=</span> <span class="n">my_guess_fn</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">ydata</span><span class="p">)</span>
+<span class="n">ydata_ri</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">ydata</span><span class="p">)])</span>
+<span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">SHO_fit_flattened</span><span class="p">,</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">ydata_ri</span><span class="p">,</span><span class="n">p0</span><span class="o">=</span><span class="n">pg</span><span class="p">)</span>
+
+<span class="n">ydata_fit</span> <span class="o">=</span> <span class="n">SHO_fit_flattened</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="o">*</span><span class="n">popt</span><span class="p">)</span>
+<span class="n">complex_output</span> <span class="o">=</span> <span class="n">ydata_fit</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">ydata_guess</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">ydata_fit</span><span class="p">[(</span><span class="nb">len</span><span class="p">(</span><span class="n">ydata_guess</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">):]</span>
+<span class="n">amp_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+<span class="n">phase_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span> <span class="s1">&#39;bo&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">amp_output</span><span class="p">,</span> <span class="s1">&#39;b-&#39;</span><span class="p">)</span>
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span> <span class="s1">&#39;yo&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="n">phase_output</span><span class="p">,</span> <span class="s1">&#39;y-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Amplitude and Phase, with optimized fit plotted&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Amplitude and Phase, with optimized fit plotted&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_01_parallel_computing_Sidpy_Fitter_Complex_11_1.png" src="../../_images/notebooks_01_parallel_computing_Sidpy_Fitter_Complex_11_1.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Now-try-the-Sidpy-Fitter">
+<h1>Now try the Sidpy Fitter<a class="headerlink" href="#Now-try-the-Sidpy-Fitter" title="Link to this heading">¶</a></h1>
+<p>This can be used to fit all spectra at once. There is an option for km_guess, which determines whether the kmeans priors will be used. This means that the spectra will be clustered by KMeans into a given number of clusters, and then the guess function will be used to extract the prior for each cluster mean, and then this optimized fit will be used as priors for each cluster member.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Let&#39;s try sidpy fitter</span>
+<span class="c1">#Instantiate the SidFitter class</span>
+<span class="n">fitter</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">proc</span><span class="o">.</span><span class="n">fitter</span><span class="o">.</span><span class="n">SidFitter</span><span class="p">(</span><span class="n">beps_small</span><span class="p">,</span> <span class="n">SHO_fit_flattened</span><span class="p">,</span><span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">guess_fn</span> <span class="o">=</span> <span class="n">my_guess_fn</span><span class="p">,</span><span class="n">ind_dims</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span>
+                           <span class="n">threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">return_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_fit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_std</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                           <span class="n">km_guess</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">num_fit_parms</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">n_clus</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:distributed.http.proxy:To route to workers diagnostics web server please install jupyter-server-proxy: python -m pip install jupyter-server-proxy
+INFO:distributed.scheduler:State start
+INFO:distributed.scheduler:  Scheduler at:     tcp://127.0.0.1:38133
+INFO:distributed.scheduler:  dashboard at:            127.0.0.1:8787
+INFO:distributed.nanny:        Start Nanny at: &#39;tcp://127.0.0.1:45173&#39;
+INFO:distributed.nanny:        Start Nanny at: &#39;tcp://127.0.0.1:44227&#39;
+INFO:distributed.nanny:        Start Nanny at: &#39;tcp://127.0.0.1:37661&#39;
+INFO:distributed.nanny:        Start Nanny at: &#39;tcp://127.0.0.1:35209&#39;
+INFO:distributed.scheduler:Register worker &lt;WorkerState &#39;tcp://127.0.0.1:44419&#39;, name: 1, status: init, memory: 0, processing: 0&gt;
+INFO:distributed.scheduler:Starting worker compute stream, tcp://127.0.0.1:44419
+INFO:distributed.core:Starting established connection to tcp://127.0.0.1:33098
+INFO:distributed.scheduler:Register worker &lt;WorkerState &#39;tcp://127.0.0.1:36079&#39;, name: 2, status: init, memory: 0, processing: 0&gt;
+INFO:distributed.scheduler:Starting worker compute stream, tcp://127.0.0.1:36079
+INFO:distributed.core:Starting established connection to tcp://127.0.0.1:33090
+INFO:distributed.scheduler:Register worker &lt;WorkerState &#39;tcp://127.0.0.1:41503&#39;, name: 3, status: init, memory: 0, processing: 0&gt;
+INFO:distributed.scheduler:Starting worker compute stream, tcp://127.0.0.1:41503
+INFO:distributed.core:Starting established connection to tcp://127.0.0.1:33108
+INFO:distributed.scheduler:Register worker &lt;WorkerState &#39;tcp://127.0.0.1:43353&#39;, name: 0, status: init, memory: 0, processing: 0&gt;
+INFO:distributed.scheduler:Starting worker compute stream, tcp://127.0.0.1:43353
+INFO:distributed.core:Starting established connection to tcp://127.0.0.1:33104
+INFO:distributed.scheduler:Receive client connection: Client-5eccbb79-eeb5-11ed-81e2-0242ac1c000c
+INFO:distributed.core:Starting established connection to tcp://127.0.0.1:33112
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#Note that without bounds, the fitting is not very good</span>
+
+<span class="n">lb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span>
+<span class="n">ub</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">10000</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span>
+
+<span class="n">fit_parameters</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">do_fit</span><span class="p">(</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb</span><span class="p">,</span><span class="n">ub</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+sidpy.Dataset of type UNKNOWN with:
+ dask.array&lt;transpose, shape=(750, 44), dtype=complex64, chunksize=(750, 44), chunktype=numpy.ndarray&gt;
+ data contains: quantity (a.u.)
+ and Dimensions:
+a:  generic (generic) of size (750,)
+b:  generic (generic) of size (44,)
+ with metadata: [&#39;fold_attr&#39;] complex64
+Warning: complex dataset detected. For Kmeans priors, we will treat real part only
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/usr/local/lib/python3.10/dist-packages/sklearn/cluster/_kmeans.py:870: FutureWarning: The default value of `n_init` will change from 10 to &#39;auto&#39; in 1.4. Set the value of `n_init` explicitly to suppress the warning
+  warnings.warn(
+INFO:distributed.nanny:Closing Nanny at &#39;tcp://127.0.0.1:45173&#39;. Reason: nanny-close
+INFO:distributed.nanny:Nanny asking worker to close. Reason: nanny-close
+INFO:distributed.nanny:Closing Nanny at &#39;tcp://127.0.0.1:44227&#39;. Reason: nanny-close
+INFO:distributed.nanny:Nanny asking worker to close. Reason: nanny-close
+INFO:distributed.nanny:Closing Nanny at &#39;tcp://127.0.0.1:37661&#39;. Reason: nanny-close
+INFO:distributed.nanny:Nanny asking worker to close. Reason: nanny-close
+INFO:distributed.nanny:Closing Nanny at &#39;tcp://127.0.0.1:35209&#39;. Reason: nanny-close
+INFO:distributed.nanny:Nanny asking worker to close. Reason: nanny-close
+INFO:distributed.core:Received &#39;close-stream&#39; from tcp://127.0.0.1:33104; closing.
+INFO:distributed.core:Received &#39;close-stream&#39; from tcp://127.0.0.1:33098; closing.
+INFO:distributed.scheduler:Remove worker &lt;WorkerState &#39;tcp://127.0.0.1:43353&#39;, name: 0, status: closing, memory: 0, processing: 0&gt;
+INFO:distributed.core:Removing comms to tcp://127.0.0.1:43353
+INFO:distributed.scheduler:Remove worker &lt;WorkerState &#39;tcp://127.0.0.1:44419&#39;, name: 1, status: closing, memory: 0, processing: 0&gt;
+INFO:distributed.core:Removing comms to tcp://127.0.0.1:44419
+INFO:distributed.core:Received &#39;close-stream&#39; from tcp://127.0.0.1:33108; closing.
+INFO:distributed.scheduler:Remove worker &lt;WorkerState &#39;tcp://127.0.0.1:41503&#39;, name: 3, status: closing, memory: 0, processing: 0&gt;
+INFO:distributed.core:Removing comms to tcp://127.0.0.1:41503
+INFO:distributed.core:Received &#39;close-stream&#39; from tcp://127.0.0.1:33090; closing.
+INFO:distributed.scheduler:Remove worker &lt;WorkerState &#39;tcp://127.0.0.1:36079&#39;, name: 2, status: closing, memory: 0, processing: 0&gt;
+INFO:distributed.core:Removing comms to tcp://127.0.0.1:36079
+INFO:distributed.scheduler:Lost all workers
+INFO:distributed.scheduler:Scheduler closing...
+INFO:distributed.scheduler:Scheduler closing all comms
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit_parameters_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fit_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Plot-the-results-of-25-random-spectra">
+<h1>Plot the results of 25 random spectra<a class="headerlink" href="#Plot-the-results-of-25-random-spectra" title="Link to this heading">¶</a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">15</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">):</span>
+    <span class="n">ind_plot</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">beps_small</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">beps_small</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">beps_small</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">beps_small</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">])]</span>
+
+    <span class="n">ydata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">beps_small</span><span class="p">[</span><span class="n">ind_plot</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ind_plot</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">:,</span> <span class="n">ind_plot</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ind_plot</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
+    <span class="n">fit_parms</span> <span class="o">=</span> <span class="n">fit_parameters_mat</span><span class="p">[</span><span class="n">ind_plot</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ind_plot</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ind_plot</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ind_plot</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="p">:]</span>
+
+    <span class="n">ydata_fit</span> <span class="o">=</span> <span class="n">SHO_fit_flattened</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="o">*</span><span class="n">fit_parms</span><span class="p">)</span>
+    <span class="n">complex_output</span> <span class="o">=</span> <span class="n">ydata_fit</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">ydata_fit</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">ydata_fit</span><span class="p">[(</span><span class="nb">len</span><span class="p">(</span><span class="n">ydata_fit</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">):]</span>
+    <span class="n">amp_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+    <span class="n">phase_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="o">/</span><span class="mf">1E3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="o">/</span><span class="mf">1E3</span><span class="p">,</span> <span class="n">amp_fit</span><span class="p">,</span> <span class="s1">&#39;b-&#39;</span><span class="p">)</span>
+    <span class="n">fit_parms_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">fit_parms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mf">1E3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">fit_parms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">1E3</span> <span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">fit_parms</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">fit_parms</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="mi">2</span><span class="p">)]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fit_parms_labels</span><span class="p">))</span>
+    <span class="n">ax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">twinx</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="o">/</span><span class="mf">1E3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">ydata</span><span class="p">),</span> <span class="s1">&#39;mo&#39;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">freq_vec</span><span class="o">/</span><span class="mf">1E3</span><span class="p">,</span> <span class="n">phase_fit</span><span class="p">,</span> <span class="s1">&#39;m-&#39;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_01_parallel_computing_Sidpy_Fitter_Complex_17_0.png" src="../../_images/notebooks_01_parallel_computing_Sidpy_Fitter_Complex_17_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

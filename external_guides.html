@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tutorials on Basics &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/documentation_options.js?v=425f82fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Guidelines for Contribution" href="contribute.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials on Basics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#python-and-packages">Python and  packages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#python">Python</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hdf5-and-h5py">HDF5 and h5py</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-software">Installing software</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">python</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#python-packages">python packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#updating-packages">Updating packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#upgrading-python">Upgrading python</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-code">Writing code</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#text-editors">Text Editors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#integrated-development-environments-ide">Integrated Development Environments (IDE)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jupyter-notebooks">Jupyter Notebooks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#software-development-basics">Software development basics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#environments">Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-control">Version control</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tutorials on Basics</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/external_guides.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tutorials-on-basics">
+<h1>Tutorials on Basics<a class="headerlink" href="#tutorials-on-basics" title="Link to this heading">¶</a></h1>
+<p>For those who are new to python and data analytics, we highly encourage you to
+go through <a class="reference external" href="https://github.com/jagar2/Fall_2019_Data_Analysis_and_Machine_Learning_for_Experimentalists">Prof. Josh Agar’s tutorials</a>
+for a throrough primer on all the basic concepts.</p>
+<p>Here are a list of other tutorials from other websites and sources that describe some of the many important topics
+on reading, using / running and writing code:</p>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#python-and-packages" id="id4">Python and  packages</a></p>
+<ul>
+<li><p><a class="reference internal" href="#python" id="id5">Python</a></p></li>
+<li><p><a class="reference internal" href="#hdf5-and-h5py" id="id6">HDF5 and h5py</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#installing-software" id="id7">Installing software</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id1" id="id8">python</a></p></li>
+<li><p><a class="reference internal" href="#python-packages" id="id9">python packages</a></p></li>
+<li><p><a class="reference internal" href="#updating-packages" id="id10">Updating packages</a></p></li>
+<li><p><a class="reference internal" href="#upgrading-python" id="id11">Upgrading python</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#writing-code" id="id12">Writing code</a></p>
+<ul>
+<li><p><a class="reference internal" href="#text-editors" id="id13">Text Editors</a></p></li>
+<li><p><a class="reference internal" href="#integrated-development-environments-ide" id="id14">Integrated Development Environments (IDE)</a></p></li>
+<li><p><a class="reference internal" href="#jupyter-notebooks" id="id15">Jupyter Notebooks</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#software-development-basics" id="id16">Software development basics</a></p>
+<ul>
+<li><p><a class="reference internal" href="#environments" id="id17">Environments</a></p></li>
+<li><p><a class="reference internal" href="#version-control" id="id18">Version control</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="python-and-packages">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Python and  packages</a><a class="headerlink" href="#python-and-packages" title="Link to this heading">¶</a></h2>
+<p>There are several concepts such as file operations, parallel computing, etc.
+that are heavily used and applied in pyUSID. Most of these concepts are realized using add-ons or packages in
+python. Here is a compilation of useful tutorials:</p>
+<section id="python">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Python</a><a class="headerlink" href="#python" title="Link to this heading">¶</a></h3>
+<p>The following tutorials go over the basics of python programming:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/tutorial/">Official Python tutorial</a></p></li>
+<li><p>The <a class="reference external" href="http://docs.python-guide.org/en/latest/">Hitchhiker guide to Python</a></p></li>
+<li><p>Introduction to programming in <a class="reference external" href="https://pythonprogramming.net/beginner-python-programming-tutorials/">Python 3</a></p></li>
+<li><p>Tutorials on a broad spectrum of <a class="reference external" href="https://automatetheboringstuff.com">real-world use topics</a></p></li>
+</ul>
+</section>
+<section id="hdf5-and-h5py">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">HDF5 and h5py</a><a class="headerlink" href="#hdf5-and-h5py" title="Link to this heading">¶</a></h3>
+<p>Our software packages - <code class="docutils literal notranslate"><span class="pre">sidpy</span></code>, <code class="docutils literal notranslate"><span class="pre">pyUSID</span></code>, <code class="docutils literal notranslate"><span class="pre">pyNSID</span></code> are all
+designed to be file-centric, we highly recommend learning more about HDF5 and h5py:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://portal.hdfgroup.org/display/HDF5/Learning+HDF5">Basics of HDF5</a> (especially the last three tutorials)</p></li>
+<li><p><a class="reference external" href="http://docs.h5py.org/en/latest/quick.html">Quick start</a> to h5py</p></li>
+<li><p>Another <a class="reference external" href="https://www.nersc.gov/assets/Uploads/H5py-2017-Feb23.pdf">tutorial on HDF5 and h5py</a></p></li>
+</ul>
+</section>
+</section>
+<section id="installing-software">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Installing software</a><a class="headerlink" href="#installing-software" title="Link to this heading">¶</a></h2>
+<section id="id1">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">python</a><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://www.anaconda.com/download/">Anaconda</a> is a popular source for python which also comes with a large number of popular scientific python packages that are all correctly compiled and installed in one go.
+Tutorial for <a class="reference external" href="https://www.youtube.com/watch?v=YJC6ldI3hWk">installing Anaconda</a> (Python + all necessary packages)</p>
+</section>
+<section id="python-packages">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">python packages</a><a class="headerlink" href="#python-packages" title="Link to this heading">¶</a></h3>
+<p>Two popular methods for installing packages in python are:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="https://packaging.python.org/tutorials/installing-packages/">pip</a>:</dt><dd><ul>
+<li><p>included with basic python and standard on Linux and Mac OS</p></li>
+<li><p>Works great for installing pure python and other simple packages</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://conda.io/docs/user-guide/tasks/manage-pkgs.html">conda</a></dt><dd><ul>
+<li><p>included with Anaconda installation</p></li>
+<li><p>Ideally suited for installing packages that have complex dependencies</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Here’s a nice tutorial on <a class="reference external" href="https://www.youtube.com/watch?v=Z_Kxg-EYvxM">installing packages using both pip and conda</a></p></li>
+</ul>
+</section>
+<section id="updating-packages">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Updating packages</a><a class="headerlink" href="#updating-packages" title="Link to this heading">¶</a></h3>
+<p>Following <a class="reference external" href="https://stackoverflow.com/questions/45197777/how-do-i-update-anaconda">these instructions</a>, open a terminal or the command prompt (Windows) and type:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>update<span class="w"> </span>conda
+conda<span class="w"> </span>update<span class="w"> </span>anaconda
+</pre></div>
+</div>
+<p>Note that you could use the following line instead of or in addition to <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">update</span> <span class="pre">anaconda</span></code> but it can lead to incompatible package versions</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>update<span class="w"> </span>--all
+</pre></div>
+</div>
+<p>Note that this does <strong>not</strong> update python itself.</p>
+</section>
+<section id="upgrading-python">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Upgrading python</a><a class="headerlink" href="#upgrading-python" title="Link to this heading">¶</a></h3>
+<p>Follow these instructions to <a class="reference external" href="https://conda.io/docs/user-guide/tasks/manage-python.html#updating-or-upgrading-python">upgrade python using conda</a> to the latest or specific version</p>
+</section>
+</section>
+<section id="writing-code">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Writing code</a><a class="headerlink" href="#writing-code" title="Link to this heading">¶</a></h2>
+<section id="text-editors">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Text Editors</a><a class="headerlink" href="#text-editors" title="Link to this heading">¶</a></h3>
+<p>These software often do not have any advanced features found in IDEs such as syntax highlighting,
+real-time code-checking etc. but are simple, and most importantly, open files quickly.  Here are some excellent
+text editors for each class of operating system:</p>
+<ul class="simple">
+<li><p>Mac OS - <a class="reference external" href="https://atom.io/">Atom</a></p></li>
+<li><p>Linux - <a class="reference external" href="https://wiki.gnome.org/Apps/Gedit">gEdit</a>, <a class="reference external" href="https://www.vim.org/">vim</a>, <a class="reference external" href="https://neovim.io/">neovim</a></p></li>
+<li><p>Windows - <a class="reference external" href="https://notepad-plus-plus.org/">Notepad++</a></p></li>
+</ul>
+</section>
+<section id="integrated-development-environments-ide">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Integrated Development Environments (IDE)</a><a class="headerlink" href="#integrated-development-environments-ide" title="Link to this heading">¶</a></h3>
+<p>These applications often come with a built-in text editor, code management
+capabilities, a python console, a terminal, integration with software repositories, etc. that make them ideal for
+executing and developing code. We only recommend two IDEs at this point: Spyder for users, PyCharm for developers.
+Both of these work in Linux, Mac OS, and Windows.</p>
+<ul>
+<li><p><a class="reference external" href="https://en.wikipedia.org/wiki/Spyder_(software)">Spyder</a> is a great IDE that is simple and will be immediately
+familiar for users of Matlab.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://www.youtube.com/watch?v=a1P_9fGrfnU">Basics of Spyder</a></p></li>
+<li><p><a class="reference external" href="http://datasciencesource.com/python-with-spyder-tutorial/">Python  with Spyder</a> - this was written with
+Python 2.7 in mind, but most concepts will still apply</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><a class="reference external" href="https://www.jetbrains.com/pycharm/">Pycharm</a></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Official <a class="reference external" href="https://confluence.jetbrains.com/display/PYH/PyCharm+Tutorials">PyCharm Tutorial</a> from Jetbrains</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://code.visualstudio.com/">VS Code</a></dt><dd><ul class="simple">
+<li><p>Completely free and open-source editor by Microsoft. Much faster and extremely lightweight compared to Pycharm.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="jupyter-notebooks">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Jupyter Notebooks</a><a class="headerlink" href="#jupyter-notebooks" title="Link to this heading">¶</a></h3>
+<p>These are <a class="reference external" href="http://jupyter.org/">interactive documents</a> containing live cells with code, equations,
+visualizations, and narrative text. The interactive nature of the document makes Jupyter notebooks an ideal medium for
+conveying information and a narrative. These documents are neither text editors nor IDEs and are a separate category.</p>
+<ul class="simple">
+<li><p>Notebook <a class="reference external" href="http://nbviewer.jupyter.org/github/jupyter/notebook/blob/master/docs/source/examples/Notebook/Notebook%20Basics.ipynb">basics</a></p></li>
+<li><p><a class="reference external" href="https://www.datacamp.com/community/tutorials/tutorial-jupyter-notebook">Video</a> tutorial</p></li>
+<li><p>Another <a class="reference external" href="https://www.youtube.com/watch?v=HW29067qVWk">video overview</a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="software-development-basics">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Software development basics</a><a class="headerlink" href="#software-development-basics" title="Link to this heading">¶</a></h2>
+<p>This section is mainly focused on the other tools that are mainly necessary for those interested in developing their own
+code and possibly contributing back to sidpy.</p>
+<section id="environments">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Environments</a><a class="headerlink" href="#environments" title="Link to this heading">¶</a></h3>
+<p>Environments allow users to set up and segregate software sandboxes. For example, one could set up separate environments
+in python 2 and 3 to ensure that a certain desired code works in both python 2 and 3. For python users, there are two
+main and popular modes of creating and managing environments - <strong>virtual environments</strong> and <strong>conda environments</strong>.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="https://docs.python.org/3/tutorial/venv.html">Virtual environment</a></dt><dd><ul>
+<li><p>Basic python ships with virtual enviroments. Anaconda is not required for this</p></li>
+<li><p>How to <a class="reference external" href="http://www.pythonforbeginners.com/basics/how-to-use-python-virtualenv">use venv</a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Conda environments</dt><dd><ul>
+<li><p><a class="reference external" href="https://conda.io/docs/user-guide/getting-started.html">Basics</a> of Conda</p></li>
+<li><p>How to <a class="reference external" href="https://conda.io/docs/user-guide/tasks/manage-environments.html">manage environments in conda</a></p></li>
+<li><p><a class="reference external" href="https://www.youtube.com/watch?v=EGaw6VXV3GI">Managing Python Environments</a> with Conda</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="version-control">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Version control</a><a class="headerlink" href="#version-control" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://vimeo.com/41027679">Version control</a> is a tool used for managing changes in code over time. It lifts the
+burden of having to check for changes line-by-line when multiple people are working on the same project. For example,
+sidpy uses <a class="reference external" href="https://git-scm.com/">Git</a>, the most popular version control software (VCS) for tracking changes etc. By default, git
+typically only comes with a command-line interface. However, there are several software packages that provide a
+graphical user interface on top of git. One other major benefit of using an IDE over jupyter or a text editor is that
+(some) IDEs come with excellent integration with VCS like Git. Here are a collection of useful resources to get you
+started on git:</p>
+<ul class="simple">
+<li><p>Tutorial on the <a class="reference external" href="https://www.atlassian.com/git/tutorials">basics of git</a></p></li>
+<li><p>Our favorite git client - <a class="reference external" href="https://support.gitkraken.com/">GitKraken</a></p></li>
+<li><p>Our favorite IDE with <a class="reference external" href="https://www.youtube.com/watch?v=vIReqoQYud8">excellent integration with Git: PyCharm</a></p></li>
+<li><p>Our own guide to <a class="reference external" href="https://github.com/pycroscopy/sidpy/blob/master/docs/Using%20PyCharm%20to%20manage%20repository.pdf">setting up and using git with PyCharm</a></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="contribute.html" class="btn btn-neutral float-right" title="Guidelines for Contribution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

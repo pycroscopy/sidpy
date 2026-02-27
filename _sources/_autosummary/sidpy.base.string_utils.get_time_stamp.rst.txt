@@ -1,0 +1,6 @@
+sidpy.base.string\_utils.get\_time\_stamp
+=========================================
+
+.. currentmodule:: sidpy.base.string_utils
+
+.. autofunction:: get_time_stamp

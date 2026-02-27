@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.link\_h5\_obj\_as\_alias
+=============================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: link_h5_obj_as_alias

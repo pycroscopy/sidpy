@@ -1,0 +1,6 @@
+sidpy.hdf.dtype\_utils.validate\_dtype
+======================================
+
+.. currentmodule:: sidpy.hdf.dtype_utils
+
+.. autofunction:: validate_dtype

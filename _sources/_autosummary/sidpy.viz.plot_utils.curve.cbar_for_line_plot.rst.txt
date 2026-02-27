@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.curve.cbar\_for\_line\_plot
+=================================================
+
+.. currentmodule:: sidpy.viz.plot_utils.curve
+
+.. autofunction:: cbar_for_line_plot

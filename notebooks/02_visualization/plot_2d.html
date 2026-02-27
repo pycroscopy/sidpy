@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2D plotting utilities &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Utilities for color maps" href="plot_cmap.html" />
+    <link rel="prev" title="1D plotting utilities" href="plot_1d.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Visualization</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="plot_1d.html">1D plotting utilities</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">2D plotting utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Introduction">Introduction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Table-of-contents:">Table of contents:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_map()">plot_map()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_map_stack()">plot_map_stack()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plot_complex_spectra()">plot_complex_spectra()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cmap.html">Utilities for color maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cmap.html#plot_utils-has-a-handful-of-colormaps-suited-for-different-applications.">plot_utils has a handful of colormaps suited for different applications.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cmap.html#cmap_jet_white_center()">cmap_jet_white_center()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cmap.html#make_linear_alpha_cmap()">make_linear_alpha_cmap()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cmap.html#get_cmap_object()">get_cmap_object()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_cmap.html#cmap_from_rgba()">cmap_from_rgba()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_misc.html">Misc Plotting utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plot_misc.html#General-Utilities">General Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Visualization</a></li>
+      <li class="breadcrumb-item active">2D plotting utilities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/02_visualization/plot_2d.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="2D-plotting-utilities">
+<h1>2D plotting utilities<a class="headerlink" href="#2D-plotting-utilities" title="Link to this heading">¶</a></h1>
+<p><strong>Suhas Somnath</strong></p>
+<p>8/12/2017</p>
+<p><strong>This is a short walk-through of useful plotting utilities available in sidpy</strong></p>
+<section id="Introduction">
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Link to this heading">¶</a></h2>
+<p>Some of the functions in <code class="docutils literal notranslate"><span class="pre">sidpy.viz.plot_utils</span></code> fill gaps in the default matplotlib package, some were developed for scientific applications, These functions have been developed to substantially simplify the generation of high quality figures for journal publications.</p>
+<section id="Table-of-contents:">
+<h3>Table of contents:<a class="headerlink" href="#Table-of-contents:" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>plot_map</p></li>
+<li><p>plot_map_stack</p></li>
+<li><p>plot_complex_spectra</p></li>
+</ul>
+<section id="Import-necessary-packages:">
+<h4>Import necessary packages:<a class="headerlink" href="#Import-necessary-packages:" title="Link to this heading">¶</a></h4>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">install</span><span class="p">(</span><span class="n">package</span><span class="p">):</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="n">package</span><span class="p">])</span>
+<span class="c1"># Package for downloading online files:</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;sidpy not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pip</span>
+    <span class="n">install</span><span class="p">(</span><span class="s1">&#39;sidpy&#39;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+</section>
+<section id="plot_map()">
+<h1>plot_map()<a class="headerlink" href="#plot_map()" title="Link to this heading">¶</a></h1>
+<p>This function adds several popularly used features to the basic image plotting function in matplotlib including:</p>
+<ul class="simple">
+<li><p>easy addition of a colorbar</p></li>
+<li><p>custom x and y tick values</p></li>
+<li><p>clipping the colorbar to N standard deviations of the mean</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+<span class="n">y_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x_vec</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="n">atom_intensities</span> <span class="o">=</span> <span class="n">y_vec</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">y_vec</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="c1"># Standard imshow plot for reference</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">atom_intensities</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Standard imshow&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># Now plot_map with some options enabled:</span>
+<span class="n">sidpy</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">plot_utils</span><span class="o">.</span><span class="n">plot_map</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">atom_intensities</span><span class="p">,</span> <span class="n">stdevs</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">num_ticks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                       <span class="n">x_vec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">atom_intensities</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                       <span class="n">y_vec</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="n">atom_intensities</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                       <span class="n">cbar_label</span><span class="o">=</span><span class="s1">&#39;intensity (a. u.)&#39;</span><span class="p">,</span> <span class="n">tick_font_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;plot_map&#39;</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_02_visualization_plot_2d_3_0.png" src="../../_images/notebooks_02_visualization_plot_2d_3_0.png" />
+</div>
+</div>
+</section>
+<section id="plot_map_stack()">
+<h1>plot_map_stack()<a class="headerlink" href="#plot_map_stack()" title="Link to this heading">¶</a></h1>
+<div class="line-block">
+<div class="line">One of the most popular operations in scientific research is the visualization of a stack of images.</div>
+<div class="line">This function is built specifically for that purpose.</div>
+<div class="line">Here we simply simulate some images using sinusoidal functions for demonstration purposes.</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_sine_2d_image</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
+    <span class="n">x_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+    <span class="n">y_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x_vec</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">y_vec</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">y_vec</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+
+<span class="n">frequencies</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span> <span class="p">,</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">]</span>
+<span class="n">image_stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_sine_2d_image</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">frequencies</span><span class="p">]</span>
+<span class="n">image_stack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_stack</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">plot_utils</span><span class="o">.</span><span class="n">plot_map_stack</span><span class="p">(</span><span class="n">image_stack</span><span class="p">,</span> <span class="n">reverse_dims</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">title_yoffset</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_02_visualization_plot_2d_5_0.png" src="../../_images/notebooks_02_visualization_plot_2d_5_0.png" />
+</div>
+</div>
+</section>
+<section id="plot_complex_spectra()">
+<h1>plot_complex_spectra()<a class="headerlink" href="#plot_complex_spectra()" title="Link to this heading">¶</a></h1>
+<div class="line-block">
+<div class="line">This function plots the amplitude and phase components of a stack of complex valued 2D images.</div>
+<div class="line">Here we simulate the data using sine and cosine components</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_complex_2d_image</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
+    <span class="c1"># Simple function to generate images</span>
+    <span class="n">x_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+    <span class="n">y_vec_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x_vec</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">y_vec_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x_vec</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">y_vec_2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">y_vec_2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">y_vec_1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">y_vec_1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+
+<span class="c1"># The range of frequences over which the images are generated</span>
+<span class="n">frequencies</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">image_stack</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_complex_2d_image</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">frequencies</span><span class="p">]</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">plot_utils</span><span class="o">.</span><span class="n">plot_complex_spectra</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_stack</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">3.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_02_visualization_plot_2d_7_0.png" src="../../_images/notebooks_02_visualization_plot_2d_7_0.png" />
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="plot_1d.html" class="btn btn-neutral float-left" title="1D plotting utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plot_cmap.html" class="btn btn-neutral float-right" title="Utilities for color maps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

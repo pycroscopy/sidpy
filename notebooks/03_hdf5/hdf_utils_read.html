@@ -1,0 +1,1134 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utilities for reading h5USID files &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="Primer to HDF5 and h5py" href="h5py_primer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">HDF5 Tools</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="h5py_primer.html">Primer to HDF5 and h5py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5py_primer.html#Groups">Groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5py_primer.html#Datasets">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="h5py_primer.html#Attributes">Attributes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Utilities for reading h5USID files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Recommended-pre-requisite-reading">Recommended pre-requisite reading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Import-all-necessary-packages">Import all necessary packages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#This-scientific-dataset">This scientific dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Load-the-dataset">Load the dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Inspect-HDF5-contents">Inspect HDF5 contents</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#print_tree()">print_tree()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Accessing-Attributes">Accessing Attributes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#get_attributes()">get_attributes()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get_attr()">get_attr()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#check_for_matching_attrs()">check_for_matching_attrs()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Finding-datasets-and-groups">Finding datasets and groups</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#find_dataset()">find_dataset()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#check_if_main()">check_if_main()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get_all_main()">get_all_main()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#find_results_groups()">find_results_groups()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#check_for_old()">check_for_old()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get_source_dataset()">get_source_dataset()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get_auxiliary_datasets()">get_auxiliary_datasets()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Accessing-Ancillary-Datasets">Accessing Ancillary Datasets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#get_dimensionality()">get_dimensionality()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get_sort_order()">get_sort_order()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get_unit_values()">get_unit_values()</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Reshaping-Data">Reshaping Data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reshape_to_n_dims()">reshape_to_n_dims()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reshape_from_n_dims()">reshape_from_n_dims()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">HDF5 Tools</a></li>
+      <li class="breadcrumb-item active">Utilities for reading h5USID files</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/03_hdf5/hdf_utils_read.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+<section id="Utilities-for-reading-h5USID-files">
+<h1>Utilities for reading h5USID files<a class="headerlink" href="#Utilities-for-reading-h5USID-files" title="Link to this heading">¶</a></h1>
+<p><strong>Suhas Somnath</strong></p>
+<p>4/18/2018</p>
+<p><strong>This document illustrates the many handy functions in sidpy.hdf.hdf_utils and pyUSID.hdf_utils that significantly simplify reading data and metadata in Universal Spectroscopy and Imaging Data (USID) HDF5 files (h5USID files)</strong></p>
+<p>Note: Most of the functions demonstrated in this notebook have been moved out of <code class="docutils literal notranslate"><span class="pre">pyUSID.hdf_utils</span></code> and into <code class="docutils literal notranslate"><span class="pre">sidpy.hdf</span></code></p>
+<section id="Introduction">
+<h2>Introduction<a class="headerlink" href="#Introduction" title="Link to this heading">¶</a></h2>
+<p>The USID model uses a data-centric approach to data analysis and processing meaning that results from all data analysis and processing are written to the same h5 file that contains the recorded measurements. <strong>Hierarchical Data Format (HDF5)</strong> files allow data, whether it is raw measured data or results of analysis, to be stored in multiple datasets within the same file in a tree-like manner. Certain rules and considerations have been made in pyUSID to ensure consistent and easy access to any
+data.</p>
+<p>The h5py python package provides great functions to create, read, and manage data in HDF5 files. In <code class="docutils literal notranslate"><span class="pre">pyUSID.hdf_utils</span></code>, we have added functions that facilitate scientifically relevant, or USID specific functionality such as checking if a dataset is a Main dataset, reshaping to / from the original N dimensional form of the data, etc. Due to the wide breadth of the functions in <code class="docutils literal notranslate"><span class="pre">hdf_utils</span></code>, the guide for hdf_utils will be split in two parts - one that focuses on functions that facilitate
+reading and one that facilitate writing of data. The following guide provides examples of how, and more importantly when, to use functions in <code class="docutils literal notranslate"><span class="pre">pyUSID.hdf_utils</span></code> for various scenarios.</p>
+</section>
+<section id="Recommended-pre-requisite-reading">
+<h2>Recommended pre-requisite reading<a class="headerlink" href="#Recommended-pre-requisite-reading" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://pycroscopy.github.io/USID/usid_model.html">Universal Spectroscopic and Imaging Data (USID) model</a></p></li>
+<li><p><a class="reference external" href="./h5py_primer.html">Crash course on HDF5 and h5py</a></p></li>
+</ul>
+</section>
+<section id="Import-all-necessary-packages">
+<h2>Import all necessary packages<a class="headerlink" href="#Import-all-necessary-packages" title="Link to this heading">¶</a></h2>
+<p>Before we begin demonstrating the numerous functions in <code class="docutils literal notranslate"><span class="pre">pyUSID.hdf_utils</span></code>, we need to import the necessary packages. Here are a list of packages besides pyUSID that will be used in this example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">h5py</span></code> - to open and close the file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wget</span></code> - to download the example data file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code> - for numerical operations on arrays in memory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> - basic visualization of data</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sidpy</span></code> - basic scientific hdf5 capabilities</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="c1"># Warning package in case something goes wrong</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">install</span><span class="p">(</span><span class="n">package</span><span class="p">):</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;pip&quot;</span><span class="p">,</span> <span class="s2">&quot;install&quot;</span><span class="p">,</span> <span class="n">package</span><span class="p">])</span>
+<span class="c1"># Package for downloading online files:</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># This package is not part of anaconda and may need to be installed.</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">wget</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;wget not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pip</span>
+    <span class="n">install</span><span class="p">(</span><span class="n">wget</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">wget</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="c1"># import sidpy - supporting package for pyUSID:</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;sidpy not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pip</span>
+    <span class="n">install</span><span class="p">(</span><span class="s1">&#39;sidpy&#39;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+
+<span class="c1"># Finally import pyUSID.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pyUSID</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">usid</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;pyUSID not found.  Will install with pip.&#39;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pip</span>
+    <span class="n">install</span><span class="p">(</span><span class="s1">&#39;pyUSID&#39;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pyUSID</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">usid</span>
+</pre></div>
+</div>
+</div>
+<p>In order to demonstrate the many functions in hdf_utils, we will be using a h5USID file containing real experimental data along with results from analyses on the measurement data</p>
+<section id="This-scientific-dataset">
+<h3>This scientific dataset<a class="headerlink" href="#This-scientific-dataset" title="Link to this heading">¶</a></h3>
+<p>For this example, we will be working with a <strong>Band Excitation Polarization Switching (BEPS)</strong> dataset acquired from advanced atomic force microscopes. In the much simpler <strong>Band Excitation (BE)</strong> imaging datasets, a single spectrum is acquired at each location in a two dimensional grid of spatial locations. Thus, BE imaging datasets have two position dimensions (<code class="docutils literal notranslate"><span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">Y</span></code>) and one spectroscopic dimension (<code class="docutils literal notranslate"><span class="pre">Frequency</span></code> - against which the spectrum is recorded). The BEPS dataset used in this
+example has a spectrum for <strong>each combination of</strong> three other parameters (<code class="docutils literal notranslate"><span class="pre">DC</span> <span class="pre">offset</span></code>, <code class="docutils literal notranslate"><span class="pre">Field</span></code>, and <code class="docutils literal notranslate"><span class="pre">Cycle</span></code>). Thus, this dataset has three new spectral dimensions in addition to <code class="docutils literal notranslate"><span class="pre">Frequency</span></code>. Hence, this dataset becomes a 2+4 = <strong>6 dimensional dataset</strong></p>
+</section>
+<section id="Load-the-dataset">
+<h3>Load the dataset<a class="headerlink" href="#Load-the-dataset" title="Link to this heading">¶</a></h3>
+<p>First, let us download this file from the pyUSID Github project:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://raw.githubusercontent.com/pycroscopy/pyUSID/master/data/BEPS_small.h5&#39;</span>
+<span class="n">h5_path</span> <span class="o">=</span> <span class="s1">&#39;temp.h5&#39;</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">h5_path</span><span class="p">,</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Working on:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">h5_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Working on:
+temp.h5
+</pre></div></div>
+</div>
+<p>Next, lets open this HDF5 file in read-only mode. Note that opening the file does not cause the contents to be automatically loaded to memory. Instead, we are presented with objects that refer to specific HDF5 datasets, attributes or groups in the file</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h5_path</span> <span class="o">=</span> <span class="s1">&#39;temp.h5&#39;</span>
+<span class="n">h5_f</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">h5_f</span></code> is an active handle to the open file</p>
+</section>
+</section>
+<section id="Inspect-HDF5-contents">
+<h2>Inspect HDF5 contents<a class="headerlink" href="#Inspect-HDF5-contents" title="Link to this heading">¶</a></h2>
+<p>The file contents are stored in a tree structure, just like files on a contemporary computer. The file contains groups (similar to file folders) and datasets (similar to spreadsheets). There are several datasets in the file and these store:</p>
+<ul class="simple">
+<li><p>The actual measurement collected from the experiment</p></li>
+<li><p>Spatial location on the sample where each measurement was collected</p></li>
+<li><p>Information to support and explain the spectral data collected at each location</p></li>
+<li><p>Since the USID model stores results from processing and analyses performed on the data in the same h5USID file, these datasets and groups are present as well</p></li>
+<li><p>Any other relevant ancillary information</p></li>
+</ul>
+<section id="print_tree()">
+<h3>print_tree()<a class="headerlink" href="#print_tree()" title="Link to this heading">¶</a></h3>
+<p>Soon after opening any file, it is often of interest to list the contents of the file. While one can use the open source software HDFViewer developed by the HDF organization, <code class="docutils literal notranslate"><span class="pre">pyUSID.hdf_utils</span></code> also has a very handy function - <code class="docutils literal notranslate"><span class="pre">print_tree()</span></code> to quickly visualize all the datasets and groups within the file within python.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Contents of the H5 file:&#39;</span><span class="p">)</span>
+<span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">h5_f</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Contents of the H5 file:
+/
+├ Measurement_000
+  ---------------
+  ├ Channel_000
+    -----------
+    ├ Bin_FFT
+    ├ Bin_Frequencies
+    ├ Bin_Indices
+    ├ Bin_Step
+    ├ Bin_Wfm_Type
+    ├ Excitation_Waveform
+    ├ Noise_Floor
+    ├ Position_Indices
+    ├ Position_Values
+    ├ Raw_Data
+    ├ Raw_Data-SHO_Fit_000
+      --------------------
+      ├ Fit
+      ├ Guess
+      ├ Spectroscopic_Indices
+      ├ Spectroscopic_Values
+    ├ Spatially_Averaged_Plot_Group_000
+      ---------------------------------
+      ├ Bin_Frequencies
+      ├ Mean_Spectrogram
+      ├ Spectroscopic_Parameter
+      ├ Step_Averaged_Response
+    ├ Spatially_Averaged_Plot_Group_001
+      ---------------------------------
+      ├ Bin_Frequencies
+      ├ Mean_Spectrogram
+      ├ Spectroscopic_Parameter
+      ├ Step_Averaged_Response
+    ├ Spectroscopic_Indices
+    ├ Spectroscopic_Values
+    ├ UDVS
+    ├ UDVS_Indices
+</pre></div></div>
+</div>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">print_tree()</span></code> presents a clean tree view of the contents of the group. In this mode, only the group names are underlined. Alternatively, it can print the full paths of each dataset and group, with respect to the group / file of interest, by setting the <code class="docutils literal notranslate"><span class="pre">rel_paths</span></code> keyword argument. <code class="docutils literal notranslate"><span class="pre">print_tree()</span></code> could also be used to display the contents of and HDF5 group instead of complete HDF5 file as we have done above. Lets configure it to print the relative paths of all objects within
+the <code class="docutils literal notranslate"><span class="pre">Channel_000</span></code> group:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;/Measurement_000/Channel_000/&#39;</span><span class="p">],</span> <span class="n">rel_paths</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+/Measurement_000/Channel_000
+Bin_FFT
+Bin_Frequencies
+Bin_Indices
+Bin_Step
+Bin_Wfm_Type
+Excitation_Waveform
+Noise_Floor
+Position_Indices
+Position_Values
+Raw_Data
+Raw_Data-SHO_Fit_000
+Raw_Data-SHO_Fit_000/Fit
+Raw_Data-SHO_Fit_000/Guess
+Raw_Data-SHO_Fit_000/Spectroscopic_Indices
+Raw_Data-SHO_Fit_000/Spectroscopic_Values
+Spatially_Averaged_Plot_Group_000
+Spatially_Averaged_Plot_Group_000/Bin_Frequencies
+Spatially_Averaged_Plot_Group_000/Mean_Spectrogram
+Spatially_Averaged_Plot_Group_000/Spectroscopic_Parameter
+Spatially_Averaged_Plot_Group_000/Step_Averaged_Response
+Spatially_Averaged_Plot_Group_001
+Spatially_Averaged_Plot_Group_001/Bin_Frequencies
+Spatially_Averaged_Plot_Group_001/Mean_Spectrogram
+Spatially_Averaged_Plot_Group_001/Spectroscopic_Parameter
+Spatially_Averaged_Plot_Group_001/Step_Averaged_Response
+Spectroscopic_Indices
+Spectroscopic_Values
+UDVS
+UDVS_Indices
+</pre></div></div>
+</div>
+<p>Finally, <code class="docutils literal notranslate"><span class="pre">print_tree()</span></code> can also be configured to only print USID Main datasets besides Group objects using the <code class="docutils literal notranslate"><span class="pre">main_dsets_only</span></code> option.</p>
+<p><strong>Note</strong>: only <code class="docutils literal notranslate"><span class="pre">pyUSID</span></code> has this capability unlike <code class="docutils literal notranslate"><span class="pre">sidpy</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span> <span class="n">main_dsets_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+/
+├ Measurement_000
+  ---------------
+  ├ Channel_000
+    -----------
+    ├ Raw_Data
+    ├ Raw_Data-SHO_Fit_000
+      --------------------
+      ├ Fit
+      ├ Guess
+    ├ Spatially_Averaged_Plot_Group_000
+      ---------------------------------
+    ├ Spatially_Averaged_Plot_Group_001
+      ---------------------------------
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Accessing-Attributes">
+<h2>Accessing Attributes<a class="headerlink" href="#Accessing-Attributes" title="Link to this heading">¶</a></h2>
+<p>HDF5 datasets and groups can also store metadata such as experimental parameters. These metadata can be text, numbers, small lists of numbers or text etc. These metadata can be very important for understanding the datasets and guide the analysis routines.</p>
+<p>While one could use the basic <code class="docutils literal notranslate"><span class="pre">h5py</span></code> functionality to access attributes, one would encounter a lot of problems when attempting to decode attributes whose values were strings or lists of strings due to some issues in <code class="docutils literal notranslate"><span class="pre">h5py</span></code>. This problem has been demonstrated in our <code class="docutils literal notranslate"><span class="pre">primer</span> <span class="pre">to</span> <span class="pre">HDF5</span> <span class="pre">and</span> <span class="pre">h5py</span> <span class="pre">&lt;./plot_h5py.html&gt;</span></code>_. Instead of using the basic functionality of <code class="docutils literal notranslate"><span class="pre">h5py</span></code>, we recommend always using the functions in pyUSID that reliably and consistently work for any kind of attribute for any
+version of python:</p>
+<section id="get_attributes()">
+<h3>get_attributes()<a class="headerlink" href="#get_attributes()" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">get_attributes()</span></code> is a very handy function that returns all or a specified set of attributes in an HDF5 object. If no attributes are explicitly requested, all attributes in the object are returned:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attributes</span><span class="p">(</span><span class="n">h5_f</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+current_position_x : 4
+experiment_date : 26-Feb-2015 14:49:48
+data_tool : be_analyzer
+translator : ODF
+project_name : Band Excitation
+current_position_y : 4
+experiment_unix_time : 1503428472.2374
+sample_name : PZT
+xcams_id : abc
+user_name : John Doe
+comments : Band Excitation data
+Pycroscopy version : 0.0.a51
+data_type : BEPSData
+translate_date : 2017_08_22
+project_id : CNMS_2015B_X0000
+grid_size_y : 5
+sample_description : Thin Film
+instrument : cypher_west
+grid_size_x : 5
+</pre></div></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">get_attributes()</span></code> is also great for only getting selected attributes. For example, if we only cared about the user and project related attributes, we could manually request for any that we wanted:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">proj_attrs</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attributes</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;project_name&#39;</span><span class="p">,</span> <span class="s1">&#39;project_id&#39;</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">proj_attrs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+user_name : John Doe
+project_name : Band Excitation
+project_id : CNMS_2015B_X0000
+</pre></div></div>
+</div>
+</section>
+<section id="get_attr()">
+<h3>get_attr()<a class="headerlink" href="#get_attr()" title="Link to this heading">¶</a></h3>
+<p>If we are sure that we only wanted a specific attribute, we could instead use <code class="docutils literal notranslate"><span class="pre">get_attr()</span></code> as:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+John Doe
+</pre></div></div>
+</div>
+</section>
+<section id="check_for_matching_attrs()">
+<h3>check_for_matching_attrs()<a class="headerlink" href="#check_for_matching_attrs()" title="Link to this heading">¶</a></h3>
+<p>Consider the scenario where we are have several HDF5 files or Groups or datasets and we wanted to check each one to see if they have the certain metadata / attributes. <code class="docutils literal notranslate"><span class="pre">check_for_matching_attrs()</span></code> is one very handy function that simplifies the comparision operation.</p>
+<p>For example, let us check if this file was authored by <code class="docutils literal notranslate"><span class="pre">John</span> <span class="pre">Doe</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">sidpy</span><span class="o">.</span><span class="n">hdf</span><span class="o">.</span><span class="n">prov_utils</span><span class="o">.</span><span class="n">check_for_matching_attrs</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span>
+                                                    <span class="n">new_parms</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;user_name&#39;</span><span class="p">:</span> <span class="s1">&#39;John Doe&#39;</span><span class="p">}))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Finding-datasets-and-groups">
+<h2>Finding datasets and groups<a class="headerlink" href="#Finding-datasets-and-groups" title="Link to this heading">¶</a></h2>
+<p>There are numerous ways to search for and access datasets and groups in H5 files using the basic functionalities of h5py. pyUSID.hdf_utils contains several functions that simplify common searching / lookup operations as part of scientific workflows.</p>
+<section id="find_dataset()">
+<h3>find_dataset()<a class="headerlink" href="#find_dataset()" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">find_dataset()</span></code> function will return all datasets that whose names contain the provided string. In this case, we are looking for any datasets containing the string <code class="docutils literal notranslate"><span class="pre">UDVS</span></code> in their names. If you look above, there are two datasets (UDVS and UDVS_Indices) that match this condition:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">udvs_dsets_2</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_dataset</span><span class="p">(</span><span class="n">h5_f</span><span class="p">,</span> <span class="s1">&#39;UDVS&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">udvs_dsets_2</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;HDF5 dataset &#34;UDVS&#34;: shape (256, 7), type &#34;&lt;f4&#34;&gt;
+&lt;HDF5 dataset &#34;UDVS_Indices&#34;: shape (22272,), type &#34;&lt;u8&#34;&gt;
+</pre></div></div>
+</div>
+<p>As you might know by now, h5USID files contain three kinds of datasets:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Main</span></code> datasets that contain data recorded / computed at multiple spatial locations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ancillary</span></code> datasets that support a main dataset</p></li>
+<li><p>Other datasets</p></li>
+</ul>
+<p>For more information, please refer to the documentation on the USID model.</p>
+</section>
+<section id="check_if_main()">
+<h3>check_if_main()<a class="headerlink" href="#check_if_main()" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">check_if_main()</span></code> is a very handy function that helps distinguish between <code class="docutils literal notranslate"><span class="pre">Main</span></code> datasets and other objects (<code class="docutils literal notranslate"><span class="pre">Ancillary</span></code> datasets, other datasets, Groups etc.). Lets apply this function to see which of the objects within the <code class="docutils literal notranslate"><span class="pre">Channel_000</span></code> Group are <code class="docutils literal notranslate"><span class="pre">Main</span></code> datasets:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h5_chan_group</span> <span class="o">=</span> <span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;Measurement_000/Channel_000&#39;</span><span class="p">]</span>
+
+<span class="c1"># We will prepare two lists - one of objects that are ``main`` and one of objects that are not</span>
+
+<span class="n">non_main_objs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">main_objs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">h5_chan_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">check_if_main</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+        <span class="n">main_objs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">non_main_objs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+<span class="c1"># Now we simply print the names of the items in each list</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Main Datasets:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----------------&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">main_objs</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Objects that were not Main datasets:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">non_main_objs</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Main Datasets:
+----------------
+Raw_Data
+
+Objects that were not Main datasets:
+--------------------------------------
+Bin_FFT
+Bin_Frequencies
+Bin_Indices
+Bin_Step
+Bin_Wfm_Type
+Excitation_Waveform
+Noise_Floor
+Position_Indices
+Position_Values
+Raw_Data-SHO_Fit_000
+Spatially_Averaged_Plot_Group_000
+Spatially_Averaged_Plot_Group_001
+Spectroscopic_Indices
+Spectroscopic_Values
+UDVS
+UDVS_Indices
+</pre></div></div>
+</div>
+<p>The above script allowed us to distinguish Main datasets from all other objects only within the Group named <code class="docutils literal notranslate"><span class="pre">Channel_000</span></code>.</p>
+</section>
+<section id="get_all_main()">
+<h3>get_all_main()<a class="headerlink" href="#get_all_main()" title="Link to this heading">¶</a></h3>
+<p>What if we want to quickly find all <code class="docutils literal notranslate"><span class="pre">Main</span></code> datasets even within the sub-Groups of <code class="docutils literal notranslate"><span class="pre">Channel_000</span></code>? To do this, we have a very handy function called - <code class="docutils literal notranslate"><span class="pre">get_all_main()</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">main_dsets</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_all_main</span><span class="p">(</span><span class="n">h5_chan_group</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">main_dsets</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------------------------------&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;HDF5 dataset &#34;Raw_Data&#34;: shape (25, 22272), type &#34;&lt;c8&#34;&gt;
+located at:
+        /Measurement_000/Channel_000/Raw_Data
+Data contains:
+        Cantilever Vertical Deflection (V)
+Data dimensions and original shape:
+Position Dimensions:
+        X - size: 5
+        Y - size: 5
+Spectroscopic Dimensions:
+        Frequency - size: 87
+        DC_Offset - size: 64
+        Field - size: 2
+        Cycle - size: 2
+Data Type:
+        complex64
+--------------------------------------------------------------------
+&lt;HDF5 dataset &#34;Fit&#34;: shape (25, 256), type &#34;|V20&#34;&gt;
+located at:
+        /Measurement_000/Channel_000/Raw_Data-SHO_Fit_000/Fit
+Data contains:
+        SHO parameters (compound)
+Data dimensions and original shape:
+Position Dimensions:
+        X - size: 5
+        Y - size: 5
+Spectroscopic Dimensions:
+        DC_Offset - size: 64
+        Field - size: 2
+        Cycle - size: 2
+Data Fields:
+        Phase [rad], R2 Criterion, Quality Factor, Amplitude [V], Frequency [Hz]
+--------------------------------------------------------------------
+&lt;HDF5 dataset &#34;Guess&#34;: shape (25, 256), type &#34;|V20&#34;&gt;
+located at:
+        /Measurement_000/Channel_000/Raw_Data-SHO_Fit_000/Guess
+Data contains:
+        SHO parameters (compound)
+Data dimensions and original shape:
+Position Dimensions:
+        X - size: 5
+        Y - size: 5
+Spectroscopic Dimensions:
+        DC_Offset - size: 64
+        Field - size: 2
+        Cycle - size: 2
+Data Fields:
+        Phase [rad], R2 Criterion, Quality Factor, Amplitude [V], Frequency [Hz]
+--------------------------------------------------------------------
+</pre></div></div>
+</div>
+<p>The datasets above show that the file contains three main datasets. Two of these datasets are contained in a HDF5 Group called <code class="docutils literal notranslate"><span class="pre">Raw_Data-SHO_Fit_000</span></code> meaning that they are results of an operation called <code class="docutils literal notranslate"><span class="pre">SHO_Fit</span></code> performed on the <code class="docutils literal notranslate"><span class="pre">Main</span></code> dataset - <code class="docutils literal notranslate"><span class="pre">Raw_Data</span></code>. The first of the three main datasets is indeed the <code class="docutils literal notranslate"><span class="pre">Raw_Data</span></code> dataset from which the latter two datasets (<code class="docutils literal notranslate"><span class="pre">Fit</span></code> and <code class="docutils literal notranslate"><span class="pre">Guess</span></code>) were derived.</p>
+<p>The USID model allows the same operation, such as <code class="docutils literal notranslate"><span class="pre">SHO_Fit</span></code>, to be performed on the same dataset (<code class="docutils literal notranslate"><span class="pre">Raw_Data</span></code>), multiple times. Each time the operation is performed, a new HDF5 Group is created to hold the new results. Often, we may want to perform a few operations such as:</p>
+<ul class="simple">
+<li><p>Find the (source / main) dataset from which certain results were derived</p></li>
+<li><p>Check if a particular operation was performed on a main dataset</p></li>
+<li><p>Find all groups corresponding to a particular operation (e.g. - <code class="docutils literal notranslate"><span class="pre">SHO_Fit</span></code>) being applied to a Main dataset</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">hdf_utils</span></code> has a few handy functions for many of these use cases.</p>
+</section>
+<section id="find_results_groups()">
+<h3>find_results_groups()<a class="headerlink" href="#find_results_groups()" title="Link to this heading">¶</a></h3>
+<p>First, lets show that <code class="docutils literal notranslate"><span class="pre">find_results_groups()</span></code> finds all Groups containing the results of a <code class="docutils literal notranslate"><span class="pre">SHO_Fit</span></code> operation applied to <code class="docutils literal notranslate"><span class="pre">Raw_Data</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># First get the dataset corresponding to Raw_Data</span>
+<span class="n">h5_raw</span> <span class="o">=</span> <span class="n">h5_chan_group</span><span class="p">[</span><span class="s1">&#39;Raw_Data&#39;</span><span class="p">]</span>
+
+<span class="n">operation</span> <span class="o">=</span> <span class="s1">&#39;SHO_Fit&#39;</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Instances of operation &quot;</span><span class="si">{}</span><span class="s1">&quot; applied to dataset named &quot;</span><span class="si">{}</span><span class="s1">&quot;:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">h5_raw</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+<span class="n">h5_sho_group_list</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">find_results_groups</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">h5_sho_group_list</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Instances of operation &#34;SHO_Fit&#34; applied to dataset named &#34;/Measurement_000/Channel_000/Raw_Data&#34;:
+[&lt;HDF5 group &#34;/Measurement_000/Channel_000/Raw_Data-SHO_Fit_000&#34; (4 members)&gt;]
+</pre></div></div>
+</div>
+<p>As expected, the <code class="docutils literal notranslate"><span class="pre">SHO_Fit</span></code> operation was performed on <code class="docutils literal notranslate"><span class="pre">Raw_Data</span></code> dataset only once, which is why <code class="docutils literal notranslate"><span class="pre">find_results_groups()</span></code> returned only one HDF5 Group - <code class="docutils literal notranslate"><span class="pre">SHO_Fit_000</span></code>.</p>
+</section>
+<section id="check_for_old()">
+<h3>check_for_old()<a class="headerlink" href="#check_for_old()" title="Link to this heading">¶</a></h3>
+<p>Often one may want to check if a certain operation was performed on a dataset with the very same parameters to avoid recomputing the results. <code class="docutils literal notranslate"><span class="pre">hdf_utils.check_for_old()</span></code> is a very handy function that compares parameters (a dictionary) for a new / potential operation against the metadata (attributes) stored in each existing results group (HDF5 groups whose name starts with <code class="docutils literal notranslate"><span class="pre">Raw_Data-SHO_Fit</span></code> in this case). Before we demonstrate <code class="docutils literal notranslate"><span class="pre">check_for_old()</span></code>, lets take a look at the attributes stored in
+the existing results groups:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Parameters already used for computing SHO_Fit on Raw_Data in the file:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attributes</span><span class="p">(</span><span class="n">h5_chan_group</span><span class="p">[</span><span class="s1">&#39;Raw_Data-SHO_Fit_000&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Parameters already used for computing SHO_Fit on Raw_Data in the file:
+machine_id : mac109728.ornl.gov
+timestamp : 2017_08_22-15_02_08
+SHO_guess_method : pycroscopy BESHO
+SHO_fit_method : pycroscopy BESHO
+</pre></div></div>
+</div>
+<p>Now, let us check for existing results where the <code class="docutils literal notranslate"><span class="pre">SHO_fit_method</span></code> attribute matches an existing value and a new value:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Checking to see if SHO Fits have been computed on the raw dataset:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Using &quot;pycroscopy BESHO&quot;:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">check_for_old</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="s1">&#39;SHO_Fit&#39;</span><span class="p">,</span>
+                                 <span class="n">new_parms</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;SHO_fit_method&#39;</span><span class="p">:</span> <span class="s1">&#39;pycroscopy BESHO&#39;</span><span class="p">}))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Using &quot;alternate technique&quot;&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">check_for_old</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="s1">&#39;SHO_Fit&#39;</span><span class="p">,</span>
+                                 <span class="n">new_parms</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;SHO_fit_method&#39;</span><span class="p">:</span> <span class="s1">&#39;alternate technique&#39;</span><span class="p">}))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Checking to see if SHO Fits have been computed on the raw dataset:
+
+Using &#34;pycroscopy BESHO&#34;:
+[&lt;HDF5 group &#34;/Measurement_000/Channel_000/Raw_Data-SHO_Fit_000&#34; (4 members)&gt;]
+
+Using &#34;alternate technique&#34;
+[]
+</pre></div></div>
+</div>
+<p>Clearly, while find_results_groups() returned any and all groups corresponding to <code class="docutils literal notranslate"><span class="pre">SHO_Fit</span></code> being applied to <code class="docutils literal notranslate"><span class="pre">Raw_Data</span></code>, <code class="docutils literal notranslate"><span class="pre">check_for_old()</span></code> only returned the group(s) where the operation was performed using the same specified parameters (<code class="docutils literal notranslate"><span class="pre">sho_fit_method</span></code> in this case).</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">check_for_old()</span></code> performs two operations - search for all groups with the matching nomenclature and then compare the attributes. <code class="docutils literal notranslate"><span class="pre">check_for_matching_attrs()</span></code> is the handy function, that enables the latter operation of comparing a giving dictionary of parameters against attributes in a given object.</p>
+</section>
+<section id="get_source_dataset()">
+<h3>get_source_dataset()<a class="headerlink" href="#get_source_dataset()" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">hdf_utils.get_source_dataset()</span></code> is a very handy function for the inverse scenario where we are interested in finding the source dataset from which the known result was derived:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h5_sho_group</span> <span class="o">=</span> <span class="n">h5_sho_group_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Datagroup containing the SHO fits:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">h5_sho_group</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Dataset on which the SHO Fit was computed:&#39;</span><span class="p">)</span>
+<span class="n">h5_source_dset</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_source_dataset</span><span class="p">(</span><span class="n">h5_sho_group</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">h5_source_dset</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Datagroup containing the SHO fits:
+&lt;HDF5 group &#34;/Measurement_000/Channel_000/Raw_Data-SHO_Fit_000&#34; (4 members)&gt;
+
+Dataset on which the SHO Fit was computed:
+&lt;HDF5 dataset &#34;Raw_Data&#34;: shape (25, 22272), type &#34;&lt;c8&#34;&gt;
+located at:
+        /Measurement_000/Channel_000/Raw_Data
+Data contains:
+        Cantilever Vertical Deflection (V)
+Data dimensions and original shape:
+Position Dimensions:
+        X - size: 5
+        Y - size: 5
+Spectroscopic Dimensions:
+        Frequency - size: 87
+        DC_Offset - size: 64
+        Field - size: 2
+        Cycle - size: 2
+Data Type:
+        complex64
+</pre></div></div>
+</div>
+<p>Since the source dataset is always a <code class="docutils literal notranslate"><span class="pre">Main</span></code> dataset, <code class="docutils literal notranslate"><span class="pre">get_source_dataset()</span></code> results a <code class="docutils literal notranslate"><span class="pre">USIDataset</span></code> object instead of a regular <code class="docutils literal notranslate"><span class="pre">HDF5</span> <span class="pre">Dataset</span></code> object.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">hdf_utils.get_source_dataset()</span></code> and <code class="docutils literal notranslate"><span class="pre">find_results_groups()</span></code> rely on the USID rule that results of an operation be stored in a Group named <code class="docutils literal notranslate"><span class="pre">Source_Dataset_Name-Operation_Name_00x</span></code>.</p>
+</section>
+<section id="get_auxiliary_datasets()">
+<h3>get_auxiliary_datasets()<a class="headerlink" href="#get_auxiliary_datasets()" title="Link to this heading">¶</a></h3>
+<p>The association of datasets and groups with one another provides a powerful mechanism for conveying (richer) information. One way to associate objects with each other is to store the reference of an object as an attribute of another. This is precisely the capability that is leveraged to turn Central datasets into USID Main Datasets or <code class="docutils literal notranslate"><span class="pre">USIDatasets</span></code>. USIDatasets need to have four attributes that are references to the <code class="docutils literal notranslate"><span class="pre">Position</span></code> and <code class="docutils literal notranslate"><span class="pre">Spectroscopic</span></code> <code class="docutils literal notranslate"><span class="pre">ancillary</span></code> datasets. Note, that USID
+does not restrict or preclude the storage of other relevant datasets as attributes of another dataset. For example, the <code class="docutils literal notranslate"><span class="pre">Raw_Data</span></code> dataset appears to contain several attributes whose keys / names match the names of datasets we see above and values all appear to be HDF5 object references:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attributes</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Bin_Frequencies : &lt;HDF5 object reference&gt;
+Position_Indices : &lt;HDF5 object reference&gt;
+Excitation_Waveform : &lt;HDF5 object reference&gt;
+out_of_field_Plot_Group : &lt;HDF5 region reference&gt;
+Bin_Indices : &lt;HDF5 object reference&gt;
+Spectroscopic_Indices : &lt;HDF5 object reference&gt;
+UDVS : &lt;HDF5 object reference&gt;
+Bin_Wfm_Type : &lt;HDF5 object reference&gt;
+units : V
+Bin_Step : &lt;HDF5 object reference&gt;
+Bin_FFT : &lt;HDF5 object reference&gt;
+Spectroscopic_Values : &lt;HDF5 object reference&gt;
+UDVS_Indices : &lt;HDF5 object reference&gt;
+Position_Values : &lt;HDF5 object reference&gt;
+in_field_Plot_Group : &lt;HDF5 region reference&gt;
+Noise_Floor : &lt;HDF5 object reference&gt;
+quantity : Cantilever Vertical Deflection
+</pre></div></div>
+</div>
+<p>As the name suggests, these HDF5 object references are references or addresses to datasets located elsewhere in the file. Conventionally, one would need to apply this reference to the file handle to get the actual HDF5 Dataset / Group object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_auxiliary_datasets()</span></code> simplifies this process by directly retrieving the actual Dataset / Group associated with the attribute. Thus, we would be able to get a reference to the <code class="docutils literal notranslate"><span class="pre">Bin_Frequencies</span></code> Dataset via:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h5_obj</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_auxiliary_datasets</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="s1">&#39;Bin_Frequencies&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">h5_obj</span><span class="p">)</span>
+<span class="c1"># Lets prove that this object is the same as the &#39;Bin_Frequencies&#39; object that can be directly addressed:</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">h5_obj</span> <span class="o">==</span> <span class="n">h5_f</span><span class="p">[</span><span class="s1">&#39;/Measurement_000/Channel_000/Bin_Frequencies&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;HDF5 dataset &#34;Bin_Frequencies&#34;: shape (87,), type &#34;&lt;f4&#34;&gt;
+True
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Accessing-Ancillary-Datasets">
+<h2>Accessing Ancillary Datasets<a class="headerlink" href="#Accessing-Ancillary-Datasets" title="Link to this heading">¶</a></h2>
+<p>One of the major benefits of h5USID is its ability to handle large multidimensional datasets at ease. <code class="docutils literal notranslate"><span class="pre">Ancillary</span></code> datasets serve as the keys or legends for explaining the dimensionality, reshape-ability, etc. of a dataset. There are several functions in hdf_utils that simplify many common operations on ancillary datasets.</p>
+<p>Before we demonstrate the several useful functions in hdf_utils, lets access the position and spectroscopic ancillary datasets using the <code class="docutils literal notranslate"><span class="pre">get_auxiliary_datasets()</span></code> function we used above:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dset_list</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_auxiliary_datasets</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Position_Indices&#39;</span><span class="p">,</span> <span class="s1">&#39;Position_Values&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;Spectroscopic_Indices&#39;</span><span class="p">,</span> <span class="s1">&#39;Spectroscopic_Values&#39;</span><span class="p">])</span>
+<span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="p">,</span> <span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span> <span class="o">=</span> <span class="n">dset_list</span>
+</pre></div>
+</div>
+</div>
+<p>As mentioned above, this is indeed a six dimensional dataset with two position dimensions and four spectroscopic dimensions. The <code class="docutils literal notranslate"><span class="pre">Field</span></code> and <code class="docutils literal notranslate"><span class="pre">Cycle</span></code> dimensions do not have any units since they are dimensionless unlike the other dimensions.</p>
+<section id="get_dimensionality()">
+<h3>get_dimensionality()<a class="headerlink" href="#get_dimensionality()" title="Link to this heading">¶</a></h3>
+<p>Now lets find out the number of steps in each of those dimensions using another handy function called <code class="docutils literal notranslate"><span class="pre">get_dimensionality()</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pos_dim_sizes</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_dimensionality</span><span class="p">(</span><span class="n">h5_pos_inds</span><span class="p">)</span>
+<span class="n">spec_dim_sizes</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_dimensionality</span><span class="p">(</span><span class="n">h5_spec_inds</span><span class="p">)</span>
+<span class="n">pos_dim_names</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="n">h5_pos_inds</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">)</span>
+<span class="n">spec_dim_names</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_attr</span><span class="p">(</span><span class="n">h5_spec_inds</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Size of each Position dimension:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos_dim_names</span><span class="p">,</span> <span class="n">pos_dim_sizes</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">length</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Size of each Spectroscopic dimension:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">spec_dim_names</span><span class="p">,</span> <span class="n">spec_dim_sizes</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">length</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Size of each Position dimension:
+X : 5
+Y : 5
+
+Size of each Spectroscopic dimension:
+Frequency : 87
+DC_Offset : 64
+Field : 2
+Cycle : 2
+</pre></div></div>
+</div>
+</section>
+<section id="get_sort_order()">
+<h3>get_sort_order()<a class="headerlink" href="#get_sort_order()" title="Link to this heading">¶</a></h3>
+<p>In a few (rare) cases, the spectroscopic / position dimensions are not arranged in descending order of rate of change. In other words, the dimensions in these ancillary matrices are not arranged from fastest-varying to slowest. To account for such discrepancies, <code class="docutils literal notranslate"><span class="pre">hdf_utils</span></code> has a very handy function that goes through each of the columns or rows in the ancillary indices matrices and finds the order in which these dimensions vary.</p>
+<p>Below we illustrate an example of sorting the names of the spectroscopic dimensions from fastest to slowest in the BEPS data file:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spec_sort_order</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_sort_order</span><span class="p">(</span><span class="n">h5_spec_inds</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Rate of change of spectroscopic dimensions: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spec_sort_order</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Spectroscopic dimensions arranged as is:&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">spec_dim_names</span><span class="p">)</span>
+<span class="n">sorted_spec_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spec_dim_names</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">spec_sort_order</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Spectroscopic dimensions arranged from fastest to slowest&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sorted_spec_labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Rate of change of spectroscopic dimensions: [0 2 1 3]
+
+Spectroscopic dimensions arranged as is:
+[&#39;Frequency&#39; &#39;DC_Offset&#39; &#39;Field&#39; &#39;Cycle&#39;]
+
+Spectroscopic dimensions arranged from fastest to slowest
+[&#39;Frequency&#39; &#39;Field&#39; &#39;DC_Offset&#39; &#39;Cycle&#39;]
+</pre></div></div>
+</div>
+</section>
+<section id="get_unit_values()">
+<h3>get_unit_values()<a class="headerlink" href="#get_unit_values()" title="Link to this heading">¶</a></h3>
+<p>When visualizing the data it is essential to plot the data against appropriate values on the X, Y, or Z axes. Recall that by definition that the values over which each dimension is varied, are repeated and tiled over the entire position or spectroscopic dimension of the dataset. Thus, if we had just the bias waveform repeated over two cycles, spectroscopic values would contain the bias waveform tiled twice and the cycle numbers repeated as many times as the number of points in the bias waveform.
+Therefore, extracting the bias waveform or the cycle numbers from the ancillary datasets is not trivial. This problem is especially challenging for multidimensional datasets such as the one under consideration. Fortunately, <code class="docutils literal notranslate"><span class="pre">hdf_utils</span></code> has a very handy function for this as well:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pos_unit_values</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_unit_values</span><span class="p">(</span><span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_pos_vals</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Position unit values:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pos_unit_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+<span class="n">spec_unit_values</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">get_unit_values</span><span class="p">(</span><span class="n">h5_spec_inds</span><span class="p">,</span> <span class="n">h5_spec_vals</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Position unit values:
+Y : [0. 1. 2. 3. 4.]
+X : [0. 1. 2. 3. 4.]
+</pre></div></div>
+</div>
+<p>Since the spectroscopic dimensions are quite complicated, lets visualize the results from <code class="docutils literal notranslate"><span class="pre">get_unit_values()</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">6.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">,</span> <span class="n">spec_dim_names</span><span class="p">):</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">axis</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">spec_unit_values</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="s1">&#39;o-&#39;</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Spectroscopic Dimensions&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.05</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/notebooks_03_hdf5_hdf_utils_read_49_0.png" src="../../_images/notebooks_03_hdf5_hdf_utils_read_49_0.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Reshaping-Data">
+<h2>Reshaping Data<a class="headerlink" href="#Reshaping-Data" title="Link to this heading">¶</a></h2>
+<section id="reshape_to_n_dims()">
+<h3>reshape_to_n_dims()<a class="headerlink" href="#reshape_to_n_dims()" title="Link to this heading">¶</a></h3>
+<p>The USID model stores N dimensional datasets in a flattened 2D form of position x spectral values. It can become challenging to retrieve the data in its original N-dimensional form, especially for multidimensional datasets such as the one we are working on. Fortunately, all the information regarding the dimensionality of the dataset are contained in the spectral and position ancillary datasets. <code class="docutils literal notranslate"><span class="pre">reshape_to_n_dims()</span></code> is a very useful function that can help retrieve the N-dimensional form of the
+data using a simple function call:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ndim_form</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">reshape_to_n_dims</span><span class="p">(</span><span class="n">h5_raw</span><span class="p">,</span> <span class="n">get_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Succeeded in reshaping flattened 2D dataset to N dimensions&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Shape of the data in its original 2D form&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">h5_raw</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Shape of the N dimensional form of the dataset:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">ndim_form</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;And these are the dimensions&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Failed in reshaping the dataset&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Succeeded in reshaping flattened 2D dataset to N dimensions
+Shape of the data in its original 2D form
+(25, 22272)
+Shape of the N dimensional form of the dataset:
+(5, 5, 87, 64, 2, 2)
+And these are the dimensions
+[&#39;X&#39; &#39;Y&#39; &#39;Frequency&#39; &#39;DC_Offset&#39; &#39;Field&#39; &#39;Cycle&#39;]
+</pre></div></div>
+</div>
+</section>
+<section id="reshape_from_n_dims()">
+<h3>reshape_from_n_dims()<a class="headerlink" href="#reshape_from_n_dims()" title="Link to this heading">¶</a></h3>
+<p>The inverse problem of reshaping an N dimensional dataset back to a 2D dataset (let’s say for the purposes of multivariate analysis or storing into h5USID files) is also easily solved using another handy function - <code class="docutils literal notranslate"><span class="pre">reshape_from_n_dims()</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">two_dim_form</span><span class="p">,</span> <span class="n">success</span> <span class="o">=</span> <span class="n">usid</span><span class="o">.</span><span class="n">hdf_utils</span><span class="o">.</span><span class="n">reshape_from_n_dims</span><span class="p">(</span><span class="n">ndim_form</span><span class="p">,</span> <span class="n">h5_pos</span><span class="o">=</span><span class="n">h5_pos_inds</span><span class="p">,</span> <span class="n">h5_spec</span><span class="o">=</span><span class="n">h5_spec_inds</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Shape of flattened two dimensional form&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">two_dim_form</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Failed in flattening the N dimensional dataset&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Shape of flattened two dimensional form
+(25, 22272)
+</pre></div></div>
+</div>
+<p>Close and delete the h5_file</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h5_f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">h5_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="h5py_primer.html" class="btn btn-neutral float-left" title="Primer to HDF5 and h5py" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

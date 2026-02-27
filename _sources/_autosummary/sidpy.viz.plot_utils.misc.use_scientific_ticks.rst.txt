@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.misc.use\_scientific\_ticks
+=================================================
+
+.. currentmodule:: sidpy.viz.plot_utils.misc
+
+.. autofunction:: use_scientific_ticks

@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.get\_QT\_app
+======================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: get_QT_app

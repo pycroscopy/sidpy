@@ -1,0 +1,6 @@
+sidpy.hdf.prov\_utils.assign\_group\_index
+==========================================
+
+.. currentmodule:: sidpy.hdf.prov_utils
+
+.. autofunction:: assign_group_index

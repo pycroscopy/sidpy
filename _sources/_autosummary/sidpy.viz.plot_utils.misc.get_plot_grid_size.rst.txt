@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.misc.get\_plot\_grid\_size
+================================================
+
+.. currentmodule:: sidpy.viz.plot_utils.misc
+
+.. autofunction:: get_plot_grid_size

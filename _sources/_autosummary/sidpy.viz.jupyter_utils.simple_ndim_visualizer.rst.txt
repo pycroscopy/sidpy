@@ -1,0 +1,6 @@
+sidpy.viz.jupyter\_utils.simple\_ndim\_visualizer
+=================================================
+
+.. currentmodule:: sidpy.viz.jupyter_utils
+
+.. autofunction:: simple_ndim_visualizer

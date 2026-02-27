@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.find\_dataset
+==================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: find_dataset

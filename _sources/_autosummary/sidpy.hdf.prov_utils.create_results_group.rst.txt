@@ -1,0 +1,6 @@
+sidpy.hdf.prov\_utils.create\_results\_group
+============================================
+
+.. currentmodule:: sidpy.hdf.prov_utils
+
+.. autofunction:: create_results_group

@@ -1,0 +1,28 @@
+sidpy.viz.dataset\_viz.MultiImageStackVisualizer
+================================================
+
+.. currentmodule:: sidpy.viz.dataset_viz
+
+.. autoclass:: MultiImageStackVisualizer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~MultiImageStackVisualizer.get_spectrum
+      ~MultiImageStackVisualizer.get_xy
+      ~MultiImageStackVisualizer.set_bin
+      ~MultiImageStackVisualizer.set_legend
+   
+   
+
+   
+   
+   

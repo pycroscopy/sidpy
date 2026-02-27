@@ -1,0 +1,497 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upgrading from Matlab &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/documentation_options.js?v=425f82fe"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contact us" href="contact.html" />
+    <link rel="prev" title="Guidelines for Contribution" href="contribute.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Upgrading from Matlab</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#system-functions">System functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#file-i-o">File I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-type">Data Type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mathematics">Mathematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#array-creation">Array Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-functions">Advanced functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#array-indexing">Array Indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Advanced functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-plotting">Basic Plotting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Upgrading from Matlab</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/matlab.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="upgrading-from-matlab">
+<h1>Upgrading from Matlab<a class="headerlink" href="#upgrading-from-matlab" title="Link to this heading">¶</a></h1>
+<p><strong>Chris R. Smith</strong></p>
+<p>Here are some one-to-one translations for many popular functions in Matlab and python that should make it easier to switch from Matlab to Python</p>
+<section id="system-functions">
+<h2>System functions<a class="headerlink" href="#system-functions" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>addpath</p></td>
+<td><p>sys.path.append</p></td>
+<td><p>Add to path</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="file-i-o">
+<h2>File I/O<a class="headerlink" href="#file-i-o" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>dlmread</p></td>
+<td><p>either read and parse or skimage.io.imread</p></td>
+<td><p>Read ASCII-delimited file of numeric data into matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p>imread</p></td>
+<td><p>pyplot.imread</p></td>
+<td><p>read image file; N is number of files used</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="data-type">
+<h2>Data Type<a class="headerlink" href="#data-type" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>int</p></td>
+<td><p>numpy.int</p></td>
+<td><p>Convert data to signed integer</p></td>
+</tr>
+<tr class="row-odd"><td><p>double</p></td>
+<td><p>numpy.float</p></td>
+<td><p>Convert data to double</p></td>
+</tr>
+<tr class="row-even"><td><p>real</p></td>
+<td><p>numpy.real</p></td>
+<td><p>Return the real part of a complex number</p></td>
+</tr>
+<tr class="row-odd"><td><p>imag</p></td>
+<td><p>numpy.imag</p></td>
+<td><p>Return the imaginary part of a complex number</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mathematics">
+<h2>Mathematics<a class="headerlink" href="#mathematics" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>sqrt</p></td>
+<td><p>math.sqrt or numpy.sqrt</p></td>
+<td><p>Square root</p></td>
+</tr>
+<tr class="row-odd"><td><p>erf</p></td>
+<td><p>math.erf or scipy.special.erf</p></td>
+<td><p>Error function</p></td>
+</tr>
+<tr class="row-even"><td><p>atan2</p></td>
+<td><p>math.erf or numpy.atan2</p></td>
+<td><p>Four-quadrant inverse tangent</p></td>
+</tr>
+<tr class="row-odd"><td><p>abs</p></td>
+<td><p>abs or numpy.abs</p></td>
+<td><p>Absolute value</p></td>
+</tr>
+<tr class="row-even"><td><p>exp</p></td>
+<td><p>exp or numpy.exp</p></td>
+<td><p>Exponential function</p></td>
+</tr>
+<tr class="row-odd"><td><p>sin</p></td>
+<td><p>sin or numpy.sin</p></td>
+<td><p>Sine function</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="array-creation">
+<h2>Array Creation<a class="headerlink" href="#array-creation" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>zeros</p></td>
+<td><p>numpy.zeros</p></td>
+<td><p>Create an array of zeros</p></td>
+</tr>
+<tr class="row-odd"><td><p>meshgrid</p></td>
+<td><p>numpy.meshgrid</p></td>
+<td><p>Create grid of coordinates in 2 or 3 dimensions</p></td>
+</tr>
+<tr class="row-even"><td><p>ndgrid</p></td>
+<td><p>numpy.mgrid or numpy.ogrid</p></td>
+<td><p>Rectangular grid in N-D space</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="advanced-functions">
+<h2>Advanced functions<a class="headerlink" href="#advanced-functions" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>permute</p></td>
+<td><p>numpy.transpose</p></td>
+<td><p>Rearrange dimensions of N-dimensional array</p></td>
+</tr>
+<tr class="row-odd"><td><p>angle</p></td>
+<td><p>numpy.angle</p></td>
+<td><p>Phase angles for elements in complex array</p></td>
+</tr>
+<tr class="row-even"><td><p>max</p></td>
+<td><p>numpy.max</p></td>
+<td><p>Return the maximum element in an array</p></td>
+</tr>
+<tr class="row-odd"><td><p>min</p></td>
+<td><p>numpy.min</p></td>
+<td><p>Return the minimum element in an array</p></td>
+</tr>
+<tr class="row-even"><td><p>reshape</p></td>
+<td><p>numpy.reshape</p></td>
+<td><p>Reshape array</p></td>
+</tr>
+<tr class="row-odd"><td><p>mean</p></td>
+<td><p>numpy.mean</p></td>
+<td><p>Take mean along specified dimension</p></td>
+</tr>
+<tr class="row-even"><td><p>size</p></td>
+<td><p>numpy.size</p></td>
+<td><p>get the total number of entries in an array</p></td>
+</tr>
+<tr class="row-odd"><td><p>cell2mat</p></td>
+<td><p>numpy.vstack([numpy.hstack(cell) for cell in cells])</p></td>
+<td><p>converts data structure from cell to mat; joins multiple arrays of different sizes into single array</p></td>
+</tr>
+<tr class="row-even"><td><p>repmat</p></td>
+<td><p>numpy.tile</p></td>
+<td><p>Repeat copies of an array</p></td>
+</tr>
+<tr class="row-odd"><td><p>unwrap</p></td>
+<td><p>np.unwrap</p></td>
+<td><p>Shift the phase of an array so that there are no jumps of more than the desired angle (default pi)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="array-indexing">
+<h2>Array Indexing<a class="headerlink" href="#array-indexing" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>find</p></td>
+<td><p>numpy.where</p></td>
+<td><p>Find all indices of a matrix for which a logical statement is true</p></td>
+</tr>
+<tr class="row-odd"><td><p>isnan</p></td>
+<td><p>numpy.isnan</p></td>
+<td><p>checks each array entry to see if it is NaN</p></td>
+</tr>
+<tr class="row-even"><td><p>isinf</p></td>
+<td><p>numpy.isinf</p></td>
+<td><p>checks each array entry to see if it is Inf</p></td>
+</tr>
+<tr class="row-odd"><td><p>ischar</p></td>
+<td><p>numpy.ischar</p></td>
+<td><p>checks each array entry to see if it is a character</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id1">
+<h2>Advanced functions<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>fft2</p></td>
+<td><p>numpy.fft.fft2</p></td>
+<td><p>2D fast Fourier transform</p></td>
+</tr>
+<tr class="row-odd"><td><p>fftshift</p></td>
+<td><p>numpy.fft.fftshift</p></td>
+<td><p>shift zero-frequency component to the center of the spectrum</p></td>
+</tr>
+<tr class="row-even"><td><p>ifftshift</p></td>
+<td><p>numpy.fft.ifftshift</p></td>
+<td><p>inverse fftshift</p></td>
+</tr>
+<tr class="row-odd"><td><p>ifft2</p></td>
+<td><p>numpy.fft.fifft2</p></td>
+<td><p>inverse 2d fft</p></td>
+</tr>
+<tr class="row-even"><td><p>interp2</p></td>
+<td><p>scipy.interpolate.RectBivariateSpline or scipy.interpolate.interp2</p></td>
+<td><p>Interpolation for 2-D gridded data in meshgrid format</p></td>
+</tr>
+<tr class="row-odd"><td><p>imshowpair</p></td>
+<td><p>skimage.measure.structural_similarity</p></td>
+<td><p>Compare differences between 2 images</p></td>
+</tr>
+<tr class="row-even"><td><p>imregconfig</p></td>
+<td></td>
+<td><p>Creates configurations to perform intensity-based image registration</p></td>
+</tr>
+<tr class="row-odd"><td><p>imregister</p></td>
+<td></td>
+<td><p>Intensity-based image registration</p></td>
+</tr>
+<tr class="row-even"><td><p>imregtform</p></td>
+<td><p>skimage.feature.register_translation or skimage.transform.estimate_transform</p></td>
+<td><p>Estimate geometric transfomation to align two images</p></td>
+</tr>
+<tr class="row-odd"><td><p>imwarp</p></td>
+<td><p>skimage.transform.warp</p></td>
+<td><p>Apply geometric transformation to an image</p></td>
+</tr>
+<tr class="row-even"><td><p>imref2d</p></td>
+<td></td>
+<td><p>Reference 2d image to xy-coordinates</p></td>
+</tr>
+<tr class="row-odd"><td><p>corr2</p></td>
+<td><p>scipy.signal.correlate2d</p></td>
+<td><p>2d correlation coefficient</p></td>
+</tr>
+<tr class="row-even"><td><p>optimset</p></td>
+<td></td>
+<td><p>Create of edit optimizations options for passing to fminbnd, fminsearch, fzero, or lsqnonneg</p></td>
+</tr>
+<tr class="row-odd"><td><p>lsqcurvefit</p></td>
+<td><p>scipy.optimize.curve_fit</p></td>
+<td><p>Solve nonlinear curve-fitting problems</p></td>
+</tr>
+<tr class="row-even"><td><p>fastica</p></td>
+<td><p>sklearn.decomposition.FastICA</p></td>
+<td><p>fast fixed-point algorithm for independent component analysis and projection pursuit</p></td>
+</tr>
+<tr class="row-odd"><td><p>kmeans</p></td>
+<td><p>sklearn.cluster.Kmeans</p></td>
+<td><p>kmeans clustering</p></td>
+</tr>
+<tr class="row-even"><td><p>fsolve</p></td>
+<td><p>scipy.optimize.root(func, x0, method=’anderson’)</p></td>
+<td><p>Root finding.  Scipy does not have a trust-region dogleg method that functions exactly like Matlab’s fsolve.  The ‘anderson’ method reproduces the results in many cases.  Other methods may need to be explored for other problems.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="basic-plotting">
+<h2>Basic Plotting<a class="headerlink" href="#basic-plotting" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Matlab Function</p></th>
+<th class="head"><p>Python Equivalent</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>figure</p></td>
+<td><p>matplotlib.pyplot.figure</p></td>
+<td><p>Create a new figure object</p></td>
+</tr>
+<tr class="row-odd"><td><p>clf</p></td>
+<td><p>figure.clf</p></td>
+<td><p>clear figure; shouldn’t be needed in Python since each figure will be a unique object</p></td>
+</tr>
+<tr class="row-even"><td><p>subplot</p></td>
+<td><p>figure.subplots or figure.add_subplot</p></td>
+<td><p>1st creates a set of subplots in the figure, 2nd creates one subplot and adds it to the figure</p></td>
+</tr>
+<tr class="row-odd"><td><p>plot</p></td>
+<td><p>figure.plot or axes.plot</p></td>
+<td><p>Add lineplot to current figure</p></td>
+</tr>
+<tr class="row-even"><td><p>title</p></td>
+<td><p>object.title</p></td>
+<td><p>Title of plot; better to define on object creation if possible</p></td>
+</tr>
+<tr class="row-odd"><td><p>xlabel</p></td>
+<td><p>axes.xlabel</p></td>
+<td><p>Label for the x-axis of plot</p></td>
+</tr>
+<tr class="row-even"><td><p>ylabel</p></td>
+<td><p>axes.ylabel</p></td>
+<td><p>Label for the y-axis of plot</p></td>
+</tr>
+<tr class="row-odd"><td><p>imagesc</p></td>
+<td><p>pyplot.imshow or pyplot.matshow</p></td>
+<td><p>Scale image data to full range of colormap and display</p></td>
+</tr>
+<tr class="row-even"><td><p>axis</p></td>
+<td><p>axes.axis</p></td>
+<td><p>Axis properties</p></td>
+</tr>
+<tr class="row-odd"><td><p>surf</p></td>
+<td><p>axes3d.plot_surface or axes3d.plot_trisurf</p></td>
+<td><p>Plot a 3d surface, need to uses mpl_toolkits.mplot3d and Axes3d; which you use depends on data format</p></td>
+</tr>
+<tr class="row-even"><td><p>shading</p></td>
+<td></td>
+<td><p>Set during plot creation as argument</p></td>
+</tr>
+<tr class="row-odd"><td><p>view</p></td>
+<td><p>axes3d.view_init</p></td>
+<td><p>Change the viewing angle for a 3d plot</p></td>
+</tr>
+<tr class="row-even"><td><p>colormap</p></td>
+<td><p>plot.colormap</p></td>
+<td><p>Set the colormap; better to do so at plot creation if possible</p></td>
+</tr>
+<tr class="row-odd"><td><p>colorbar</p></td>
+<td><p>figure.add_colorbar(axes)</p></td>
+<td><p>Add colorbar to selected axes</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="contribute.html" class="btn btn-neutral float-left" title="Guidelines for Contribution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="contact.html" class="btn btn-neutral float-right" title="Contact us" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+sidpy.base.dict\_utils.nested\_dict\_from\_flattened\_key
+=========================================================
+
+.. currentmodule:: sidpy.base.dict_utils
+
+.. autofunction:: nested_dict_from_flattened_key

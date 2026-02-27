@@ -1,0 +1,30 @@
+sidpy.proc.fitter\_refactor.SidpyFitterRefactor
+===============================================
+
+.. currentmodule:: sidpy.proc.fitter_refactor
+
+.. autoclass:: SidpyFitterRefactor
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SidpyFitterRefactor.do_fit
+      ~SidpyFitterRefactor.do_guess
+      ~SidpyFitterRefactor.do_kmeans_guess
+      ~SidpyFitterRefactor.reconstruct_function
+      ~SidpyFitterRefactor.setup_calc
+      ~SidpyFitterRefactor.transform_to_sidpy
+   
+   
+
+   
+   
+   

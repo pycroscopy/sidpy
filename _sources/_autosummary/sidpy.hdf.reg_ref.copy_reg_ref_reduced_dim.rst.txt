@@ -1,0 +1,6 @@
+sidpy.hdf.reg\_ref.copy\_reg\_ref\_reduced\_dim
+===============================================
+
+.. currentmodule:: sidpy.hdf.reg_ref
+
+.. autofunction:: copy_reg_ref_reduced_dim

@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.copy\_attributes
+=====================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: copy_attributes

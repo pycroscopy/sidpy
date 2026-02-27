@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.get\_attributes
+====================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: get_attributes

@@ -1,0 +1,6 @@
+sidpy.sid.dataset.convert\_hyperspy
+===================================
+
+.. currentmodule:: sidpy.sid.dataset
+
+.. autofunction:: convert_hyperspy

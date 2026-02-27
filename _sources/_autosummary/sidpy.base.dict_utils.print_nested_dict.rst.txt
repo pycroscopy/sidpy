@@ -1,0 +1,6 @@
+sidpy.base.dict\_utils.print\_nested\_dict
+==========================================
+
+.. currentmodule:: sidpy.base.dict_utils
+
+.. autofunction:: print_nested_dict

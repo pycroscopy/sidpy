@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.hdf.prov_utils &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.hdf.prov_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.hdf.prov_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Tools for tracking provenance within HDF5 files</span>
+
+<span class="sd">Created on Tue Nov  3 21:14:25 2015</span>
+
+<span class="sd">@author: Suhas Somnath, Chris Smith</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> \
+    <span class="n">unicode_literals</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sidpy.base.string_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_single_string_arg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sidpy.hdf.hdf_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_attr</span><span class="p">,</span> <span class="n">write_book_keeping_attrs</span><span class="p">,</span> \
+    <span class="n">write_simple_attrs</span>
+
+
+<div class="viewcode-block" id="assign_group_index">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.prov_utils.assign_group_index.html#sidpy.hdf.prov_utils.assign_group_index">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assign_group_index</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="n">base_name</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Searches the parent h5 group to find the next available index for the group</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_parent_group : :class:`h5py.Group` object</span>
+<span class="sd">        Parent group under which the new group object will be created</span>
+<span class="sd">    base_name : str or unicode</span>
+<span class="sd">        Base name of the new group without index</span>
+<span class="sd">    verbose : bool, optional. Default=False</span>
+<span class="sd">        Whether or not to print debugging statements</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    base_name : str or unicode</span>
+<span class="sd">        Base name of the new group with the next available index as a suffix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_parent_group should be a h5py.Group object&#39;</span><span class="p">)</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">base_name</span><span class="p">,</span> <span class="s1">&#39;base_name&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;base_name should not be an empty string&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">base_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+        <span class="n">base_name</span> <span class="o">+=</span> <span class="s1">&#39;_&#39;</span>
+
+    <span class="n">temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">h5_parent_group</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Looking for group names starting with </span><span class="si">{}</span><span class="s1"> in parent containing items: &#39;</span>
+              <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base_name</span><span class="p">,</span> <span class="n">temp</span><span class="p">))</span>
+    <span class="n">previous_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item_name</span> <span class="ow">in</span> <span class="n">temp</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">[</span><span class="n">item_name</span><span class="p">],</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="ow">and</span> <span class="n">item_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">base_name</span><span class="p">):</span>
+            <span class="n">previous_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">item_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">base_name</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)))</span>
+    <span class="n">previous_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">previous_indices</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;indices of existing groups with the same prefix: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">previous_indices</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">previous_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">previous_indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">base_name</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">{:03d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_indexed_group">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.prov_utils.create_indexed_group.html#sidpy.hdf.prov_utils.create_indexed_group">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_indexed_group</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="n">base_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a group with an indexed name (eg - &#39;Measurement_012&#39;) under</span>
+<span class="sd">    ``h5_parent_group`` using the provided ``base_name`` as a prefix for the</span>
+<span class="sd">    group&#39;s name</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_parent_group : :class:`h5py.Group` or :class:`h5py.File`</span>
+<span class="sd">        File or group within which the new group will be created</span>
+<span class="sd">    base_name : str or unicode</span>
+<span class="sd">        Prefix for the group name. This need not end with a &#39;_&#39;. It will be</span>
+<span class="sd">        added automatically</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="p">(</span><span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_parent_group should be a h5py.File or Group object&#39;</span><span class="p">)</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">base_name</span><span class="p">,</span> <span class="s1">&#39;base_name&#39;</span><span class="p">)</span>
+
+    <span class="n">group_name</span> <span class="o">=</span> <span class="n">assign_group_index</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="n">base_name</span><span class="p">)</span>
+    <span class="n">h5_new_group</span> <span class="o">=</span> <span class="n">h5_parent_group</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">group_name</span><span class="p">)</span>
+    <span class="n">write_book_keeping_attrs</span><span class="p">(</span><span class="n">h5_new_group</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">h5_new_group</span></div>
+
+
+
+<div class="viewcode-block" id="create_results_group">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.prov_utils.create_results_group.html#sidpy.hdf.prov_utils.create_results_group">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_results_group</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">h5_parent_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a h5py.Group object auto-indexed and named as</span>
+<span class="sd">    &#39;DatasetName-ToolName_00x&#39;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_main : h5py.Dataset object</span>
+<span class="sd">        Reference to the dataset based on which the process / analysis is being</span>
+<span class="sd">        performed</span>
+<span class="sd">    tool_name : string / unicode</span>
+<span class="sd">        Name of the Process / Analysis applied to h5_main</span>
+<span class="sd">    h5_parent_group : h5py.Group, optional. Default = None</span>
+<span class="sd">        Parent group under which the results group will be created. Use this</span>
+<span class="sd">        option to write results into a new HDF5 file. By default, results will</span>
+<span class="sd">        be written into the same group containing `h5_main`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    h5_group : :class:`h5py.Group`</span>
+<span class="sd">        Results group which can now house the results datasets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Revise significantly. Avoid parent dataset name</span>
+    <span class="c1"># Consider embedding refs to source datasets as attributes of group</span>
+
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The behavior of create_results_group is very likely to change soon &#39;</span>
+         <span class="s1">&#39;and significantly. Use this function with caution&#39;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_main should be a h5py.Dataset object&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">h5_parent_group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="p">(</span><span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;h5_parent_group&#39; should either be a h5py.File &quot;</span>
+                            <span class="s2">&quot;or h5py.Group object&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h5_parent_group</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="n">tool_name</span> <span class="o">=</span> <span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="s1">&#39;tool_name&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">tool_name</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;tool_name should not contain the &quot;-&quot; character. Reformatted name from:</span><span class="si">{}</span><span class="s1"> to &#39;</span>
+             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">tool_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)))</span>
+    <span class="n">tool_name</span> <span class="o">=</span> <span class="n">tool_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+
+    <span class="n">group_name</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="n">tool_name</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span>
+    <span class="n">group_name</span> <span class="o">=</span> <span class="n">assign_group_index</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="n">group_name</span><span class="p">)</span>
+
+    <span class="n">h5_group</span> <span class="o">=</span> <span class="n">h5_parent_group</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">group_name</span><span class="p">)</span>
+
+    <span class="n">write_book_keeping_attrs</span><span class="p">(</span><span class="n">h5_group</span><span class="p">)</span>
+
+    <span class="c1"># Also add some basic attributes like source and tool name. This will allow relaxation of nomenclature restrictions:</span>
+    <span class="c1"># this are NOT being used right now but will be in the subsequent versions of pyNSID</span>
+    <span class="n">write_simple_attrs</span><span class="p">(</span><span class="n">h5_group</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;tool&#39;</span><span class="p">:</span> <span class="n">tool_name</span><span class="p">,</span> <span class="s1">&#39;num_source_dsets&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+    <span class="c1"># in this case, there is only one source</span>
+    <span class="k">if</span> <span class="n">h5_parent_group</span><span class="o">.</span><span class="n">file</span> <span class="o">==</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">dset_ind</span><span class="p">,</span> <span class="n">dset</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">h5_main</span><span class="p">]):</span>
+            <span class="n">h5_group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;source_&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">{:03d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_ind</span><span class="p">)]</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">ref</span>
+
+    <span class="k">return</span> <span class="n">h5_group</span></div>
+
+
+
+<div class="viewcode-block" id="find_results_groups">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.prov_utils.find_results_groups.html#sidpy.hdf.prov_utils.find_results_groups">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_results_groups</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">h5_parent_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Finds a list of all groups containing results of the process of name</span>
+<span class="sd">    ``tool_name`` being applied to the dataset</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_main : h5 dataset reference</span>
+<span class="sd">        Reference to the target dataset to which the tool was applied</span>
+<span class="sd">    tool_name : String / unicode</span>
+<span class="sd">        Name of the tool applied to the target dataset</span>
+<span class="sd">    h5_parent_group : h5py.Group, optional. Default = None</span>
+<span class="sd">        Parent group under which the results group will be searched for. Use</span>
+<span class="sd">        this option when the results groups are contained in different HDF5</span>
+<span class="sd">        file compared to `h5_main`. BY default, this function will search</span>
+<span class="sd">        within the same group that contains `h5_main`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    groups : list of references to :class:`h5py.Group` objects</span>
+<span class="sd">        groups whose name contains the tool name and the dataset name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The behavior of find_results_group is very likely to change soon &#39;</span>
+         <span class="s1">&#39;and significantly. Use this function with caution&#39;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_main should be a h5py.Dataset object&#39;</span><span class="p">)</span>
+    <span class="n">tool_name</span> <span class="o">=</span> <span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="s1">&#39;tool_name&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">h5_parent_group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">,</span> <span class="p">(</span><span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;h5_parent_group&#39; should either be a h5py.File &quot;</span>
+                            <span class="s2">&quot;or h5py.Group object&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h5_parent_group</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="n">dset_name</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">h5_parent_group</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">dset_name</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">and</span> <span class="n">tool_name</span> <span class="ow">in</span> <span class="n">key</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h5_parent_group</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">groups</span></div>
+
+
+
+<div class="viewcode-block" id="check_for_old">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.prov_utils.check_for_old.html#sidpy.hdf.prov_utils.check_for_old">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_for_old</span><span class="p">(</span><span class="n">h5_base</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">new_parms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">h5_parent_goup</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check to see if the results of a tool already exist and if they</span>
+<span class="sd">    were performed with the same parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_base : h5py.Dataset object</span>
+<span class="sd">           Dataset on which the tool is being applied to</span>
+<span class="sd">    tool_name : str</span>
+<span class="sd">           process or analysis name</span>
+<span class="sd">    new_parms : dict, optional</span>
+<span class="sd">           Parameters with which this tool will be performed.</span>
+<span class="sd">    target_dset : str, optional, default = None</span>
+<span class="sd">            Name of the dataset whose attributes will be compared against new_parms.</span>
+<span class="sd">            Default - checking against the group</span>
+<span class="sd">    h5_parent_goup : h5py.Group, optional. Default = None</span>
+<span class="sd">            The group to search under. Use this option when `h5_base` and</span>
+<span class="sd">            the potential results groups (within `h5_parent_goup` are located</span>
+<span class="sd">            in different HDF5 files. Default - search within h5_base.parent</span>
+<span class="sd">    verbose : bool, optional, default = False</span>
+<span class="sd">           Whether or not to print debugging statements</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    group : list</span>
+<span class="sd">           List of all :class:`h5py.Group` objects with parameters matching</span>
+<span class="sd">           those in `new_parms`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The behavior of check_for_old is very likely to change soon &#39;</span>
+         <span class="s1">&#39;. Use this function with caution&#39;</span><span class="p">,</span> <span class="ne">FutureWarning</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_base</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_base should be a h5py.Dataset object&#39;</span><span class="p">)</span>
+    <span class="n">tool_name</span> <span class="o">=</span> <span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="s1">&#39;tool_name&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">h5_parent_goup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_parent_goup</span><span class="p">,</span> <span class="p">(</span><span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;h5_parent_group&#39; should either be a h5py.File &quot;</span>
+                            <span class="s2">&quot;or h5py.Group object&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h5_parent_goup</span> <span class="o">=</span> <span class="n">h5_base</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">if</span> <span class="n">new_parms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">new_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_parms</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;new_parms should be a dict&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target_dset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">target_dset</span> <span class="o">=</span> <span class="n">validate_single_string_arg</span><span class="p">(</span><span class="n">target_dset</span><span class="p">,</span> <span class="s1">&#39;target_dset&#39;</span><span class="p">)</span>
+
+    <span class="n">matching_groups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">find_results_groups</span><span class="p">(</span><span class="n">h5_base</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">,</span>
+                                 <span class="n">h5_parent_group</span><span class="o">=</span><span class="n">h5_parent_goup</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Looking at group - </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">h5_obj</span> <span class="o">=</span> <span class="n">group</span>
+        <span class="k">if</span> <span class="n">target_dset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">target_dset</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">h5_obj</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="n">target_dset</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> did not contain the target dataset: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                                                             <span class="n">target_dset</span><span class="p">))</span>
+                <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">check_for_matching_attrs</span><span class="p">(</span><span class="n">h5_obj</span><span class="p">,</span> <span class="n">new_parms</span><span class="o">=</span><span class="n">new_parms</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">):</span>
+            <span class="c1"># return group</span>
+            <span class="n">matching_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">matching_groups</span></div>
+
+
+
+<div class="viewcode-block" id="check_for_matching_attrs">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.prov_utils.check_for_matching_attrs.html#sidpy.hdf.prov_utils.check_for_matching_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_for_matching_attrs</span><span class="p">(</span><span class="n">h5_obj</span><span class="p">,</span> <span class="n">new_parms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compares attributes in the given H5 object against those in the provided</span>
+<span class="sd">    dictionary and returns True if the parameters match, and False otherwise</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_obj : h5py object (Dataset or :class:`h5py.Group`)</span>
+<span class="sd">        Object whose attributes will be compared against ``new_parms``</span>
+<span class="sd">    new_parms : dict, optional. default = empty dictionary</span>
+<span class="sd">        Parameters to compare against the attributes present in h5_obj</span>
+<span class="sd">    verbose : bool, optional, default = False</span>
+<span class="sd">       Whether or not to print debugging statements</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tests: bool</span>
+<span class="sd">        Whether or not all paramters in new_parms matched with those in h5_obj&#39;s attributes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_obj</span><span class="p">,</span> <span class="p">(</span><span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_obj should be a h5py.Dataset, h5py.Group, or h5py.File object&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">new_parms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">new_parms</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_parms</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;new_parms should be a dictionary&#39;</span><span class="p">)</span>
+
+    <span class="n">tests</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">new_parms</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Looking for new attribute named: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+        <span class="c1"># HDF5 cannot store None as an attribute anyway. ignore</span>
+        <span class="k">if</span> <span class="n">new_parms</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">old_value</span> <span class="o">=</span> <span class="n">get_attr</span><span class="p">(</span><span class="n">h5_obj</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># if parameter was not found assume that something has changed</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;New parm: </span><span class="si">{}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">- new parm not in group *****&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_parms</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;New parm: </span><span class="si">{}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">- new parm not iterable unlike old parm *****&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">new_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_parms</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">old_value</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">new_array</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;New parm: </span><span class="si">{}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">- are of different sizes ****&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">answer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="n">new_array</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="c1"># comes here when comparing string arrays</span>
+                    <span class="c1"># Not sure of a better way</span>
+                    <span class="n">answer</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">old_val</span><span class="p">,</span> <span class="n">new_val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="n">new_array</span><span class="p">):</span>
+                        <span class="n">answer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">old_val</span> <span class="o">==</span> <span class="n">new_val</span><span class="p">)</span>
+                    <span class="n">answer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;New parm: </span><span class="si">{}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">- match: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">answer</span><span class="p">))</span>
+                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;if isinstance(new_parms[key], collections.Iterable):</span>
+<span class="sd">                if verbose:</span>
+<span class="sd">                    print(&#39;New parm: {} \t- new parm is iterable unlike old parm *****&#39;.format(key))</span>
+<span class="sd">                tests.append(False)</span>
+<span class="sd">                break&quot;&quot;&quot;</span>
+            <span class="n">answer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">new_parms</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="n">old_value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;New parm: </span><span class="si">{}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">- match: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">answer</span><span class="p">))</span>
+            <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">tests</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_source_dataset">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.prov_utils.get_source_dataset.html#sidpy.hdf.prov_utils.get_source_dataset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_source_dataset</span><span class="p">(</span><span class="n">h5_group</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the name of the source dataset used to create the input `h5_group`,</span>
+<span class="sd">    so long as the source dataset is in the same HDF5 file</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_group : :class:`h5py.Group`</span>
+<span class="sd">        Child group whose source dataset will be returned</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    h5_source : NSIDataset object</span>
+<span class="sd">        Main dataset from which this group was generated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_group</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_group should be a h5py.Group object&#39;</span><span class="p">)</span>
+
+    <span class="n">h5_parent_group</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">group_name</span> <span class="o">=</span> <span class="n">h5_group</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># What if the group name was not formatted according to Pycroscopy rules?</span>
+    <span class="n">name_split</span> <span class="o">=</span> <span class="n">group_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name_split</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The provided group&#39;s name could not be split by &#39;-&#39; as expected in &quot;</span>
+                         <span class="s2">&quot;SourceDataset-ProcessName_000&quot;</span><span class="p">)</span>
+    <span class="n">h5_source</span> <span class="o">=</span> <span class="n">h5_parent_group</span><span class="p">[</span><span class="n">name_split</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Source object was not a dataset!&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">h5_source</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

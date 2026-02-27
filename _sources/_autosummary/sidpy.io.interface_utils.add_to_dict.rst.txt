@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.add\_to\_dict
+=======================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: add_to_dict

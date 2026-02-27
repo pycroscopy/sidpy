@@ -1,0 +1,29 @@
+sidpy.viz.dataset\_viz.ComplexSpectralImageFitVisualizer
+========================================================
+
+.. currentmodule:: sidpy.viz.dataset_viz
+
+.. autoclass:: ComplexSpectralImageFitVisualizer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ComplexSpectralImageFitVisualizer.get_fit_spectrum
+      ~ComplexSpectralImageFitVisualizer.get_spectrum
+      ~ComplexSpectralImageFitVisualizer.get_xy
+      ~ComplexSpectralImageFitVisualizer.set_bin
+      ~ComplexSpectralImageFitVisualizer.set_legend
+   
+   
+
+   
+   
+   

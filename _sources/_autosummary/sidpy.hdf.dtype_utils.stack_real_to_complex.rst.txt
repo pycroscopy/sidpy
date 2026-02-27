@@ -1,0 +1,6 @@
+sidpy.hdf.dtype\_utils.stack\_real\_to\_complex
+===============================================
+
+.. currentmodule:: sidpy.hdf.dtype_utils
+
+.. autofunction:: stack_real_to_complex

@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.cmap.cmap\_jet\_white\_center
+===================================================
+
+.. currentmodule:: sidpy.viz.plot_utils.cmap
+
+.. autofunction:: cmap_jet_white_center

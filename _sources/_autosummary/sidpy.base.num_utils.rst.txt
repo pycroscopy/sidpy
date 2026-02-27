@@ -1,0 +1,39 @@
+sidpy.base.num\_utils
+=====================
+
+.. automodule:: sidpy.base.num_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      build_ind_val_matrices
+      contains_integers
+      convert_length
+      from_meters
+      get_exponent
+      get_slope
+      integers_to_slices
+      to_meters
+      to_ranges
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

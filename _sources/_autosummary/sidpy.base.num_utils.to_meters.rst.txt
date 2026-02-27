@@ -1,0 +1,6 @@
+sidpy.base.num\_utils.to\_meters
+================================
+
+.. currentmodule:: sidpy.base.num_utils
+
+.. autofunction:: to_meters

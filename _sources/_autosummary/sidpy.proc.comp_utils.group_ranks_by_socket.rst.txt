@@ -1,0 +1,6 @@
+sidpy.proc.comp\_utils.group\_ranks\_by\_socket
+===============================================
+
+.. currentmodule:: sidpy.proc.comp_utils
+
+.. autofunction:: group_ranks_by_socket

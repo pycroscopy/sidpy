@@ -1,0 +1,30 @@
+sidpy.proc.fitter.SidFitter
+===========================
+
+.. currentmodule:: sidpy.proc.fitter
+
+.. autoclass:: SidFitter
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SidFitter.default_curve_fit
+      ~SidFitter.do_fit
+      ~SidFitter.do_guess
+      ~SidFitter.get_fitted_dataset
+      ~SidFitter.get_km_priors
+      ~SidFitter.visualize_fit_results
+   
+   
+
+   
+   
+   

@@ -1,0 +1,29 @@
+sidpy.io.interface\_utils.open\_file\_dialog
+============================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autoclass:: open_file_dialog
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~open_file_dialog.get_directory
+      ~open_file_dialog.get_file_name
+      ~open_file_dialog.set_dir
+      ~open_file_dialog.set_options
+      ~open_file_dialog.update_directory_list
+   
+   
+
+   
+   
+   
