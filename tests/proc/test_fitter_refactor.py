@@ -279,13 +279,13 @@ class TestSidpyFitterWithBounds(unittest.TestCase):
 
     def test_unbounded_unchanged(self):
         """Unbounded fit must return a valid sidpy.Dataset with finite params."""
-        result, _ = self._make_fitter().do_fit()
+        result = self._make_fitter().do_fit()
         self.assertIsInstance(result, sid.Dataset)
         self.assertTrue(np.all(np.isfinite(np.array(result))))
 
     def test_scalar_lower_bound(self):
         """Scalar lower_bounds=0 — all returned params must be >= 0."""
-        result, _ = self._make_fitter(lower_bounds=0.0).do_fit()
+        result = self._make_fitter(lower_bounds=0.0).do_fit()
         params = np.array(result)
         self.assertTrue(np.all(params >= -1e-6),
                         msg=f"Some params violated lower_bound=0: min={params.min()}")
@@ -293,7 +293,7 @@ class TestSidpyFitterWithBounds(unittest.TestCase):
     def test_scalar_upper_bound(self):
         """Scalar upper_bounds=1e6 — all returned params must be <= 1e6."""
         upper = 1e6
-        result, _ = self._make_fitter(upper_bounds=upper).do_fit()
+        result = self._make_fitter(upper_bounds=upper).do_fit()
         params = np.array(result)
         self.assertTrue(np.all(params <= upper + 1e-6),
                         msg=f"Some params violated upper_bound={upper}: max={params.max()}")
@@ -303,7 +303,7 @@ class TestSidpyFitterWithBounds(unittest.TestCase):
         n = self._make_fitter().num_params
         lb = np.zeros(n)
         ub = np.full(n, 1e6)
-        result, _ = self._make_fitter(lower_bounds=lb, upper_bounds=ub).do_fit()
+        result = self._make_fitter(lower_bounds=lb, upper_bounds=ub).do_fit()
         params = np.array(result)
         for i in range(n):
             p = params[..., i]
@@ -342,7 +342,7 @@ class TestSidpyFitterWithBounds(unittest.TestCase):
         n = self._make_fitter().num_params
         lb = list(np.zeros(n))
         ub = list(np.ones(n) * 1e6)
-        result, _ = self._make_fitter(lower_bounds=lb, upper_bounds=ub).do_fit()
+        result = self._make_fitter(lower_bounds=lb, upper_bounds=ub).do_fit()
         meta = result.metadata["fit_parameters"]
         self.assertIn("lower_bounds", meta)
         self.assertIn("upper_bounds", meta)
@@ -351,7 +351,7 @@ class TestSidpyFitterWithBounds(unittest.TestCase):
 
     def test_none_bounds_metadata_is_none(self):
         """When no bounds are passed, metadata entries must be None."""
-        result, _ = self._make_fitter().do_fit()
+        result = self._make_fitter().do_fit()
         meta = result.metadata["fit_parameters"]
         self.assertIsNone(meta.get("lower_bounds"))
         self.assertIsNone(meta.get("upper_bounds"))
@@ -360,7 +360,7 @@ class TestSidpyFitterWithBounds(unittest.TestCase):
         """Bounds + non-linear loss must not raise (both require method='trf')."""
         fitter = self._make_fitter(lower_bounds=0.0)
         try:
-            result, _ = fitter.do_fit(loss='soft_l1')
+            result = fitter.do_fit(loss='soft_l1')
         except Exception as e:
             self.fail(f"do_fit raised with bounds + non-linear loss: {e}")
         self.assertIsInstance(result, sid.Dataset)
