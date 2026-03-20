@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.misc.make\_scalar\_mappable
+=================================================
+
+.. currentmodule:: sidpy.viz.plot_utils.misc
+
+.. autofunction:: make_scalar_mappable

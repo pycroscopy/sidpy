@@ -1,0 +1,6 @@
+sidpy.hdf.reg\_ref.write\_region\_references
+============================================
+
+.. currentmodule:: sidpy.hdf.reg_ref
+
+.. autofunction:: write_region_references

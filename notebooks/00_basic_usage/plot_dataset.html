@@ -1,0 +1,704 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mathematics and Datasets &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Mathematic Operations on Datasets" href="math_dataset.html" />
+    <link rel="prev" title="Creating and Manipulating Datasets" href="create_dataset.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Basic usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="create_dataset.html">Creating and Manipulating Datasets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Mathematics and Datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Creating-an-Image-Dataset">Creating an Image Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Simple-Arithmetic">Simple Arithmetic</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Plotting-a-Complex-Image">Plotting a Complex Image</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-a-spectrum">Plotting a spectrum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Creating-an-Image-Stack-DataSet">Creating an Image-Stack DataSet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-the-Dataset">Plotting the Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plot-Dataset-as-Spectral-Image">Plot Dataset as Spectral Image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#4-Dimensional-Dataset">4-Dimensional Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Plotting-of-Point-Cloud">Plotting of Point Cloud</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#2D">2D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#3D">3D</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Point-cloud-with-base_image">Point cloud with base_image</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="math_dataset.html">Mathematic Operations on Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hyperspy.html">Working with Hyperspy Data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Basic usage</a></li>
+      <li class="breadcrumb-item active">Mathematics and Datasets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/notebooks/00_basic_usage/plot_dataset.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Mathematics-and-Datasets">
+<h1>Mathematics and Datasets<a class="headerlink" href="#Mathematics-and-Datasets" title="Link to this heading">¶</a></h1>
+<p><strong>Gerd Duscher</strong></p>
+<p>04/16/2020</p>
+<p><strong>Please download this example and run it as a notebook by scrolling to the bottom of this page</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ensure python 3 compatibility:</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="o">%</span><span class="k">matplotlib</span> widget
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s1">&#39;../../&#39;</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">sidpy</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0.12.3
+</pre></div></div>
+</div>
+<section id="Creating-an-Image-Dataset">
+<h2>Creating an Image Dataset<a class="headerlink" href="#Creating-an-Image-Dataset" title="Link to this heading">¶</a></h2>
+<p>First, we make a sidpy dataset from a numpy array, with all the information to plot it.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">512</span><span class="p">,</span><span class="mi">512</span><span class="p">))</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">)))</span>
+
+<span class="n">dset</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;counts&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;intensity&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;random&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="mf">.02</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spatial&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;distance&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mf">.02</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spatial&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;distance&#39;</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a267441ac47f472b8c42fecf375e778e", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<p>We have the capability to store the variance of our data within the sidpy.Dataset by either adding an additional attribute variance using <code class="docutils literal notranslate"><span class="pre">sidpy.Dataset.from_array(x,</span> <span class="pre">variance=var)</span></code> or by directly saving our variance array in <code class="docutils literal notranslate"><span class="pre">sidpy.Dataset.variance</span></code></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span><span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,:]))</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="n">x_var</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "851f9305461944c2ab4034e220cd5d03", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b904772b4635412088f2c71a54169888", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="Simple-Arithmetic">
+<h2>Simple Arithmetic<a class="headerlink" href="#Simple-Arithmetic" title="Link to this heading">¶</a></h2>
+<p>First we subtract the min of this image, and we want to have the rest of the information unchanged</p>
+<p>So we use the minimum function and do a subtraction.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dset</span> <span class="o">=</span> <span class="n">dset</span> <span class="o">-</span> <span class="n">dset</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "45673e8d0f834f348a6ff4cc53411ade", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<section id="Plotting-a-Complex-Image">
+<h3>Plotting a Complex Image<a class="headerlink" href="#Plotting-a-Complex-Image" title="Link to this heading">¶</a></h3>
+<p>What if the data form a complex image?</p>
+<p>Because, we do not want to start all over again, we will use the <code class="docutils literal notranslate"><span class="pre">like_data</span></code> function, which copies all metadata onto the new dataset.</p>
+<p>The resulting plot consists of two images, which share however the axes, try it out and zoom into one image.</p>
+<p>Another feature of the <code class="docutils literal notranslate"><span class="pre">plot</span></code> function is that you can add any matplotlib keywords and values to the plot.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_c</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span> <span class="o">*</span><span class="mi">1</span><span class="n">j</span>
+<span class="n">dset_complex</span>  <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">like_data</span><span class="p">(</span><span class="n">x_c</span><span class="p">,</span> <span class="s1">&#39;complex image&#39;</span><span class="p">)</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset_complex</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "5e222053441047acaa141250c0c2609a", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+</section>
+<section id="Plotting-a-spectrum">
+<h2>Plotting a spectrum<a class="headerlink" href="#Plotting-a-spectrum" title="Link to this heading">¶</a></h2>
+<p>A spectrum can also easily be populated with the apropriete metadata.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span>
+<span class="n">x_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1024</span><span class="p">))</span>
+
+<span class="n">dset</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="n">x_var</span><span class="p">)</span>
+
+<span class="c1"># dataset metadata</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;spectrum&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;random&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;intensity&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;a.u.&#39;</span>
+
+<span class="c1"># dimension with metadata</span>
+<span class="n">scale</span> <span class="o">=</span> <span class="mf">.5</span>
+<span class="n">offset</span> <span class="o">=</span> <span class="mi">390</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">scale</span><span class="o">+</span><span class="n">offset</span><span class="p">,</span> <span class="s1">&#39;energy&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">dim_0</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spectral&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">energy</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;eV&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">energy</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;energy&#39;</span>
+
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a12a2fac69fe465ba8a90736b40cef48", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="Creating-an-Image-Stack-DataSet">
+<h2>Creating an Image-Stack DataSet<a class="headerlink" href="#Creating-an-Image-Stack-DataSet" title="Link to this heading">¶</a></h2>
+<p>In the following we will make a numpy which resembles a stack of images</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">sidpy</span> <span class="pre">Dataset</span></code> will set the <code class="docutils literal notranslate"><span class="pre">data_type</span></code> to <code class="docutils literal notranslate"><span class="pre">image_stack</span></code> for the plotting routine to know how to plot this dataset.</p>
+<p>The dimensions have to contain at least two <code class="docutils literal notranslate"><span class="pre">spatial</span></code> dimensions and one that is identifiable as a stack dimension (‘stack, ‘frame’, ‘time’). First we make a stack of images</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span>
+<span class="n">x_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span>
+
+<span class="n">dset</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;image_stack&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;counts&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;intensity&#39;</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="n">x_var</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s1">&#39;frame&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;temporal&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mf">.02</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spatial&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;distance&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="mf">.02</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spatial&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;nm&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;distance&#39;</span>
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Plotting-the-Dataset">
+<h2>Plotting the Dataset<a class="headerlink" href="#Plotting-the-Dataset" title="Link to this heading">¶</a></h2>
+<p>Please note that the scroll wheel will move you through the stack, also the slider and the play button will let you navigate through this image stack.</p>
+<p>Zoom to an area and let it play!</p>
+<p>Click on the <code class="docutils literal notranslate"><span class="pre">Average</span></code> button and then click on it again.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "1e160d42a74641f19b6a394f4017a185", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "c34f202e25db4c3b878c9fac27751bad", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<p>The kwargs dictionary is used to plot the image stack in TEM style with scale bar</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;scale_bar&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="s1">&#39;hot&#39;</span><span class="p">}</span>  <span class="c1"># or maby &#39;cmap&#39;: &#39;gray&#39;</span>
+
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Shape of dataset is:  (25, 512, 512)
+3D dataset: DataType.IMAGE_STACK
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "993fa4ee8ce74d139c135fb8c13bc801", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "89ec670f38294a2aa1586a62e8ea8495", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="Plot-Dataset-as-Spectral-Image">
+<h2>Plot Dataset as Spectral Image<a class="headerlink" href="#Plot-Dataset-as-Spectral-Image" title="Link to this heading">¶</a></h2>
+<p>We need to change the data_type of the dataset to <code class="docutils literal notranslate"><span class="pre">spectral_image</span></code> and the dimension_type of one dimension to <code class="docutils literal notranslate"><span class="pre">spectral</span></code>.</p>
+<p>Now the plot function plots it as a spectrum image.</p>
+<p>Select the spectrum with the mouse (left click).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;spectral_image&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="s1">&#39;spectrum&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">spectrum</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spectral&#39;</span>
+<span class="c1">#dset[0,0,:] *=20</span>
+<span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;scale_bar&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="s1">&#39;hot&#39;</span><span class="p">}</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="c1"># Note:</span>
+<span class="c1"># Double click in right panel will zoom to full scale</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "93e03dd6f8264d4593721324366a1d71", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<p>We make the selection more visible by setting the binning of the spectra selection.</p>
+<p>The binning avrages over the binning box.</p>
+<p>Run the code-cell below and look in the plot <code class="docutils literal notranslate"><span class="pre">above</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dset</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">set_bin</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<p>The axes (and figure) instances of matplotlib can be accessed throught the <code class="docutils literal notranslate"><span class="pre">view</span></code> attribute of the sidpy dataset.</p>
+<p>The code cell below will draw a red square lattice on the plot <code class="docutils literal notranslate"><span class="pre">above</span></code></p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">501</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">501</span><span class="p">:</span><span class="mi">100</span><span class="p">]</span> <span class="o">+</span> <span class="mi">5</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<p>The plotting routine can also be used independently.</p>
+<p>Please note, that a reference (here the variable <code class="docutils literal notranslate"><span class="pre">view</span></code>) must be maintained for interactive plotting.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;scale_bar&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="s1">&#39;hot&#39;</span><span class="p">,</span> <span class="p">}</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="s1">&#39;frame&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;temporal&#39;</span>
+
+<span class="n">view</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">dataset_viz</span><span class="o">.</span><span class="n">ImageStackVisualizer</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "16e2467cab5d440192919ff4d346d0aa", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a87eec6e5f4d4e71a63943a36fa9339c", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<p>In the same way as above, we can plot the dataset as an image.</p>
+<p>Please note, that we did not have to set the <code class="docutils literal notranslate"><span class="pre">data_type</span></code> of the dataset.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">dset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;scale_bar&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="s1">&#39;hot&#39;</span><span class="p">}</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">viz</span><span class="o">.</span><span class="n">dataset_viz</span><span class="o">.</span><span class="n">ImageVisualizer</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">image_number</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(25, 512, 512)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "99f930b85d544abeb5dc45b136fcec73", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "20fafd968186428da6470de777354f33", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="4-Dimensional-Dataset">
+<h2>4-Dimensional Dataset<a class="headerlink" href="#4-Dimensional-Dataset" title="Link to this heading">¶</a></h2>
+<p>A 4-dimensional dataset can be visualized as easily.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">+=</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">)</span>
+<span class="c1">#kwargs=(scan_x=0, scan_y=1)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">data_type</span><span class="o">=</span><span class="s1">&#39;Image_4d&#39;</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">plot</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "4611b9c716ea49f88bcc5f1ff7b8a773", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<p>We have the following parameters to influence the plot:</p>
+<ul class="simple">
+<li><p>scan_x, scan_y</p></li>
+<li><p>image_4d_x, image_4d_y Those parameters are supposed to be integers givin the dimension of the dataset.</p></li>
+</ul>
+<p>In the plot above where none of these parameters are specified we assume slowest to fastest change of dimensions.</p>
+<p>But below, we switch scanned and image dimensions of th 4d dataset.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scan_x</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">scan_y</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">image_4d_x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">image_4d_y</span><span class="o">=</span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "959aae9d857a40d4b838b34bd2a4a011", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="Plotting-of-Point-Cloud">
+<h2>Plotting of Point Cloud<a class="headerlink" href="#Plotting-of-Point-Cloud" title="Link to this heading">¶</a></h2>
+<p>Point Clouds can be represented by the 2D <code class="docutils literal notranslate"><span class="pre">sidpy</span> <span class="pre">Dataset</span></code> with one <code class="docutils literal notranslate"><span class="pre">point_cloud</span></code> dimension and one <code class="docutils literal notranslate"><span class="pre">spectral</span></code> dimension or by the 3D <code class="docutils literal notranslate"><span class="pre">sidpy</span> <span class="pre">Dataset</span></code> with one more <code class="docutils literal notranslate"><span class="pre">channel</span></code> dimension.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">point_cloud</span></code> dimension represents point number, while the real points coordinates must be stored in the <code class="docutils literal notranslate"><span class="pre">sidpy.Dataset.point_cloud</span></code>. To customize spatial units and quantities for specific coordinates, simply extend the <code class="docutils literal notranslate"><span class="pre">sidpy.Dataset.point_cloud</span></code> dictionary with the relevant values.</p>
+<section id="2D">
+<h3>2D<a class="headerlink" href="#2D" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">data_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="c1">#np.random.rand(20,2)+10</span>
+
+<span class="n">dset</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coordinates</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">)</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;point_cloud&#39;</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="n">data_var</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">point_cloud</span><span class="p">[</span><span class="s1">&#39;spacial_units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;um&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">point_cloud</span><span class="p">[</span><span class="s1">&#39;quantity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Distance&#39;</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;point number&#39;</span><span class="p">,</span>
+                                    <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;Point number&#39;</span><span class="p">,</span>
+                                    <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;point_cloud&#39;</span><span class="p">))</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">,</span>
+                                    <span class="n">units</span><span class="o">=</span><span class="s1">&#39;a.u.&#39;</span><span class="p">,</span>
+                                    <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">,</span>
+                                    <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;spectral&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;a.u.&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;Intensity&#39;</span>
+
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "87db21846d064513bcec21ff8c4186a4", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="3D">
+<h3>3D<a class="headerlink" href="#3D" title="Link to this heading">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">data_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="mi">7</span>
+
+<span class="n">dset</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coordinates</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">)</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;point_cloud&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="n">data_var</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;point number&#39;</span><span class="p">,</span>
+                                    <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;Point number&#39;</span><span class="p">,</span>
+                                    <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;point_cloud&#39;</span><span class="p">))</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                                     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;cycle&#39;</span><span class="p">,</span>
+                                     <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;Cycle&#39;</span><span class="p">,</span>
+                                     <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;channel&#39;</span><span class="p">))</span>
+
+<span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">,</span>
+                                    <span class="n">units</span><span class="o">=</span><span class="s1">&#39;a.u.&#39;</span><span class="p">,</span>
+                                    <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">,</span>
+                                    <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;spectral&#39;</span><span class="p">))</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;a.u.&#39;</span>
+<span class="n">dset</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;Intensity&#39;</span>
+<span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "8d3f54514ba94277a48c3f3186b156ac", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+</section>
+<section id="Point-cloud-with-base_image">
+<h3>Point cloud with base_image<a class="headerlink" href="#Point-cloud-with-base_image" title="Link to this heading">¶</a></h3>
+<p>To visualize a point cloud within the real field of view, you can use the dset.plot function by providing an additional attribute called base_name. In this case, you can call the function as follows: <code class="docutils literal notranslate"><span class="pre">dset.plot(base_name=image_dataset)</span></code>, where image_dataset should be an instance of <code class="docutils literal notranslate"><span class="pre">sidpy.Dataset</span></code> with a data_type set to ‘IMAGE’.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#image_dataset initializtion. image_dataset represents field of view</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+<span class="n">im_data</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">+</span> <span class="mi">8</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,:])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span>
+
+<span class="n">image_dataset</span> <span class="o">=</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">im_data</span><span class="p">,</span> <span class="n">datatype</span><span class="o">=</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;counts&#39;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="s1">&#39;intensity&#39;</span><span class="p">)</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;random&#39;</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">image_dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s1">&#39;x&#39;</span><span class="p">))</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spatial&#39;</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;um&#39;</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;distance&#39;</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">image_dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="s1">&#39;y&#39;</span><span class="p">))</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">dimension_type</span> <span class="o">=</span> <span class="s1">&#39;spatial&#39;</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s1">&#39;um&#39;</span>
+<span class="n">image_dataset</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="s1">&#39;distance&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">view</span> <span class="o">=</span> <span class="n">dset</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">base_image</span> <span class="o">=</span> <span class="n">image_dataset</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "12c64e91c73a4fdf89b18ab0a0f1e18f", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="create_dataset.html" class="btn btn-neutral float-left" title="Creating and Manipulating Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="math_dataset.html" class="btn btn-neutral float-right" title="Mathematic Operations on Datasets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

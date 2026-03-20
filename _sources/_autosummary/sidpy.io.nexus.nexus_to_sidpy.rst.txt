@@ -1,0 +1,6 @@
+sidpy.io.nexus.nexus\_to\_sidpy
+===============================
+
+.. currentmodule:: sidpy.io.nexus
+
+.. autofunction:: nexus_to_sidpy

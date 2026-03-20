@@ -1,0 +1,700 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.hdf.reg_ref &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.hdf.reg_ref</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.hdf.reg_ref</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Nov  3 21:14:25 2015</span>
+
+<span class="sd">@author: Chris Smith, Suhas Somnath</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> \
+    <span class="n">unicode_literals</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sidpy.base.string_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_string_att</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+    <span class="n">unicode</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;get_region&#39;</span><span class="p">,</span> <span class="s1">&#39;clean_reg_ref&#39;</span><span class="p">,</span> <span class="s1">&#39;attempt_reg_ref_build&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;copy_reg_ref_reduced_dim&#39;</span><span class="p">,</span><span class="s1">&#39;create_region_reference&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;get_indices_for_region_ref&#39;</span><span class="p">,</span> <span class="s1">&#39;simple_region_ref_copy&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;write_region_references&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="get_region">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.get_region.html#sidpy.hdf.reg_ref.get_region">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_region</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">reg_ref_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the region in a dataset specified by a region reference</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_dset : h5py.Dataset</span>
+<span class="sd">        Dataset containing the region reference</span>
+<span class="sd">    reg_ref_name : str / unicode</span>
+<span class="sd">        Name of the region reference</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value : np.ndarray</span>
+<span class="sd">        Data specified by the region reference. Note that a squeeze is applied</span>
+<span class="sd">        by default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg_ref_name</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;reg_ref_name should be a string&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_dset should be of type h5py.Dataset&#39;</span><span class="p">)</span>
+    <span class="c1"># this may raise KeyErrors. Let it</span>
+    <span class="n">reg_ref</span> <span class="o">=</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">reg_ref_name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">[</span><span class="n">reg_ref</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="clean_reg_ref">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.clean_reg_ref.html#sidpy.hdf.reg_ref.clean_reg_ref">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clean_reg_ref</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">reg_ref_tuple</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes sure that the provided instructions for a region reference are indeed</span>
+<span class="sd">    valid. This method has become necessary since h5py allows the writing of</span>
+<span class="sd">    region references larger than the maxshape</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_dset : h5.Dataset instance</span>
+<span class="sd">        Dataset to which region references will be added as attributes</span>
+<span class="sd">    reg_ref_tuple : list / tuple</span>
+<span class="sd">        The slicing information formatted using tuples of slice objects.</span>
+<span class="sd">    verbose : Boolean (Optional. Default = False)</span>
+<span class="sd">        Whether or not to print status messages</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_reg_refs : tuple</span>
+<span class="sd">        Instructions for the corrected region reference</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg_ref_tuple</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;slices should be a tuple, list, or slice but is &#39;</span>
+                        <span class="s1">&#39;instead of type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">reg_ref_tuple</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_dset should be a h5py.Dataset object but is &#39;</span>
+                        <span class="s1">&#39;instead of type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg_ref_tuple</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+        <span class="c1"># 1D dataset</span>
+        <span class="n">reg_ref_tuple</span> <span class="o">=</span> <span class="p">[</span><span class="n">reg_ref_tuple</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reg_ref_tuple</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">h5_dset</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Region reference tuple did not have the same &#39;</span>
+                         <span class="s1">&#39;dimensions as the h5 dataset&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Comparing </span><span class="si">{}</span><span class="s1"> with h5 dataset maxshape of </span><span class="si">{}</span><span class="s1">&#39;</span>
+              <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reg_ref_tuple</span><span class="p">,</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">maxshape</span><span class="p">))</span>
+
+    <span class="n">new_reg_refs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">reg_ref_slice</span><span class="p">,</span> <span class="n">max_size</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">reg_ref_tuple</span><span class="p">,</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">maxshape</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg_ref_slice</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;slices should be a tuple or a list but is instead&#39;</span>
+                            <span class="s1">&#39; of type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">reg_ref_slice</span><span class="p">)))</span>
+
+        <span class="c1"># For now we will simply make sure that the end of the slice is</span>
+        <span class="c1"># &lt;= maxshape</span>
+        <span class="k">if</span> <span class="n">max_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reg_ref_slice</span><span class="o">.</span><span class="n">stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">reg_ref_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">reg_ref_slice</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                                  <span class="nb">min</span><span class="p">(</span><span class="n">reg_ref_slice</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="n">max_size</span><span class="p">),</span>
+                                  <span class="n">reg_ref_slice</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="n">new_reg_refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reg_ref_slice</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Region reference tuple now: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_reg_refs</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_reg_refs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="attempt_reg_ref_build">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.attempt_reg_ref_build.html#sidpy.hdf.reg_ref.attempt_reg_ref_build">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">attempt_reg_ref_build</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">dim_names</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attempts to build region references</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_dset : h5.Dataset instance</span>
+<span class="sd">        Dataset to which region references need to be added as attributes</span>
+<span class="sd">    dim_names : list or tuple</span>
+<span class="sd">        List of the names of the region references (typically names of</span>
+<span class="sd">        dimensions)</span>
+<span class="sd">    verbose : bool, optional. Default=False</span>
+<span class="sd">        Whether or not to print debugging statements</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    labels_dict : dict</span>
+<span class="sd">        The slicing information must be formatted using tuples of slice objects</span>
+<span class="sd">        For example {&#39;region_1&#39;:(slice(None, None), slice (0,1))}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_dset should be a h5py.Dataset object but is &#39;</span>
+                        <span class="s1">&#39;instead of type </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dim_names</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;slices should be a list or tuple but is instead of &#39;</span>
+                        <span class="s1">&#39;type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">dim_names</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">h5_dset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">))</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">dim_names</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unable to automatically generate region references &#39;</span>
+                        <span class="s1">&#39;for dataset: </span><span class="si">{}</span><span class="s1"> since one or more names of the region&#39;</span>
+                        <span class="s1">&#39; references was not a string&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dset</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+    <span class="n">labels_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim_names</span><span class="p">)</span> <span class="o">==</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most likely a spectroscopic indices / values dataset&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dim_index</span><span class="p">,</span> <span class="n">curr_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dim_names</span><span class="p">):</span>
+            <span class="n">labels_dict</span><span class="p">[</span><span class="n">curr_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">dim_index</span><span class="p">,</span> <span class="n">dim_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                                      <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim_names</span><span class="p">)</span> <span class="o">==</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Most likely a position indices / values dataset&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dim_index</span><span class="p">,</span> <span class="n">curr_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dim_names</span><span class="p">):</span>
+            <span class="n">labels_dict</span><span class="p">[</span><span class="n">curr_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="n">dim_index</span><span class="p">,</span>
+                                                         <span class="n">dim_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels_dict</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Attempted to automatically build region reference dictionary for&#39;</span>
+             <span class="s1">&#39; dataset: </span><span class="si">{}</span><span class="s1">.</span><span class="se">\n</span><span class="s1">Please specify region references as a tuple of &#39;</span>
+             <span class="s1">&#39;slice objects for each attribute&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dset</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Could not build region references since dataset had shape:&#39;</span>
+                  <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> and number of region references is </span><span class="si">{}</span><span class="s1">&#39;</span>
+                  <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dset</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim_names</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">labels_dict</span></div>
+
+
+
+<div class="viewcode-block" id="get_indices_for_region_ref">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.get_indices_for_region_ref.html#sidpy.hdf.reg_ref.get_indices_for_region_ref">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_indices_for_region_ref</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">return_method</span><span class="o">=</span><span class="s1">&#39;slices&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given an hdf5 region reference and the dataset it refers to,</span>
+<span class="sd">    return an array of indices within that dataset that</span>
+<span class="sd">    correspond to the reference.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_main : HDF5 Dataset</span>
+<span class="sd">        dataset that the reference can be returned from</span>
+<span class="sd">    ref : HDF5 Region Reference</span>
+<span class="sd">        Region reference object</span>
+<span class="sd">    return_method : {&#39;slices&#39;, &#39;corners&#39;, &#39;points&#39;}</span>
+<span class="sd">        slices : the reference is return as pairs of slices</span>
+
+<span class="sd">        corners : the reference is returned as pairs of corners representing</span>
+<span class="sd">        the starting and ending indices of each block</span>
+
+<span class="sd">        points : the reference is returns as a list of tuples of points</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ref_inds : Numpy Array</span>
+<span class="sd">        array of indices in the source dataset that ref accesses</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_main should be a h5py.Dataset object&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">RegionReference</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;ref should be a h5py.RegionReference object&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">return_method</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;return_method should be a string&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_method</span> <span class="o">==</span> <span class="s1">&#39;points&#39;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">__corners_to_point_array</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Convert a pair of tuples representing two opposite corners of an</span>
+<span class="sd">            HDF5 region reference</span>
+<span class="sd">            into a list of arrays for each dimension.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            start : Tuple</span>
+<span class="sd">                the starting indices of the region</span>
+<span class="sd">            stop : Tuple</span>
+<span class="sd">                the final indices of the region</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            inds : Tuple of arrays</span>
+<span class="sd">                the list of points in each dimension</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">ranges</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">start</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">stop</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">ranges</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">stop</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">stop</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint</span><span class="p">))</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">ranges</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">)</span>
+
+            <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">flat</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">)))</span>
+
+            <span class="k">return</span> <span class="n">ref_inds</span>
+
+        <span class="n">return_func</span> <span class="o">=</span> <span class="n">__corners_to_point_array</span>
+    <span class="k">elif</span> <span class="n">return_method</span> <span class="o">==</span> <span class="s1">&#39;corners&#39;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">__corners_to_corners</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span>
+
+        <span class="n">return_func</span> <span class="o">=</span> <span class="n">__corners_to_corners</span>
+    <span class="k">elif</span> <span class="n">return_method</span> <span class="o">==</span> <span class="s1">&#39;slices&#39;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">__corners_to_slices</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Convert a pair of tuples representing two opposite corners of an</span>
+<span class="sd">            HDF5 region reference</span>
+<span class="sd">            into a pair of slices.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            start : Tuple</span>
+<span class="sd">                the starting indices of the region</span>
+<span class="sd">            stop : Tuple</span>
+<span class="sd">                the final indices of the region</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            slices : list</span>
+<span class="sd">                pair of slices representing the region</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">idim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">)):</span>
+                <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="n">idim</span><span class="p">],</span> <span class="n">stop</span><span class="p">[</span><span class="n">idim</span><span class="p">]))</span>
+
+            <span class="k">return</span> <span class="n">slices</span>
+
+        <span class="n">return_func</span> <span class="o">=</span> <span class="n">__corners_to_slices</span>
+
+    <span class="n">region</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">h5r</span><span class="o">.</span><span class="n">get_region</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">reg_type</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">get_select_type</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">reg_type</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reference is hyperslabs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ref_inds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">region</span><span class="o">.</span><span class="n">get_select_hyper_blocklist</span><span class="p">():</span>
+            <span class="n">ref_inds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">return_func</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+        <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">reg_type</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reference is single block</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">get_select_bounds</span><span class="p">()</span>
+
+        <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">return_func</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No method exists for converting this type of reference&#39;</span><span class="p">)</span>
+        <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ref_inds</span></div>
+
+
+
+<div class="viewcode-block" id="copy_reg_ref_reduced_dim">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.copy_reg_ref_reduced_dim.html#sidpy.hdf.reg_ref.copy_reg_ref_reduced_dim">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_reg_ref_reduced_dim</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5_target</span><span class="p">,</span> <span class="n">h5_source_inds</span><span class="p">,</span>
+                             <span class="n">h5_target_inds</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Copies a region reference from one dataset to another taking into account</span>
+<span class="sd">    that a dimension has been lost from source to target</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_source : HDF5 Dataset</span>
+<span class="sd">            source dataset for region reference copy</span>
+<span class="sd">    h5_target : HDF5 Dataset</span>
+<span class="sd">            target dataset for region reference copy</span>
+<span class="sd">    h5_source_inds : HDF5 Dataset</span>
+<span class="sd">            indices of each dimension of the h5_source dataset</span>
+<span class="sd">    h5_target_inds : HDF5 Dataset</span>
+<span class="sd">            indices of each dimension of the h5_target dataset</span>
+<span class="sd">    key : String</span>
+<span class="sd">            Name of attribute in h5_source that contains</span>
+<span class="sd">            the Region Reference to copy</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ref_inds : Nx2x2 array of unsigned integers</span>
+<span class="sd">            Array containing pairs of points that define</span>
+<span class="sd">            the corners of each hyperslab in the region</span>
+<span class="sd">            reference</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5_target</span><span class="p">,</span> <span class="n">h5_source_inds</span><span class="p">,</span>
+                                  <span class="n">h5_target_inds</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="s1">&#39;h5_source&#39;</span><span class="p">,</span> <span class="s1">&#39;h5_target&#39;</span><span class="p">,</span> <span class="s1">&#39;h5_source_inds&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;h5_target_inds&#39;</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39; should be a h5py.Dataset object&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;key should be a string&#39;</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Determine which dimension is missing from the target</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">lost_dim</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">h5_source_inds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">dim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">h5_target_inds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]:</span>
+            <span class="n">lost_dim</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h5_source_inds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">dim</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">h5_source</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">get_indices_for_region_ref</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span>
+                                          <span class="n">return_method</span><span class="o">=</span><span class="s1">&#39;corners&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Convert to proper spectroscopic dimensions</span>
+<span class="sd">    First is special case for a region reference that spans the entire dataset</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_inds</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">h5_source</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+        <span class="n">ref_inds</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5_target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    More common case of reference made of hyperslabs</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">spec_ind_zeroes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h5_source_inds</span><span class="p">[</span><span class="n">lost_dim</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">ref_inds</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="n">ref_inds</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec_ind_zeroes</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">stop</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stop</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec_ind_zeroes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">ref_inds</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec_ind_zeroes</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">spec_ind_zeroes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">stop</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec_ind_zeroes</span><span class="p">)</span>
+        <span class="n">ref_inds</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">stop</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create the new reference from the indices</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">h5_target</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">create_region_reference</span><span class="p">(</span><span class="n">h5_target</span><span class="p">,</span> <span class="n">ref_inds</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ref_inds</span></div>
+
+
+
+<div class="viewcode-block" id="create_region_reference">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.create_region_reference.html#sidpy.hdf.reg_ref.create_region_reference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_region_reference</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">ref_inds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a region reference in the destination dataset using an iterable of</span>
+<span class="sd">    pairs of indices representing the start and end points of a hyperslab block</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_main : HDF5 dataset</span>
+<span class="sd">        dataset the region will be created in</span>
+<span class="sd">    ref_inds : Iterable</span>
+<span class="sd">        index pairs, [start indices, final indices] for each block in the</span>
+<span class="sd">        hyperslab</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_ref : HDF5 Region reference</span>
+<span class="sd">        reference in `h5_main` for the blocks of points defined by `ref_inds`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_main</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_main should be a h5py.Dataset object&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_inds</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;ref_inds should be a list or tuple&#39;</span><span class="p">)</span>
+
+    <span class="n">h5_space</span> <span class="o">=</span> <span class="n">h5_main</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">get_space</span><span class="p">()</span>
+    <span class="n">h5_space</span><span class="o">.</span><span class="n">select_none</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="n">ref_inds</span><span class="p">:</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">stop</span> <span class="o">-</span> <span class="n">start</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">h5_space</span><span class="o">.</span><span class="n">select_hyperslab</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                  <span class="n">block</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="p">),</span> <span class="n">op</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">h5_space</span><span class="o">.</span><span class="n">select_valid</span><span class="p">():</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Could not create new region reference.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">new_ref</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">h5r</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">h5_main</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">h5r</span><span class="o">.</span><span class="n">DATASET_REGION</span><span class="p">,</span>
+                              <span class="n">space</span><span class="o">=</span><span class="n">h5_space</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_ref</span></div>
+
+
+
+<div class="viewcode-block" id="simple_region_ref_copy">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.simple_region_ref_copy.html#sidpy.hdf.reg_ref.simple_region_ref_copy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">simple_region_ref_copy</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5_target</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Copies a region reference from one dataset to another</span>
+<span class="sd">    without alteration</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_source : HDF5 Dataset</span>
+<span class="sd">            source dataset for region reference copy</span>
+<span class="sd">    h5_target : HDF5 Dataset</span>
+<span class="sd">            target dataset for region reference copy</span>
+<span class="sd">    key : String</span>
+<span class="sd">            Name of attribute in h5_source that contains</span>
+<span class="sd">            the Region Reference to copy</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ref_inds : Nx2x2 array of unsigned integers</span>
+<span class="sd">            Array containing pairs of points that define</span>
+<span class="sd">            the corners of each hyperslab in the region</span>
+<span class="sd">            reference</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5_target</span><span class="p">],</span>
+                                 <span class="p">[</span><span class="s1">&#39;h5_source&#39;</span><span class="p">,</span> <span class="s1">&#39;h5_target&#39;</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">param_name</span> <span class="o">+</span> <span class="s1">&#39; should be a h5py.Dataset object&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">unicode</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;key should be a string&#39;</span><span class="p">)</span>
+
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">h5_source</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">get_indices_for_region_ref</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span>
+                                          <span class="n">return_method</span><span class="o">=</span><span class="s1">&#39;corners&#39;</span><span class="p">)</span>
+    <span class="n">ref_inds</span> <span class="o">=</span> <span class="n">ref_inds</span><span class="o">.</span><span class="n">reshape</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+    <span class="n">ref_inds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5_target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">target_ref</span> <span class="o">=</span> <span class="n">create_region_reference</span><span class="p">(</span><span class="n">h5_target</span><span class="p">,</span> <span class="n">ref_inds</span><span class="p">)</span>
+    <span class="n">h5_target</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_ref</span>
+    <span class="k">return</span> <span class="n">ref_inds</span></div>
+
+
+
+<div class="viewcode-block" id="copy_all_region_refs">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.copy_all_region_refs.html#sidpy.hdf.reg_ref.copy_all_region_refs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">copy_all_region_refs</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5_target</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Copies only region references from the source dataset to the target dataset</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_source : h5py.Dataset</span>
+<span class="sd">        Dataset from which to copy region references</span>
+<span class="sd">    h5_target : h5py.Dataset</span>
+<span class="sd">        Dataset to which to copy region references to</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;h5_source&#39; should be a h5py.Dataset object&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_target</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;h5_target&#39; should be a h5py.Dataset object&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">h5_source</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_source</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">h5py</span><span class="o">.</span><span class="n">RegionReference</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">simple_region_ref_copy</span><span class="p">(</span><span class="n">h5_source</span><span class="p">,</span> <span class="n">h5_target</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_region_references">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.hdf.reg_ref.write_region_references.html#sidpy.hdf.reg_ref.write_region_references">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_region_references</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">reg_ref_dict</span><span class="p">,</span> <span class="n">add_labels_attr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates attributes of a h5py.Dataset that refer to regions in the dataset</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_dset : h5.Dataset instance</span>
+<span class="sd">        Dataset to which region references will be added as attributes</span>
+<span class="sd">    reg_ref_dict : dict</span>
+<span class="sd">        The slicing information must be formatted using tuples of slice objects</span>
+<span class="sd">        . For example {&#39;region_1&#39;:(slice(None, None), slice (0,1))}</span>
+<span class="sd">    add_labels_attr : bool, optional, default = True</span>
+<span class="sd">        Whether or not to write an attribute named &#39;labels&#39; with the</span>
+<span class="sd">    verbose : Boolean (Optional. Default = False)</span>
+<span class="sd">        Whether or not to print status messages</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reg_ref_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;slices should be a dictionary but is instead of type &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">reg_ref_dict</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;h5_dset should be a h5py.Dataset object but is &#39;</span>
+                        <span class="s1">&#39;instead of type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting to write Region References to Dataset&#39;</span><span class="p">,</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+              <span class="s1">&#39;of shape:&#39;</span><span class="p">,</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">reg_ref_name</span><span class="p">,</span> <span class="n">reg_ref_tuple</span> <span class="ow">in</span> <span class="n">reg_ref_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;About to write region reference:&#39;</span><span class="p">,</span> <span class="n">reg_ref_name</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span>
+                  <span class="n">reg_ref_tuple</span><span class="p">)</span>
+
+        <span class="n">reg_ref_tuple</span> <span class="o">=</span> <span class="n">clean_reg_ref</span><span class="p">(</span><span class="n">h5_dset</span><span class="p">,</span> <span class="n">reg_ref_tuple</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="n">h5_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">reg_ref_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5_dset</span><span class="o">.</span><span class="n">regionref</span><span class="p">[</span><span class="n">reg_ref_tuple</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Wrote Region Reference:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">reg_ref_name</span><span class="p">)</span>
+
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Next, write these label names as an attribute called labels</span>
+<span class="sd">    Now make an attribute called &#39;labels&#39; that is a list of strings </span>
+<span class="sd">    First ascertain the dimension of the slicing:</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">add_labels_attr</span><span class="p">:</span>
+        <span class="n">found_dim</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">dimen_index</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">reg_ref_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="n">reg_ref_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">dimen_index</span><span class="p">,</span> <span class="n">slice_obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">reg_ref_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="c1"># We make the assumption that checking the start is sufficient</span>
+            <span class="k">if</span> <span class="n">slice_obj</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">found_dim</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">found_dim</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">reg_ref_dict</span><span class="p">)</span>
+            <span class="c1"># The list that will hold all the names</span>
+            <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">reg_ref_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">headers</span><span class="p">[</span><span class="n">reg_ref_dict</span><span class="p">[</span><span class="n">col_name</span><span class="p">][</span><span class="n">dimen_index</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_name</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing header attributes: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">))</span>
+            <span class="c1"># Now write the list of col / row names as an attribute:</span>
+            <span class="n">h5_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clean_string_att</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Unable to write region references for </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dset</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Wrote Region References of Dataset </span><span class="si">{}</span><span class="s1">&#39;</span>
+                  <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h5_dset</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

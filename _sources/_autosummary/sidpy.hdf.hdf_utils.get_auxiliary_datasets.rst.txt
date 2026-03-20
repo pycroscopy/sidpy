@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.get\_auxiliary\_datasets
+=============================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: get_auxiliary_datasets

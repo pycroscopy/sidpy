@@ -1,0 +1,6 @@
+sidpy.proc.mcp\_server\_beps.fit\_sho\_response
+===============================================
+
+.. currentmodule:: sidpy.proc.mcp_server_beps
+
+.. autofunction:: fit_sho_response

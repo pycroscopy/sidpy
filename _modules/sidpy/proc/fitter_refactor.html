@@ -1,0 +1,704 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.proc.fitter_refactor &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.proc.fitter_refactor</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.proc.fitter_refactor</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dask.array</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">da</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">least_squares</span>
+<span class="c1">#from sklearn.cluster import KMeans</span>
+<span class="c1"># Try importing dask_ml, warn if missing</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dask_ml.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">KMeans</span> <span class="k">as</span> <span class="n">DaskKMeans</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;The &#39;dask-ml&#39; library is required for scalable K-Means. Install via &#39;pip install dask-ml&#39;.&quot;</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sid</span>
+
+<div class="viewcode-block" id="SidpyFitterRefactor">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.html#sidpy.proc.fitter_refactor.SidpyFitterRefactor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SidpyFitterRefactor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A parallelized fitter for sidpy.Datasets that supports K-Means-based </span>
+<span class="sd">    initial guesses for improved convergence on large datasets.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset : sidpy.Dataset</span>
+<span class="sd">        The original sidpy dataset containing data and metadata.</span>
+<span class="sd">    dask_data : dask.array.Array</span>
+<span class="sd">        The underlying dask array used for parallel computation.</span>
+<span class="sd">    model_func : callable</span>
+<span class="sd">        The function to fit. Expected signature: f(x_axis, *params).</span>
+<span class="sd">    guess_func : callable</span>
+<span class="sd">        The function to generate initial guesses. Expected signature: f(x_axis, y_data).</span>
+<span class="sd">    metadata : dict</span>
+<span class="sd">        A dictionary containing fit parameters, model source code, and configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">model_function</span><span class="p">,</span> <span class="n">guess_function</span><span class="p">,</span> <span class="n">ind_dims</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">lower_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the SidpyFitterKMeans.</span>
+
+<span class="sd">        Inputs</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset : sidpy.Dataset</span>
+<span class="sd">            Dataset to be fitted.</span>
+<span class="sd">        model_function : callable</span>
+<span class="sd">            The model function to use for fitting.</span>
+<span class="sd">        guess_function : callable</span>
+<span class="sd">            The function to generate initial parameters for the model.</span>
+<span class="sd">        ind_dims : int or tuple of int, optional</span>
+<span class="sd">            The indices of the dimensions to fit over. Default is whatever are the spectral dimensions</span>
+<span class="sd">        num_params: int, optional but required in case of 2D or higher fitting</span>
+<span class="sd">            The number of parameters the fitting function expects.</span>
+<span class="sd">        lower_bounds : None, float, or array-like, optional</span>
+<span class="sd">            Lower bounds for the fit parameters. Can be:</span>
+<span class="sd">              - None (default): no lower bound (-inf) on any parameter.</span>
+<span class="sd">              - scalar float: the same lower bound applied to every parameter.</span>
+<span class="sd">              - array-like of length num_params: per-parameter lower bounds.</span>
+<span class="sd">            Must satisfy lower_bounds &lt;= upper_bounds element-wise.</span>
+<span class="sd">        upper_bounds : None, float, or array-like, optional</span>
+<span class="sd">            Upper bounds for the fit parameters. Same rules as lower_bounds.</span>
+<span class="sd">            Must satisfy upper_bounds &gt;= lower_bounds element-wise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">sidpy</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Dataset must be a sidpy.Dataset object.&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dask_data</span> <span class="o">=</span> <span class="n">dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_func</span> <span class="o">=</span> <span class="n">model_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">guess_func</span> <span class="o">=</span> <span class="n">guess_function</span>
+
+        <span class="c1"># Store bounds early so _fit_logic and do_kmeans_guess always see them.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_bounds</span> <span class="o">=</span> <span class="n">lower_bounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_bounds</span> <span class="o">=</span> <span class="n">upper_bounds</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectral_dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_spectral_dims</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spectral_dims</span> <span class="p">)</span> <span class="k">if</span> <span class="n">ind_dims</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ind_dims</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">]</span>
+        
+        <span class="c1"># Standardize x_axis (coordinate values)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">])</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_complex</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span> <span class="o">=</span> <span class="n">num_params</span>
+
+        <span class="c1"># --- Reproducibility Metadata ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;fit_parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;ind_dims&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">,</span>
+                <span class="s2">&quot;is_complex&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complex</span><span class="p">,</span>
+                <span class="s2">&quot;use_kmeans&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># Updated during do_fit</span>
+                <span class="s2">&quot;n_clusters&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>   <span class="c1"># Updated during do_fit</span>
+                <span class="s2">&quot;lower_bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">lower_bounds</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lower_bounds</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+                                 <span class="k">else</span> <span class="n">lower_bounds</span><span class="p">),</span>
+                <span class="s2">&quot;upper_bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">upper_bounds</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">upper_bounds</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+                                 <span class="k">else</span> <span class="n">upper_bounds</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;source_code&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;model_function&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_source</span><span class="p">(</span><span class="n">model_function</span><span class="p">),</span>
+                <span class="s2">&quot;guess_function&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_source</span><span class="p">(</span><span class="n">guess_function</span><span class="p">)</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;dataset_info&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;original_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;original_shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extracts source code and splits into lines for readable metadata.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">raw_source</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">raw_source</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>  <span class="c1"># Returns list of strings</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;Source code not available (function might be defined in a shell or compiled).&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="SidpyFitterRefactor.setup_calc">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.html#sidpy.proc.fitter_refactor.SidpyFitterRefactor.setup_calc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup_calc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepares the calculation by rechunking and determining the parameter count.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chunks : str or tuple, optional</span>
+<span class="sd">            The chunk size for the dask array. Default is &#39;auto&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">chunks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dask_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dask_data</span><span class="o">.</span><span class="n">rechunk</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+        
+        <span class="n">s_slice</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">:</span> 
+            <span class="n">s_slice</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        
+        <span class="n">sample_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dask_data</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">s_slice</span><span class="p">)])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">sample_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">guess_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">sample_y</span><span class="p">))</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_guess</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;num_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setup Complete. Params: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="si">}</span><span class="s2"> | Spatial Dims: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">ind_dims</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal helper to reshape dask blocks into (Pixels, Spectrum).&quot;&quot;&quot;</span>
+        <span class="n">n_ind</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind_dims</span><span class="p">)</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="n">n_ind</span><span class="p">,</span> <span class="n">block</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">ind_dims</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+        <span class="n">spatial_shape</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="n">n_ind</span><span class="p">]</span>
+        <span class="n">flat_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">n_ind</span><span class="p">:]))</span>
+        <span class="k">return</span> <span class="n">flat_data</span><span class="p">,</span> <span class="n">spatial_shape</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_logic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_vec</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">f_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">return_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Core optimization logic for a single pixel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_vec</span><span class="p">))</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="c1"># --- Resolve bounds --------------------------------------------</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_bound</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">n_params</span><span class="p">,</span> <span class="n">fill_value</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return a float64 array of length n_params from a flexible input.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_params</span><span class="p">,</span> <span class="n">fill_value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_params</span><span class="p">,</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">n_params</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Bound array length (</span><span class="si">{</span><span class="n">arr</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">) does not match &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;num_params (</span><span class="si">{</span><span class="n">n_params</span><span class="si">}</span><span class="s2">). Provide a scalar or an &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;array-like of length </span><span class="si">{</span><span class="n">n_params</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">arr</span>
+
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">_resolve_bound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower_bounds</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="n">_resolve_bound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper_bounds</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span>  <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">lb</span> <span class="o">&gt;</span> <span class="n">ub</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;lower_bounds must be &lt;= upper_bounds for every parameter. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Violations at indices: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">lb</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">ub</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Clip guess into bounds so least_squares doesn&#39;t raise immediately.</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">,</span> <span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>
+
+        <span class="c1"># &#39;lm&#39; only supports linear loss and no bounds; use &#39;trf&#39; otherwise.</span>
+        <span class="n">has_finite_bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lb</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ub</span><span class="p">))</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;trf&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">has_finite_bounds</span> <span class="ow">or</span> <span class="n">loss</span> <span class="o">!=</span> <span class="s1">&#39;linear&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;lm&#39;</span>
+        <span class="c1"># ---------------------------------------------------------------</span>
+
+        <span class="c1"># Prepare data for least_squares (handle complex)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complex</span><span class="p">:</span>
+            <span class="n">y_input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">y_vec</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">y_vec</span><span class="o">.</span><span class="n">imag</span><span class="p">])</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">residuals</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_s</span><span class="p">):</span>
+                <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">fit</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">y_s</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                    <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">fit</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">fit</span><span class="o">.</span><span class="n">imag</span><span class="p">])</span>
+                <span class="k">return</span> <span class="n">y_s</span> <span class="o">-</span> <span class="n">fit</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">y_input</span> <span class="o">=</span> <span class="n">y_vec</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">residuals</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">p</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">y</span> <span class="o">-</span> <span class="n">fit</span>
+        
+        <span class="c1"># Run Fit</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">least_squares</span><span class="p">(</span><span class="n">residuals</span><span class="p">,</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">y_input</span><span class="p">),</span>
+                            <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">f_scale</span><span class="o">=</span><span class="n">f_scale</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_cov</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1"># --- Covariance Calculation ---</span>
+        <span class="c1"># 1. Get Jacobian (J) at the solution</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">jac</span>
+        
+        <span class="c1"># 2. Approximate Hessian (J.T @ J)</span>
+        <span class="c1"># Note: If J is rank-deficient, this inversion can be unstable. </span>
+        <span class="c1"># We use pseudo-inverse (pinv) for safety.</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">J</span>
+        <span class="n">cov_unscaled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+
+        <span class="c1"># 3. Calculate Residual Variance (Reduced Chi-Squared)</span>
+        <span class="c1"># dof = num_data_points - num_parameters</span>
+        <span class="n">dof</span> <span class="o">=</span> <span class="n">y_input</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">if</span> <span class="n">dof</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">var_residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">fun</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">dof</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">var_residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="c1"># Perfect fit or underdetermined</span>
+
+        <span class="c1"># 4. Scale Covariance</span>
+        <span class="n">cov_matrix</span> <span class="o">=</span> <span class="n">cov_unscaled</span> <span class="o">*</span> <span class="n">var_residuals</span>
+        
+        <span class="c1"># Return flattened parameters followed by flattened covariance</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">cov_matrix</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
+
+<div class="viewcode-block" id="SidpyFitterRefactor.do_kmeans_guess">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.html#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_kmeans_guess">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_kmeans_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs K-Means clustering to find representative spectra for prior fitting.</span>
+<span class="sd">        We use Dask-ML Kmeans to do this in a scalable fashion.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_clusters : int, optional</span>
+<span class="sd">            Number of clusters to use for K-Means. Default is 10.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dask.array.Array</span>
+<span class="sd">            A dask array containing the initial guesses for every pixel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting Dask K-Means Guess with </span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2"> clusters...&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># 1. Prepare Data as Flat Dask Array (Pixels, Features)</span>
+        <span class="c1"># We use the internal self.dask_data which might be rechunked already</span>
+        <span class="c1"># Move spectral dims to the end</span>
+        <span class="n">data_move</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dask_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+        
+        <span class="n">n_spectral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">])</span>
+        <span class="c1"># Reshape to (Pixels, Spectrum)</span>
+        <span class="n">flat_data</span> <span class="o">=</span> <span class="n">data_move</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_spectral</span><span class="p">)))</span>
+        
+        <span class="c1"># 2. Normalize (Lazy Dask Operations)</span>
+        <span class="n">clustering_data</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">flat_data</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_complex</span> <span class="k">else</span> <span class="n">flat_data</span>
+        
+        <span class="c1"># Compute min/max per pixel (axis 1) keeping dims for broadcasting</span>
+        <span class="n">d_min</span> <span class="o">=</span> <span class="n">clustering_data</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">d_max</span> <span class="o">=</span> <span class="n">clustering_data</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="p">(</span><span class="n">d_max</span> <span class="o">-</span> <span class="n">d_min</span><span class="p">)</span>
+        <span class="c1"># Avoid divide by zero</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">denom</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">denom</span><span class="p">)</span>
+        
+        <span class="n">norm_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">clustering_data</span> <span class="o">-</span> <span class="n">d_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">denom</span>
+       
+        <span class="c1">#print(&quot;Norm data shape is {}&quot;.format(norm_data.shape))</span>
+        <span class="c1"># 3. Fit K-Means using Dask-ML</span>
+        <span class="c1"># init=&#39;k-means||&#39; is the scalable version of k-means++</span>
+        <span class="n">km</span> <span class="o">=</span> <span class="n">DaskKMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;k-means||&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+        <span class="n">km</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">norm_data</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span> <span class="c1"># This triggers computation for centroids</span>
+        
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">km</span><span class="o">.</span><span class="n">labels_</span> <span class="c1"># This is a dask array of shape (Pixels,)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calculating cluster means and fitting priors...&quot;</span><span class="p">)</span>
+
+        <span class="c1"># 4. Compute Mean Spectra for each cluster (Original Data)</span>
+        <span class="c1"># We need the mean of the *original* flat_data based on the labels.</span>
+        <span class="c1"># We construct a list of lazy mean computations and compute them in one pass.</span>
+        <span class="n">lazy_means</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">labels</span> <span class="o">==</span> <span class="n">i</span><span class="p">)</span>
+            <span class="c1"># Dask boolean indexing -&gt; Mean. </span>
+            <span class="c1"># Note: Boolean indexing creates unknown chunk sizes, but mean collapses them.</span>
+            <span class="c1"># We add a check for empty clusters to avoid NaNs.</span>
+            <span class="n">cluster_mean</span> <span class="o">=</span> <span class="n">flat_data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">lazy_means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cluster_mean</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+        
+        <span class="c1"># Compute all means simultaneously to read data once</span>
+        <span class="n">computed_means</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="o">*</span><span class="n">lazy_means</span><span class="p">)</span>
+        
+        <span class="c1"># 5. Fit the priors (runs locally as n_clusters is small)</span>
+        <span class="n">priors_per_cluster</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_clusters</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">))</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mean_spec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">computed_means</span><span class="p">):</span>
+            <span class="c1"># Handle empty clusters (NaNs)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">mean_spec</span><span class="p">)):</span>
+                <span class="n">priors_per_cluster</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">)</span> 
+                <span class="k">continue</span>
+
+            <span class="n">init_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess_func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">mean_spec</span><span class="p">)</span>
+            <span class="n">priors_per_cluster</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_logic</span><span class="p">(</span><span class="n">mean_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">init_p</span><span class="p">)</span>
+        
+        <span class="c1"># 6. Map priors back to full spatial shape</span>
+        <span class="c1"># labels is a dask array, we can index the numpy priors array with it</span>
+        <span class="c1"># We need to map_blocks this look-up because &#39;priors_per_cluster&#39; is numpy</span>
+        <span class="c1"># and &#39;labels&#39; is dask.</span>
+        
+        <span class="k">def</span><span class="w"> </span><span class="nf">map_priors</span><span class="p">(</span><span class="n">label_block</span><span class="p">,</span> <span class="n">priors_lookup</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">priors_lookup</span><span class="p">[</span><span class="n">label_block</span><span class="p">]</span>
+
+        <span class="n">full_prior_flat</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">map_blocks</span><span class="p">(</span>
+            <span class="n">map_priors</span><span class="p">,</span> 
+            <span class="n">priors_lookup</span><span class="o">=</span><span class="n">priors_per_cluster</span><span class="p">,</span> 
+            <span class="n">dtype</span><span class="o">=</span><span class="n">priors_per_cluster</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">chunks</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">chunks</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">,),</span>
+            <span class="n">new_axis</span><span class="o">=</span><span class="mi">1</span> <span class="c1"># Adding the parameter axis</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Reshape back to (Spatial..., Params)</span>
+        <span class="n">spatial_shape</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span><span class="p">]</span>
+        <span class="n">full_prior_map</span> <span class="o">=</span> <span class="n">full_prior_flat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">spatial_shape</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">,))</span>
+        
+        <span class="k">return</span> <span class="n">full_prior_map</span></div>
+
+
+<div class="viewcode-block" id="SidpyFitterRefactor.reconstruct_function">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.html#sidpy.proc.fitter_refactor.SidpyFitterRefactor.reconstruct_function">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reconstruct_function</span><span class="p">(</span><span class="n">source_code_input</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reconstructs a python function from source code stored in metadata.</span>
+<span class="sd">        Robustly handles lists, strings, and indentation issues.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">textwrap</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+        <span class="c1"># 1. STANDARDIZE INPUT TO STRING</span>
+        <span class="c1"># The input might be a list of strings (new format), a single string (old format), </span>
+        <span class="c1"># or a numpy array of strings (from some HDF5 loaders).</span>
+        
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_code_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># It&#39;s already a string</span>
+            <span class="n">source_code</span> <span class="o">=</span> <span class="n">source_code_input</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_code_input</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="c1"># It&#39;s a sequence: join it into a single block</span>
+            <span class="c1"># map(str, ...) handles cases where data might be numpy objects</span>
+            <span class="n">source_code</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">source_code_input</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Source code must be a string or list of strings, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source_code_input</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># 2. FIX INDENTATION</span>
+        <span class="c1"># textwrap.dedent ONLY works on strings, which is why we joined above.</span>
+        <span class="c1"># This removes the common leading whitespace (e.g. if defined inside a class).</span>
+        <span class="n">source_code</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="n">source_code</span><span class="p">)</span>
+
+        <span class="c1"># 3. SETUP CONTEXT (Imports)</span>
+        <span class="n">local_scope</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">global_scope</span> <span class="o">=</span> <span class="n">context</span> <span class="k">if</span> <span class="n">context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        
+        <span class="c1"># Ensure numpy is available by default as &#39;np&#39;</span>
+        <span class="k">if</span> <span class="s1">&#39;np&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">global_scope</span><span class="p">:</span>
+            <span class="n">global_scope</span><span class="p">[</span><span class="s1">&#39;np&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span>
+
+        <span class="c1"># 4. EXECUTE</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">exec</span><span class="p">(</span><span class="n">source_code</span><span class="p">,</span> <span class="n">global_scope</span><span class="p">,</span> <span class="n">local_scope</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--- SOURCE CODE ERROR ---&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">source_code</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;-------------------------&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to execute source code. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># 5. EXTRACT CALLABLE</span>
+        <span class="c1"># Find the function definition in the local scope</span>
+        <span class="n">callables</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">local_scope</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> 
+                     <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;__builtins__&#39;</span><span class="p">}</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callables</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No function was defined in the provided source code.&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Return the last defined function (most likely the target)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">callables</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+        
+<div class="viewcode-block" id="SidpyFitterRefactor.do_guess">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.html#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_guess">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parallelized guess logic across all pixels.&quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">guess_worker</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">ind_dims</span><span class="p">,</span> <span class="n">num_params</span><span class="p">):</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="n">flat_data</span><span class="p">,</span> <span class="n">spat_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_block</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">ind_dims</span><span class="p">)</span>
+            <span class="n">out_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">flat_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_params</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">flat_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess_func</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">flat_data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">out_flat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">out_flat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">spat_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">num_params</span><span class="p">,))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">guess_result</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">dask_data</span><span class="o">.</span><span class="n">map_blocks</span><span class="p">(</span>
+            <span class="n">guess_worker</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">drop_axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">,</span> <span class="n">new_axis</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess_result</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span> <span class="c1">#this is still a dask array only, we won&#39;t return sidpy arrays at this intermediate stage.</span></div>
+
+
+<div class="viewcode-block" id="SidpyFitterRefactor.do_fit">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.html#sidpy.proc.fitter_refactor.SidpyFitterRefactor.do_fit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guesses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_kmeans</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+               <span class="n">fit_parameter_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">f_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">return_cov</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the parallel fit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        guesses : dask.array.Array, optional</span>
+<span class="sd">            Initial guesses. If None, generated automatically.</span>
+<span class="sd">        use_kmeans : bool, optional</span>
+<span class="sd">            Whether to use K-means priors. Default is False.</span>
+<span class="sd">        n_clusters : int, optional</span>
+<span class="sd">            Number of clusters if use_kmeans is True. Default is 10.</span>
+<span class="sd">        fit_parameter_labels : list of str, optional</span>
+<span class="sd">            List of string labels for the fit parameters (e.g. [&#39;Amp&#39;, &#39;Phase&#39;]). These are simply saved in metadata.</span>
+<span class="sd">        loss : str, optional</span>
+<span class="sd">            Loss function for least_squares (e.g., &#39;linear&#39;, &#39;soft_l1&#39;, &#39;huber&#39;, &#39;cauchy&#39;, &#39;arctan&#39;).</span>
+<span class="sd">        f_scale : float, optional</span>
+<span class="sd">             Value of soft margin between inlier and outlier residuals. Default is 1.0.</span>
+<span class="sd">        return_cov : bool, optional</span>
+<span class="sd">            If True, returns a tuple (fit_dataset, cov_dataset). </span>
+<span class="sd">            The cov_dataset contains the covariance matrix for the fit parameters.</span>
+<span class="sd">            CAUTION: This significantly increases memory usage.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sidpy.Dataset or tuple(sidpy.Dataset, sidpy.Dataset)</span>
+<span class="sd">            If return_cov is False: returns the Fit Parameter dataset.</span>
+<span class="sd">            If return_cov is True: returns (Fit Parameter dataset, Covariance Matrix dataset).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_parameter_labels</span> <span class="o">=</span> <span class="n">fit_parameter_labels</span>
+        
+        <span class="c1"># Update metadata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;fit_parameters&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s2">&quot;use_kmeans&quot;</span><span class="p">:</span> <span class="n">use_kmeans</span><span class="p">,</span>
+            <span class="s2">&quot;n_clusters&quot;</span><span class="p">:</span> <span class="n">n_clusters</span> <span class="k">if</span> <span class="n">use_kmeans</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
+            <span class="s2">&quot;f_scale&quot;</span><span class="p">:</span> <span class="n">f_scale</span><span class="p">,</span>
+            <span class="s2">&quot;return_cov&quot;</span><span class="p">:</span> <span class="n">return_cov</span><span class="p">,</span>
+            <span class="s2">&quot;lower_bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower_bounds</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower_bounds</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+                             <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_bounds</span><span class="p">),</span>
+            <span class="s2">&quot;upper_bounds&quot;</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper_bounds</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper_bounds</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+                             <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_bounds</span><span class="p">),</span>
+        <span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">guesses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">guesses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_kmeans_guess</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">)</span> <span class="k">if</span> <span class="n">use_kmeans</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_guess</span><span class="p">()</span>
+
+        <span class="c1"># Determine output size</span>
+        <span class="c1"># If returning covariance, output is: [Params (N)] + [Covariance (N*N)]</span>
+        <span class="n">out_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="o">**</span><span class="mi">2</span> <span class="k">if</span> <span class="n">return_cov</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">fit_worker</span><span class="p">(</span><span class="n">data_block</span><span class="p">,</span> <span class="n">guess_block</span><span class="p">,</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">ind_dims</span><span class="p">,</span> <span class="n">num_params</span><span class="p">):</span>
+            <span class="n">data_block</span><span class="p">,</span> <span class="n">guess_block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data_block</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">guess_block</span><span class="p">)</span>
+            <span class="n">flat_data</span><span class="p">,</span> <span class="n">spat_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_block</span><span class="p">(</span><span class="n">data_block</span><span class="p">,</span> <span class="n">ind_dims</span><span class="p">)</span>
+            <span class="n">flat_guess</span> <span class="o">=</span> <span class="n">guess_block</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">guess_block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            
+            <span class="n">out_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">flat_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">out_dim</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">flat_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">flat_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">continue</span>
+                <span class="c1"># Pass return_cov to logic</span>
+                <span class="n">out_flat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_logic</span><span class="p">(</span><span class="n">flat_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x_in</span><span class="p">,</span> <span class="n">flat_guess</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                              <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">f_scale</span><span class="o">=</span><span class="n">f_scale</span><span class="p">,</span> 
+                                              <span class="n">return_cov</span><span class="o">=</span><span class="n">return_cov</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">out_flat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">spat_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">out_dim</span><span class="p">,))</span>
+
+        <span class="c1"># Blockwise setup</span>
+        <span class="n">data_ind</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="n">guess_ind</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">])</span> <span class="c1"># Guess has same spatial dims + param dim</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_result</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">blockwise</span><span class="p">(</span>
+            <span class="n">fit_worker</span><span class="p">,</span> <span class="n">guess_ind</span><span class="p">,</span> <span class="c1"># We map output to same structure as guess</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dask_data</span><span class="p">,</span> <span class="n">data_ind</span><span class="p">,</span>
+            <span class="n">guesses</span><span class="p">,</span> <span class="n">guess_ind</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_axis</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ind_dims</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">align_arrays</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">concatenate</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="n">computed_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_result</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        
+        <span class="c1"># Transform handles splitting if return_cov was used</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_to_sidpy</span><span class="p">(</span><span class="n">computed_result</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SidpyFitterRefactor.transform_to_sidpy">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.fitter_refactor.SidpyFitterRefactor.html#sidpy.proc.fitter_refactor.SidpyFitterRefactor.transform_to_sidpy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_to_sidpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_dask_array</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the fit results into sidpy.Dataset(s).</span>
+<span class="sd">        Handles splitting parameters and covariance if present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">total_channels</span> <span class="o">=</span> <span class="n">fit_dask_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="c1"># Check if we have covariance data attached</span>
+        <span class="c1"># If shape is exactly num_params, we only have params.</span>
+        <span class="c1"># If shape is num_params + num_params^2, we have covariance.</span>
+        <span class="n">has_cov</span> <span class="o">=</span> <span class="n">total_channels</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span>
+        
+        <span class="c1"># --- 1. Extract Parameters ---</span>
+        <span class="n">params_array</span> <span class="o">=</span> <span class="n">fit_dask_array</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">]</span>
+        <span class="n">sid_params</span> <span class="o">=</span> <span class="n">sid</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">params_array</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">_fit_params&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Helper to set spatial dimensions (reused for both datasets)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">set_spatial_dims</span><span class="p">(</span><span class="n">dset</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">orig_dim</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">orig_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">_axes</span><span class="p">[</span><span class="n">orig_dim</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">orig_axis</span> <span class="o">=</span> <span class="n">sid</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">orig_dim</span><span class="p">]),</span>
+                                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;dim_</span><span class="si">{</span><span class="n">orig_dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;spatial&#39;</span><span class="p">)</span>
+                <span class="n">dset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">orig_axis</span><span class="p">)</span>
+        
+        <span class="n">set_spatial_dims</span><span class="p">(</span><span class="n">sid_params</span><span class="p">)</span>
+
+        <span class="c1"># Set Spectral Dimension for Params</span>
+        <span class="n">custom_labels</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;fit_parameter_labels&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">custom_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">custom_labels</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">:</span>
+            <span class="n">p_qty</span> <span class="o">=</span> <span class="s1">&#39;Label&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;fit_parameters&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;fit_parameter_labels&quot;</span><span class="p">:</span> <span class="n">custom_labels</span> <span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">p_qty</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span>
+        
+        <span class="n">p_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">)</span>  
+        <span class="n">sid_params</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span><span class="p">),</span> 
+                                 <span class="n">sid</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fit_parameters&#39;</span><span class="p">,</span> 
+                                               <span class="n">quantity</span><span class="o">=</span><span class="n">p_qty</span><span class="p">,</span> <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;spectral&#39;</span><span class="p">))</span>
+        
+        <span class="c1"># Attach Metadata</span>
+        <span class="n">sid_params</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">sid_params</span><span class="o">.</span><span class="n">provenance</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sidpy&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;generated_from&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span><span class="p">}}</span>
+        <span class="n">sid_params</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s1">&#39;image_stack&#39;</span> <span class="c1"># Usually a stack of parameter maps</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_cov</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sid_params</span>
+
+        <span class="c1"># --- 2. Extract Covariance (If present) ---</span>
+        <span class="n">cov_flat</span> <span class="o">=</span> <span class="n">fit_dask_array</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">:]</span>
+        <span class="c1"># Reshape: (Spatial..., Params, Params)</span>
+        <span class="n">cov_shape</span> <span class="o">=</span> <span class="n">fit_dask_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_params</span><span class="p">)</span>
+        <span class="n">cov_array</span> <span class="o">=</span> <span class="n">cov_flat</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">cov_shape</span><span class="p">)</span>
+        
+        <span class="n">sid_cov</span> <span class="o">=</span> <span class="n">sid</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">cov_array</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">_fit_covariance&quot;</span><span class="p">)</span>
+        <span class="n">set_spatial_dims</span><span class="p">(</span><span class="n">sid_cov</span><span class="p">)</span>
+        
+        <span class="c1"># Covariance has TWO spectral dimensions: Params x Params</span>
+        <span class="c1"># Dim 1: Rows (Params)</span>
+        <span class="n">sid_cov</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span><span class="p">),</span> 
+                              <span class="n">sid</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;parameter_row&#39;</span><span class="p">,</span> 
+                                            <span class="n">quantity</span><span class="o">=</span><span class="n">p_qty</span><span class="p">,</span> <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;spectral&#39;</span><span class="p">))</span>
+        <span class="c1"># Dim 2: Cols (Params)</span>
+        <span class="n">sid_cov</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spat_dims</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> 
+                              <span class="n">sid</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;parameter_col&#39;</span><span class="p">,</span> 
+                                            <span class="n">quantity</span><span class="o">=</span><span class="n">p_qty</span><span class="p">,</span> <span class="n">dimension_type</span><span class="o">=</span><span class="s1">&#39;spectral&#39;</span><span class="p">))</span>
+        
+        <span class="n">sid_cov</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">sid_cov</span><span class="o">.</span><span class="n">provenance</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sidpy&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;generated_from&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="s1">&#39;parent_fit&#39;</span><span class="p">:</span> <span class="n">sid_params</span><span class="o">.</span><span class="n">title</span><span class="p">}}</span>
+        
+        <span class="k">return</span> <span class="n">sid_params</span><span class="p">,</span> <span class="n">sid_cov</span></div>
+</div>
+
+    
+
+    
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

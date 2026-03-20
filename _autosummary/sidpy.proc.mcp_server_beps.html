@@ -1,0 +1,156 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.proc.mcp_server_beps &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">sidpy.proc.mcp_server_beps</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/sidpy.proc.mcp_server_beps.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-sidpy.proc.mcp_server_beps">
+<span id="sidpy-proc-mcp-server-beps"></span><h1>sidpy.proc.mcp_server_beps<a class="headerlink" href="#module-sidpy.proc.mcp_server_beps" title="Link to this heading">¶</a></h1>
+<p>MCP server utilities for BEPS loop and SHO fitting.</p>
+<p>This module wraps the existing <code class="docutils literal notranslate"><span class="pre">SidpyFitterRefactor</span></code> workflows in MCP-friendly
+tools so an LLM client can fit nested-array BEPS loop data and SHO response
+data without re-implementing the fitting logic.</p>
+<p>The MCP runtime is optional. Importing this module does not require <code class="docutils literal notranslate"><span class="pre">mcp</span></code>,
+but running the server does.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.SHO_fit_flattened.html#sidpy.proc.mcp_server_beps.SHO_fit_flattened" title="sidpy.proc.mcp_server_beps.SHO_fit_flattened"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SHO_fit_flattened</span></code></a></p></td>
+<td><p>Flattened complex SHO response used by the SHO fitter tests.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.calculate_loop_centroid.html#sidpy.proc.mcp_server_beps.calculate_loop_centroid" title="sidpy.proc.mcp_server_beps.calculate_loop_centroid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_loop_centroid</span></code></a></p></td>
+<td><p>Calculate the polygon centroid for one unfolded loop.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.create_mcp_server.html#sidpy.proc.mcp_server_beps.create_mcp_server" title="sidpy.proc.mcp_server_beps.create_mcp_server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_mcp_server</span></code></a></p></td>
+<td><p>Create an MCP server exposing the BEPS loop and SHO fitting tools.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.fit_beps_loops.html#sidpy.proc.mcp_server_beps.fit_beps_loops" title="sidpy.proc.mcp_server_beps.fit_beps_loops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_beps_loops</span></code></a></p></td>
+<td><p>Fit BEPS loop data where the last axis contains the loop trace.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.fit_sho_response.html#sidpy.proc.mcp_server_beps.fit_sho_response" title="sidpy.proc.mcp_server_beps.fit_sho_response"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_sho_response</span></code></a></p></td>
+<td><p>Fit SHO response data where the last axis contains the frequency sweep.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.generate_guess.html#sidpy.proc.mcp_server_beps.generate_guess" title="sidpy.proc.mcp_server_beps.generate_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_guess</span></code></a></p></td>
+<td><p>Generate the initial BEPS loop parameter guess.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.loop_fit_function.html#sidpy.proc.mcp_server_beps.loop_fit_function" title="sidpy.proc.mcp_server_beps.loop_fit_function"><code class="xref py py-obj docutils literal notranslate"><span class="pre">loop_fit_function</span></code></a></p></td>
+<td><p>Nine-parameter loop model used by the BEPS fitter tests.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.main.html#sidpy.proc.mcp_server_beps.main" title="sidpy.proc.mcp_server_beps.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a></p></td>
+<td><p>Run the MCP server over the default transport.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="sidpy.proc.mcp_server_beps.sho_guess_fn.html#sidpy.proc.mcp_server_beps.sho_guess_fn" title="sidpy.proc.mcp_server_beps.sho_guess_fn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sho_guess_fn</span></code></a></p></td>
+<td><p>Initial guess heuristic for SHO fitting.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

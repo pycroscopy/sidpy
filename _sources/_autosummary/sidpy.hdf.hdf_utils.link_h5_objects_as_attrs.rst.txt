@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.link\_h5\_objects\_as\_attrs
+=================================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: link_h5_objects_as_attrs

@@ -1,0 +1,473 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.io.nexus &mdash; sidpy 0.12.8 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/documentation_options.js?v=425f82fe"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.io.nexus</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.io.nexus</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utilities for converting between sidpy datasets and NeXus HDF5.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sidpy.sid</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Dimension</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sidpy_to_nexus_hdf5&quot;</span><span class="p">,</span> <span class="s2">&quot;nexus_to_sidpy&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clean_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fallback</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">name</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="n">fallback</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_unique_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">used_names</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_names</span><span class="p">:</span>
+        <span class="n">used_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">name</span>
+
+    <span class="n">index</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">candidate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_names</span><span class="p">:</span>
+            <span class="n">used_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">candidate</span>
+        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_decode_if_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bytes_</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normalize_axes_attr</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_json_ready</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bytes_</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">_json_ready</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span> <span class="n">_json_ready</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_json_ready</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_json_dataset</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">payload</span><span class="p">):</span>
+    <span class="n">string_dtype</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">string_dtype</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="n">parent</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">_json_ready</span><span class="p">(</span><span class="n">payload</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">string_dtype</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_json_dataset</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parent</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">parent</span><span class="p">[</span><span class="n">name</span><span class="p">][()]</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_root_attrs</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">default_entry</span><span class="p">):</span>
+    <span class="n">time_stamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">default_entry</span>
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5_file</span><span class="o">.</span><span class="n">filename</span>
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;file_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time_stamp</span>
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;creator&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sidpy&quot;</span>
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;HDF5_Version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">hdf5_version</span>
+    <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;h5py_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">version</span>
+
+
+<div class="viewcode-block" id="sidpy_to_nexus_hdf5">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.nexus.sidpy_to_nexus_hdf5.html#sidpy.io.nexus.sidpy_to_nexus_hdf5">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sidpy_to_nexus_hdf5</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">h5_path</span><span class="p">,</span> <span class="n">entry_name</span><span class="o">=</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">nxdata_name</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span>
+                        <span class="n">signal_name</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write a sidpy.Dataset to a NeXus-compatible HDF5 file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset : sidpy.Dataset</span>
+<span class="sd">        Dataset to serialize.</span>
+<span class="sd">    h5_path : str or h5py.File</span>
+<span class="sd">        Destination HDF5 path or open file handle.</span>
+<span class="sd">    entry_name : str, optional</span>
+<span class="sd">        Name of the NXentry group.</span>
+<span class="sd">    nxdata_name : str, optional</span>
+<span class="sd">        Name of the NXdata group.</span>
+<span class="sd">    signal_name : str, optional</span>
+<span class="sd">        Name of the primary signal dataset within NXdata.</span>
+<span class="sd">    mode : str, optional</span>
+<span class="sd">        File mode used when `h5_path` is a path.</span>
+<span class="sd">    compression : str, optional</span>
+<span class="sd">        Compression passed to h5py when creating datasets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or h5py.Dataset</span>
+<span class="sd">        Signal dataset path for path-based writes, or the written h5py.Dataset</span>
+<span class="sd">        when an open file handle is provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dataset must be a sidpy.Dataset&quot;</span><span class="p">)</span>
+
+    <span class="n">entry_name</span> <span class="o">=</span> <span class="n">_clean_name</span><span class="p">(</span><span class="n">entry_name</span><span class="p">,</span> <span class="s2">&quot;entry&quot;</span><span class="p">)</span>
+    <span class="n">nxdata_name</span> <span class="o">=</span> <span class="n">_clean_name</span><span class="p">(</span><span class="n">nxdata_name</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span>
+    <span class="n">signal_name</span> <span class="o">=</span> <span class="n">_clean_name</span><span class="p">(</span><span class="n">signal_name</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span>
+
+    <span class="n">close_file</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
+        <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5_path</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="n">close_file</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">entry_name</span> <span class="ow">in</span> <span class="n">h5_file</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">entry_name</span><span class="p">]</span>
+
+        <span class="n">_set_root_attrs</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">)</span>
+
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">h5_file</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">entry_name</span><span class="p">)</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;NX_class&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NXentry&quot;</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nxdata_name</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="n">signal_name</span><span class="p">)</span>
+
+        <span class="n">nxdata</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">nxdata_name</span><span class="p">)</span>
+        <span class="n">nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;NX_class&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NXdata&quot;</span>
+        <span class="n">nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;signal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">signal_name</span>
+
+        <span class="n">signal_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">signal_kwargs</span><span class="p">[</span><span class="s2">&quot;compression&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">compression</span>
+
+        <span class="n">signal</span> <span class="o">=</span> <span class="n">nxdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">signal_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dataset</span><span class="p">),</span> <span class="o">**</span><span class="n">signal_kwargs</span><span class="p">)</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">units</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;quantity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">quantity</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;data_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">data_type</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;modality&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">modality</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">source</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">title</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;long_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">data_descriptor</span>
+
+        <span class="n">used_names</span> <span class="o">=</span> <span class="p">{</span><span class="n">signal_name</span><span class="p">}</span>
+        <span class="n">axes_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dim_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">_axes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dim_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">axis_name</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span>
+                <span class="n">axes_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">axis_name</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">axis_name</span> <span class="o">=</span> <span class="n">_ensure_unique_name</span><span class="p">(</span><span class="n">_clean_name</span><span class="p">(</span><span class="n">axis</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;dim_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dim_index</span><span class="p">)),</span> <span class="n">used_names</span><span class="p">)</span>
+            <span class="n">axis_dset</span> <span class="o">=</span> <span class="n">nxdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="n">axis_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axis</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+            <span class="n">axis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">units</span>
+            <span class="n">axis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;quantity&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">quantity</span>
+            <span class="n">axis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;dimension_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">dimension_type</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">axis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;long_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="o">.</span><span class="n">quantity</span><span class="p">,</span> <span class="n">axis</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+            <span class="n">nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_indices&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis_name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">dim_index</span>
+            <span class="n">axes_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">axis_name</span><span class="p">)</span>
+
+        <span class="n">nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;axes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axes_names</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">h5py</span><span class="o">.</span><span class="n">string_dtype</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nxdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_errors&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">signal_name</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">variance</span><span class="p">))</span>
+
+        <span class="n">sidpy_collection</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;sidpy_metadata&quot;</span><span class="p">)</span>
+        <span class="n">sidpy_collection</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;NX_class&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NXcollection&quot;</span>
+        <span class="n">_write_json_dataset</span><span class="p">(</span><span class="n">sidpy_collection</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+        <span class="n">_write_json_dataset</span><span class="p">(</span><span class="n">sidpy_collection</span><span class="p">,</span> <span class="s2">&quot;original_metadata&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">original_metadata</span><span class="p">)</span>
+        <span class="n">_write_json_dataset</span><span class="p">(</span><span class="n">sidpy_collection</span><span class="p">,</span> <span class="s2">&quot;provenance&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">provenance</span><span class="p">)</span>
+
+        <span class="n">h5_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">close_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">signal</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">signal</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">close_file</span><span class="p">:</span>
+            <span class="n">h5_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_default_child</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">default_name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">default_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">default_name</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">default_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">default_name</span> <span class="ow">in</span> <span class="n">parent</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">parent</span><span class="p">[</span><span class="n">default_name</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">default_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">parent</span><span class="o">.</span><span class="n">file</span><span class="p">[</span><span class="n">default_name</span><span class="p">]</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="n">default_name</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;//&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">parent</span><span class="o">.</span><span class="n">file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">parent</span><span class="o">.</span><span class="n">file</span><span class="p">[</span><span class="n">candidate</span><span class="p">]</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_nxentry</span><span class="p">(</span><span class="n">h5_file</span><span class="p">):</span>
+    <span class="n">default_entry</span> <span class="o">=</span> <span class="n">_resolve_default_child</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">h5_file</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_entry</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">default_entry</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NX_class&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="s2">&quot;NXentry&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default_entry</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">h5_file</span><span class="p">:</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NX_class&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="s2">&quot;NXentry&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find an NXentry group in the provided file&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_nxdata</span><span class="p">(</span><span class="n">entry</span><span class="p">):</span>
+    <span class="n">default_nxdata</span> <span class="o">=</span> <span class="n">_resolve_default_child</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_nxdata</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">default_nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NX_class&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="s2">&quot;NXdata&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default_nxdata</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">:</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NX_class&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="s2">&quot;NXdata&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find an NXdata group in the provided entry&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="nexus_to_sidpy">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.io.nexus.nexus_to_sidpy.html#sidpy.io.nexus.nexus_to_sidpy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">nexus_to_sidpy</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">entry_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nxdata_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">signal_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a NeXus HDF5 NXdata signal into a sidpy.Dataset.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    h5_path : str or h5py.File</span>
+<span class="sd">        Source HDF5 file path or open file handle.</span>
+<span class="sd">    entry_path : str, optional</span>
+<span class="sd">        Explicit path to the NXentry group.</span>
+<span class="sd">    nxdata_path : str, optional</span>
+<span class="sd">        Explicit path to the NXdata group.</span>
+<span class="sd">    signal_name : str, optional</span>
+<span class="sd">        Explicit name of the signal dataset inside NXdata.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sidpy.Dataset</span>
+<span class="sd">        Restored dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
+        <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5_path</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">h5_file</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nxdata_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nxdata</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">nxdata_path</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nxdata</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;nxdata_path must point to a group&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entry_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">nxdata</span><span class="o">.</span><span class="n">parent</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">entry_path</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">entry_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">h5_file</span><span class="p">[</span><span class="n">entry_path</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">_find_nxentry</span><span class="p">(</span><span class="n">h5_file</span><span class="p">)</span>
+        <span class="n">nxdata</span> <span class="o">=</span> <span class="n">_find_nxdata</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NX_class&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="s2">&quot;NXdata&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The selected group is not an NXdata group&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">signal_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">signal_name</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;signal&quot;</span><span class="p">))</span>
+    <span class="n">signal_name</span> <span class="o">=</span> <span class="n">_clean_name</span><span class="p">(</span><span class="n">signal_name</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">signal_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nxdata</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find signal dataset &#39;</span><span class="si">{}</span><span class="s2">&#39; in NXdata&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">signal_name</span><span class="p">))</span>
+
+    <span class="n">signal</span> <span class="o">=</span> <span class="n">nxdata</span><span class="p">[</span><span class="n">signal_name</span><span class="p">]</span>
+    <span class="n">entry_title</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">][()])</span> <span class="k">if</span> <span class="s2">&quot;title&quot;</span> <span class="ow">in</span> <span class="n">entry</span> <span class="k">else</span> <span class="n">signal_name</span>
+    <span class="n">signal_title</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">signal</span><span class="p">),</span> <span class="n">title</span><span class="o">=</span><span class="n">signal_title</span> <span class="ow">or</span> <span class="n">entry_title</span><span class="p">)</span>
+
+    <span class="n">dataset</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="s2">&quot;generic&quot;</span><span class="p">))</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">quantity</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="s2">&quot;generic&quot;</span><span class="p">))</span>
+
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_type&quot;</span><span class="p">,</span> <span class="s2">&quot;UNKNOWN&quot;</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span>
+    <span class="k">except</span> <span class="ne">Warning</span><span class="p">:</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">data_type</span> <span class="o">=</span> <span class="s2">&quot;UNKNOWN&quot;</span>
+
+    <span class="n">dataset</span><span class="o">.</span><span class="n">modality</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;modality&quot;</span><span class="p">,</span> <span class="s2">&quot;generic&quot;</span><span class="p">))</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;source&quot;</span><span class="p">,</span> <span class="s2">&quot;generic&quot;</span><span class="p">))</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">signal_title</span> <span class="ow">or</span> <span class="n">entry_title</span>
+
+    <span class="n">axes_names</span> <span class="o">=</span> <span class="n">_normalize_axes_attr</span><span class="p">(</span><span class="n">nxdata</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;axes&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">axes_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;dim_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">ndim</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes_names</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NXdata axes metadata does not match signal rank&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">dim_index</span><span class="p">,</span> <span class="n">axis_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axes_names</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">axis_name</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">axis_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nxdata</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">axis_dset</span> <span class="o">=</span> <span class="n">nxdata</span><span class="p">[</span><span class="n">axis_name</span><span class="p">]</span>
+        <span class="n">axis_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">axis_dset</span><span class="p">[()])</span>
+        <span class="k">if</span> <span class="n">axis_values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Only 1D NXdata axes are currently supported&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">axis_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">dim_index</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Axis &#39;</span><span class="si">{}</span><span class="s2">&#39; length does not match data dimension </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis_name</span><span class="p">,</span> <span class="n">dim_index</span><span class="p">))</span>
+
+        <span class="n">dimension</span> <span class="o">=</span> <span class="n">Dimension</span><span class="p">(</span><span class="n">axis_values</span><span class="p">,</span>
+                              <span class="n">name</span><span class="o">=</span><span class="n">axis_name</span><span class="p">,</span>
+                              <span class="n">quantity</span><span class="o">=</span><span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">axis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;quantity&quot;</span><span class="p">,</span> <span class="n">axis_name</span><span class="p">)),</span>
+                              <span class="n">units</span><span class="o">=</span><span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">axis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="s2">&quot;generic&quot;</span><span class="p">)),</span>
+                              <span class="n">dimension_type</span><span class="o">=</span><span class="n">_decode_if_bytes</span><span class="p">(</span><span class="n">axis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dimension_type&quot;</span><span class="p">,</span> <span class="s2">&quot;UNKNOWN&quot;</span><span class="p">)))</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span><span class="n">dim_index</span><span class="p">,</span> <span class="n">dimension</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;sidpy_metadata&quot;</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">:</span>
+        <span class="n">sidpy_collection</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;sidpy_metadata&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sidpy_collection</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">Group</span><span class="p">):</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">_read_json_dataset</span><span class="p">(</span><span class="n">sidpy_collection</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">)</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">original_metadata</span> <span class="o">=</span> <span class="n">_read_json_dataset</span><span class="p">(</span><span class="n">sidpy_collection</span><span class="p">,</span> <span class="s2">&quot;original_metadata&quot;</span><span class="p">)</span>
+            <span class="n">provenance</span> <span class="o">=</span> <span class="n">_read_json_dataset</span><span class="p">(</span><span class="n">sidpy_collection</span><span class="p">,</span> <span class="s2">&quot;provenance&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">provenance</span><span class="p">:</span>
+                <span class="n">dataset</span><span class="o">.</span><span class="n">provenance</span> <span class="o">=</span> <span class="n">provenance</span>
+
+    <span class="n">dataset</span><span class="o">.</span><span class="n">h5_dataset</span> <span class="o">=</span> <span class="n">signal</span>
+    <span class="k">return</span> <span class="n">dataset</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.progress\_bar
+=======================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: progress_bar
