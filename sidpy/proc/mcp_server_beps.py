@@ -237,11 +237,17 @@ def _build_dataset(
             f"Received axis length {spectral_axis.size} and last axis {array.shape[-1]}."
         )
 
-    dataset = sid.Dataset.from_array(array, name=dataset_name)
+    dataset = sid.Dataset.from_array(array, title=dataset_name)
     for dim in range(array.ndim - 1):
         dataset.set_dimension(
             dim,
-            sid.Dimension(np.arange(array.shape[dim]), name=f"dim_{dim}", dimension_type="spatial"),
+            sid.Dimension(
+                np.arange(array.shape[dim]),
+                name=f"position_{dim}",
+                quantity=f"Position {dim}",
+                units="a.u.",
+                dimension_type="spatial",
+            ),
         )
     dataset.set_dimension(
         array.ndim - 1,
@@ -455,7 +461,10 @@ def main():
     """Run the MCP server over the default transport."""
     if mcp is None:  # pragma: no cover - optional runtime dependency
         raise ImportError("The 'mcp' package is required to run the BEPS MCP server.")
-    mcp.run()
+    try:
+        mcp.run(transport="stdio")
+    except TypeError:  # pragma: no cover - compatibility with older MCP releases
+        mcp.run()
 
 
 __all__ = [
