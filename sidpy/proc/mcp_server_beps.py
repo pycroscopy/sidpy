@@ -12,6 +12,7 @@ but running the server does.
 from __future__ import annotations
 
 from typing import Any, Dict, Iterable, Optional, Sequence
+from uuid import uuid4
 
 import numpy as np
 import sidpy as sid
@@ -39,6 +40,7 @@ LOOP_PARAMETER_LABELS = [
 ]
 
 SHO_PARAMETER_LABELS = ["amplitude", "resonance_frequency", "quality_factor", "phase"]
+DATASET_REGISTRY: Dict[str, sid.Dataset] = {}
 
 
 def loop_fit_function(vdc: Sequence[float], *coef_vec: float) -> np.ndarray:
@@ -216,6 +218,66 @@ def _as_builtin(value: Any) -> Any:
     return value
 
 
+def _normalize_data_type(data_type: Optional[str]) -> str:
+    return "UNKNOWN" if data_type is None else str(data_type)
+
+
+def _dataset_dimension_payload(dimension: sid.Dimension, axis: int) -> Dict[str, Any]:
+    values = np.asarray(dimension)
+    return {
+        "axis": axis,
+        "name": dimension.name,
+        "quantity": dimension.quantity,
+        "units": dimension.units,
+        "dimension_type": dimension.dimension_type.name,
+        "length": int(values.size),
+        "values": values.tolist(),
+    }
+
+
+def _dataset_payload(dataset: sid.Dataset, dataset_id: Optional[str] = None) -> Dict[str, Any]:
+    payload = {
+        "shape": list(dataset.shape),
+        "ndim": int(dataset.ndim),
+        "title": dataset.title,
+        "quantity": dataset.quantity,
+        "units": dataset.units,
+        "data_type": dataset.data_type.name,
+        "modality": dataset.modality,
+        "source": dataset.source,
+        "metadata": _as_builtin(dataset.metadata),
+        "original_metadata": _as_builtin(dataset.original_metadata),
+        "dimensions": [_dataset_dimension_payload(dataset._axes[axis], axis) for axis in sorted(dataset._axes)],
+    }
+    if dataset_id is not None:
+        payload["dataset_id"] = dataset_id
+    return payload
+
+
+def _store_dataset(dataset: sid.Dataset, dataset_id: Optional[str] = None) -> str:
+    if dataset_id is None:
+        dataset_id = str(uuid4())
+    DATASET_REGISTRY[dataset_id] = dataset
+    return dataset_id
+
+
+def _get_dataset(dataset_id: str) -> sid.Dataset:
+    try:
+        return DATASET_REGISTRY[dataset_id]
+    except KeyError as exc:
+        raise KeyError(f"Unknown dataset_id '{dataset_id}'. Create or register a dataset first.") from exc
+
+
+def _merge_nested_dict(base: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(base)
+    for key, value in updates.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _merge_nested_dict(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
 def _build_dataset(
     data: Sequence[Any],
     spectral_axis: Sequence[float],
@@ -260,6 +322,157 @@ def _build_dataset(
         ),
     )
     return dataset
+
+
+def create_dataset(
+    data: Sequence[Any],
+    *,
+    dataset_name: str = "sidpy_dataset",
+    data_type: Optional[str] = None,
+    quantity: str = "generic",
+    units: str = "generic",
+    modality: str = "generic",
+    source: str = "generic",
+    dimensions: Optional[Sequence[Dict[str, Any]]] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    original_metadata: Optional[Dict[str, Any]] = None,
+    dataset_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Create and register a sidpy.Dataset from nested array-like data."""
+    dataset = sid.Dataset.from_array(
+        data,
+        title=dataset_name,
+        datatype=_normalize_data_type(data_type),
+        quantity=quantity,
+        units=units,
+        modality=modality,
+        source=source,
+    )
+
+    if dimensions is not None:
+        if len(dimensions) != dataset.ndim:
+            raise ValueError(
+                "dimensions must provide one entry per dataset axis. "
+                f"Received {len(dimensions)} dimensions for dataset.ndim={dataset.ndim}."
+            )
+        specified_axes = [int(dimension_spec.get("axis", axis)) for axis, dimension_spec in enumerate(dimensions)]
+        expected_axes = set(range(dataset.ndim))
+        if len(set(specified_axes)) != len(specified_axes):
+            raise ValueError("Each dimension axis may only be specified once.")
+        if set(specified_axes) != expected_axes:
+            raise ValueError(
+                "dimensions must cover every dataset axis exactly once. "
+                f"Received axes {specified_axes} for expected axes {sorted(expected_axes)}."
+            )
+        for axis, dimension_spec in enumerate(dimensions):
+            axis_index = int(dimension_spec.get("axis", axis))
+            values = dimension_spec.get("values", np.arange(dataset.shape[axis_index]))
+            name = dimension_spec.get("name", f"dim_{axis_index}")
+            quantity_value = dimension_spec.get("quantity", name)
+            units_value = dimension_spec.get("units", "generic")
+            dim_type = dimension_spec.get("dimension_type", "UNKNOWN")
+            dataset.set_dimension(
+                axis_index,
+                sid.Dimension(
+                    values,
+                    name=name,
+                    quantity=quantity_value,
+                    units=units_value,
+                    dimension_type=dim_type,
+                ),
+            )
+
+    if metadata is not None:
+        dataset.metadata = dict(metadata)
+    if original_metadata is not None:
+        dataset.original_metadata = dict(original_metadata)
+
+    dataset_id = _store_dataset(dataset, dataset_id=dataset_id)
+    return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+def get_dataset(dataset_id: str) -> Dict[str, Any]:
+    """Return a JSON-friendly summary of a registered dataset."""
+    dataset = _get_dataset(dataset_id)
+    return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+def list_datasets() -> Dict[str, Any]:
+    """List dataset ids currently stored in the in-memory MCP registry."""
+    return {
+        "datasets": [
+            {
+                "dataset_id": dataset_id,
+                "title": dataset.title,
+                "shape": list(dataset.shape),
+                "data_type": dataset.data_type.name,
+            }
+            for dataset_id, dataset in DATASET_REGISTRY.items()
+        ]
+    }
+
+
+def add_metadata(
+    dataset_id: str,
+    metadata: Dict[str, Any],
+    *,
+    merge: bool = True,
+    target: str = "metadata",
+) -> Dict[str, Any]:
+    """Add or replace metadata on a registered dataset."""
+    dataset = _get_dataset(dataset_id)
+    target_name = str(target).lower()
+    if target_name not in {"metadata", "original_metadata"}:
+        raise ValueError("target must be either 'metadata' or 'original_metadata'.")
+
+    current = getattr(dataset, target_name)
+    next_value = _merge_nested_dict(current, metadata) if merge else dict(metadata)
+    setattr(dataset, target_name, next_value)
+    return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+def update_dimension(
+    dataset_id: str,
+    axis: int,
+    *,
+    values: Sequence[float],
+    name: Optional[str] = None,
+    quantity: Optional[str] = None,
+    units: Optional[str] = None,
+    dimension_type: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Replace one dataset dimension using sidpy.Dimension and Dataset.set_dimension."""
+    dataset = _get_dataset(dataset_id)
+    axis = int(axis)
+    existing_dimension = dataset._axes[axis]
+    replacement = sid.Dimension(
+        values,
+        name=name or existing_dimension.name,
+        quantity=quantity or existing_dimension.quantity,
+        units=units or existing_dimension.units,
+        dimension_type=existing_dimension.dimension_type if dimension_type is None else dimension_type,
+    )
+    dataset.set_dimension(axis, replacement)
+    return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+def rename_dimension(dataset_id: str, axis: int, name: str) -> Dict[str, Any]:
+    """Rename one registered dataset dimension."""
+    dataset = _get_dataset(dataset_id)
+    dataset.rename_dimension(int(axis), name)
+    return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+def remove_dataset(dataset_id: str) -> Dict[str, Any]:
+    """Remove a dataset from the in-memory registry."""
+    dataset = _get_dataset(dataset_id)
+    payload = {
+        "dataset_id": dataset_id,
+        "title": dataset.title,
+        "removed": True,
+    }
+    del DATASET_REGISTRY[dataset_id]
+    return payload
 
 
 def _package_result(result: Any) -> Dict[str, Any]:
@@ -386,11 +599,91 @@ def fit_sho_response(
 
 
 def create_mcp_server(server_name: str = "sidpy-beps-fitting"):
-    """Create an MCP server exposing the BEPS loop and SHO fitting tools."""
+    """Create an MCP server exposing sidpy dataset and fitting tools."""
     if FastMCP is None:  # pragma: no cover - optional runtime dependency
         raise ImportError("The 'mcp' package is required to create the BEPS MCP server.")
 
     server = FastMCP(server_name)
+
+    @server.tool()
+    def create_dataset_tool(
+        data: Sequence[Any],
+        dataset_name: str = "sidpy_dataset",
+        data_type: Optional[str] = None,
+        quantity: str = "generic",
+        units: str = "generic",
+        modality: str = "generic",
+        source: str = "generic",
+        dimensions: Optional[Sequence[Dict[str, Any]]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        original_metadata: Optional[Dict[str, Any]] = None,
+        dataset_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a sidpy.Dataset and store it in the MCP server registry."""
+        return create_dataset(
+            data,
+            dataset_name=dataset_name,
+            data_type=data_type,
+            quantity=quantity,
+            units=units,
+            modality=modality,
+            source=source,
+            dimensions=dimensions,
+            metadata=metadata,
+            original_metadata=original_metadata,
+            dataset_id=dataset_id,
+        )
+
+    @server.tool()
+    def get_dataset_tool(dataset_id: str) -> Dict[str, Any]:
+        """Return a registered dataset summary including dimensions and metadata."""
+        return get_dataset(dataset_id)
+
+    @server.tool()
+    def list_datasets_tool() -> Dict[str, Any]:
+        """List the registered dataset ids in this MCP server process."""
+        return list_datasets()
+
+    @server.tool()
+    def add_metadata_tool(
+        dataset_id: str,
+        metadata: Dict[str, Any],
+        merge: bool = True,
+        target: str = "metadata",
+    ) -> Dict[str, Any]:
+        """Add or replace metadata on a registered sidpy dataset."""
+        return add_metadata(dataset_id, metadata, merge=merge, target=target)
+
+    @server.tool()
+    def update_dimension_tool(
+        dataset_id: str,
+        axis: int,
+        values: Sequence[float],
+        name: Optional[str] = None,
+        quantity: Optional[str] = None,
+        units: Optional[str] = None,
+        dimension_type: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Replace one dataset dimension with new values and optional metadata."""
+        return update_dimension(
+            dataset_id,
+            axis,
+            values=values,
+            name=name,
+            quantity=quantity,
+            units=units,
+            dimension_type=dimension_type,
+        )
+
+    @server.tool()
+    def rename_dimension_tool(dataset_id: str, axis: int, name: str) -> Dict[str, Any]:
+        """Rename one dataset dimension."""
+        return rename_dimension(dataset_id, axis, name)
+
+    @server.tool()
+    def remove_dataset_tool(dataset_id: str) -> Dict[str, Any]:
+        """Remove a dataset from the in-memory MCP registry."""
+        return remove_dataset(dataset_id)
 
     @server.tool()
     def fit_beps_loops_tool(
@@ -468,15 +761,23 @@ def main():
 
 
 __all__ = [
+    "DATASET_REGISTRY",
     "LOOP_PARAMETER_LABELS",
     "SHO_PARAMETER_LABELS",
     "SHO_fit_flattened",
+    "add_metadata",
     "calculate_loop_centroid",
+    "create_dataset",
     "create_mcp_server",
     "fit_beps_loops",
     "fit_sho_response",
     "generate_guess",
+    "get_dataset",
+    "list_datasets",
     "loop_fit_function",
     "main",
+    "remove_dataset",
+    "rename_dimension",
     "sho_guess_fn",
+    "update_dimension",
 ]
