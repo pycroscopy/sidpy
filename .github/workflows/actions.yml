@@ -95,4 +95,30 @@ jobs:
       run: |
         pip install wheel twine
         python setup.py sdist bdist_wheel
+        python - <<'PY'
+        import pathlib
+        import zipfile
+
+        wheel_paths = sorted(pathlib.Path("dist").glob("*.whl"))
+        if not wheel_paths:
+            raise SystemExit("No wheel was built in dist/")
+
+        wheel_path = wheel_paths[-1]
+        with zipfile.ZipFile(wheel_path) as archive:
+            entry_points = [
+                name for name in archive.namelist()
+                if name.endswith("entry_points.txt")
+            ]
+            if not entry_points:
+                raise SystemExit(f"{wheel_path.name} is missing entry_points.txt")
+
+            contents = archive.read(entry_points[0]).decode()
+            expected = "sidpy-mcp = sidpy.proc.mcp_server_beps:main"
+            if expected not in contents:
+                raise SystemExit(
+                    f"{wheel_path.name} does not declare the sidpy-mcp console script"
+                )
+
+        print(f"Verified {wheel_path.name} includes sidpy-mcp")
+        PY
         twine upload --username "__token__" --password $PYPI_TOKEN_PASSWORD dist/*
