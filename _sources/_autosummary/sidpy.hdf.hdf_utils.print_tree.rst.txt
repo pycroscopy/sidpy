@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.print\_tree
+================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: print_tree

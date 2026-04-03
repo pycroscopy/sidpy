@@ -1,0 +1,6 @@
+sidpy.proc.comp\_utils.get\_available\_memory
+=============================================
+
+.. currentmodule:: sidpy.proc.comp_utils
+
+.. autofunction:: get_available_memory

@@ -1,0 +1,6 @@
+sidpy.proc.mcp\_server\_beps.main
+=================================
+
+.. currentmodule:: sidpy.proc.mcp_server_beps
+
+.. autofunction:: main

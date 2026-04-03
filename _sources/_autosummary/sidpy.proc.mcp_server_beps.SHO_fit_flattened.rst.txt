@@ -1,0 +1,6 @@
+sidpy.proc.mcp\_server\_beps.SHO\_fit\_flattened
+================================================
+
+.. currentmodule:: sidpy.proc.mcp_server_beps
+
+.. autofunction:: SHO_fit_flattened

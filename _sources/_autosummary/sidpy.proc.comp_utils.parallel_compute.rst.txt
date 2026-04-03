@@ -1,0 +1,6 @@
+sidpy.proc.comp\_utils.parallel\_compute
+========================================
+
+.. currentmodule:: sidpy.proc.comp_utils
+
+.. autofunction:: parallel_compute

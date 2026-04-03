@@ -1,0 +1,6 @@
+sidpy.io.nexus.sidpy\_to\_nexus\_hdf5
+=====================================
+
+.. currentmodule:: sidpy.io.nexus
+
+.. autofunction:: sidpy_to_nexus_hdf5

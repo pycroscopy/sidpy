@@ -1,0 +1,6 @@
+sidpy.proc.mcp\_server\_beps.fit\_beps\_loops
+=============================================
+
+.. currentmodule:: sidpy.proc.mcp_server_beps
+
+.. autofunction:: fit_beps_loops
