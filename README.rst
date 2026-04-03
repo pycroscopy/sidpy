@@ -1,8 +1,8 @@
 sidpy
 =====
 
-.. image:: https://github.com/pycroscopy/sidpy/workflows/build/badge.svg?branch=main
-    :target: https://github.com/pycroscopy/sidpy/actions?query=workflow%3Abuild
+.. image:: https://github.com/pycroscopy/sidpy/actions/workflows/actions.yml/badge.svg?branch=main
+    :target: https://github.com/pycroscopy/sidpy/actions/workflows/actions.yml?query=branch%3Amain
     :alt: GiHub Actions
 
 .. image:: https://img.shields.io/pypi/v/sidpy.svg
@@ -13,7 +13,7 @@ sidpy
     :target: https://github.com/conda-forge/sidpy-feedstock
     :alt: conda-forge
    
-.. image:: https://codecov.io/gh/pycroscopy/sidpy/branch/master/graph/badge.svg?token=BCFR4FR6AL
+.. image:: https://codecov.io/gh/pycroscopy/sidpy/branch/main/graph/badge.svg?token=BCFR4FR6AL
     :target: https://codecov.io/gh/pycroscopy/sidpy
     :alt: coverage
 
