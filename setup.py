@@ -71,7 +71,8 @@ setup(
     include_package_data=True,
     # https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-dependencies
     extras_require={
-        'MPI': ["mpi4py"], 'test': ["pytest", "pytest-cov", "SciFiReaders"]
+        'MPI': ["mpi4py"],
+        'test': ["pytest", "pytest-cov", "SciFiReaders", "aicspylibczi"],
     },
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
@@ -89,9 +90,9 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    # entry_points={
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
+    entry_points={
+        'console_scripts': [
+            'sidpy-mcp=sidpy.proc.mcp_server_beps:main',
+        ],
+    },
 )
