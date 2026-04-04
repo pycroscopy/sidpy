@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sidpy"
+dynamic = ["version"]
+description = "Python utilities for storing, visualizing, and processing Spectroscopic and Imaging Data (SID)"
+readme = { file = "README.rst", content-type = "text/x-rst" }
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Pycroscopy contributors", email = "pycroscopy@gmail.com" },
+]
+keywords = [
+    "imaging",
+    "spectra",
+    "multidimensional",
+    "scientific",
+    "visualization",
+    "processing",
+    "storage",
+    "hdf5",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Cython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "numpy>=1.10",
+    "toolz",
+    "cytoolz",
+    "dask",
+    "dask-ml>=2025.1.0",
+    "h5py>=2.6.0",
+    "matplotlib>=2.0.0",
+    "distributed>=2.0.0",
+    "six",
+    "joblib>=0.11.0",
+    "ipywidgets",
+    "ipykernel",
+    "ipython",
+    "scikit-learn>=1.6.1",
+    "scipy",
+    "ase",
+    "ipympl",
+    "dill",
+    "pyswarms>=1.3.0",
+]
+
+[project.optional-dependencies]
+MPI = ["mpi4py"]
+test = ["pytest", "pytest-cov", "SciFiReaders", "aicspylibczi"]
+
+[project.scripts]
+sidpy-mcp = "sidpy.proc.mcp_server_beps:main"
+
+[project.urls]
+Homepage = "https://pycroscopy.github.io/sidpy/about.html"
+Documentation = "https://pycroscopy.github.io/sidpy/index.html"
+Source = "https://github.com/pycroscopy/sidpy"
+Issues = "https://github.com/pycroscopy/sidpy/issues"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "sidpy.__version__.version" }
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*", "*.tests", "*.tests.*"]

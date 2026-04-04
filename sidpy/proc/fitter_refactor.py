@@ -1,6 +1,8 @@
 import numpy as np
 import dask.array as da
 from scipy.optimize import least_squares
+import base64
+import dill
 #from sklearn.cluster import KMeans
 # Try importing dask_ml, warn if missing
 try:
@@ -10,7 +12,7 @@ except ImportError:
 import inspect
 import sidpy as sid
 
-class SidpyFitterRefactor:
+class SidpyFitter:
     """
     A parallelized fitter for sidpy.Datasets that supports K-Means-based 
     initial guesses for improved convergence on large datasets.
@@ -32,7 +34,7 @@ class SidpyFitterRefactor:
     def __init__(self, dataset, model_function, guess_function, ind_dims=None, num_params=None,
                  lower_bounds=None, upper_bounds=None):
         """
-        Initializes the SidpyFitterKMeans.
+        Initializes the SidpyFitter.
 
         Inputs
         ----------
@@ -75,8 +77,11 @@ class SidpyFitterRefactor:
         self.ind_dims = tuple(self.spectral_dims ) if ind_dims is None else ind_dims
         self.spat_dims = [d for d in range(self.ndim) if d not in self.ind_dims]
         
-        # Standardize x_axis (coordinate values)
-        self.x_axis = np.array([self.dataset._axes[d].values for d in self.ind_dims]).squeeze()
+        # Standardize x_axis (coordinate values). Keep a list when the axes have
+        # different lengths so 2D+ fits can consume them directly.
+        self.x_axis = [self.dataset._axes[d].values for d in self.ind_dims]
+        if len(self.x_axis) == 1:
+            self.x_axis = self.x_axis[0]
         
         self.is_complex = np.iscomplexobj(self.dataset)
         self.num_params = num_params
@@ -533,6 +538,21 @@ class SidpyFitterRefactor:
         
         # Attach Metadata
         sid_params.metadata = dict(self.metadata).copy()
+        fit_parms_dict = {
+            "fit_parameters_labels": custom_labels,
+            "fitting_function": self.metadata["source_code"]["model_function"],
+            "guess_function": self.metadata["source_code"]["guess_function"],
+            "ind_dims": self.ind_dims,
+        }
+        sid_params.metadata["fit_parms_dict"] = fit_parms_dict.copy()
+
+        fit_fn_dict = {"func1": self.model_func}
+        encoded_dict = {}
+        for key, value in fit_fn_dict.items():
+            serialized_value = dill.dumps(value)
+            encoded_value = base64.b64encode(serialized_value).decode("utf-8")
+            encoded_dict[key] = encoded_value
+        sid_params.metadata["fitting_functions"] = encoded_dict.copy()
         sid_params.provenance = {'sidpy': {'generated_from': self.dataset.title}}
         sid_params.data_type = 'image_stack' # Usually a stack of parameter maps
 
@@ -559,10 +579,9 @@ class SidpyFitterRefactor:
                                             quantity=p_qty, dimension_type='spectral'))
         
         sid_cov.metadata = dict(self.metadata).copy()
+        sid_cov.metadata["fit_parms_dict"] = fit_parms_dict.copy()
+        sid_cov.metadata["fitting_functions"] = encoded_dict.copy()
         sid_cov.provenance = {'sidpy': {'generated_from': self.dataset.title, 'parent_fit': sid_params.title}}
         
         return sid_params, sid_cov
-    
-
-    
     

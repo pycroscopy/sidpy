@@ -16,7 +16,7 @@ mpl.use('Agg')
 import numpy as np
 sys.path.insert(0, "../../sidpy/")
 import sidpy
-from sidpy.proc.fitter import SidFitter
+from sidpy.proc import SidpyFitter
 
 
 def get_fit_dataset(dset_shape=(5,5,32)):
@@ -25,6 +25,10 @@ def get_fit_dataset(dset_shape=(5,5,32)):
     def one_lin_func(xvec, *coeff):
         a1,a2 = coeff
         return a1*xvec + a2 
+
+    def one_lin_guess(xvec, yvec):
+        slope, intercept = np.polyfit(xvec, yvec, 1)
+        return [slope, intercept]
 
 
     #create a dataset
@@ -53,11 +57,11 @@ def get_fit_dataset(dset_shape=(5,5,32)):
                                             dimension_type='spatial'))
     data_set.set_dimension(2, sidpy.Dimension(xvec,
                                             name = 'bias',quantity = 'V', units = 'V', dimension_type='spectral'))
-    fitter = SidFitter(data_set, one_lin_func,num_workers=4,
-                           threads=2, return_cov=False, return_fit=True, return_std=False,
-                           km_guess=False,num_fit_parms = 2)
-    output = fitter.do_fit()
-    return data_set, output[0], output[1]
+    fitter = SidpyFitter(data_set, one_lin_func, one_lin_guess, ind_dims=(2,))
+    fitter.setup_calc()
+    fit_parameters = fitter.do_fit()
+    fitted_dataset = sidpy.viz.dataset_viz.SpectralImageFitVisualizer(data_set, fit_parameters).fit_dset
+    return data_set, fit_parameters, fitted_dataset
 
 def get_spectrum(dtype=float):
     x = np.array(np.random.normal(3, 2.5, size=1024), dtype=dtype)

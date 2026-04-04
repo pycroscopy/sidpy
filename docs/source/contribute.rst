@@ -25,10 +25,8 @@ General guidelines
   - expected inputs and outputs, examples, notes, purpose of functions
 * Please avoid very short names for variables like ``i`` or ``k``. This makes it challenging to follow code, find and fix bugs.
 * Please consider using packages that are easy to install on Windows, Mac, and Linux.
-  It is quite likely that packages included within Anaconda
-  (which has a comprehensive list packages for science and data analysis + visualization) can handle most needs.
-  If this is not possible, try to use packages that are easy to to install (pip install).
-  If even this is not possible, try to use packages that at least have conda installers.
+  Prefer packages available on PyPI and installable through modern Python tooling such as ``uv`` or ``pip``.
+  If that is not possible, document the extra installation steps clearly in the README or docs.
 * Follow best practices for `PEP8 compatibility <https://www.datacamp.com/community/tutorials/pep8-tutorial-python-code>`_.
   The easiest way to ensure compatibility is to set it up in your code editor.
   `PyCharm <https://blog.jetbrains.com/pycharm/2013/02/long-awaited-pep-8-checks-on-the-fly-improved-doctest-support-and-more-in-pycharm-2-7/>`_ does this by default.

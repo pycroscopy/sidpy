@@ -1,7 +1,7 @@
 """
 MCP server utilities for BEPS loop and SHO fitting.
 
-This module wraps the existing ``SidpyFitterRefactor`` workflows in MCP-friendly
+This module wraps the existing ``SidpyFitter`` workflows in MCP-friendly
 tools so an LLM client can fit nested-array BEPS loop data and SHO response
 data without re-implementing the fitting logic.
 
@@ -18,7 +18,7 @@ import sidpy as sid
 from scipy.spatial import ConvexHull
 from scipy.special import erf
 
-from .fitter_refactor import SidpyFitterRefactor
+from .fitter_refactor import SidpyFitter
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -92,7 +92,7 @@ def generate_guess(vdc: Sequence[float], pr_vec: Sequence[float], show_plots: bo
     """
     Generate the initial BEPS loop parameter guess.
 
-    This matches the tested heuristic in ``tests/proc/test_fitter_refactor.py``.
+    This matches the tested heuristic in ``tests/proc/test_fitter.py``.
     ``show_plots`` is accepted for API compatibility but not used here.
     """
     del show_plots
@@ -298,7 +298,7 @@ def fit_beps_loops(
         spectral_quantity="Voltage",
         spectral_units="Volts",
     )
-    fitter = SidpyFitterRefactor(
+    fitter = SidpyFitter(
         dataset,
         loop_fit_function,
         generate_guess,
@@ -356,7 +356,7 @@ def fit_sho_response(
         spectral_quantity="Frequency",
         spectral_units="Hz",
     )
-    fitter = SidpyFitterRefactor(
+    fitter = SidpyFitter(
         dataset,
         SHO_fit_flattened,
         sho_guess_fn,

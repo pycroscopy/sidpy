@@ -9,10 +9,6 @@ sidpy
     :target: https://pypi.org/project/sidpy/
     :alt: PyPI
     
-.. image:: https://img.shields.io/conda/vn/conda-forge/sidpy.svg
-    :target: https://github.com/conda-forge/sidpy-feedstock
-    :alt: conda-forge
-   
 .. image:: https://codecov.io/gh/pycroscopy/sidpy/branch/main/graph/badge.svg?token=BCFR4FR6AL
     :target: https://codecov.io/gh/pycroscopy/sidpy
     :alt: coverage

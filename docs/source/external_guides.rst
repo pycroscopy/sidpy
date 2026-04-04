@@ -37,8 +37,8 @@ Installing software
 -------------------
 python
 ~~~~~~~
-`Anaconda <https://www.anaconda.com/download/>`_ is a popular source for python which also comes with a large number of popular scientific python packages that are all correctly compiled and installed in one go.
-Tutorial for `installing Anaconda <https://www.youtube.com/watch?v=YJC6ldI3hWk>`_ (Python + all necessary packages)
+`uv <https://docs.astral.sh/uv/>`_ is a fast Python package and environment manager that can create isolated environments and install scientific dependencies reproducibly.
+Tutorial for `installing uv <https://docs.astral.sh/uv/getting-started/installation/>`_.
 
 python packages
 ~~~~~~~~~~~~~~~~
@@ -47,31 +47,22 @@ Two popular methods for installing packages in python are:
 * `pip <https://packaging.python.org/tutorials/installing-packages/>`_:
     * included with basic python and standard on Linux and Mac OS
     * Works great for installing pure python and other simple packages
-* `conda <https://conda.io/docs/user-guide/tasks/manage-pkgs.html>`_
-    * included with Anaconda installation
-    * Ideally suited for installing packages that have complex dependencies
-* Here's a nice tutorial on `installing packages using both pip and conda <https://www.youtube.com/watch?v=Z_Kxg-EYvxM>`_
+* `uv <https://docs.astral.sh/uv/>`_
+    * creates and manages project environments
+    * can install packages from `pyproject.toml` or requirements files
 
 Updating packages
 ~~~~~~~~~~~~~~~~~
-Following `these instructions <https://stackoverflow.com/questions/45197777/how-do-i-update-anaconda>`_, open a terminal or the command prompt (Windows) and type:
+If you are working in a `uv` managed project, open a terminal and run:
 
 .. code:: bash
 
-    conda update conda
-    conda update anaconda
-
-Note that you could use the following line instead of or in addition to ``conda update anaconda`` but it can lead to incompatible package versions
-
-.. code:: bash
-
-    conda update --all
-
-Note that this does **not** update python itself.
+    uv lock --upgrade
+    uv sync
 
 Upgrading python
 ~~~~~~~~~~~~~~~~
-Follow these instructions to `upgrade python using conda <https://conda.io/docs/user-guide/tasks/manage-python.html#updating-or-upgrading-python>`_ to the latest or specific version
+Use `uv python install <https://docs.astral.sh/uv/reference/cli/#uv-python-install>`_ to add a specific Python version, then recreate the environment with that interpreter.
 
 Writing code
 ------------
@@ -124,17 +115,16 @@ code and possibly contributing back to sidpy.
 Environments
 ~~~~~~~~~~~~
 Environments allow users to set up and segregate software sandboxes. For example, one could set up separate environments
-in python 2 and 3 to ensure that a certain desired code works in both python 2 and 3. For python users, there are two
-main and popular modes of creating and managing environments - **virtual environments** and **conda environments**.
+in python 2 and 3 to ensure that a certain desired code works in both python 2 and 3. For Python users, common
+approaches are **virtual environments** and tools like ``uv`` that manage them.
 
 * `Virtual environment <https://docs.python.org/3/tutorial/venv.html>`_
-    * Basic python ships with virtual enviroments. Anaconda is not required for this
+    * Basic python ships with virtual enviroments.
     * How to `use venv <http://www.pythonforbeginners.com/basics/how-to-use-python-virtualenv>`_
 
-* Conda environments
-    * `Basics  <https://conda.io/docs/user-guide/getting-started.html>`_ of Conda
-    * How to `manage environments in conda <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
-    * `Managing Python Environments <https://www.youtube.com/watch?v=EGaw6VXV3GI>`_ with Conda
+* `uv`-managed environments
+    * `uv documentation <https://docs.astral.sh/uv/>`_
+    * use ``uv venv`` and ``uv sync`` to create and populate a project environment
 
 Version control
 ~~~~~~~~~~~~~~~

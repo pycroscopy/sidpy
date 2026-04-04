@@ -19,8 +19,8 @@ Guide for python novices
 ~~~~~~~~~~~~~~~~~~~~~~~~
 For the python novices by a python novice - **Nick Mostovych, Brown University**
 
-#. Watch the video on `installing Anaconda <https://www.youtube.com/watch?v=YJC6ldI3hWk>`_
-#. Follow instructions on the :ref:`installation <Installation>` page to install Anaconda.
+#. Install `uv <https://docs.astral.sh/uv/>`_.
+#. Follow instructions on the :ref:`installation <Installation>` page to create the sidpy environment with ``uv``.
 #. Watch the `video tutorial <https://www.youtube.com/watch?v=HW29067qVWk>`_ on the Jupyter Notebooks
 #. Read the whole :ref:`Tutorial on Basics page <Tutorials on Basics>`. Do NOT proceed unless you are familiar with basic python programming and usage.
 #. Read `the document on the pyNSID data format <https://pycroscopy.github.io/pyNSID/nsid.html>`_. This is very important and highlights the advantages of using NSID. New users should not jump to the examples until they have a good understanding of the data format.
