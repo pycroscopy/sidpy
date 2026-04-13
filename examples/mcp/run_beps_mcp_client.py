@@ -65,6 +65,13 @@ class JsonRpcMessage:
     payload: Dict[str, Any]
 
 
+def _json_default(value: Any) -> Any:
+    """Encode values that the standard JSON encoder cannot handle."""
+    if isinstance(value, complex):
+        return {"__complex__": [value.real, value.imag]}
+    raise TypeError(f"Object of type {value.__class__.__name__} is not JSON serializable")
+
+
 class StdioMcpClient:
     """Small MCP client that speaks JSON-RPC over stdio."""
 
@@ -173,7 +180,7 @@ class StdioMcpClient:
     def _send(self, payload: Dict[str, Any]) -> None:
         if self.proc is None or self.proc.stdin is None:
             raise McpError("MCP server is not running.")
-        body = (json.dumps(payload) + "\n").encode("utf-8")
+        body = (json.dumps(payload, default=_json_default) + "\n").encode("utf-8")
         self._debug(f"send: {payload.get('method', 'response')}")
         self.proc.stdin.write(body)
         self.proc.stdin.flush()

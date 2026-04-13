@@ -163,19 +163,182 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
         workflow = mcp_mod.get_named_workflow("fit_beps_dataset")
         self.assertEqual(workflow["name"], "analysis.fit_beps_dataset")
         self.assertEqual(workflow["group"], "analysis")
-        self.assertGreaterEqual(len(workflow["steps"]), 4)
-        self.assertTrue(any(step["tool"] == "fit_beps_loops_tool" for step in workflow["steps"]))
-        self.assertTrue(any(step["tool"] == "fit_sho_response_tool" for step in workflow["steps"]))
-        self.assertTrue(any(step["tool"] == "create_dataset_tool" for step in workflow["steps"]))
-        self.assertIn("SciFiReaders.NSIDReader", workflow["setup"][0]["tool"])
+        self.assertEqual(len(workflow["steps"]), 1)
+        step_tools = [step.get("tool") for step in workflow["steps"]]
+        self.assertIn("fit_beps_dataset_workflow_tool", step_tools)
+        self.assertEqual(workflow["setup"][0]["server"], "scifireaders")
+        self.assertEqual(workflow["setup"][0]["tool"], "read_scifireaders_file")
+        self.assertTrue(
+            any("one sidpy MCP call" in step.get("notes", "") or "one sidpy workflow tool" in step.get("notes", "") for step in workflow["steps"] + workflow["setup"])
+        )
+
+    def test_real_file_scifireaders_payload_can_drive_the_executable_workflow(self):
+        from pathlib import Path
+        import shutil
+        import os
+        import tempfile
+
+        os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
+        try:
+            from SciFiReaders.mcp import scifireaders_mcp
+        except Exception as exc:
+            self.skipTest(f"SciFiReaders MCP is required for the executable workflow test: {exc}")
+
+        file_path = Path("/Users/rvv/Downloads/PTO_5x5.h5")
+        if not file_path.exists():
+            self.skipTest(f"Real BEPS fixture not found: {file_path}")
+
+        fd, tmp_name = tempfile.mkstemp(prefix="pto_5x5_sidpy_", suffix=".h5")
+        os.close(fd)
+        working_path = Path(tmp_name)
+        shutil.copy2(file_path, working_path)
+
+        reader_payload = scifireaders_mcp.read_file(str(working_path), return_mode="data")
+        self.assertIn("datasets", reader_payload)
+
+        registered = mcp_mod.register_external_dataset(
+            reader_payload,
+            channel_name="Channel_000",
+            dataset_name="pto_5x5_from_scifireaders",
+        )
+        source_dataset_id = registered["dataset_id"]
+        array = np.asarray(reader_payload["datasets"]["Channel_000"]["data"])
+
+        sho_cycle_idx = 1
+        sho_result = mcp_mod.fit_sho_response_over_dc_from_dataset(
+            source_dataset_id,
+            cycle_index=sho_cycle_idx,
+            use_kmeans=False,
+            n_clusters=4,
+            return_cov=False,
+            loss="linear",
+            dataset_name="pto_5x5_sho_from_dataset",
+        )
+        sho_params = np.asarray(sho_result["parameters"])
+        sho_data = np.transpose(array[:, :, :, :, sho_cycle_idx], (0, 1, 3, 2))
+        sho_axis = np.asarray(reader_payload["datasets"]["Channel_000"]["dimensions"][2]["values"])
+        sho_pred_concat = []
+        sho_true_concat = []
+        sho_amp_true = []
+        sho_amp_pred = []
+        for row in range(sho_data.shape[0]):
+            for col in range(sho_data.shape[1]):
+                for dc_idx in range(sho_data.shape[2]):
+                    pred_flat = mcp_mod.SHO_fit_flattened(sho_axis, *sho_params[row, col, dc_idx])
+                    true_flat = np.hstack([sho_data[row, col, dc_idx].real, sho_data[row, col, dc_idx].imag])
+                    sho_pred_concat.append(pred_flat)
+                    sho_true_concat.append(true_flat)
+                    pred_complex = pred_flat[: len(sho_axis)] + 1j * pred_flat[len(sho_axis) :]
+                    sho_amp_true.append(np.abs(sho_data[row, col, dc_idx]))
+                    sho_amp_pred.append(np.abs(pred_complex))
+        sho_overall_r2 = r2_score(np.asarray(sho_true_concat).reshape(-1), np.asarray(sho_pred_concat).reshape(-1))
+        sho_amp_overall_r2 = r2_score(np.asarray(sho_amp_true).reshape(-1), np.asarray(sho_amp_pred).reshape(-1))
+        self.assertGreater(sho_overall_r2, 0.8)
+        self.assertGreater(sho_amp_overall_r2, 0.9)
+
+        sho_dataset = mcp_mod.create_dataset(
+            sho_params,
+            dataset_name="pto_5x5_sho_fit_parameters",
+            quantity="fit_parameter",
+            units="a.u.",
+            dimensions=[
+                {
+                    "axis": 0,
+                    "name": "X",
+                    "quantity": "X",
+                    "units": "m",
+                    "dimension_type": "spatial",
+                    "values": np.asarray(registered["dimensions"][0]["values"]).tolist(),
+                },
+                {
+                    "axis": 1,
+                    "name": "Y",
+                    "quantity": "Y",
+                    "units": "m",
+                    "dimension_type": "spatial",
+                    "values": np.asarray(registered["dimensions"][1]["values"]).tolist(),
+                },
+                {
+                    "axis": 2,
+                    "name": "DC Offset",
+                    "quantity": "DC Offset",
+                    "units": "Volts",
+                    "dimension_type": "spectral",
+                    "values": np.asarray(registered["dimensions"][3]["values"]).tolist(),
+                },
+                {
+                    "axis": 3,
+                    "name": "fit_parameter",
+                    "quantity": "fit_parameter",
+                    "units": "index",
+                    "dimension_type": "spectral",
+                    "values": list(range(sho_params.shape[-1])),
+                },
+            ],
+            metadata={
+                "fit_kind": "sho_dc_sweep",
+                "source_dataset": str(file_path),
+                "source_dataset_id": source_dataset_id,
+                "source_slice": {
+                    "cycle_index": sho_cycle_idx,
+                },
+            },
+        )
+
+        loop_input = mcp_mod.derive_loop_input_from_sho_result(sho_dataset["dataset_id"])
+        self.assertIn("beps_data", loop_input)
+        self.assertIn("dc_voltage", loop_input)
+        self.assertEqual(
+            loop_input["source_slice"],
+            {
+                "cycle_index": sho_cycle_idx,
+                "signal": "projected_piezoresponse",
+                "projection_tool": "BGlib.projectLoop",
+            },
+        )
+        expected_projected = np.asarray(
+            [
+                mcp_mod._project_piezoresponse_loop(
+                    beps_axis,
+                    sho_params[row, col, :, 0],
+                    sho_params[row, col, :, 3],
+                )["Projected Loop"]
+                for row in range(sho_params.shape[0])
+                for col in range(sho_params.shape[1])
+            ]
+        ).reshape(beps_data.shape)
+        np.testing.assert_allclose(np.asarray(loop_input["beps_data"]), expected_projected)
+
+        beps_result = mcp_mod.fit_beps_loops(
+            loop_input["beps_data"],
+            loop_input["dc_voltage"],
+            use_kmeans=False,
+            n_clusters=4,
+            return_cov=False,
+            loss="linear",
+            dataset_name="pto_5x5_beps_from_derived_input",
+        )
+        self.assertEqual(beps_result["fit_kind"], "beps_loop")
+        self.assertEqual(beps_result["parameter_shape"], [5, 5, 9])
+        beps_params = np.asarray(beps_result["parameters"])
+        beps_pred = np.asarray([
+            mcp_mod.loop_fit_function(loop_input["dc_voltage"], *beps_params[row, col])
+            for row in range(beps_params.shape[0])
+            for col in range(beps_params.shape[1])
+        ]).reshape(np.asarray(loop_input["beps_data"]).shape)
+        beps_r2 = r2_score(np.asarray(loop_input["beps_data"]).reshape(-1), beps_pred.reshape(-1))
+        self.assertGreater(beps_r2, 0.75)
 
     def test_real_file_fits_round_trip_to_sidpy_datasets(self):
         from pathlib import Path
+        import os
+
+        os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
 
         try:
             import SciFiReaders as sr
-        except ImportError:
-            self.skipTest("SciFiReaders is required for the real-file MCP integration test.")
+        except Exception as exc:
+            self.skipTest(f"SciFiReaders is required for the real-file MCP integration test: {exc}")
 
         file_path = Path(
             "/Users/rvv/Downloads/PTO_5x5.h5"
@@ -209,6 +372,57 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
         _, sho_dc_idx, sho_cycle_idx = max(sho_candidates, key=lambda item: item[0])
         sho_data = array[:, :, :, sho_dc_idx, sho_cycle_idx]
         sho_axis = np.asarray(data._axes[2].values)
+
+        source_dataset = mcp_mod.create_dataset(
+            array,
+            dataset_name="pto_5x5_source_dataset",
+            quantity="signal",
+            units="a.u.",
+            dimensions=[
+                {
+                    "axis": 0,
+                    "name": "X",
+                    "quantity": "X",
+                    "units": "m",
+                    "dimension_type": "spatial",
+                    "values": np.asarray(data._axes[0].values).tolist(),
+                },
+                {
+                    "axis": 1,
+                    "name": "Y",
+                    "quantity": "Y",
+                    "units": "m",
+                    "dimension_type": "spatial",
+                    "values": np.asarray(data._axes[1].values).tolist(),
+                },
+                {
+                    "axis": 2,
+                    "name": "Frequency",
+                    "quantity": "Frequency",
+                    "units": "Hz",
+                    "dimension_type": "spectral",
+                    "values": np.asarray(data._axes[2].values).tolist(),
+                },
+                {
+                    "axis": 3,
+                    "name": "DC Offset",
+                    "quantity": "Voltage",
+                    "units": "Volts",
+                    "dimension_type": "spectral",
+                    "values": np.asarray(data._axes[3].values).tolist(),
+                },
+                {
+                    "axis": 4,
+                    "name": "Cycle",
+                    "quantity": "Cycle",
+                    "units": "index",
+                    "dimension_type": "spectral",
+                    "values": np.asarray(data._axes[4].values).tolist(),
+                },
+            ],
+            metadata={"source_file": "PTO_5x5.h5"},
+        )
+        source_dataset_id = source_dataset["dataset_id"]
 
         # --- BEPS fit ---
         beps_result = mcp_mod.fit_beps_loops(
@@ -369,9 +583,10 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
                 "fit_kind": "sho",
                 "parameter_labels": mcp_mod.SHO_PARAMETER_LABELS,
                 "source_dataset": "PTO_5x5.h5",
+                "source_dataset_id": source_dataset_id,
                 "source_slice": {
-                    "dc_index": sho_dc_idx,
-                    "cycle_index": sho_cycle_idx,
+                    "frequency_index": beps_freq_idx,
+                    "cycle_index": beps_cycle_idx,
                 },
                 "fit_quality": {
                     "overall_r2": float(sho_overall_r2),
@@ -388,19 +603,40 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
         self.assertEqual(sho_round_trip["shape"], [5, 5, 4])
         self.assertEqual(sho_round_trip["metadata"]["fit_quality"]["overall_r2"], float(sho_overall_r2))
 
+        loop_input = mcp_mod.derive_loop_input_from_sho_result(sho_dataset_id)
+        self.assertEqual(
+            loop_input["source_slice"],
+            {"frequency_index": beps_freq_idx, "cycle_index": beps_cycle_idx},
+        )
+        self.assertEqual(loop_input["beps_data"], beps_data.tolist())
+
     def test_stdio_mcp_client_can_fit_real_file_and_create_datasets(self):
         from pathlib import Path
+        import shutil
+        import os
+        import tempfile
 
+        os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
         try:
             import SciFiReaders as sr
-        except ImportError:
-            self.skipTest("SciFiReaders is required for the stdio MCP integration test.")
+        except Exception as exc:
+            self.skipTest(f"SciFiReaders is required for the stdio MCP integration test: {exc}")
 
         file_path = Path("/Users/rvv/Downloads/PTO_5x5.h5")
         if not file_path.exists():
             self.skipTest(f"Real BEPS fixture not found: {file_path}")
 
-        reader = sr.NSIDReader(str(file_path))
+        fd, tmp_name = tempfile.mkstemp(prefix="pto_5x5_sidpy_", suffix=".h5")
+        os.close(fd)
+        analysis_path = Path(tmp_name)
+        shutil.copy2(file_path, analysis_path)
+
+        fd, tmp_name = tempfile.mkstemp(prefix="pto_5x5_sidpy_", suffix=".h5")
+        os.close(fd)
+        workflow_path = Path(tmp_name)
+        shutil.copy2(file_path, workflow_path)
+
+        reader = sr.NSIDReader(str(analysis_path))
         data = reader.read()["Channel_000"]
         array = np.asarray(data)
 
@@ -584,6 +820,88 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
             sho_amp_pred = np.asarray(sho_amp_pred)
             self.assertGreater(r2_score(sho_true_concat.reshape(-1), sho_pred_concat.reshape(-1)), 0.85)
             self.assertGreater(r2_score(sho_amp_true.reshape(-1), sho_amp_pred.reshape(-1)), 0.94)
+
+    def test_stdio_mcp_client_can_run_full_beps_dataset_workflow(self):
+        from pathlib import Path
+        import shutil
+        import os
+        import tempfile
+
+        os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
+        try:
+            import SciFiReaders as sr
+            from SciFiReaders.mcp import scifireaders_mcp
+        except Exception as exc:
+            self.skipTest(f"SciFiReaders MCP is required for the workflow stdio integration test: {exc}")
+
+        file_path = Path("/Users/rvv/Downloads/PTO_5x5.h5")
+        if not file_path.exists():
+            self.skipTest(f"Real BEPS fixture not found: {file_path}")
+
+        fd, tmp_name = tempfile.mkstemp(prefix="pto_5x5_sidpy_", suffix=".h5")
+        os.close(fd)
+        working_path = Path(tmp_name)
+        shutil.copy2(file_path, working_path)
+
+        fd, tmp_name = tempfile.mkstemp(prefix="pto_5x5_sidpy_", suffix=".h5")
+        os.close(fd)
+        workflow_path = Path(tmp_name)
+        shutil.copy2(file_path, workflow_path)
+
+        reader = sr.NSIDReader(str(working_path))
+        data = reader.read()["Channel_000"]
+        array = np.asarray(data)
+
+        with StdioMcpClient(DEFAULT_SERVER_COMMAND, cwd=Path("/Users/rvv/Github/sidpy")) as client:
+            tools = client.list_tools()
+            tool_names = {tool["name"] for tool in tools}
+            self.assertIn("fit_beps_dataset_workflow_tool", tool_names)
+
+            result = client.call_tool(
+                "fit_beps_dataset_workflow_tool",
+                {
+                    "source_file_path": str(workflow_path),
+                    "channel_name": "Channel_000",
+                    "dataset_name": "PTO_5x5.h5",
+                    "cycle_index": 1,
+                    "use_kmeans": False,
+                    "n_clusters": 4,
+                    "return_cov": False,
+                    "loss": "linear",
+                    "sho_dataset_name": "pto_5x5_sho_workflow",
+                    "beps_dataset_name": "pto_5x5_beps_workflow",
+                },
+            )
+            payload = json.loads(_extract_tool_text(result))
+
+            self.assertIn("sho_dataset_id", payload)
+            self.assertIn("beps_dataset_id", payload)
+            self.assertEqual(payload["sho_dataset"]["shape"], [5, 5, array.shape[3], 4])
+            self.assertEqual(payload["beps_dataset"]["shape"], [5, 5, 9])
+            self.assertEqual(
+                payload["loop_input"]["source_slice"],
+                {
+                    "cycle_index": 1,
+                    "signal": "projected_piezoresponse",
+                    "projection_tool": "BGlib.projectLoop",
+                },
+            )
+            self.assertEqual(payload["sho_dataset"]["metadata"]["fit_kind"], "sho_dc_sweep")
+            self.assertGreater(payload["sho_dataset"]["metadata"]["fit_quality"]["overall_r2"], 0.8)
+            self.assertGreater(payload["sho_dataset"]["metadata"]["fit_quality"]["amplitude_overall_r2"], 0.9)
+            self.assertGreater(payload["beps_dataset"]["metadata"]["fit_quality"]["overall_r2"], 0.75)
+            expected_projected = np.asarray(
+                [
+                    mcp_mod._project_piezoresponse_loop(
+                        np.asarray(data._axes[3].values),
+                        sho_params[row, col, :, 0],
+                        sho_params[row, col, :, 3],
+                    )["Projected Loop"]
+                    for row in range(sho_params.shape[0])
+                    for col in range(sho_params.shape[1])
+                ]
+            ).reshape(beps_data.shape)
+            np.testing.assert_allclose(np.asarray(payload["loop_input"]["beps_data"]), expected_projected)
 
 
 if __name__ == "__main__":

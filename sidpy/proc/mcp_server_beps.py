@@ -11,6 +11,10 @@ but running the server does.
 
 from __future__ import annotations
 
+from functools import lru_cache
+from importlib import import_module
+from importlib.util import module_from_spec, spec_from_file_location
+from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Sequence
 from uuid import uuid4
 
@@ -46,153 +50,57 @@ WORKFLOW_EXAMPLES: Dict[str, list[Dict[str, Any]]] = {
         {
             "name": "fit_beps_dataset",
             "goal": (
-                "Read a BEPS HDF5/NSID file with SciFiReaders, fit a BEPS loop map "
-                "and an SHO slice, then save the fit-parameter maps as sidpy.Datasets."
+                "Read a BEPS HDF5/NSID file with the SciFiReaders MCP server, "
+                "then run one sidpy workflow tool that fits SHO over the full DC "
+                "sweep for one cycle, derives the loop input by projecting the "
+                "fitted SHO amplitude and phase with BGlib projectLoop, and "
+                "saves both fit-parameter maps as sidpy.Datasets."
             ),
             "inputs": {
                 "file_path": "/path/to/PTO_5x5.h5",
                 "channel_name": "Channel_000",
-                "beps_frequency_index": 23,
-                "beps_cycle_index": 0,
-                "sho_dc_index": 49,
                 "sho_cycle_index": 1,
-                "use_kmeans": True,
+                "use_kmeans": False,
                 "n_clusters": 4,
+                "scifireaders_return_mode": "data",
                 "beps_dataset_name": "beps_fit_parameters",
                 "sho_dataset_name": "sho_fit_parameters",
             },
             "setup": [
                 {
-                    "kind": "external",
-                    "tool": "SciFiReaders.NSIDReader",
+                    "kind": "mcp",
+                    "server": "scifireaders",
+                    "tool": "read_scifireaders_file",
                     "arguments": {
                         "file_path": "{{file_path}}",
+                        "return_mode": "{{scifireaders_return_mode}}",
                     },
-                    "assign": "reader",
                     "notes": (
-                        "Read the file outside MCP, then extract {{channel_name}} into a "
-                        "sidpy.Dataset before calling the fit tools."
-                    ),
-                },
-                {
-                    "kind": "external",
-                    "tool": "reader.read()",
-                    "arguments": {},
-                    "assign": "channel_data",
-                    "notes": (
-                        "Use the loaded dataset to build two slices: "
-                        "BEPS data = data[:, :, beps_frequency_index, :, beps_cycle_index]; "
-                        "SHO data = data[:, :, :, sho_dc_index, sho_cycle_index]."
+                        "Read the file with the SciFiReaders MCP server so the file "
+                        "never needs to be handled directly in Python."
                     ),
                 },
             ],
             "steps": [
                 {
-                    "tool": "fit_beps_loops_tool",
+                    "tool": "fit_beps_dataset_workflow_tool",
                     "arguments": {
-                        "data": "{{beps_data}}",
-                        "dc_voltage": "{{dc_voltage}}",
+                        "source_file_path": "{{file_path}}",
+                        "channel_name": "{{channel_name}}",
+                        "dataset_name": "{{file_path}}",
+                        "cycle_index": "{{sho_cycle_index}}",
                         "use_kmeans": "{{use_kmeans}}",
                         "n_clusters": "{{n_clusters}}",
                         "return_cov": False,
                         "loss": "linear",
-                        "dataset_name": "beps_loop_fit",
+                        "sho_dataset_name": "{{sho_dataset_name}}",
+                        "beps_dataset_name": "{{beps_dataset_name}}",
                     },
-                    "notes": "Fit the BEPS loop slice first so the loop map is captured cleanly.",
-                },
-                {
-                    "tool": "create_dataset_tool",
-                    "arguments": {
-                        "data": "{{beps_parameters}}",
-                        "dataset_name": "{{beps_dataset_name}}",
-                        "quantity": "fit_parameter",
-                        "units": "a.u.",
-                        "dimensions": [
-                            {
-                                "axis": 0,
-                                "name": "X",
-                                "quantity": "X",
-                                "units": "m",
-                                "dimension_type": "spatial",
-                                "values": "{{x_values}}",
-                            },
-                            {
-                                "axis": 1,
-                                "name": "Y",
-                                "quantity": "Y",
-                                "units": "m",
-                                "dimension_type": "spatial",
-                                "values": "{{y_values}}",
-                            },
-                            {
-                                "axis": 2,
-                                "name": "fit_parameter",
-                                "quantity": "fit_parameter",
-                                "units": "index",
-                                "dimension_type": "spectral",
-                                "values": [0, 1, 2, 3, 4, 5, 6, 7, 8],
-                            },
-                        ],
-                        "metadata": {
-                            "fit_kind": "beps_loop",
-                            "source_dataset": "{{file_path}}",
-                        },
-                    },
-                    "notes": "Store the BEPS fit output as a sidpy.Dataset with spatial X/Y axes preserved.",
-                },
-                {
-                    "tool": "fit_sho_response_tool",
-                    "arguments": {
-                        "real_data": "{{sho_real_data}}",
-                        "imag_data": "{{sho_imag_data}}",
-                        "frequency": "{{frequency}}",
-                        "use_kmeans": "{{use_kmeans}}",
-                        "n_clusters": "{{n_clusters}}",
-                        "return_cov": False,
-                        "loss": "linear",
-                        "dataset_name": "sho_response_fit",
-                    },
-                    "notes": "Fit the complex SHO slice after the loop map has been built.",
-                },
-                {
-                    "tool": "create_dataset_tool",
-                    "arguments": {
-                        "data": "{{sho_parameters}}",
-                        "dataset_name": "{{sho_dataset_name}}",
-                        "quantity": "fit_parameter",
-                        "units": "a.u.",
-                        "dimensions": [
-                            {
-                                "axis": 0,
-                                "name": "X",
-                                "quantity": "X",
-                                "units": "m",
-                                "dimension_type": "spatial",
-                                "values": "{{x_values}}",
-                            },
-                            {
-                                "axis": 1,
-                                "name": "Y",
-                                "quantity": "Y",
-                                "units": "m",
-                                "dimension_type": "spatial",
-                                "values": "{{y_values}}",
-                            },
-                            {
-                                "axis": 2,
-                                "name": "fit_parameter",
-                                "quantity": "fit_parameter",
-                                "units": "index",
-                                "dimension_type": "spectral",
-                                "values": [0, 1, 2, 3],
-                            },
-                        ],
-                        "metadata": {
-                            "fit_kind": "sho",
-                            "source_dataset": "{{file_path}}",
-                        },
-                    },
-                    "notes": "Save the SHO fit output as a sidpy.Dataset so it can be inspected or reused.",
+                    "assign": "workflow_result",
+                    "notes": (
+                        "Run the full fit workflow in one sidpy MCP call after "
+                        "the SciFiReaders read step."
+                    ),
                 },
             ],
         }
@@ -479,6 +387,126 @@ def _dataset_payload(dataset: sid.Dataset, dataset_id: Optional[str] = None) -> 
     return payload
 
 
+def _dimension_type_value(dimension_type: Any) -> Any:
+    if hasattr(dimension_type, "name"):
+        return dimension_type
+    return str(dimension_type)
+
+
+def _is_dataset_like(value: Any) -> bool:
+    return (
+        hasattr(value, "shape")
+        and hasattr(value, "metadata")
+        and hasattr(value, "get_dimension_by_number")
+    )
+
+
+def _restore_complex_payload(value: Any) -> Any:
+    """Restore JSON-safe complex markers back into complex numbers."""
+    if isinstance(value, dict):
+        if set(value.keys()) == {"__complex__"}:
+            real, imag = value["__complex__"]
+            return complex(real, imag)
+        return {key: _restore_complex_payload(val) for key, val in value.items()}
+    if isinstance(value, list):
+        return [_restore_complex_payload(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_restore_complex_payload(item) for item in value)
+    return value
+
+
+def _dataset_from_payload(payload: Dict[str, Any], *, dataset_name: Optional[str] = None) -> sid.Dataset:
+    if "data" not in payload:
+        raise ValueError("The dataset payload must include a 'data' field.")
+
+    data = _restore_complex_payload(payload["data"])
+    dataset = sid.Dataset.from_array(
+        np.asarray(data),
+        title=dataset_name or payload.get("title", "sidpy_dataset"),
+        datatype=_normalize_data_type(payload.get("data_type")),
+        quantity=payload.get("quantity", "generic"),
+        units=payload.get("units", "generic"),
+        modality=payload.get("modality", "generic"),
+        source=payload.get("source", "generic"),
+    )
+
+    for dim in payload.get("dimensions", []):
+        axis = int(dim.get("axis", len(dataset._axes)))
+        if axis >= dataset.ndim:
+            continue
+        values = dim.get("values", np.arange(dataset.shape[axis]))
+        dataset.set_dimension(
+            axis,
+            sid.Dimension(
+                values,
+                name=dim.get("name", f"dim_{axis}"),
+                quantity=dim.get("quantity", dim.get("name", f"dim_{axis}")),
+                units=dim.get("units", "generic"),
+                dimension_type=_dimension_type_value(dim.get("dimension_type", "UNKNOWN")),
+            ),
+        )
+
+    if "metadata" in payload:
+        dataset.metadata = dict(payload.get("metadata", {}))
+    if "original_metadata" in payload:
+        dataset.original_metadata = dict(payload.get("original_metadata", {}))
+    return dataset
+
+
+def _select_dataset_from_read_result(read_result: Any, channel_name: Optional[str] = None) -> sid.Dataset:
+    """Pick one sidpy.Dataset out of a SciFiReaders read result."""
+    def _collect_datasets(value: Any) -> list[sid.Dataset]:
+        if _is_dataset_like(value):
+            return [value]
+        if isinstance(value, dict) and {"data", "dimensions"}.issubset(value.keys()):
+            return [_dataset_from_payload(value, dataset_name=value.get("title"))]
+        if isinstance(value, dict):
+            datasets: list[sid.Dataset] = []
+            for key, item in value.items():
+                if isinstance(item, dict) and {"data", "dimensions"}.issubset(item.keys()):
+                    datasets.append(_dataset_from_payload(item, dataset_name=str(key)))
+                else:
+                    datasets.extend(_collect_datasets(item))
+            return datasets
+        if isinstance(value, (list, tuple)):
+            datasets = []
+            for item in value:
+                datasets.extend(_collect_datasets(item))
+            return datasets
+        return []
+
+    if isinstance(read_result, sid.Dataset):
+        return read_result
+    if _is_dataset_like(read_result):
+        return read_result  # type: ignore[return-value]
+
+    if isinstance(read_result, dict):
+        if channel_name is not None:
+            if channel_name in read_result and isinstance(read_result[channel_name], sid.Dataset):
+                return read_result[channel_name]
+            dataset_values = _collect_datasets(read_result)
+            if dataset_values:
+                return dataset_values[0]
+            raise KeyError(f"Channel {channel_name!r} was not found in the reader result.")
+
+        dataset_values = _collect_datasets(read_result)
+        if len(dataset_values) == 1:
+            return dataset_values[0]
+        if not dataset_values:
+            raise ValueError("The reader result did not contain any sidpy.Dataset objects.")
+        raise ValueError("channel_name is required when the reader result contains multiple datasets.")
+
+    if isinstance(read_result, (list, tuple)):
+        dataset_values = _collect_datasets(read_result)
+        if len(dataset_values) == 1:
+            return dataset_values[0]
+        if not dataset_values:
+            raise ValueError("The reader result did not contain any sidpy.Dataset objects.")
+        raise ValueError("channel_name is required when the reader result contains multiple datasets.")
+
+    raise TypeError("Unsupported reader result type.")
+
+
 def _store_dataset(dataset: sid.Dataset, dataset_id: Optional[str] = None) -> str:
     if dataset_id is None:
         dataset_id = str(uuid4())
@@ -616,10 +644,167 @@ def create_dataset(
     return _dataset_payload(dataset, dataset_id=dataset_id)
 
 
+def register_external_dataset(
+    reader_payload: Dict[str, Any],
+    *,
+    channel_name: Optional[str] = None,
+    dataset_name: Optional[str] = None,
+    dataset_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Register a SciFiReaders dataset payload as a sidpy.Dataset."""
+    payload = reader_payload
+    if "datasets" in reader_payload:
+        datasets = reader_payload["datasets"]
+        if channel_name is not None:
+            try:
+                payload = datasets[channel_name]
+            except KeyError as exc:
+                raise KeyError(f"Channel {channel_name!r} was not found in the reader payload.") from exc
+        elif len(datasets) == 1:
+            payload = next(iter(datasets.values()))
+        else:
+            raise ValueError("channel_name is required when the reader payload contains multiple datasets.")
+
+    dataset = _dataset_from_payload(payload, dataset_name=dataset_name)
+    dataset_id = _store_dataset(dataset, dataset_id=dataset_id)
+    return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+def register_external_dataset_from_file(
+    output_file_path: str,
+    *,
+    channel_name: Optional[str] = None,
+    dataset_name: Optional[str] = None,
+    dataset_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Register a SciFiReaders-exported NeXus file as a sidpy.Dataset."""
+    try:
+        import SciFiReaders as sr
+    except ImportError as exc:  # pragma: no cover - optional runtime dependency
+        raise ImportError("SciFiReaders is required to register a reader output file.") from exc
+
+    reader = sr.NSIDReader(str(Path(output_file_path)))
+    read_result = reader.read()
+    dataset = _select_dataset_from_read_result(read_result, channel_name=channel_name)
+    if dataset_name:
+        dataset = dataset.copy()
+        dataset.title = dataset_name
+    dataset_id = _store_dataset(dataset, dataset_id=dataset_id)
+    return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+@lru_cache(maxsize=1)
+def _load_bglib_be_loop_module():
+    """Load BGlib's be_loop helpers for piezoresponse projection."""
+    module_name = "BGlib.be.analysis.utils.be_loop"
+    try:
+        return import_module(module_name)
+    except ImportError:
+        module_path = (
+            Path(__file__).resolve().parents[2].parent
+            / "BGlib"
+            / "BGlib"
+            / "be"
+            / "analysis"
+            / "utils"
+            / "be_loop.py"
+        )
+        if not module_path.exists():
+            raise ImportError(
+                "BGlib is required to project SHO amplitude and phase into a "
+                "piezoresponse loop."
+            )
+        spec = spec_from_file_location("_bglib_be_loop_mcp", module_path)
+        if spec is None or spec.loader is None:
+            raise ImportError("Unable to load BGlib be_loop helpers.")
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+
+def _project_piezoresponse_loop(
+    dc_voltage: Sequence[float],
+    amplitude_vec: Sequence[float],
+    phase_vec: Sequence[float],
+) -> Dict[str, Any]:
+    """Project SHO amplitude and phase into a BGlib piezoresponse loop."""
+    be_loop = _load_bglib_be_loop_module()
+    results = be_loop.projectLoop(
+        np.asarray(dc_voltage, dtype=float).ravel().tolist(),
+        np.asarray(amplitude_vec, dtype=float).ravel().tolist(),
+        np.asarray(phase_vec, dtype=float).ravel().tolist(),
+    )
+    return dict(results)
+
+
 def get_dataset(dataset_id: str) -> Dict[str, Any]:
     """Return a JSON-friendly summary of a registered dataset."""
     dataset = _get_dataset(dataset_id)
     return _dataset_payload(dataset, dataset_id=dataset_id)
+
+
+def derive_loop_input_from_sho_result(sho_dataset_id: str) -> Dict[str, Any]:
+    """Derive the BEPS loop input from a saved SHO fit dataset."""
+    sho_dataset = _get_dataset(sho_dataset_id)
+    metadata = dict(sho_dataset.metadata)
+    source_dataset_id = metadata.get("source_dataset_id")
+    source_slice = metadata.get("source_slice", {})
+    if not source_dataset_id:
+        raise ValueError("The SHO result dataset is missing source_dataset_id metadata.")
+
+    source_dataset = _get_dataset(str(source_dataset_id))
+    cycle_index = int(source_slice.get("cycle_index"))
+    if sho_dataset.ndim < 4:
+        raise ValueError("The SHO result dataset must include a DC axis and fit-parameter axis.")
+    if source_dataset.ndim < 5:
+        raise ValueError(
+            "The source dataset must have at least five dimensions to derive a BEPS loop slice."
+        )
+
+    if sho_dataset.shape[-1] < 1:
+        raise ValueError("The SHO result dataset must contain at least one fit parameter.")
+
+    if sho_dataset.shape[-1] < 4:
+        raise ValueError("The SHO result dataset must include amplitude and phase fit parameters.")
+
+    dc_voltage = np.asarray(source_dataset._axes[3].values)
+    sho_amplitude = np.asarray(sho_dataset[..., 0], dtype=float)
+    sho_phase = np.asarray(sho_dataset[..., 3], dtype=float)
+
+    projected = np.zeros(sho_amplitude.shape[:2] + (dc_voltage.size,), dtype=float)
+    rotation = np.zeros(sho_amplitude.shape[:2] + (2,), dtype=float)
+    centroid = np.zeros(sho_amplitude.shape[:2] + (2,), dtype=float)
+    geometric_area = np.zeros(sho_amplitude.shape[:2], dtype=float)
+    for row in range(sho_amplitude.shape[0]):
+        for col in range(sho_amplitude.shape[1]):
+            projection = _project_piezoresponse_loop(
+                dc_voltage,
+                sho_amplitude[row, col],
+                sho_phase[row, col],
+            )
+            projected[row, col] = np.asarray(projection["Projected Loop"], dtype=float)
+            rotation[row, col] = np.asarray(projection["Rotation Matrix"], dtype=float)
+            centroid[row, col] = np.asarray(projection["Centroid"], dtype=float)
+            geometric_area[row, col] = float(projection["Geometric Area"])
+
+    dc_voltage = np.asarray(source_dataset._axes[3].values)
+
+    return {
+        "source_dataset_id": source_dataset_id,
+        "source_slice": {
+            "cycle_index": cycle_index,
+            "signal": "projected_piezoresponse",
+            "projection_tool": "BGlib.projectLoop",
+        },
+        "beps_data": projected.tolist(),
+        "dc_voltage": dc_voltage.tolist(),
+        "projected_loop": projected.tolist(),
+        "projection": {
+            "rotation_matrix": rotation.tolist(),
+            "centroid": centroid.tolist(),
+            "geometric_area": geometric_area.tolist(),
+        },
+    }
 
 
 def list_datasets() -> Dict[str, Any]:
@@ -823,6 +1008,490 @@ def fit_sho_response(
     return payload
 
 
+def fit_sho_response_from_dataset(
+    dataset_id: str,
+    *,
+    dc_index: int,
+    cycle_index: int,
+    use_kmeans: bool = False,
+    n_clusters: int = 10,
+    return_cov: bool = False,
+    loss: str = "linear",
+    f_scale: float = 1.0,
+    lower_bounds: Optional[Sequence[float]] = None,
+    upper_bounds: Optional[Sequence[float]] = None,
+    chunks: Any = "auto",
+    dataset_name: str = "sho_response_data",
+) -> Dict[str, Any]:
+    """Fit SHO response directly from a registered dataset using axis indices."""
+    dataset = _get_dataset(dataset_id)
+    if dataset.ndim < 5:
+        raise ValueError("The source dataset must have at least five dimensions for SHO fitting.")
+    return fit_sho_response(
+        np.real(np.asarray(dataset[:, :, :, dc_index, cycle_index])),
+        np.asarray(dataset._axes[2].values),
+        imag_data=np.imag(np.asarray(dataset[:, :, :, dc_index, cycle_index])),
+        use_kmeans=use_kmeans,
+        n_clusters=n_clusters,
+        return_cov=return_cov,
+        loss=loss,
+        f_scale=f_scale,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+        chunks=chunks,
+        dataset_name=dataset_name,
+    )
+
+
+def fit_sho_response_over_dc_from_dataset(
+    dataset_id: str,
+    *,
+    cycle_index: int,
+    use_kmeans: bool = False,
+    n_clusters: int = 10,
+    return_cov: bool = False,
+    loss: str = "linear",
+    f_scale: float = 1.0,
+    lower_bounds: Optional[Sequence[float]] = None,
+    upper_bounds: Optional[Sequence[float]] = None,
+    chunks: Any = "auto",
+    dataset_name: str = "sho_response_dc_data",
+) -> Dict[str, Any]:
+    """Fit SHO response over the full DC sweep for one cycle."""
+    dataset = _get_dataset(dataset_id)
+    if dataset.ndim < 5:
+        raise ValueError("The source dataset must have at least five dimensions for SHO fitting.")
+
+    complex_array = np.asarray(dataset[:, :, :, :, cycle_index])
+    complex_array = np.transpose(complex_array, (0, 1, 3, 2))
+    return fit_sho_response(
+        np.real(complex_array),
+        np.asarray(dataset._axes[2].values),
+        imag_data=np.imag(complex_array),
+        use_kmeans=use_kmeans,
+        n_clusters=n_clusters,
+        return_cov=return_cov,
+        loss=loss,
+        f_scale=f_scale,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+        chunks=chunks,
+        dataset_name=dataset_name,
+    )
+
+
+def fit_beps_loops_from_dataset(
+    dataset_id: str,
+    *,
+    frequency_index: int,
+    cycle_index: int,
+    use_kmeans: bool = False,
+    n_clusters: int = 6,
+    return_cov: bool = False,
+    loss: str = "linear",
+    f_scale: float = 1.0,
+    lower_bounds: Optional[Sequence[float]] = None,
+    upper_bounds: Optional[Sequence[float]] = None,
+    chunks: Any = "auto",
+    dataset_name: str = "beps_loop_data",
+) -> Dict[str, Any]:
+    """Fit BEPS loops directly from a registered dataset using axis indices."""
+    dataset = _get_dataset(dataset_id)
+    if dataset.ndim < 5:
+        raise ValueError("The source dataset must have at least five dimensions for BEPS fitting.")
+    return fit_beps_loops(
+        np.real(np.asarray(dataset[:, :, frequency_index, :, cycle_index])),
+        np.asarray(dataset._axes[3].values),
+        use_kmeans=use_kmeans,
+        n_clusters=n_clusters,
+        return_cov=return_cov,
+        loss=loss,
+        f_scale=f_scale,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+        chunks=chunks,
+        dataset_name=dataset_name,
+    )
+
+
+def _r2_score(y_true: Sequence[Any], y_pred: Sequence[Any]) -> float:
+    """Compute a simple R^2 score without depending on scikit-learn."""
+    true = np.asarray(y_true, dtype=float).reshape(-1)
+    pred = np.asarray(y_pred, dtype=float).reshape(-1)
+    if true.size == 0:
+        return float("nan")
+    ss_res = float(np.sum((true - pred) ** 2))
+    ss_tot = float(np.sum((true - np.mean(true)) ** 2))
+    if ss_tot == 0.0:
+        return 1.0
+    return 1.0 - (ss_res / ss_tot)
+
+
+def _fit_parameter_dataset(
+    parameters: Sequence[Any],
+    *,
+    dataset_name: str,
+    x_values: Sequence[Any],
+    y_values: Sequence[Any],
+    parameter_labels: Sequence[str],
+    fit_kind: str,
+    source_dataset: str,
+    source_dataset_id: str,
+    source_slice: Dict[str, Any],
+    fit_quality: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Store a fit-parameter map with preserved X/Y axes and workflow metadata."""
+    params = np.asarray(parameters)
+    x_axis = np.asarray(x_values).tolist()
+    y_axis = np.asarray(y_values).tolist()
+    dims = [
+        {
+            "axis": 0,
+            "name": "X",
+            "quantity": "X",
+            "units": "m",
+            "dimension_type": "spatial",
+            "values": x_axis,
+        },
+        {
+            "axis": 1,
+            "name": "Y",
+            "quantity": "Y",
+            "units": "m",
+            "dimension_type": "spatial",
+            "values": y_axis,
+        },
+        {
+            "axis": 2,
+            "name": "fit_parameter",
+            "quantity": "fit_parameter",
+            "units": "index",
+            "dimension_type": "spectral",
+            "values": list(range(params.shape[-1])),
+        },
+    ]
+    metadata: Dict[str, Any] = {
+        "fit_kind": fit_kind,
+        "parameter_labels": list(parameter_labels),
+        "source_dataset": source_dataset,
+        "source_dataset_id": source_dataset_id,
+        "source_slice": dict(source_slice),
+    }
+    if fit_quality is not None:
+        metadata["fit_quality"] = dict(fit_quality)
+    return create_dataset(
+        params,
+        dataset_name=dataset_name,
+        quantity="fit_parameter",
+        units="a.u.",
+        dimensions=dims,
+        metadata=metadata,
+    )
+
+
+def fit_beps_dataset_from_reader_payload(
+    reader_payload: Dict[str, Any],
+    *,
+    channel_name: Optional[str] = None,
+    dataset_name: Optional[str] = None,
+    sho_dc_index: int,
+    sho_cycle_index: int,
+    beps_frequency_index: int,
+    beps_cycle_index: int,
+    use_kmeans: bool = False,
+    n_clusters: int = 6,
+    return_cov: bool = False,
+    loss: str = "linear",
+    f_scale: float = 1.0,
+    lower_bounds: Optional[Sequence[float]] = None,
+    upper_bounds: Optional[Sequence[float]] = None,
+    source_dataset_id: Optional[str] = None,
+    sho_dataset_name: str = "sho_fit_parameters",
+    beps_dataset_name: str = "beps_fit_parameters",
+) -> Dict[str, Any]:
+    """Run the BEPS workflow from a SciFiReaders payload in one tool chain."""
+    registered = register_external_dataset(
+        reader_payload,
+        channel_name=channel_name,
+        dataset_name=dataset_name,
+        dataset_id=source_dataset_id,
+    )
+    source_dataset_id = registered["dataset_id"]
+    source_dataset_title = registered.get("title", dataset_name or "sidpy_dataset")
+
+    sho_result = fit_sho_response_over_dc_from_dataset(
+        source_dataset_id,
+        cycle_index=sho_cycle_index,
+        use_kmeans=use_kmeans,
+        n_clusters=n_clusters,
+        return_cov=return_cov,
+        loss=loss,
+        f_scale=f_scale,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+        dataset_name=sho_dataset_name,
+    )
+    sho_params = np.asarray(sho_result["parameters"])
+    source_dataset = _get_dataset(source_dataset_id)
+    sho_data = np.asarray(source_dataset[:, :, :, :, sho_cycle_index])
+    sho_data = np.transpose(sho_data, (0, 1, 3, 2))
+    sho_axis = np.asarray(source_dataset._axes[2].values)
+    sho_pred_flat = []
+    sho_true_flat = []
+    sho_amp_true = []
+    sho_amp_pred = []
+    for row in range(sho_data.shape[0]):
+        for col in range(sho_data.shape[1]):
+            for dc_index in range(sho_data.shape[2]):
+                pred_flat = SHO_fit_flattened(sho_axis, *sho_params[row, col, dc_index])
+                true_flat = np.hstack([sho_data[row, col, dc_index].real, sho_data[row, col, dc_index].imag])
+                sho_pred_flat.append(pred_flat)
+                sho_true_flat.append(true_flat)
+                pred_complex = pred_flat[: len(sho_axis)] + 1j * pred_flat[len(sho_axis) :]
+                sho_amp_true.append(np.abs(sho_data[row, col, dc_index]))
+                sho_amp_pred.append(np.abs(pred_complex))
+    sho_pred_flat = np.asarray(sho_pred_flat)
+    sho_true_flat = np.asarray(sho_true_flat)
+    sho_amp_true = np.asarray(sho_amp_true)
+    sho_amp_pred = np.asarray(sho_amp_pred)
+    sho_quality = {
+        "overall_r2": _r2_score(sho_true_flat, sho_pred_flat),
+        "amplitude_overall_r2": _r2_score(sho_amp_true, sho_amp_pred),
+    }
+    sho_dataset = _fit_parameter_dataset(
+        sho_params,
+        dataset_name=sho_dataset_name,
+        x_values=source_dataset._axes[0].values,
+        y_values=source_dataset._axes[1].values,
+        parameter_labels=SHO_PARAMETER_LABELS,
+        fit_kind="sho",
+        source_dataset=source_dataset_title,
+        source_dataset_id=source_dataset_id,
+        source_slice={
+            "cycle_index": int(sho_cycle_index),
+        },
+        fit_quality=sho_quality,
+    )
+
+    loop_input = derive_loop_input_from_sho_result(sho_dataset["dataset_id"])
+    beps_data = np.asarray(loop_input["beps_data"])
+    dc_voltage = np.asarray(loop_input["dc_voltage"])
+    beps_result = fit_beps_loops(
+        beps_data,
+        dc_voltage,
+        use_kmeans=use_kmeans,
+        n_clusters=n_clusters,
+        return_cov=return_cov,
+        loss=loss,
+        f_scale=f_scale,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+        dataset_name=beps_dataset_name,
+    )
+    beps_params = np.asarray(beps_result["parameters"])
+
+    source_slice = loop_input["source_slice"]
+    beps_pred = np.asarray([
+        loop_fit_function(dc_voltage, *beps_params[row, col])
+        for row in range(beps_data.shape[0])
+        for col in range(beps_data.shape[1])
+    ]).reshape(beps_data.shape)
+    beps_quality = {
+        "overall_r2": _r2_score(beps_data, beps_pred),
+    }
+    beps_dataset = _fit_parameter_dataset(
+        beps_params,
+        dataset_name=beps_dataset_name,
+        x_values=source_dataset._axes[0].values,
+        y_values=source_dataset._axes[1].values,
+        parameter_labels=LOOP_PARAMETER_LABELS,
+        fit_kind="beps_loop",
+        source_dataset=source_dataset_title,
+        source_dataset_id=source_dataset_id,
+        source_slice=source_slice,
+        fit_quality=beps_quality,
+    )
+
+    return {
+        "source_dataset_id": source_dataset_id,
+        "sho_result": sho_result,
+        "sho_dataset": sho_dataset,
+        "sho_dataset_id": sho_dataset["dataset_id"],
+        "loop_input": {
+            "source_dataset_id": loop_input["source_dataset_id"],
+            "source_slice": loop_input["source_slice"],
+        },
+        "beps_result": beps_result,
+        "beps_dataset": beps_dataset,
+        "beps_dataset_id": beps_dataset["dataset_id"],
+    }
+
+
+def fit_beps_dataset_from_scifireaders_file(
+    output_file_path: str,
+    *,
+    channel_name: Optional[str] = None,
+    dataset_name: Optional[str] = None,
+    sho_cycle_index: int,
+    use_kmeans: bool = False,
+    n_clusters: int = 6,
+    return_cov: bool = False,
+    loss: str = "linear",
+    f_scale: float = 1.0,
+    lower_bounds: Optional[Sequence[float]] = None,
+    upper_bounds: Optional[Sequence[float]] = None,
+    source_dataset_id: Optional[str] = None,
+    sho_dataset_name: str = "sho_fit_parameters",
+    beps_dataset_name: str = "beps_fit_parameters",
+) -> Dict[str, Any]:
+    """Run the full BEPS workflow from a SciFiReaders-exported file path."""
+    registered = register_external_dataset_from_file(
+        output_file_path,
+        channel_name=None,
+        dataset_name=dataset_name,
+        dataset_id=source_dataset_id,
+    )
+    source_dataset_id = registered["dataset_id"]
+    source_dataset_title = registered.get("title", dataset_name or "sidpy_dataset")
+    source_dataset = _get_dataset(source_dataset_id)
+
+    sho_result = fit_sho_response_over_dc_from_dataset(
+        source_dataset_id,
+        cycle_index=sho_cycle_index,
+        use_kmeans=use_kmeans,
+        n_clusters=n_clusters,
+        return_cov=return_cov,
+        loss=loss,
+        f_scale=f_scale,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+        dataset_name=sho_dataset_name,
+    )
+    sho_params = np.asarray(sho_result["parameters"])
+    sho_data = np.asarray(source_dataset[:, :, :, :, sho_cycle_index])
+    sho_data = np.transpose(sho_data, (0, 1, 3, 2))
+    sho_axis = np.asarray(source_dataset._axes[2].values)
+    sho_pred_flat = []
+    sho_true_flat = []
+    sho_amp_true = []
+    sho_amp_pred = []
+    for row in range(sho_data.shape[0]):
+        for col in range(sho_data.shape[1]):
+            for dc_index in range(sho_data.shape[2]):
+                pred_flat = SHO_fit_flattened(sho_axis, *sho_params[row, col, dc_index])
+                true_flat = np.hstack([sho_data[row, col, dc_index].real, sho_data[row, col, dc_index].imag])
+                sho_pred_flat.append(pred_flat)
+                sho_true_flat.append(true_flat)
+                pred_complex = pred_flat[: len(sho_axis)] + 1j * pred_flat[len(sho_axis) :]
+                sho_amp_true.append(np.abs(sho_data[row, col, dc_index]))
+                sho_amp_pred.append(np.abs(pred_complex))
+    sho_quality = {
+        "overall_r2": _r2_score(sho_true_flat, sho_pred_flat),
+        "amplitude_overall_r2": _r2_score(sho_amp_true, sho_amp_pred),
+    }
+    sho_dataset = create_dataset(
+        sho_params,
+        dataset_name=sho_dataset_name,
+        quantity="fit_parameter",
+        units="a.u.",
+        dimensions=[
+            {
+                "axis": 0,
+                "name": "X",
+                "quantity": "X",
+                "units": "m",
+                "dimension_type": "spatial",
+                "values": np.asarray(source_dataset._axes[0].values).tolist(),
+            },
+            {
+                "axis": 1,
+                "name": "Y",
+                "quantity": "Y",
+                "units": "m",
+                "dimension_type": "spatial",
+                "values": np.asarray(source_dataset._axes[1].values).tolist(),
+            },
+            {
+                "axis": 2,
+                "name": "DC Offset",
+                "quantity": "DC Offset",
+                "units": "Volts",
+                "dimension_type": "spectral",
+                "values": np.asarray(source_dataset._axes[3].values).tolist(),
+            },
+            {
+                "axis": 3,
+                "name": "fit_parameter",
+                "quantity": "fit_parameter",
+                "units": "index",
+                "dimension_type": "spectral",
+                "values": list(range(sho_params.shape[-1])),
+            },
+        ],
+        metadata={
+            "fit_kind": "sho_dc_sweep",
+            "parameter_labels": SHO_PARAMETER_LABELS,
+            "source_dataset": source_dataset_title,
+            "source_dataset_id": source_dataset_id,
+            "source_slice": {
+                "cycle_index": int(sho_cycle_index),
+            },
+            "fit_quality": sho_quality,
+        },
+    )
+
+    loop_input = derive_loop_input_from_sho_result(sho_dataset["dataset_id"])
+    beps_data = np.asarray(loop_input["beps_data"])
+    dc_voltage = np.asarray(loop_input["dc_voltage"])
+    beps_result = fit_beps_loops(
+        beps_data,
+        dc_voltage,
+        use_kmeans=use_kmeans,
+        n_clusters=n_clusters,
+        return_cov=return_cov,
+        loss=loss,
+        f_scale=f_scale,
+        lower_bounds=lower_bounds,
+        upper_bounds=upper_bounds,
+        dataset_name=beps_dataset_name,
+    )
+    beps_params = np.asarray(beps_result["parameters"])
+    beps_pred = np.asarray([
+        loop_fit_function(dc_voltage, *beps_params[row, col])
+        for row in range(beps_data.shape[0])
+        for col in range(beps_data.shape[1])
+    ]).reshape(beps_data.shape)
+    beps_quality = {
+        "overall_r2": _r2_score(beps_data, beps_pred),
+    }
+    beps_dataset = _fit_parameter_dataset(
+        beps_params,
+        dataset_name=beps_dataset_name,
+        x_values=source_dataset._axes[0].values,
+        y_values=source_dataset._axes[1].values,
+        parameter_labels=LOOP_PARAMETER_LABELS,
+        fit_kind="beps_loop",
+        source_dataset=source_dataset_title,
+        source_dataset_id=source_dataset_id,
+        source_slice=loop_input["source_slice"],
+        fit_quality=beps_quality,
+    )
+
+    return {
+        "source_dataset_id": source_dataset_id,
+        "sho_result": sho_result,
+        "sho_dataset": sho_dataset,
+        "sho_dataset_id": sho_dataset["dataset_id"],
+        "loop_input": {
+            "source_dataset_id": loop_input["source_dataset_id"],
+            "source_slice": loop_input["source_slice"],
+        },
+        "beps_result": beps_result,
+        "beps_dataset": beps_dataset,
+        "beps_dataset_id": beps_dataset["dataset_id"],
+    }
+
+
 def create_mcp_server(server_name: str = "sidpy-beps-fitting"):
     """Create an MCP server exposing sidpy dataset and fitting tools."""
     if FastMCP is None:  # pragma: no cover - optional runtime dependency
@@ -860,9 +1529,29 @@ def create_mcp_server(server_name: str = "sidpy-beps-fitting"):
         )
 
     @server.tool()
+    def register_external_dataset_tool(
+        reader_payload: Dict[str, Any],
+        channel_name: Optional[str] = None,
+        dataset_name: Optional[str] = None,
+        dataset_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Register a SciFiReaders dataset payload as a sidpy.Dataset."""
+        return register_external_dataset(
+            reader_payload,
+            channel_name=channel_name,
+            dataset_name=dataset_name,
+            dataset_id=dataset_id,
+        )
+
+    @server.tool()
     def get_dataset_tool(dataset_id: str) -> Dict[str, Any]:
         """Return a registered dataset summary including dimensions and metadata."""
         return get_dataset(dataset_id)
+
+    @server.tool()
+    def derive_loop_input_from_sho_result_tool(sho_dataset_id: str) -> Dict[str, Any]:
+        """Derive BEPS loop input from a saved SHO fit dataset."""
+        return derive_loop_input_from_sho_result(sho_dataset_id)
 
     @server.tool()
     def list_datasets_tool() -> Dict[str, Any]:
@@ -953,6 +1642,176 @@ def create_mcp_server(server_name: str = "sidpy-beps-fitting"):
         )
 
     @server.tool()
+    def fit_sho_response_from_dataset_tool(
+        dataset_id: str,
+        dc_index: int,
+        cycle_index: int,
+        use_kmeans: bool = False,
+        n_clusters: int = 10,
+        return_cov: bool = False,
+        loss: str = "linear",
+        f_scale: float = 1.0,
+        lower_bounds: Optional[Sequence[float]] = None,
+        upper_bounds: Optional[Sequence[float]] = None,
+        dataset_name: str = "sho_response_data",
+    ) -> Dict[str, Any]:
+        """Fit SHO response directly from a registered dataset."""
+        return fit_sho_response_from_dataset(
+            dataset_id,
+            dc_index=dc_index,
+            cycle_index=cycle_index,
+            use_kmeans=use_kmeans,
+            n_clusters=n_clusters,
+            return_cov=return_cov,
+            loss=loss,
+            f_scale=f_scale,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
+            dataset_name=dataset_name,
+        )
+
+    @server.tool()
+    def fit_sho_response_over_dc_from_dataset_tool(
+        dataset_id: str,
+        cycle_index: int,
+        use_kmeans: bool = False,
+        n_clusters: int = 10,
+        return_cov: bool = False,
+        loss: str = "linear",
+        f_scale: float = 1.0,
+        lower_bounds: Optional[Sequence[float]] = None,
+        upper_bounds: Optional[Sequence[float]] = None,
+        dataset_name: str = "sho_response_dc_data",
+    ) -> Dict[str, Any]:
+        """Fit SHO response over the full DC sweep for one cycle."""
+        return fit_sho_response_over_dc_from_dataset(
+            dataset_id,
+            cycle_index=cycle_index,
+            use_kmeans=use_kmeans,
+            n_clusters=n_clusters,
+            return_cov=return_cov,
+            loss=loss,
+            f_scale=f_scale,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
+            dataset_name=dataset_name,
+        )
+
+    @server.tool()
+    def fit_beps_loops_from_dataset_tool(
+        dataset_id: str,
+        frequency_index: int,
+        cycle_index: int,
+        use_kmeans: bool = False,
+        n_clusters: int = 6,
+        return_cov: bool = False,
+        loss: str = "linear",
+        f_scale: float = 1.0,
+        lower_bounds: Optional[Sequence[float]] = None,
+        upper_bounds: Optional[Sequence[float]] = None,
+        dataset_name: str = "beps_loop_data",
+    ) -> Dict[str, Any]:
+        """Fit BEPS loops directly from a registered dataset."""
+        return fit_beps_loops_from_dataset(
+            dataset_id,
+            frequency_index=frequency_index,
+            cycle_index=cycle_index,
+            use_kmeans=use_kmeans,
+            n_clusters=n_clusters,
+            return_cov=return_cov,
+            loss=loss,
+            f_scale=f_scale,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
+            dataset_name=dataset_name,
+        )
+
+    @server.tool()
+    def fit_beps_dataset_workflow_tool(
+        reader_payload: Optional[Dict[str, Any]] = None,
+        scifireaders_result: Optional[Dict[str, Any]] = None,
+        scifireaders_output_file_path: Optional[str] = None,
+        source_file_path: Optional[str] = None,
+        channel_name: Optional[str] = None,
+        dataset_name: Optional[str] = None,
+        dc_index: int = 0,
+        cycle_index: int = 0,
+        frequency_index: int = 0,
+        beps_cycle_index: int = 0,
+        use_kmeans: bool = False,
+        n_clusters: int = 6,
+        return_cov: bool = False,
+        loss: str = "linear",
+        f_scale: float = 1.0,
+        lower_bounds: Optional[Sequence[float]] = None,
+        upper_bounds: Optional[Sequence[float]] = None,
+        source_dataset_id: Optional[str] = None,
+        sho_dataset_name: str = "sho_fit_parameters",
+        beps_dataset_name: str = "beps_fit_parameters",
+    ) -> Dict[str, Any]:
+        """Run the full BEPS dataset workflow from one SciFiReaders payload."""
+        if source_file_path is not None:
+            return fit_beps_dataset_from_scifireaders_file(
+                source_file_path,
+                channel_name=channel_name,
+                dataset_name=dataset_name,
+                sho_cycle_index=cycle_index,
+                use_kmeans=use_kmeans,
+                n_clusters=n_clusters,
+                return_cov=return_cov,
+                loss=loss,
+                f_scale=f_scale,
+                lower_bounds=lower_bounds,
+                upper_bounds=upper_bounds,
+                source_dataset_id=source_dataset_id,
+                sho_dataset_name=sho_dataset_name,
+                beps_dataset_name=beps_dataset_name,
+            )
+        if scifireaders_output_file_path is not None:
+            return fit_beps_dataset_from_scifireaders_file(
+                scifireaders_output_file_path,
+                channel_name=channel_name,
+                dataset_name=dataset_name,
+                sho_cycle_index=cycle_index,
+                use_kmeans=use_kmeans,
+                n_clusters=n_clusters,
+                return_cov=return_cov,
+                loss=loss,
+                f_scale=f_scale,
+                lower_bounds=lower_bounds,
+                upper_bounds=upper_bounds,
+                source_dataset_id=source_dataset_id,
+                sho_dataset_name=sho_dataset_name,
+                beps_dataset_name=beps_dataset_name,
+            )
+
+        payload = reader_payload if reader_payload is not None else scifireaders_result
+        if payload is None:
+            raise ValueError(
+                "Provide the full SciFiReaders response as 'scifireaders_result' "
+                "'reader_payload', a 'scifireaders_output_file_path', or a 'source_file_path'."
+            )
+        return fit_beps_dataset_from_reader_payload(
+            payload,
+            channel_name=channel_name,
+            dataset_name=dataset_name,
+            sho_dc_index=dc_index,
+            sho_cycle_index=cycle_index,
+            beps_frequency_index=frequency_index,
+            beps_cycle_index=beps_cycle_index,
+            use_kmeans=use_kmeans,
+            n_clusters=n_clusters,
+            return_cov=return_cov,
+            loss=loss,
+            f_scale=f_scale,
+            lower_bounds=lower_bounds,
+            upper_bounds=upper_bounds,
+            source_dataset_id=source_dataset_id,
+            sho_dataset_name=sho_dataset_name,
+            beps_dataset_name=beps_dataset_name,
+        )
+
+    @server.tool()
     def fit_sho_response_tool(
         real_data: Sequence[Any],
         frequency: Sequence[float],
@@ -1009,10 +1868,16 @@ __all__ = [
     "calculate_loop_centroid",
     "create_dataset",
     "create_mcp_server",
+    "derive_loop_input_from_sho_result",
     "get_named_workflow",
     "get_workflow_examples",
     "fit_beps_loops",
+    "fit_beps_loops_from_dataset",
+    "fit_beps_dataset_from_scifireaders_file",
+    "fit_beps_dataset_from_reader_payload",
     "fit_sho_response",
+    "fit_sho_response_from_dataset",
+    "fit_sho_response_over_dc_from_dataset",
     "generate_guess",
     "get_dataset",
     "list_datasets",
@@ -1020,6 +1885,7 @@ __all__ = [
     "loop_fit_function",
     "main",
     "remove_dataset",
+    "register_external_dataset",
     "rename_dimension",
     "sho_guess_fn",
     "update_dimension",

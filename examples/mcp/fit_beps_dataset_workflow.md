@@ -1,13 +1,17 @@
 # Fit BEPS Dataset Workflow
 
-This is a small-model-friendly workflow for the common task:
+This is the small-model-friendly workflow for the common BEPS fitting task.
 
-1. Read a BEPS file with `SciFiReaders`
-2. Fit a loop slice with `fit_beps_loops_tool`
-3. Fit an SHO slice with `fit_sho_response_tool`
-4. Save both parameter maps as `sidpy.Dataset` objects
+## Workflow
 
-The workflow name published by the MCP server is:
+1. Read the file with the SciFiReaders MCP server.
+2. Pass the original file path to the sidpy workflow tool.
+3. Fit SHO over the full DC sweep for one cycle.
+4. Derive the loop input by projecting the fitted SHO amplitude and phase
+   with BGlib `projectLoop`.
+5. Save the SHO and BEPS fit-parameter datasets.
+
+The published workflow name is:
 
 `analysis.fit_beps_dataset`
 
@@ -17,125 +21,73 @@ Use these as the starting placeholders:
 
 - `file_path`: `/path/to/PTO_5x5.h5`
 - `channel_name`: `Channel_000`
-- `beps_frequency_index`: `23`
-- `beps_cycle_index`: `0`
-- `sho_dc_index`: `49`
 - `sho_cycle_index`: `1`
-- `use_kmeans`: `true`
+- `use_kmeans`: `false`
 - `n_clusters`: `4`
+- `scifireaders_return_mode`: `file`
+- `sho_dataset_name`: `sho_fit_parameters`
+- `beps_dataset_name`: `beps_fit_parameters`
 
-## Workflow Shape
+## Tool Call Sequence
 
-### 1. Read the file
+### 1. Read the file with SciFiReaders MCP
 
-Use `SciFiReaders.NSIDReader(file_path)` and read the channel named `channel_name`.
-
-Expected result:
-
-- a `sidpy.Dataset`
-- shape similar to `(x, y, frequency, dc_offset, cycle)`
-
-### 2. Build the BEPS slice
-
-Take the real-valued loop slice:
+Call:
 
 ```python
-beps_data = data[:, :, beps_frequency_index, :, beps_cycle_index].real
-dc_voltage = data._axes[3].values
+read_scifireaders_file(
+    file_path=file_path,
+    return_mode="file",
+)
 ```
 
-Then call:
+This returns a small result object with an `output_file_path` field. Pass that
+path if you want, but the sidpy workflow tool only needs the original
+`source_file_path`.
+
+### 2. Run the BEPS workflow in sidpy
+
+Call:
 
 ```python
-fit_beps_loops_tool(
-    data=beps_data,
-    dc_voltage=dc_voltage,
+fit_beps_dataset_workflow_tool(
+    source_file_path=file_path,
+    channel_name=channel_name,
+    dataset_name=file_path,
+    cycle_index=sho_cycle_index,
     use_kmeans=use_kmeans,
     n_clusters=n_clusters,
     return_cov=False,
     loss="linear",
-    dataset_name="beps_loop_fit",
+    sho_dataset_name=sho_dataset_name,
+    beps_dataset_name=beps_dataset_name,
 )
 ```
 
-Expected output:
+This one sidpy tool performs the full sequence internally:
 
-- `fit_kind = "beps_loop"`
-- `parameter_shape = [x, y, 9]`
-- `parameter_labels = LOOP_PARAMETER_LABELS`
+1. Register the source file as a sidpy dataset.
+2. Fit SHO over the full DC sweep for the selected cycle.
+3. Save the SHO fit-parameter map as a `sidpy.Dataset` with a DC axis.
+4. Project the fitted SHO amplitude and phase into a piezoresponse loop with
+   BGlib `projectLoop`.
+5. Fit the BEPS loop slice from that projected piezoresponse.
+6. Save the BEPS fit-parameter map as a `sidpy.Dataset`.
 
-### 3. Save the BEPS fit parameters
+## Expected Result
 
-Call `create_dataset_tool` with the BEPS parameter array.
+The tool returns:
 
-Use:
-
-- `quantity = "fit_parameter"`
-- `units = "a.u."`
-- spatial dimensions for `X` and `Y`
-- spectral dimension `fit_parameter` with 9 entries
-
-Attach metadata such as:
-
-- `fit_kind`
-- `source_dataset`
-- `source_slice`
-
-### 4. Build the SHO slice
-
-Take the complex frequency slice:
-
-```python
-sho_data = data[:, :, :, sho_dc_index, sho_cycle_index]
-frequency = data._axes[2].values
-```
-
-Then call:
-
-```python
-fit_sho_response_tool(
-    real_data=sho_data.real,
-    imag_data=sho_data.imag,
-    frequency=frequency,
-    use_kmeans=use_kmeans,
-    n_clusters=n_clusters,
-    return_cov=False,
-    loss="linear",
-    dataset_name="sho_response_fit",
-)
-```
-
-Expected output:
-
-- `fit_kind = "sho"`
-- `parameter_shape = [x, y, 4]`
-- `parameter_labels = SHO_PARAMETER_LABELS`
-
-### 5. Save the SHO fit parameters
-
-Call `create_dataset_tool` again with the SHO parameter array.
-
-Use:
-
-- `quantity = "fit_parameter"`
-- `units = "a.u."`
-- spatial dimensions for `X` and `Y`
-- spectral dimension `fit_parameter` with 4 entries
-
-Attach metadata such as:
-
-- `fit_kind`
-- `source_dataset`
-- `source_slice`
+- `source_dataset_id`
+- `sho_dataset_id`
+- `beps_dataset_id`
+- `sho_dataset` with `fit_quality`
+- `beps_dataset` with `fit_quality`
 
 ## Practical Notes
 
-- Keep the number of tool calls small and linear.
-- Read once, slice once, fit once, save once.
-- If the model gets confused, prefer this exact order:
-  1. read
-  2. fit BEPS
-  3. save BEPS
-  4. fit SHO
-  5. save SHO
-- The saved fit-parameter datasets should preserve the `X` and `Y` axes from the source file.
+- Keep the workflow in this exact order: optionally read with SciFiReaders, then one sidpy workflow call.
+- The SHO metadata stores the loop slice indices used by the derive step.
+- The SHO metadata stores the selected cycle index used by the derive step.
+- The loop fit uses the projected piezoresponse, not the raw loop waveform.
+- The saved fit datasets preserve the `X` and `Y` axes from the source file.
