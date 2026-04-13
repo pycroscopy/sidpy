@@ -41,6 +41,163 @@ LOOP_PARAMETER_LABELS = [
 
 SHO_PARAMETER_LABELS = ["amplitude", "resonance_frequency", "quality_factor", "phase"]
 DATASET_REGISTRY: Dict[str, sid.Dataset] = {}
+WORKFLOW_EXAMPLES: Dict[str, list[Dict[str, Any]]] = {
+    "analysis": [
+        {
+            "name": "fit_beps_dataset",
+            "goal": (
+                "Read a BEPS HDF5/NSID file with SciFiReaders, fit a BEPS loop map "
+                "and an SHO slice, then save the fit-parameter maps as sidpy.Datasets."
+            ),
+            "inputs": {
+                "file_path": "/path/to/PTO_5x5.h5",
+                "channel_name": "Channel_000",
+                "beps_frequency_index": 23,
+                "beps_cycle_index": 0,
+                "sho_dc_index": 49,
+                "sho_cycle_index": 1,
+                "use_kmeans": True,
+                "n_clusters": 4,
+                "beps_dataset_name": "beps_fit_parameters",
+                "sho_dataset_name": "sho_fit_parameters",
+            },
+            "setup": [
+                {
+                    "kind": "external",
+                    "tool": "SciFiReaders.NSIDReader",
+                    "arguments": {
+                        "file_path": "{{file_path}}",
+                    },
+                    "assign": "reader",
+                    "notes": (
+                        "Read the file outside MCP, then extract {{channel_name}} into a "
+                        "sidpy.Dataset before calling the fit tools."
+                    ),
+                },
+                {
+                    "kind": "external",
+                    "tool": "reader.read()",
+                    "arguments": {},
+                    "assign": "channel_data",
+                    "notes": (
+                        "Use the loaded dataset to build two slices: "
+                        "BEPS data = data[:, :, beps_frequency_index, :, beps_cycle_index]; "
+                        "SHO data = data[:, :, :, sho_dc_index, sho_cycle_index]."
+                    ),
+                },
+            ],
+            "steps": [
+                {
+                    "tool": "fit_beps_loops_tool",
+                    "arguments": {
+                        "data": "{{beps_data}}",
+                        "dc_voltage": "{{dc_voltage}}",
+                        "use_kmeans": "{{use_kmeans}}",
+                        "n_clusters": "{{n_clusters}}",
+                        "return_cov": False,
+                        "loss": "linear",
+                        "dataset_name": "beps_loop_fit",
+                    },
+                    "notes": "Fit the BEPS loop slice first so the loop map is captured cleanly.",
+                },
+                {
+                    "tool": "create_dataset_tool",
+                    "arguments": {
+                        "data": "{{beps_parameters}}",
+                        "dataset_name": "{{beps_dataset_name}}",
+                        "quantity": "fit_parameter",
+                        "units": "a.u.",
+                        "dimensions": [
+                            {
+                                "axis": 0,
+                                "name": "X",
+                                "quantity": "X",
+                                "units": "m",
+                                "dimension_type": "spatial",
+                                "values": "{{x_values}}",
+                            },
+                            {
+                                "axis": 1,
+                                "name": "Y",
+                                "quantity": "Y",
+                                "units": "m",
+                                "dimension_type": "spatial",
+                                "values": "{{y_values}}",
+                            },
+                            {
+                                "axis": 2,
+                                "name": "fit_parameter",
+                                "quantity": "fit_parameter",
+                                "units": "index",
+                                "dimension_type": "spectral",
+                                "values": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                            },
+                        ],
+                        "metadata": {
+                            "fit_kind": "beps_loop",
+                            "source_dataset": "{{file_path}}",
+                        },
+                    },
+                    "notes": "Store the BEPS fit output as a sidpy.Dataset with spatial X/Y axes preserved.",
+                },
+                {
+                    "tool": "fit_sho_response_tool",
+                    "arguments": {
+                        "real_data": "{{sho_real_data}}",
+                        "imag_data": "{{sho_imag_data}}",
+                        "frequency": "{{frequency}}",
+                        "use_kmeans": "{{use_kmeans}}",
+                        "n_clusters": "{{n_clusters}}",
+                        "return_cov": False,
+                        "loss": "linear",
+                        "dataset_name": "sho_response_fit",
+                    },
+                    "notes": "Fit the complex SHO slice after the loop map has been built.",
+                },
+                {
+                    "tool": "create_dataset_tool",
+                    "arguments": {
+                        "data": "{{sho_parameters}}",
+                        "dataset_name": "{{sho_dataset_name}}",
+                        "quantity": "fit_parameter",
+                        "units": "a.u.",
+                        "dimensions": [
+                            {
+                                "axis": 0,
+                                "name": "X",
+                                "quantity": "X",
+                                "units": "m",
+                                "dimension_type": "spatial",
+                                "values": "{{x_values}}",
+                            },
+                            {
+                                "axis": 1,
+                                "name": "Y",
+                                "quantity": "Y",
+                                "units": "m",
+                                "dimension_type": "spatial",
+                                "values": "{{y_values}}",
+                            },
+                            {
+                                "axis": 2,
+                                "name": "fit_parameter",
+                                "quantity": "fit_parameter",
+                                "units": "index",
+                                "dimension_type": "spectral",
+                                "values": [0, 1, 2, 3],
+                            },
+                        ],
+                        "metadata": {
+                            "fit_kind": "sho",
+                            "source_dataset": "{{file_path}}",
+                        },
+                    },
+                    "notes": "Save the SHO fit output as a sidpy.Dataset so it can be inspected or reused.",
+                },
+            ],
+        }
+    ]
+}
 
 
 def loop_fit_function(vdc: Sequence[float], *coef_vec: float) -> np.ndarray:
@@ -203,6 +360,74 @@ def sho_guess_fn(freq_vec: Sequence[float], ydata: Sequence[complex]) -> list[fl
 
     q_guess = q_values[int(np.argmin(err_vals))]
     return [amp_guess / q_guess, w_guess, q_guess, phase_guess]
+
+
+def _build_workflow_registry(include_internal: bool = False) -> Dict[str, Dict[str, Any]]:
+    """Build a registry of named workflow examples."""
+    del include_internal
+
+    registry: Dict[str, Dict[str, Any]] = {}
+    for group, workflows in WORKFLOW_EXAMPLES.items():
+        for item in workflows:
+            base_name = str(item.get("name", "")).strip()
+            if not base_name:
+                continue
+
+            full_name = f"{group}.{base_name}"
+            suffix = 2
+            while full_name in registry:
+                full_name = f"{group}.{base_name}_{suffix}"
+                suffix += 1
+
+            registry[full_name] = {
+                "name": full_name,
+                "group": group,
+                "base_name": base_name,
+                "goal": item.get("goal", ""),
+                "inputs": item.get("inputs", {}),
+                "setup": item.get("setup", []),
+                "steps": item.get("steps", []),
+            }
+    return registry
+
+
+def get_workflow_examples(include_internal: bool = False) -> Dict[str, Any]:
+    """Return grouped workflow examples for MCP clients and LLM planners."""
+    registry = _build_workflow_registry(include_internal=include_internal)
+    grouped: Dict[str, list[Dict[str, Any]]] = {}
+    for workflow in registry.values():
+        grouped.setdefault(workflow["group"], []).append(workflow)
+    return {"server": "sidpy-beps-fitting", "workflows": grouped}
+
+
+def list_named_workflows(include_internal: bool = False) -> list[Dict[str, Any]]:
+    """Return a compact list of named workflow examples."""
+    registry = _build_workflow_registry(include_internal=include_internal)
+    return [
+        {
+            "name": wf["name"],
+            "group": wf["group"],
+            "goal": wf["goal"],
+            "input_names": sorted(wf.get("inputs", {}).keys()),
+            "step_count": len(wf["steps"]),
+        }
+        for wf in registry.values()
+    ]
+
+
+def get_named_workflow(name: str, include_internal: bool = False) -> Dict[str, Any]:
+    """Return one workflow by unique name or by unique base name."""
+    registry = _build_workflow_registry(include_internal=include_internal)
+    if name in registry:
+        return registry[name]
+
+    matches = [wf for wf in registry.values() if wf["base_name"] == name]
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        names = sorted(wf["name"] for wf in matches)
+        raise ValueError(f"Workflow name {name!r} is ambiguous. Use one of: {names}")
+    raise ValueError(f"Workflow {name!r} was not found.")
 
 
 def _as_builtin(value: Any) -> Any:
@@ -686,6 +911,21 @@ def create_mcp_server(server_name: str = "sidpy-beps-fitting"):
         return remove_dataset(dataset_id)
 
     @server.tool()
+    def get_workflow_examples_tool(include_internal: bool = False) -> Dict[str, Any]:
+        """Return workflow examples that chain SciFiReaders with BEPS and SHO fitting tools."""
+        return get_workflow_examples(include_internal=include_internal)
+
+    @server.tool()
+    def workflow_list_named_workflows_tool(include_internal: bool = False) -> list[Dict[str, Any]]:
+        """Return compact summaries of the named workflow examples."""
+        return list_named_workflows(include_internal=include_internal)
+
+    @server.tool()
+    def workflow_get_named_workflow_tool(name: str, include_internal: bool = False) -> Dict[str, Any]:
+        """Return one named workflow example."""
+        return get_named_workflow(name, include_internal=include_internal)
+
+    @server.tool()
     def fit_beps_loops_tool(
         data: Sequence[Any],
         dc_voltage: Sequence[float],
@@ -769,11 +1009,14 @@ __all__ = [
     "calculate_loop_centroid",
     "create_dataset",
     "create_mcp_server",
+    "get_named_workflow",
+    "get_workflow_examples",
     "fit_beps_loops",
     "fit_sho_response",
     "generate_guess",
     "get_dataset",
     "list_datasets",
+    "list_named_workflows",
     "loop_fit_function",
     "main",
     "remove_dataset",
