@@ -1133,6 +1133,7 @@ def _fit_parameter_dataset(
     dataset_name: str,
     x_values: Sequence[Any],
     y_values: Sequence[Any],
+    dc_values: Optional[Sequence[Any]] = None,
     parameter_labels: Sequence[str],
     fit_kind: str,
     source_dataset: str,
@@ -1161,15 +1162,41 @@ def _fit_parameter_dataset(
             "dimension_type": "spatial",
             "values": y_axis,
         },
-        {
-            "axis": 2,
-            "name": "fit_parameter",
-            "quantity": "fit_parameter",
-            "units": "index",
-            "dimension_type": "spectral",
-            "values": list(range(params.shape[-1])),
-        },
     ]
+    if params.ndim == 4:
+        if dc_values is None:
+            raise ValueError("dc_values are required when storing a 4D fit-parameter dataset.")
+        dims.append(
+            {
+                "axis": 2,
+                "name": "DC Offset",
+                "quantity": "DC Offset",
+                "units": "Volts",
+                "dimension_type": "spectral",
+                "values": np.asarray(dc_values).tolist(),
+            }
+        )
+        dims.append(
+            {
+                "axis": 3,
+                "name": "fit_parameter",
+                "quantity": "fit_parameter",
+                "units": "index",
+                "dimension_type": "spectral",
+                "values": list(range(params.shape[-1])),
+            }
+        )
+    else:
+        dims.append(
+            {
+                "axis": 2,
+                "name": "fit_parameter",
+                "quantity": "fit_parameter",
+                "units": "index",
+                "dimension_type": "spectral",
+                "values": list(range(params.shape[-1])),
+            }
+        )
     metadata: Dict[str, Any] = {
         "fit_kind": fit_kind,
         "parameter_labels": list(parameter_labels),
@@ -1263,6 +1290,7 @@ def fit_beps_dataset_from_reader_payload(
         dataset_name=sho_dataset_name,
         x_values=source_dataset._axes[0].values,
         y_values=source_dataset._axes[1].values,
+        dc_values=source_dataset._axes[3].values,
         parameter_labels=SHO_PARAMETER_LABELS,
         fit_kind="sho",
         source_dataset=source_dataset_title,
@@ -1347,7 +1375,7 @@ def fit_beps_dataset_from_scifireaders_file(
     """Run the full BEPS workflow from a SciFiReaders-exported file path."""
     registered = register_external_dataset_from_file(
         output_file_path,
-        channel_name=None,
+        channel_name=channel_name,
         dataset_name=dataset_name,
         dataset_id=source_dataset_id,
     )

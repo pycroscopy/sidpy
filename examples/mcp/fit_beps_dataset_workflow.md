@@ -11,6 +11,13 @@ This is the small-model-friendly workflow for the common BEPS fitting task.
    with BGlib `projectLoop`.
 5. Save the SHO and BEPS fit-parameter datasets.
 
+There are two valid input styles:
+
+- `source_file_path`: use this when you want sidpy to read the file itself.
+- `reader_payload` or `scifireaders_result`: use this only if you already have
+  the full SciFiReaders dataset payload with a `datasets` entry containing
+  `data` and `dimensions`.
+
 The published workflow name is:
 
 `analysis.fit_beps_dataset`
@@ -44,6 +51,10 @@ read_scifireaders_file(
 This returns a small result object with an `output_file_path` field. Pass that
 path if you want, but the sidpy workflow tool only needs the original
 `source_file_path`.
+
+If you plan to call `fit_beps_dataset_workflow_tool` with `reader_payload` or
+`scifireaders_result` instead, ask SciFiReaders for `return_mode="data"` or
+`return_mode="both"` so the payload includes the nested dataset data.
 
 ### 2. Run the BEPS workflow in sidpy
 

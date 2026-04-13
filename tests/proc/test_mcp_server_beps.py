@@ -1,5 +1,6 @@
 import unittest
 import json
+from unittest.mock import patch
 
 import numpy as np
 from sklearn.metrics import r2_score
@@ -171,6 +172,65 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
         self.assertTrue(
             any("one sidpy MCP call" in step.get("notes", "") or "one sidpy workflow tool" in step.get("notes", "") for step in workflow["steps"] + workflow["setup"])
         )
+
+    def test_fit_beps_dataset_workflow_forwards_channel_name_for_file_inputs(self):
+        captured = {}
+
+        class _StopWorkflow(Exception):
+            pass
+
+        def _fake_register_external_dataset_from_file(
+            output_file_path,
+            *,
+            channel_name=None,
+            dataset_name=None,
+            dataset_id=None,
+        ):
+            captured["output_file_path"] = output_file_path
+            captured["channel_name"] = channel_name
+            captured["dataset_name"] = dataset_name
+            captured["dataset_id"] = dataset_id
+            raise _StopWorkflow
+
+        with patch.object(mcp_mod, "register_external_dataset_from_file", side_effect=_fake_register_external_dataset_from_file):
+            with self.assertRaises(_StopWorkflow):
+                mcp_mod.fit_beps_dataset_from_scifireaders_file(
+                    "/tmp/example.h5",
+                    channel_name="Channel_000",
+                    dataset_name="PTO_5x5.h5",
+                    sho_cycle_index=1,
+                    use_kmeans=False,
+                    n_clusters=4,
+                    return_cov=False,
+                    loss="linear",
+                    sho_dataset_name="sho_fit_parameters",
+                    beps_dataset_name="beps_fit_parameters",
+                )
+
+        self.assertEqual(captured["output_file_path"], "/tmp/example.h5")
+        self.assertEqual(captured["channel_name"], "Channel_000")
+        self.assertEqual(captured["dataset_name"], "PTO_5x5.h5")
+
+    def test_fit_parameter_dataset_preserves_dc_axis_for_4d_sho_maps(self):
+        params = np.zeros((2, 3, 4, 5))
+        result = mcp_mod._fit_parameter_dataset(
+            params,
+            dataset_name="sho_fit_parameters",
+            x_values=[0.0, 1.0],
+            y_values=[10.0, 20.0, 30.0],
+            dc_values=[-1.0, 0.0, 1.0, 2.0],
+            parameter_labels=mcp_mod.SHO_PARAMETER_LABELS,
+            fit_kind="sho",
+            source_dataset="demo",
+            source_dataset_id="dataset-1",
+            source_slice={"cycle_index": 1},
+        )
+
+        self.assertEqual(result["shape"], [2, 3, 4, 5])
+        self.assertEqual(result["dimensions"][2]["name"], "DC Offset")
+        self.assertEqual(result["dimensions"][2]["values"], [-1.0, 0.0, 1.0, 2.0])
+        self.assertEqual(result["dimensions"][3]["name"], "fit_parameter")
+        self.assertEqual(result["dimensions"][3]["values"], [0, 1, 2, 3, 4])
 
     def test_real_file_scifireaders_payload_can_drive_the_executable_workflow(self):
         from pathlib import Path
