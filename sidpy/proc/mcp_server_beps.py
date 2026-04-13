@@ -52,9 +52,9 @@ WORKFLOW_EXAMPLES: Dict[str, list[Dict[str, Any]]] = {
             "goal": (
                 "Read a BEPS HDF5/NSID file with the SciFiReaders MCP server, "
                 "then run one sidpy workflow tool that fits SHO over the full DC "
-                "sweep for one cycle, derives the loop input by projecting the "
-                "fitted SHO amplitude and phase with BGlib projectLoop, and "
-                "saves both fit-parameter maps as sidpy.Datasets."
+                "sweep for one selected cycle only, derives the loop input by "
+                "projecting the fitted SHO amplitude and phase with BGlib "
+                "projectLoop, and saves both fit-parameter maps as sidpy.Datasets."
             ),
             "inputs": {
                 "file_path": "/path/to/PTO_5x5.h5",
@@ -737,6 +737,24 @@ def _project_piezoresponse_loop(
     return dict(results)
 
 
+def _align_loop_trace(
+    dc_voltage: Sequence[float],
+    loop_trace: Sequence[Any],
+    roll_steps: Optional[int] = None,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """Rotate a loop trace so the cycle starts at the minimum DC voltage."""
+    dc = np.asarray(dc_voltage, dtype=float).reshape(-1)
+    trace = np.asarray(loop_trace, dtype=float)
+    if dc.size != trace.shape[-1]:
+        raise ValueError("dc_voltage and loop_trace must have matching last-axis lengths.")
+
+    if roll_steps is None:
+        roll_steps = -int(np.argmin(dc))
+    else:
+        roll_steps = int(roll_steps)
+    return np.roll(dc, roll_steps), np.roll(trace, roll_steps, axis=-1), roll_steps
+
+
 def get_dataset(dataset_id: str) -> Dict[str, Any]:
     """Return a JSON-friendly summary of a registered dataset."""
     dataset = _get_dataset(dataset_id)
@@ -768,8 +786,9 @@ def derive_loop_input_from_sho_result(sho_dataset_id: str) -> Dict[str, Any]:
         raise ValueError("The SHO result dataset must include amplitude and phase fit parameters.")
 
     dc_voltage = np.asarray(source_dataset._axes[3].values)
-    sho_amplitude = np.asarray(sho_dataset[..., 0], dtype=float)
-    sho_phase = np.asarray(sho_dataset[..., 3], dtype=float)
+    sho_array = np.asarray(sho_dataset)
+    sho_amplitude = np.asarray(sho_array[..., 0], dtype=float)
+    sho_phase = np.asarray(sho_array[..., 3], dtype=float)
 
     projected = np.zeros(sho_amplitude.shape[:2] + (dc_voltage.size,), dtype=float)
     rotation = np.zeros(sho_amplitude.shape[:2] + (2,), dtype=float)
@@ -787,12 +806,16 @@ def derive_loop_input_from_sho_result(sho_dataset_id: str) -> Dict[str, Any]:
             centroid[row, col] = np.asarray(projection["Centroid"], dtype=float)
             geometric_area[row, col] = float(projection["Geometric Area"])
 
-    dc_voltage = np.asarray(source_dataset._axes[3].values)
+    # Rotate the loop so it starts at the minimum DC voltage. That makes the
+    # first half the increasing branch and the second half the decreasing branch.
+    dc_voltage, projected, roll_steps = _align_loop_trace(dc_voltage, projected)
+    projected = projected * 1e3
 
     return {
         "source_dataset_id": source_dataset_id,
         "source_slice": {
             "cycle_index": cycle_index,
+            "loop_roll_steps": roll_steps,
             "signal": "projected_piezoresponse",
             "projection_tool": "BGlib.projectLoop",
         },
@@ -919,6 +942,7 @@ def fit_beps_loops(
     dataset_name: str = "beps_loop_data",
 ) -> Dict[str, Any]:
     """Fit BEPS loop data where the last axis contains the loop trace."""
+    _validate_single_cycle_dc_voltage(dc_voltage)
     dataset = _build_dataset(
         data,
         dc_voltage,
@@ -1127,6 +1151,63 @@ def _r2_score(y_true: Sequence[Any], y_pred: Sequence[Any]) -> float:
     return 1.0 - (ss_res / ss_tot)
 
 
+def _branch_r2_scores(dc_voltage: Sequence[Any], y_true: Sequence[Any], y_pred: Sequence[Any]) -> Dict[str, float]:
+    """Compute R^2 scores for the increasing and decreasing halves of a loop."""
+    dc = np.asarray(dc_voltage, dtype=float).reshape(-1)
+    true = np.asarray(y_true, dtype=float)
+    pred = np.asarray(y_pred, dtype=float)
+    if dc.size != true.shape[-1] or dc.size != pred.shape[-1]:
+        raise ValueError("dc_voltage, y_true, and y_pred must have matching last-axis lengths.")
+    if dc.size < 2:
+        return {
+            "increasing_branch_r2": float("nan"),
+            "decreasing_branch_r2": float("nan"),
+        }
+
+    half = dc.size // 2
+    first_dc = dc[:half]
+    second_dc = dc[half:]
+    first_true = true[..., :half]
+    first_pred = pred[..., :half]
+    second_true = true[..., half:]
+    second_pred = pred[..., half:]
+
+    first_score = _r2_score(first_true, first_pred)
+    second_score = _r2_score(second_true, second_pred)
+
+    first_slope = float(np.mean(np.diff(first_dc))) if first_dc.size > 1 else 0.0
+    second_slope = float(np.mean(np.diff(second_dc))) if second_dc.size > 1 else 0.0
+    if first_slope >= second_slope:
+        increasing_score, decreasing_score = first_score, second_score
+    else:
+        increasing_score, decreasing_score = second_score, first_score
+
+    return {
+        "increasing_branch_r2": float(increasing_score),
+        "decreasing_branch_r2": float(decreasing_score),
+    }
+
+
+def _validate_single_cycle_dc_voltage(dc_voltage: Sequence[Any]) -> None:
+    """Ensure the loop input contains one forward branch and one reverse branch."""
+    dc = np.asarray(dc_voltage, dtype=float).reshape(-1)
+    if dc.size < 3:
+        return
+
+    diffs = np.diff(dc)
+    diffs = diffs[np.abs(diffs) > np.finfo(float).eps]
+    if diffs.size == 0:
+        return
+
+    signs = np.sign(diffs)
+    sign_changes = np.count_nonzero(signs[1:] * signs[:-1] < 0)
+    if sign_changes > 2:
+        raise ValueError(
+            "BEPS loop fitting expects one cycle with a single forward branch and a single "
+            "reverse branch. Provide one cycle at a time."
+        )
+
+
 def _fit_parameter_dataset(
     parameters: Sequence[Any],
     *,
@@ -1326,6 +1407,7 @@ def fit_beps_dataset_from_reader_payload(
     ]).reshape(beps_data.shape)
     beps_quality = {
         "overall_r2": _r2_score(beps_data, beps_pred),
+        **_branch_r2_scores(dc_voltage, beps_data, beps_pred),
     }
     beps_dataset = _fit_parameter_dataset(
         beps_params,
@@ -1491,6 +1573,7 @@ def fit_beps_dataset_from_scifireaders_file(
     ]).reshape(beps_data.shape)
     beps_quality = {
         "overall_r2": _r2_score(beps_data, beps_pred),
+        **_branch_r2_scores(dc_voltage, beps_data, beps_pred),
     }
     beps_dataset = _fit_parameter_dataset(
         beps_params,

@@ -232,6 +232,88 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
         self.assertEqual(result["dimensions"][3]["name"], "fit_parameter")
         self.assertEqual(result["dimensions"][3]["values"], [0, 1, 2, 3, 4])
 
+    def test_align_loop_trace_honors_explicit_roll_steps(self):
+        dc_voltage = np.array([1.0, 2.0, -2.0, -1.0, 0.0])
+        loop_trace = np.array([10.0, 11.0, 12.0, 13.0, 14.0])
+
+        aligned_dc, aligned_trace, applied_roll = mcp_mod._align_loop_trace(
+            dc_voltage,
+            loop_trace,
+            roll_steps=-2,
+        )
+
+        np.testing.assert_array_equal(aligned_dc, np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
+        np.testing.assert_array_equal(aligned_trace, np.array([12.0, 13.0, 14.0, 10.0, 11.0]))
+        self.assertEqual(applied_roll, -2)
+
+    def test_align_loop_trace_infers_minimum_dc_roll(self):
+        dc_voltage = np.array([1.0, 2.0, -2.0, -1.0, 0.0])
+        loop_trace = np.array([10.0, 11.0, 12.0, 13.0, 14.0])
+
+        aligned_dc, aligned_trace, applied_roll = mcp_mod._align_loop_trace(dc_voltage, loop_trace)
+
+        np.testing.assert_array_equal(aligned_dc, np.array([-2.0, -1.0, 0.0, 1.0, 2.0]))
+        np.testing.assert_array_equal(aligned_trace, np.array([12.0, 13.0, 14.0, 10.0, 11.0]))
+        self.assertEqual(applied_roll, -2)
+
+    def test_real_file_path_workflow_returns_sho_and_beps_datasets(self):
+        from pathlib import Path
+        import shutil
+        import os
+        import tempfile
+
+        os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
+        try:
+            import SciFiReaders as sr
+        except Exception as exc:
+            self.skipTest(f"SciFiReaders is required for the workflow file-path regression test: {exc}")
+
+        file_path = Path("/Users/rvv/Downloads/PTO_5x5.h5")
+        if not file_path.exists():
+            self.skipTest(f"Real BEPS fixture not found: {file_path}")
+
+        fd, tmp_name = tempfile.mkstemp(prefix="pto_5x5_sidpy_", suffix=".h5")
+        os.close(fd)
+        workflow_path = Path(tmp_name)
+        shutil.copy2(file_path, workflow_path)
+
+        reader = sr.NSIDReader(str(workflow_path))
+        data = reader.read()["Channel_000"]
+        array = np.asarray(data)
+
+        result = mcp_mod.fit_beps_dataset_from_scifireaders_file(
+            str(workflow_path),
+            channel_name="Channel_000",
+            dataset_name="PTO_5x5.h5",
+            sho_cycle_index=1,
+            use_kmeans=False,
+            n_clusters=4,
+            return_cov=False,
+            loss="linear",
+            sho_dataset_name="pto_5x5_sho_workflow",
+            beps_dataset_name="pto_5x5_beps_workflow",
+        )
+
+        self.assertIn("sho_dataset_id", result)
+        self.assertIn("beps_dataset_id", result)
+        self.assertEqual(result["sho_dataset"]["shape"], [5, 5, array.shape[3], 4])
+        self.assertEqual(result["beps_dataset"]["shape"], [5, 5, 9])
+        self.assertEqual(
+            result["loop_input"]["source_slice"],
+            {
+                "cycle_index": 1,
+                "signal": "projected_piezoresponse",
+                "projection_tool": "BGlib.projectLoop",
+            },
+        )
+        self.assertEqual(result["sho_dataset"]["metadata"]["fit_kind"], "sho")
+        self.assertEqual(result["beps_dataset"]["metadata"]["fit_kind"], "beps_loop")
+        self.assertGreater(result["sho_dataset"]["metadata"]["fit_quality"]["overall_r2"], 0.8)
+        self.assertGreater(result["sho_dataset"]["metadata"]["fit_quality"]["amplitude_overall_r2"], 0.9)
+        self.assertGreater(result["beps_dataset"]["metadata"]["fit_quality"]["overall_r2"], 0.75)
+        self.assertIn("increasing_branch_r2", result["beps_dataset"]["metadata"]["fit_quality"])
+        self.assertIn("decreasing_branch_r2", result["beps_dataset"]["metadata"]["fit_quality"])
+
     def test_real_file_scifireaders_payload_can_drive_the_executable_workflow(self):
         from pathlib import Path
         import shutil
@@ -348,10 +430,13 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
         loop_input = mcp_mod.derive_loop_input_from_sho_result(sho_dataset["dataset_id"])
         self.assertIn("beps_data", loop_input)
         self.assertIn("dc_voltage", loop_input)
+        expected_roll_steps = -int(np.argmin(beps_axis))
+        expected_dc_voltage = np.roll(beps_axis, expected_roll_steps)
         self.assertEqual(
             loop_input["source_slice"],
             {
                 "cycle_index": sho_cycle_idx,
+                "loop_roll_steps": expected_roll_steps,
                 "signal": "projected_piezoresponse",
                 "projection_tool": "BGlib.projectLoop",
             },
@@ -367,7 +452,10 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
                 for col in range(sho_params.shape[1])
             ]
         ).reshape(beps_data.shape)
+        expected_projected = np.roll(expected_projected, expected_roll_steps, axis=-1)
+        expected_projected = expected_projected * 1e3
         np.testing.assert_allclose(np.asarray(loop_input["beps_data"]), expected_projected)
+        np.testing.assert_allclose(np.asarray(loop_input["dc_voltage"]), expected_dc_voltage)
 
         beps_result = mcp_mod.fit_beps_loops(
             loop_input["beps_data"],
@@ -388,6 +476,25 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
         ]).reshape(np.asarray(loop_input["beps_data"]).shape)
         beps_r2 = r2_score(np.asarray(loop_input["beps_data"]).reshape(-1), beps_pred.reshape(-1))
         self.assertGreater(beps_r2, 0.75)
+        branch_quality = mcp_mod._branch_r2_scores(
+            np.asarray(loop_input["dc_voltage"]),
+            np.asarray(loop_input["beps_data"]),
+            beps_pred,
+        )
+        self.assertIn("increasing_branch_r2", branch_quality)
+        self.assertIn("decreasing_branch_r2", branch_quality)
+
+    def test_fit_beps_loops_rejects_multi_cycle_dc_voltage(self):
+        dc_voltage = np.array([
+            -1.0, -0.5, 0.0, 0.5, 1.0,
+            0.5, 0.0, -0.5, -1.0,
+            -0.5, 0.0, 0.5, 1.0,
+            0.5, 0.0, -0.5, -1.0,
+        ])
+        data = np.zeros((1, 1, dc_voltage.size))
+
+        with self.assertRaises(ValueError):
+            mcp_mod.fit_beps_loops(data, dc_voltage)
 
     def test_real_file_fits_round_trip_to_sidpy_datasets(self):
         from pathlib import Path
@@ -942,6 +1049,7 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
                 payload["loop_input"]["source_slice"],
                 {
                     "cycle_index": 1,
+                    "loop_roll_steps": expected_roll_steps,
                     "signal": "projected_piezoresponse",
                     "projection_tool": "BGlib.projectLoop",
                 },
@@ -961,6 +1069,9 @@ class TestSidpyCoreMCPTools(unittest.TestCase):
                     for col in range(sho_params.shape[1])
                 ]
             ).reshape(beps_data.shape)
+            expected_roll_steps = -int(np.argmin(beps_axis))
+            expected_projected = np.roll(expected_projected, expected_roll_steps, axis=-1)
+            expected_projected = expected_projected * 1e3
             np.testing.assert_allclose(np.asarray(payload["loop_input"]["beps_data"]), expected_projected)
 
 

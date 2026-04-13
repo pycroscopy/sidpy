@@ -6,10 +6,13 @@ This is the small-model-friendly workflow for the common BEPS fitting task.
 
 1. Read the file with the SciFiReaders MCP server.
 2. Pass the original file path to the sidpy workflow tool.
-3. Fit SHO over the full DC sweep for one cycle.
+3. Fit SHO over the full DC sweep for one selected cycle only.
 4. Derive the loop input by projecting the fitted SHO amplitude and phase
    with BGlib `projectLoop`.
-5. Save the SHO and BEPS fit-parameter datasets.
+5. Rotate the projected loop and DC axis together so the single cycle starts
+   at a consistent DC point, then scale the projected loop by `1e3` before
+   BEPS fitting.
+6. Save the SHO and BEPS fit-parameter datasets.
 
 There are two valid input styles:
 
@@ -82,8 +85,10 @@ This one sidpy tool performs the full sequence internally:
 3. Save the SHO fit-parameter map as a `sidpy.Dataset` with a DC axis.
 4. Project the fitted SHO amplitude and phase into a piezoresponse loop with
    BGlib `projectLoop`.
-5. Fit the BEPS loop slice from that projected piezoresponse.
-6. Save the BEPS fit-parameter map as a `sidpy.Dataset`.
+5. Rotate the projected loop and the DC axis together so the two branches are
+   contiguous, then scale the projected loop by `1e3`.
+6. Fit the BEPS loop slice from that normalized projected piezoresponse.
+7. Save the BEPS fit-parameter map as a `sidpy.Dataset`.
 
 ## Expected Result
 
@@ -100,5 +105,10 @@ The tool returns:
 - Keep the workflow in this exact order: optionally read with SciFiReaders, then one sidpy workflow call.
 - The SHO metadata stores the loop slice indices used by the derive step.
 - The SHO metadata stores the selected cycle index used by the derive step.
-- The loop fit uses the projected piezoresponse, not the raw loop waveform.
+- The loop fit uses the normalized projected piezoresponse, not the raw loop
+  waveform.
+- The loop fitter only accepts one cycle at a time. If the source file
+  contains multiple cycles, select one cycle first.
+- The derived loop metadata stores the roll used to align the cycle. Reuse
+  that roll when plotting or recomputing R² so the points stay aligned.
 - The saved fit datasets preserve the `X` and `Y` axes from the source file.
