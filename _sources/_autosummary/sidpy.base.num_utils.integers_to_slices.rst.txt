@@ -1,0 +1,6 @@
+sidpy.base.num\_utils.integers\_to\_slices
+==========================================
+
+.. currentmodule:: sidpy.base.num_utils
+
+.. autofunction:: integers_to_slices

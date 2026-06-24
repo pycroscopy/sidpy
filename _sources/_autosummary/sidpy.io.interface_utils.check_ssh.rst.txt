@@ -1,0 +1,6 @@
+sidpy.io.interface\_utils.check\_ssh
+====================================
+
+.. currentmodule:: sidpy.io.interface_utils
+
+.. autofunction:: check_ssh

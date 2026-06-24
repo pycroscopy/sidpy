@@ -1,0 +1,6 @@
+sidpy.proc.mcp\_server\_beps.calculate\_loop\_centroid
+======================================================
+
+.. currentmodule:: sidpy.proc.mcp_server_beps
+
+.. autofunction:: calculate_loop_centroid

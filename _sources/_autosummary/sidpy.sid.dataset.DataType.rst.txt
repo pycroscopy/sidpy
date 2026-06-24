@@ -1,0 +1,33 @@
+sidpy.sid.dataset.DataType
+==========================
+
+.. currentmodule:: sidpy.sid.dataset
+
+.. autoclass:: DataType
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DataType.UNKNOWN
+      ~DataType.SPECTRUM
+      ~DataType.LINE_PLOT
+      ~DataType.LINE_PLOT_FAMILY
+      ~DataType.IMAGE
+      ~DataType.IMAGE_MAP
+      ~DataType.IMAGE_STACK
+      ~DataType.SPECTRAL_IMAGE
+      ~DataType.IMAGE_4D
+      ~DataType.POINT_CLOUD
+   
+   

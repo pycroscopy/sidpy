@@ -1,0 +1,39 @@
+sidpy.proc.mcp\_server\_beps
+============================
+
+.. automodule:: sidpy.proc.mcp_server_beps
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      SHO_fit_flattened
+      calculate_loop_centroid
+      create_mcp_server
+      fit_beps_loops
+      fit_sho_response
+      generate_guess
+      loop_fit_function
+      main
+      sho_guess_fn
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

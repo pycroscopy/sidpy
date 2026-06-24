@@ -1,0 +1,6 @@
+sidpy.base.string\_utils.clean\_string\_att
+===========================================
+
+.. currentmodule:: sidpy.base.string_utils
+
+.. autofunction:: clean_string_att

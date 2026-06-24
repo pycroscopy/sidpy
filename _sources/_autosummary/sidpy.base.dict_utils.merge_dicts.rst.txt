@@ -1,0 +1,6 @@
+sidpy.base.dict\_utils.merge\_dicts
+===================================
+
+.. currentmodule:: sidpy.base.dict_utils
+
+.. autofunction:: merge_dicts

@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.curve.rainbow\_plot
+=========================================
+
+.. currentmodule:: sidpy.viz.plot_utils.curve
+
+.. autofunction:: rainbow_plot

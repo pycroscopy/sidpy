@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.copy\_linked\_objects
+==========================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: copy_linked_objects

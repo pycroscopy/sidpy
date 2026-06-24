@@ -1,0 +1,6 @@
+sidpy.hdf.prov\_utils.check\_for\_old
+=====================================
+
+.. currentmodule:: sidpy.hdf.prov_utils
+
+.. autofunction:: check_for_old

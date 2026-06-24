@@ -1,0 +1,32 @@
+sidpy.sid.reader
+================
+
+.. automodule:: sidpy.sid.reader
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      Reader
+   
+   
+
+   
+   
+   
+
+
+

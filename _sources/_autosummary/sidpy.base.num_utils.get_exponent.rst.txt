@@ -1,0 +1,6 @@
+sidpy.base.num\_utils.get\_exponent
+===================================
+
+.. currentmodule:: sidpy.base.num_utils
+
+.. autofunction:: get_exponent

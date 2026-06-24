@@ -1,0 +1,615 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sidpy.proc.mcp_server_beps &mdash; sidpy 0.12.9 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/documentation_options.js?v=e62706e7"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            sidpy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">SIDpy</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../external_guides.html">Tutorials on Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Guidelines for Contribution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Upgrading from Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact us</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_autosummary/sidpy.html">sidpy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/00_basic_usage/index.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/01_parallel_computing/index.html">Parallel computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/02_visualization/index.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notebooks/03_hdf5/index.html">HDF5 Tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">sidpy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">sidpy.proc.mcp_server_beps</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sidpy.proc.mcp_server_beps</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">MCP server utilities for BEPS loop and SHO fitting.</span>
+
+<span class="sd">This module wraps the existing ``SidpyFitterRefactor`` workflows in MCP-friendly</span>
+<span class="sd">tools so an LLM client can fit nested-array BEPS loop data and SHO response</span>
+<span class="sd">data without re-implementing the fitting logic.</span>
+
+<span class="sd">The MCP runtime is optional. Importing this module does not require ``mcp``,</span>
+<span class="sd">but running the server does.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sidpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvexHull</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">erf</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.fitter_refactor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SidpyFitterRefactor</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.server.fastmcp</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastMCP</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional runtime dependency</span>
+    <span class="n">FastMCP</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="n">LOOP_PARAMETER_LABELS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;offset&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;amplitude&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;coercive_left&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;coercive_right&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;slope&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;branch_scale_1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;branch_scale_2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;branch_scale_3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;branch_scale_4&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">SHO_PARAMETER_LABELS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;amplitude&quot;</span><span class="p">,</span> <span class="s2">&quot;resonance_frequency&quot;</span><span class="p">,</span> <span class="s2">&quot;quality_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;phase&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="loop_fit_function">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.loop_fit_function.html#sidpy.proc.mcp_server_beps.loop_fit_function">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">loop_fit_function</span><span class="p">(</span><span class="n">vdc</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="n">coef_vec</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Nine-parameter loop model used by the BEPS fitter tests.&quot;&quot;&quot;</span>
+    <span class="n">vdc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vdc</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">coef_vec</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">coef_vec</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="mi">1000</span>
+
+    <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vdc</span><span class="p">[:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vdc</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span>
+    <span class="n">v2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vdc</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vdc</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="p">:])</span>
+
+    <span class="n">g1</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">erf</span><span class="p">((</span><span class="n">v1</span> <span class="o">-</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">g2</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">erf</span><span class="p">((</span><span class="n">v2</span> <span class="o">-</span> <span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">*</span> <span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">y1</span> <span class="o">=</span> <span class="p">(</span><span class="n">g1</span> <span class="o">*</span> <span class="n">erf</span><span class="p">((</span><span class="n">v1</span> <span class="o">-</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">g1</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="p">(</span><span class="n">g2</span> <span class="o">*</span> <span class="n">erf</span><span class="p">((</span><span class="n">v2</span> <span class="o">-</span> <span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="n">g2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">y1</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">v1</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">y2</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">v2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_loop_centroid">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.calculate_loop_centroid.html#sidpy.proc.mcp_server_beps.calculate_loop_centroid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_loop_centroid</span><span class="p">(</span><span class="n">vdc</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">loop_vals</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the polygon centroid for one unfolded loop.&quot;&quot;&quot;</span>
+    <span class="n">vdc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vdc</span><span class="p">))</span>
+    <span class="n">loop_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">loop_vals</span><span class="p">))</span>
+    <span class="n">num_steps</span> <span class="o">=</span> <span class="n">vdc</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="n">x_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">y_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">area_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">x_i</span> <span class="o">=</span> <span class="n">vdc</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">x_i1</span> <span class="o">=</span> <span class="n">vdc</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">y_i</span> <span class="o">=</span> <span class="n">loop_vals</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">y_i1</span> <span class="o">=</span> <span class="n">loop_vals</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">x_vals</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_i</span> <span class="o">+</span> <span class="n">x_i1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_i</span> <span class="o">*</span> <span class="n">y_i1</span> <span class="o">-</span> <span class="n">x_i1</span> <span class="o">*</span> <span class="n">y_i</span><span class="p">)</span>
+        <span class="n">y_vals</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_i</span> <span class="o">+</span> <span class="n">y_i1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_i</span> <span class="o">*</span> <span class="n">y_i1</span> <span class="o">-</span> <span class="n">x_i1</span> <span class="o">*</span> <span class="n">y_i</span><span class="p">)</span>
+        <span class="n">area_vals</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_i</span> <span class="o">*</span> <span class="n">y_i1</span> <span class="o">-</span> <span class="n">x_i1</span> <span class="o">*</span> <span class="n">y_i</span>
+
+    <span class="n">area</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">area_vals</span><span class="p">)</span>
+    <span class="n">cent_x</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">6.0</span> <span class="o">*</span> <span class="n">area</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x_vals</span><span class="p">)</span>
+    <span class="n">cent_y</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">6.0</span> <span class="o">*</span> <span class="n">area</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_vals</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">cent_x</span><span class="p">,</span> <span class="n">cent_y</span><span class="p">),</span> <span class="n">area</span></div>
+
+
+
+<div class="viewcode-block" id="generate_guess">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.generate_guess.html#sidpy.proc.mcp_server_beps.generate_guess">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_guess</span><span class="p">(</span><span class="n">vdc</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">pr_vec</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">show_plots</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate the initial BEPS loop parameter guess.</span>
+
+<span class="sd">    This matches the tested heuristic in ``tests/proc/test_fitter_refactor.py``.</span>
+<span class="sd">    ``show_plots`` is accepted for API compatibility but not used here.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">show_plots</span>
+
+    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">vdc</span><span class="p">),</span> <span class="n">pr_vec</span><span class="p">]))</span>
+    <span class="n">geom_centroid</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">calculate_loop_centroid</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_intersection</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">b</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">c</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">d</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">ccw</span><span class="p">(</span><span class="n">p_a</span><span class="p">,</span> <span class="n">p_b</span><span class="p">,</span> <span class="n">p_c</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">p_c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p_a</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">p_b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p_a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">p_b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p_a</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">p_c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p_a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">line</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+            <span class="n">coeff_a</span> <span class="o">=</span> <span class="n">p1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">coeff_b</span> <span class="o">=</span> <span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">coeff_c</span> <span class="o">=</span> <span class="n">p1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">p1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">coeff_a</span><span class="p">,</span> <span class="n">coeff_b</span><span class="p">,</span> <span class="o">-</span><span class="n">coeff_c</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">intersection</span><span class="p">(</span><span class="n">line_1</span><span class="p">,</span> <span class="n">line_2</span><span class="p">):</span>
+            <span class="n">det</span> <span class="o">=</span> <span class="n">line_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">line_2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">line_1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">line_2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">det_x</span> <span class="o">=</span> <span class="n">line_1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">line_2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">line_1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">line_2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">det_y</span> <span class="o">=</span> <span class="n">line_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">line_2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">line_1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">line_2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">det</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="n">det_x</span> <span class="o">/</span> <span class="n">det</span><span class="p">,</span> <span class="n">det_y</span> <span class="o">/</span> <span class="n">det</span>
+
+        <span class="n">intersects</span> <span class="o">=</span> <span class="p">(</span><span class="n">ccw</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ccw</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ccw</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ccw</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intersects</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">intersection</span><span class="p">(</span><span class="n">line</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">line</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+
+    <span class="n">outline_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">hull</span><span class="o">.</span><span class="n">simplices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">outline_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">hull</span><span class="o">.</span><span class="n">simplices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hull</span><span class="o">.</span><span class="n">simplices</span><span class="p">):</span>
+        <span class="n">outline_1</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">outline_2</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+    <span class="n">y_intersections</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">outline_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">find_intersection</span><span class="p">(</span>
+            <span class="n">outline_1</span><span class="p">[</span><span class="n">pair</span><span class="p">],</span>
+            <span class="n">outline_2</span><span class="p">[</span><span class="n">pair</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">geom_centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">hull</span><span class="o">.</span><span class="n">min_bound</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+            <span class="p">[</span><span class="n">geom_centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">hull</span><span class="o">.</span><span class="n">max_bound</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">y_intersections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+    <span class="n">x_intersections</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">outline_1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">find_intersection</span><span class="p">(</span>
+            <span class="n">outline_1</span><span class="p">[</span><span class="n">pair</span><span class="p">],</span>
+            <span class="n">outline_2</span><span class="p">[</span><span class="n">pair</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">hull</span><span class="o">.</span><span class="n">min_bound</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">geom_centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+            <span class="p">[</span><span class="n">hull</span><span class="o">.</span><span class="n">max_bound</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">geom_centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x_intersections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_intersections</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">min_y_intercept</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">pr_vec</span><span class="p">)</span>
+        <span class="n">max_y_intercept</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">pr_vec</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">min_y_intercept</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_intersections</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">y_intersections</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">max_y_intercept</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_intersections</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">y_intersections</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_intersections</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">min_x_intercept</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vdc</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">max_x_intercept</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">vdc</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">min_x_intercept</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_intersections</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">x_intersections</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">max_x_intercept</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_intersections</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">x_intersections</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">init_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+    <span class="n">init_guess</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_y_intercept</span>
+    <span class="n">init_guess</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_y_intercept</span> <span class="o">-</span> <span class="n">min_y_intercept</span>
+    <span class="n">init_guess</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">min_x_intercept</span>
+    <span class="n">init_guess</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_x_intercept</span>
+    <span class="n">init_guess</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">init_guess</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">init_guess</span></div>
+
+
+
+<div class="viewcode-block" id="SHO_fit_flattened">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.SHO_fit_flattened.html#sidpy.proc.mcp_server_beps.SHO_fit_flattened">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">SHO_fit_flattened</span><span class="p">(</span><span class="n">wvec</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="n">params</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flattened complex SHO response used by the SHO fitter tests.&quot;&quot;&quot;</span>
+    <span class="n">amp</span><span class="p">,</span> <span class="n">w_0</span><span class="p">,</span> <span class="n">quality_factor</span><span class="p">,</span> <span class="n">phase</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">amp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phase</span><span class="p">)</span> <span class="o">*</span> <span class="n">w_0</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">wvec</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">wvec</span> <span class="o">*</span> <span class="n">w_0</span> <span class="o">/</span> <span class="n">quality_factor</span> <span class="o">-</span> <span class="n">w_0</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">func</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">func</span><span class="p">)])</span></div>
+
+
+
+<div class="viewcode-block" id="sho_guess_fn">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.sho_guess_fn.html#sidpy.proc.mcp_server_beps.sho_guess_fn">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sho_guess_fn</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">ydata</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">complex</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initial guess heuristic for SHO fitting.&quot;&quot;&quot;</span>
+    <span class="n">ydata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ydata</span><span class="p">)</span>
+    <span class="n">amp_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))]</span>
+    <span class="n">phase_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">ydata</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))]</span>
+    <span class="n">w_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))]</span>
+
+    <span class="n">q_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">500</span><span class="p">]</span>
+    <span class="n">err_vals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">q_val</span> <span class="ow">in</span> <span class="n">q_values</span><span class="p">:</span>
+        <span class="n">p_test</span> <span class="o">=</span> <span class="p">[</span><span class="n">amp_guess</span> <span class="o">/</span> <span class="n">q_val</span><span class="p">,</span> <span class="n">w_guess</span><span class="p">,</span> <span class="n">q_val</span><span class="p">,</span> <span class="n">phase_guess</span><span class="p">]</span>
+        <span class="n">func_out</span> <span class="o">=</span> <span class="n">SHO_fit_flattened</span><span class="p">(</span><span class="n">freq_vec</span><span class="p">,</span> <span class="o">*</span><span class="n">p_test</span><span class="p">)</span>
+        <span class="n">complex_output</span> <span class="o">=</span> <span class="n">func_out</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">func_out</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">func_out</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">func_out</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span>
+        <span class="n">amp_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">complex_output</span><span class="p">)</span>
+        <span class="n">err_vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">amp_output</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ydata</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">q_guess</span> <span class="o">=</span> <span class="n">q_values</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">err_vals</span><span class="p">))]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">amp_guess</span> <span class="o">/</span> <span class="n">q_guess</span><span class="p">,</span> <span class="n">w_guess</span><span class="p">,</span> <span class="n">q_guess</span><span class="p">,</span> <span class="n">phase_guess</span><span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_builtin</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert numpy-heavy structures to JSON-serializable builtins.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="n">_as_builtin</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_as_builtin</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_dataset</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">spectral_axis</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">spectral_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">spectral_quantity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">spectral_units</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sid</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a sidpy.Dataset assuming the last axis is the fitted spectral axis.&quot;&quot;&quot;</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">spectral_axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spectral_axis</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input data must have at least one dimension.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">spectral_axis</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The spectral axis length must match the size of the last data axis. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Received axis length </span><span class="si">{</span><span class="n">spectral_axis</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> and last axis </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">sid</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span>
+            <span class="n">dim</span><span class="p">,</span>
+            <span class="n">sid</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;dim_</span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dimension_type</span><span class="o">=</span><span class="s2">&quot;spatial&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="n">dataset</span><span class="o">.</span><span class="n">set_dimension</span><span class="p">(</span>
+        <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">sid</span><span class="o">.</span><span class="n">Dimension</span><span class="p">(</span>
+            <span class="n">spectral_axis</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">spectral_name</span><span class="p">,</span>
+            <span class="n">quantity</span><span class="o">=</span><span class="n">spectral_quantity</span> <span class="ow">or</span> <span class="n">spectral_name</span><span class="p">,</span>
+            <span class="n">units</span><span class="o">=</span><span class="n">spectral_units</span> <span class="ow">or</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">,</span>
+            <span class="n">dimension_type</span><span class="o">=</span><span class="s2">&quot;spectral&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">dataset</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_package_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize fitter outputs into a JSON-friendly payload.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">params_dataset</span><span class="p">,</span> <span class="n">cov_dataset</span> <span class="o">=</span> <span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">params_dataset</span><span class="p">,</span> <span class="n">cov_dataset</span> <span class="o">=</span> <span class="n">result</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">params_dataset</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+        <span class="s2">&quot;parameter_shape&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">params_dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+        <span class="s2">&quot;parameter_metadata&quot;</span><span class="p">:</span> <span class="n">_as_builtin</span><span class="p">(</span><span class="n">params_dataset</span><span class="o">.</span><span class="n">metadata</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">cov_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;covariance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cov_dataset</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;covariance_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cov_dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;covariance_metadata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_as_builtin</span><span class="p">(</span><span class="n">cov_dataset</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">payload</span>
+
+
+<div class="viewcode-block" id="fit_beps_loops">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.fit_beps_loops.html#sidpy.proc.mcp_server_beps.fit_beps_loops">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fit_beps_loops</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">dc_voltage</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">use_kmeans</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
+    <span class="n">return_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">loss</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+    <span class="n">f_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">lower_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">upper_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chunks</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;beps_loop_data&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fit BEPS loop data where the last axis contains the loop trace.&quot;&quot;&quot;</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">_build_dataset</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span>
+        <span class="n">dc_voltage</span><span class="p">,</span>
+        <span class="s2">&quot;DC Offset&quot;</span><span class="p">,</span>
+        <span class="n">dataset_name</span><span class="p">,</span>
+        <span class="n">spectral_quantity</span><span class="o">=</span><span class="s2">&quot;Voltage&quot;</span><span class="p">,</span>
+        <span class="n">spectral_units</span><span class="o">=</span><span class="s2">&quot;Volts&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fitter</span> <span class="o">=</span> <span class="n">SidpyFitterRefactor</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="p">,</span>
+        <span class="n">loop_fit_function</span><span class="p">,</span>
+        <span class="n">generate_guess</span><span class="p">,</span>
+        <span class="n">ind_dims</span><span class="o">=</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,),</span>
+        <span class="n">lower_bounds</span><span class="o">=</span><span class="n">lower_bounds</span><span class="p">,</span>
+        <span class="n">upper_bounds</span><span class="o">=</span><span class="n">upper_bounds</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fitter</span><span class="o">.</span><span class="n">setup_calc</span><span class="p">(</span><span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">do_fit</span><span class="p">(</span>
+        <span class="n">use_kmeans</span><span class="o">=</span><span class="n">use_kmeans</span><span class="p">,</span>
+        <span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
+        <span class="n">return_cov</span><span class="o">=</span><span class="n">return_cov</span><span class="p">,</span>
+        <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+        <span class="n">f_scale</span><span class="o">=</span><span class="n">f_scale</span><span class="p">,</span>
+        <span class="n">fit_parameter_labels</span><span class="o">=</span><span class="n">LOOP_PARAMETER_LABELS</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">_package_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;parameter_labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LOOP_PARAMETER_LABELS</span>
+    <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;fit_kind&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;beps_loop&quot;</span>
+    <span class="k">return</span> <span class="n">payload</span></div>
+
+
+
+<div class="viewcode-block" id="fit_sho_response">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.fit_sho_response.html#sidpy.proc.mcp_server_beps.fit_sho_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fit_sho_response</span><span class="p">(</span>
+    <span class="n">real_data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">frequency</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">imag_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">use_kmeans</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">return_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">loss</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+    <span class="n">f_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">lower_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">upper_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chunks</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sho_response_data&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fit SHO response data where the last axis contains the frequency sweep.&quot;&quot;&quot;</span>
+    <span class="n">real_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">real_data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">imag_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">real_array</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pass complex-valued data or provide imag_data separately for SHO fitting.&quot;</span><span class="p">)</span>
+        <span class="n">complex_array</span> <span class="o">=</span> <span class="n">real_array</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">imag_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">imag_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">imag_array</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">real_array</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;real_data and imag_data must have the same shape.&quot;</span><span class="p">)</span>
+        <span class="n">complex_array</span> <span class="o">=</span> <span class="n">real_array</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">imag_array</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">_build_dataset</span><span class="p">(</span>
+        <span class="n">complex_array</span><span class="p">,</span>
+        <span class="n">frequency</span><span class="p">,</span>
+        <span class="s2">&quot;Frequency&quot;</span><span class="p">,</span>
+        <span class="n">dataset_name</span><span class="p">,</span>
+        <span class="n">spectral_quantity</span><span class="o">=</span><span class="s2">&quot;Frequency&quot;</span><span class="p">,</span>
+        <span class="n">spectral_units</span><span class="o">=</span><span class="s2">&quot;Hz&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fitter</span> <span class="o">=</span> <span class="n">SidpyFitterRefactor</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="p">,</span>
+        <span class="n">SHO_fit_flattened</span><span class="p">,</span>
+        <span class="n">sho_guess_fn</span><span class="p">,</span>
+        <span class="n">ind_dims</span><span class="o">=</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,),</span>
+        <span class="n">lower_bounds</span><span class="o">=</span><span class="n">lower_bounds</span><span class="p">,</span>
+        <span class="n">upper_bounds</span><span class="o">=</span><span class="n">upper_bounds</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">fitter</span><span class="o">.</span><span class="n">setup_calc</span><span class="p">(</span><span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">fitter</span><span class="o">.</span><span class="n">do_fit</span><span class="p">(</span>
+        <span class="n">use_kmeans</span><span class="o">=</span><span class="n">use_kmeans</span><span class="p">,</span>
+        <span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
+        <span class="n">return_cov</span><span class="o">=</span><span class="n">return_cov</span><span class="p">,</span>
+        <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+        <span class="n">f_scale</span><span class="o">=</span><span class="n">f_scale</span><span class="p">,</span>
+        <span class="n">fit_parameter_labels</span><span class="o">=</span><span class="n">SHO_PARAMETER_LABELS</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">_package_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;parameter_labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SHO_PARAMETER_LABELS</span>
+    <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;fit_kind&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sho&quot;</span>
+    <span class="k">return</span> <span class="n">payload</span></div>
+
+
+
+<div class="viewcode-block" id="create_mcp_server">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.create_mcp_server.html#sidpy.proc.mcp_server_beps.create_mcp_server">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_mcp_server</span><span class="p">(</span><span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sidpy-beps-fitting&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an MCP server exposing the BEPS loop and SHO fitting tools.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">FastMCP</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional runtime dependency</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;The &#39;mcp&#39; package is required to create the BEPS MCP server.&quot;</span><span class="p">)</span>
+
+    <span class="n">server</span> <span class="o">=</span> <span class="n">FastMCP</span><span class="p">(</span><span class="n">server_name</span><span class="p">)</span>
+
+    <span class="nd">@server</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_beps_loops_tool</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">dc_voltage</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">use_kmeans</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="n">return_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">loss</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+        <span class="n">f_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">lower_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">upper_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;beps_loop_data&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit BEPS loops from nested arrays with the spectral axis in the last dimension.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">fit_beps_loops</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">dc_voltage</span><span class="p">,</span>
+            <span class="n">use_kmeans</span><span class="o">=</span><span class="n">use_kmeans</span><span class="p">,</span>
+            <span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
+            <span class="n">return_cov</span><span class="o">=</span><span class="n">return_cov</span><span class="p">,</span>
+            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+            <span class="n">f_scale</span><span class="o">=</span><span class="n">f_scale</span><span class="p">,</span>
+            <span class="n">lower_bounds</span><span class="o">=</span><span class="n">lower_bounds</span><span class="p">,</span>
+            <span class="n">upper_bounds</span><span class="o">=</span><span class="n">upper_bounds</span><span class="p">,</span>
+            <span class="n">dataset_name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@server</span><span class="o">.</span><span class="n">tool</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_sho_response_tool</span><span class="p">(</span>
+        <span class="n">real_data</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">frequency</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">imag_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_kmeans</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">return_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">loss</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+        <span class="n">f_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">lower_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">upper_bounds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sho_response_data&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit SHO data from nested real and imaginary arrays or a complex nested array.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">fit_sho_response</span><span class="p">(</span>
+            <span class="n">real_data</span><span class="p">,</span>
+            <span class="n">frequency</span><span class="p">,</span>
+            <span class="n">imag_data</span><span class="o">=</span><span class="n">imag_data</span><span class="p">,</span>
+            <span class="n">use_kmeans</span><span class="o">=</span><span class="n">use_kmeans</span><span class="p">,</span>
+            <span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span>
+            <span class="n">return_cov</span><span class="o">=</span><span class="n">return_cov</span><span class="p">,</span>
+            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+            <span class="n">f_scale</span><span class="o">=</span><span class="n">f_scale</span><span class="p">,</span>
+            <span class="n">lower_bounds</span><span class="o">=</span><span class="n">lower_bounds</span><span class="p">,</span>
+            <span class="n">upper_bounds</span><span class="o">=</span><span class="n">upper_bounds</span><span class="p">,</span>
+            <span class="n">dataset_name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">server</span></div>
+
+
+
+<span class="k">if</span> <span class="n">FastMCP</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional runtime dependency</span>
+    <span class="n">mcp</span> <span class="o">=</span> <span class="n">create_mcp_server</span><span class="p">()</span>
+<span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional runtime dependency</span>
+    <span class="n">mcp</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../../_autosummary/sidpy.proc.mcp_server_beps.main.html#sidpy.proc.mcp_server_beps.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the MCP server over the default transport.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">mcp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional runtime dependency</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;The &#39;mcp&#39; package is required to run the BEPS MCP server.&quot;</span><span class="p">)</span>
+    <span class="n">mcp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;LOOP_PARAMETER_LABELS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SHO_PARAMETER_LABELS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SHO_fit_flattened&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;calculate_loop_centroid&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;create_mcp_server&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fit_beps_loops&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fit_sho_response&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;generate_guess&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;loop_fit_function&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sho_guess_fn&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Suhas Somnath, Gerd Duscher, and contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

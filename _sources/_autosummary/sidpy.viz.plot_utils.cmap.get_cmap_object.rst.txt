@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.cmap.get\_cmap\_object
+============================================
+
+.. currentmodule:: sidpy.viz.plot_utils.cmap
+
+.. autofunction:: get_cmap_object

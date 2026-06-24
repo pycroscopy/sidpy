@@ -1,0 +1,34 @@
+sidpy.viz.dataset\_viz.SpectralImageFitVisualizer
+=================================================
+
+.. currentmodule:: sidpy.viz.dataset_viz
+
+.. autoclass:: SpectralImageFitVisualizer
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SpectralImageFitVisualizer.get_fit_spectrum
+      ~SpectralImageFitVisualizer.get_spectrum
+      ~SpectralImageFitVisualizer.get_xy
+      ~SpectralImageFitVisualizer.set_bin
+      ~SpectralImageFitVisualizer.set_dataset
+      ~SpectralImageFitVisualizer.set_image
+      ~SpectralImageFitVisualizer.set_legend
+      ~SpectralImageFitVisualizer.set_spectrum
+      ~SpectralImageFitVisualizer.update_image
+      ~SpectralImageFitVisualizer.verify_dataset
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.misc.reset\_plot\_params
+==============================================
+
+.. currentmodule:: sidpy.viz.plot_utils.misc
+
+.. autofunction:: reset_plot_params

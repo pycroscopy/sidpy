@@ -1,0 +1,32 @@
+sidpy.viz.dataset\_viz.PointCloudVisualizerBase
+===============================================
+
+.. currentmodule:: sidpy.viz.dataset_viz
+
+.. autoclass:: PointCloudVisualizerBase
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PointCloudVisualizerBase.add_colorbar
+      ~PointCloudVisualizerBase.amp_ph
+      ~PointCloudVisualizerBase.get_spectrum
+      ~PointCloudVisualizerBase.get_xy
+      ~PointCloudVisualizerBase.real_imag
+      ~PointCloudVisualizerBase.set_image
+      ~PointCloudVisualizerBase.set_spectrum
+      ~PointCloudVisualizerBase.verify_dataset
+   
+   
+
+   
+   
+   

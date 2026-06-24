@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.write\_book\_keeping\_attrs
+================================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: write_book_keeping_attrs

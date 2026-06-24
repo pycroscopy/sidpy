@@ -1,0 +1,35 @@
+﻿sidpy
+=====
+
+.. automodule:: sidpy
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+      :template: custom-module-template.rst
+   :recursive:
+
+   base
+   hdf
+   io
+   proc
+   sid
+   viz
+

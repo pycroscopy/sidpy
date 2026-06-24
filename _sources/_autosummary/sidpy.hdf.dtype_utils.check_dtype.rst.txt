@@ -1,0 +1,6 @@
+sidpy.hdf.dtype\_utils.check\_dtype
+===================================
+
+.. currentmodule:: sidpy.hdf.dtype_utils
+
+.. autofunction:: check_dtype

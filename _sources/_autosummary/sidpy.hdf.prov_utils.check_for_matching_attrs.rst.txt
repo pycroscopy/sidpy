@@ -1,0 +1,6 @@
+sidpy.hdf.prov\_utils.check\_for\_matching\_attrs
+=================================================
+
+.. currentmodule:: sidpy.hdf.prov_utils
+
+.. autofunction:: check_for_matching_attrs

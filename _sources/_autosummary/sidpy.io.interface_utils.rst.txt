@@ -1,0 +1,50 @@
+sidpy.io.interface\_utils
+=========================
+
+.. automodule:: sidpy.io.interface_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      add_to_dict
+      check_ssh
+      get_QT_app
+      openfile_dialog_QT
+      openfile_dialog_qt
+      progress_bar
+      savefile_dialog
+      savefile_dialog_qt
+      update_directory_list
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      ChooseDataset
+      FileWidget
+      open_file_dialog
+   
+   
+
+   
+   
+   
+
+
+

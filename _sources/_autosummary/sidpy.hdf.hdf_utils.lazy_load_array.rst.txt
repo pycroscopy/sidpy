@@ -1,0 +1,6 @@
+sidpy.hdf.hdf\_utils.lazy\_load\_array
+======================================
+
+.. currentmodule:: sidpy.hdf.hdf_utils
+
+.. autofunction:: lazy_load_array

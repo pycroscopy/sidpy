@@ -1,0 +1,6 @@
+sidpy.sid.dataset.is\_simple\_list
+==================================
+
+.. currentmodule:: sidpy.sid.dataset
+
+.. autofunction:: is_simple_list

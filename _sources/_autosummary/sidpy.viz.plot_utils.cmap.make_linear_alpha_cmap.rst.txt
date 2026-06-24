@@ -1,0 +1,6 @@
+sidpy.viz.plot\_utils.cmap.make\_linear\_alpha\_cmap
+====================================================
+
+.. currentmodule:: sidpy.viz.plot_utils.cmap
+
+.. autofunction:: make_linear_alpha_cmap

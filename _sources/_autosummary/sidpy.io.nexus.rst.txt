@@ -1,0 +1,32 @@
+sidpy.io.nexus
+==============
+
+.. automodule:: sidpy.io.nexus
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      nexus_to_sidpy
+      sidpy_to_nexus_hdf5
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

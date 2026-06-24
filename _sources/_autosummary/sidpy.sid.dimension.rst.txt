@@ -1,0 +1,33 @@
+sidpy.sid.dimension
+===================
+
+.. automodule:: sidpy.sid.dimension
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      Dimension
+      DimensionType
+   
+   
+
+   
+   
+   
+
+
+

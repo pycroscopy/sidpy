@@ -1,0 +1,6 @@
+sidpy.hdf.prov\_utils.create\_indexed\_group
+============================================
+
+.. currentmodule:: sidpy.hdf.prov_utils
+
+.. autofunction:: create_indexed_group

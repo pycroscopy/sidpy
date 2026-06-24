@@ -1,0 +1,6 @@
+sidpy.base.dict\_utils.nest\_dict
+=================================
+
+.. currentmodule:: sidpy.base.dict_utils
+
+.. autofunction:: nest_dict
