@@ -515,10 +515,13 @@ class TestCopy(unittest.TestCase):
         dataset = Dataset.from_array(values)
         dataset.rename_dimension(0, 'x')
         dataset.quantity = 'test'
+        dataset.original_metadata = {'instrument': 'test_scope', 'reader': 'test_reader'}
         descriptor = dataset.copy()
 
         self.assertIsInstance(descriptor, Dataset)
         self.assertEqual(descriptor.quantity, dataset.quantity)
+        self.assertEqual(descriptor.original_metadata, dataset.original_metadata)
+        self.assertIsNot(descriptor.original_metadata, dataset.original_metadata)
         self.assertTrue(hasattr(descriptor, 'x'))
 
 

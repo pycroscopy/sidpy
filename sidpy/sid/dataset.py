@@ -485,6 +485,7 @@ class Dataset(da.Array):
         for dim in self._axes:
             dataset_copy.set_dimension(dim, self._axes[dim])
         dataset_copy.metadata = dict(self.metadata).copy()
+        dataset_copy.original_metadata = dict(self.original_metadata).copy()
 
         return dataset_copy
 
