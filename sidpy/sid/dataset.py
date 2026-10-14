@@ -1513,15 +1513,14 @@ class Dataset(da.Array):
                               title_prefix='Rounded_')
 
     def reshape(self, shape, merge_chunks=True, limit=None):
-        # This somehow adds an extra dimension at the end
-        # Will come back to this
+        """Reshape the data as a Dask array without dimension metadata."""
         warnings.warn('Dimensional information will be lost.\
                        Please use fold, unfold to combine dimensions')
         if len(shape) == 1 and isinstance(shape[0], Iterable):
             new_shape = shape[0]
         else:
             new_shape = shape
-        return super().reshape(*new_shape, merge_chunks)
+        return super().reshape(new_shape, merge_chunks=merge_chunks, limit=limit)
 
     @reduce_dims
     def prod(self, axis=None, dtype=None, keepdims=False,
